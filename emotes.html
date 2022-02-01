@@ -1,0 +1,3658 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8" />
+  <script>
+   /* RealityRipple's Homemade Emote Wall (Version 0.2.5 BETA)
+    * ===================================
+    *
+    * Notes and Caveats
+    *
+    * This emote wall uses normal <img> objects rather than a HTML Canvas
+    * While this lowers efficiency, it also adds better GIF file support
+    * and allows easier user manipulation.
+    *
+    * Note: At present, the "zoom in" and "zoom out" feature uses a resource-heavy
+    * design which can be replaced with the "scale: " CSS directive as soon as
+    * Chrome adds support. Additionally, the Bounce animation uses specific
+    * position-based drawing rather than actually being animated. Finally, the cube
+    * animation uses eight objects on screen for every image, making it a
+    * particularly resource-heavy drawing. If your computer has trouble with this
+    * emote wall, please try disabling these options.
+    *
+    *
+    * Configuration Information
+    * =========================
+    *
+    * channel     The name of the channel to join. Also used to choose an IRC nickname.
+    *
+    * login       Settings related to the login process.
+    *
+    *  client     The Client ID value is used to track which third-party project is
+    *             accessing your account. This emote wall does not have a constant ID,
+    *             and will work with whatever tool you use to get an OAuth ID (see below).
+    *
+    *  oauth      The OAuth ID value is used in lieu of a password to access the Twitch API.
+    *             Please generate an OAuth ID and matching Client ID:
+    *             - Visit https://twitchtokengenerator.com/
+    *             - Choose "Custom Scope Token"
+    *             - Scroll down to the "chat:read" scope option and choose "Yes"
+    *             - Scroll further down to the button that says "Generate Token!" and click it
+    *             - Choose "Authorize" to let Twitch Token Generator connect to Twitch
+    *             - Fill out the captcha prompt
+    *             - Copy the Client ID value and paste it into "client:"
+    *             - Copy the Access Token value and paste it into "oauth:"
+    *             If you ever stop using this emote wall, please log into Twitch and visit
+    *             https://www.twitch.tv/settings/connections . Under "Other Connections",
+    *             click the "Disconnect" button next to "Twitch Token Generator".
+    *             If you want to use a different Twitch OAuth generator (or do it yourself),
+    *             feel free.
+    *
+    * reddit      The unique ID of a Reddit RPAN session (usually 6 characters at the end of the URL).
+    *             If you don't use Reddit to stream, please keep this set to FALSE.
+    *             You must change this for every Reddit stream at present, unfortunately.
+    *
+    * display     Settings related to the animation of the emote wall.
+    *
+    *  styles     An array of animation styles which individual emotes randomly perform.
+    *             You may turn on and off elements in this array by "commenting out" a style
+    *             by putting two slashes before the name:
+    *              // 'Still',        <-- disabled
+    *                 'StraightLine', <-- allowed
+    *
+    *  access     A bitwise flag representing which users' messages show up on the emote wall.
+    *             Account types are represented by the following values:
+    *
+    *              0x800 = broadcaster
+    *              0x400 = moderator badge
+    *              0x200 = founder badge
+    *              0x100 = vip badge
+    *              0x040 = tier 3 subscriber badge
+    *              0x020 = tier 2 subscriber badge
+    *              0x010 = tier 1 subscriber badge
+    *              0x004 = cheer badge
+    *              0x002 = follower
+    *              0x001 = stranger
+    *
+    *             Just put a vertical pipe " | " in between each of the values
+    *             representing levels of access:
+    *
+    *              ACCESS                                 MEANING 
+    *             0x800 | 0x400                           broadcaster and moderator only
+    *             0x800 | 0x400 | 0x100 | 0x040 | 0x020   broadcasters, mods, VIPs, and tier 2 and 3 subscribers
+    *             0x800 | 0x010 | 0x002                   boradcaster, tier 1 subscribers, and followers
+    *
+    *             If you know how bitwise flags work, you can also use them
+    *             in more complicated ways:
+    *               ACCESS           MEANING
+    *             0xF77             all users from the broadcaster to strangers
+    *             0xF77 ^ 0x003     all users except followers and strangers
+    *             0x0F0             all subscribers
+    *
+    *  duplicates A boolean to toggle duplicate emotes per message.
+    *             If TRUE, every emote posted in chat will be shown.
+    *             If FALSE, only one of each emote per message will be shown.
+    *
+    *  useEmoji   Toggles display of emojis on the emote wall, and lets you choose
+    *             an emoji font style.
+    *             If TRUE, emojis will be shown using the "twemoji" font.
+    *             If FALSE, emojis will not be shown on the emote wall.
+    *             If 'twemoji', emojis will be shown using the "twemoji" font.
+    *             If 'openmoji', emojis will be shown using the "openmoji" font.
+    *             If 'noto', emojis will be shown using the "noto" font.
+    *             If 'blob', emojis will be shown using the "blobmoji" font.
+    *
+    *  extended   Settings related to third-party emotes.
+    *
+    *   useFFZ    Toggles display of FrankerFaceZ emotes.
+    *
+    *   useBTTV   Toggles display of BetterTTV emotes.
+    *
+    *   use7TV    Toggles display of 7TV emotes.
+    *
+    *  kappa      Settings related to emote-splosions and the !kappagen command.
+    *
+    *   count     The number of emotes to display per kappagen. This value must be less than the
+    *             "emote max" value seen below (best would be 1/4th or less).
+    *
+    *   styles    Similar to the array of styles for normal emotes, but this one lists emote-splosion types.
+    *             Please do not try to add normal styles to the kappa list or vice versa.
+    *
+    *   access    Similar to the access flag for normal emotes, but controls which users can use the !kappagen command.
+    *
+    * emote       Settings related to individual emote display.
+    *
+    *  time       The number of seconds an emote should show up on the screen for.
+    *
+    *  max        The maximum nuber of emotes to show on the screen at one time.
+    *             Set this value to 0 for infinite emotes (may eat your CPU, or may perform better).
+    *             This value should be greater than the "kappa count" value seen above (best would be 4x or more).
+    *
+    *  size       Settings related to the size of emotes.
+    *   ratio     A decimal value representing the height of each emote, relative
+    *             to the smallest screen dimension.  If the height of the screen
+    *             is less than the width, each emote will be equal to the height of
+    *             the screen multiplied by this ratio. Suggested "1 / n" where n is greater than 10.
+    *
+    *   min       The minimum height of an emote, in pixels.
+    *
+    *   max       The maximum height of an emote, in pixels.
+    *
+    *  in         Settings related to the showing of an emote.
+    *             Note: some kappagen styles do not use these. See the notes
+    *             next to each kappagen style name.
+    *
+    *   fade      A boolean to toggle the "fade in" style.
+    *
+    *   zoom      A boolean to toggle the "zoom in" style.
+    *
+    *  out        Settings related to the hiding of an emote.
+    *             Note: some kappagen styles do not use these. See the notes
+    *             next to each kappagen style name.
+    *
+    *   fade      A boolean to toggle the "fade out" style.
+    *
+    *   zoom      A boolean to toggle the "zoom out" style.
+    *
+    * event       Settings related to channel events which trigger emote-splosions (kappagen).
+    *
+    *  raid       Settings related to kappagens when being raided.
+    *
+    *   minimum   The minimum number of raiders required for a kappagen to be triggered.
+    *             Set to 0 to disable raid kappagens.
+    *
+    *   styles    An array of kappagen styles to use for raid events.
+    *             If FALSE, the default "kappa styles" setting will be used instead.
+    *
+    *  sub        Settings related to kappagens on a subscribe event.
+    *             Note: Sub event booleans can also be arrays of kappa styles.
+    *             This will override the default list of kappa styles for the
+    *             particular event in question.
+    *
+    *   useMsg    If TRUE, any emotes in resub messages will be used for the kappagen.
+    *             If FALSE, rany emotes in resub messages will show up like normal emotes.
+    *
+    *   t1        Settings related to kappagens on a tier 1 subscribe event.
+    *
+    *    first    A user subscribes at Tier 1 for the first time.
+    *             If TRUE, a kappagen will occur.
+    *             If FALSE, no kappagen will occur.
+    *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    resub    A user resubscribes or extends their subscription at Tier 1.
+    *             If TRUE, a kappagen will occur.
+    *             If FALSE, no kappagen will occur.
+    *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    gift     Settings related to tier 1 gifts.
+    *
+    *     first   A user gifts another user their first Tier 1 subscription.
+    *             If TRUE, a kappagen will occur.
+    *             If FALSE, no kappagen will occur.
+    *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *     resub   A user gifts another user a Tier 1 resubscription.
+    *             If TRUE, a kappagen will occur.
+    *             If FALSE, no kappagen will occur.
+    *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *     bomb    A user gifts multiple Tier 1 subscriptions.
+    *             If 0, no kappagen will occur.
+    *             If 1, a kappagen will occur on any random gift.
+    *             If greater than 1, the number of gifted users in a Tier 1 giftbomb must be
+    *             greater than or equal to this number to trigger a kappagen.
+    *
+    *   t2        Identical to t1, but for Tier 2 subscriptions.
+    *
+    *   t3        Identical to t1, but for Tier 3 subscriptions.
+    *
+    *   prime     Settings related to kappagens on an Amazon Prime subscribe event.
+    *
+    *    first    A user subscribes with Prime for the first time.
+    *             If TRUE, a kappagen will occur.
+    *             If FALSE, no kappagen will occur.
+    *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    resub    A user resubscribes or extends their Prime subscription.
+    *             If TRUE, a kappagen will occur.
+    *             If FALSE, no kappagen will occur.
+    *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *  cheer      The minimum bits required for a cheer to trigger a kappagen.
+    *             If 0, no kappagen will occur on cheer.
+    *
+    *  badge      Settings related to users earning bits badges.
+    *             This section is more "fluid" than other sections.
+    *             Each entry is a number representing a bits badge and a kappa boolean value.
+    *             For example:
+    *   '1'        If TRUE, a kappagen will occur when a user gets their 1 bit badge.
+    *              If FALSE, no kappagen will occur for 1 bit badges.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *             If a user earns a bits badge for a number not listed in the array, the system will
+    *             find the number which is closest to the badge, favoring the lower number in case of a tie.
+    *             For example:
+    *   '100': false
+    *   '5000': true
+    *              If a user earns their 1000 bits badge, no kappagen will occur because 1000 is closer to 100 than 5000.
+    *              If a user earns their 10000 bits badge, a kappagen will occur because 5000 is the closest listed number.
+    *             Note that the numbers must be strings (in 'single quotes') to function properly.
+    *
+    *
+    * Additional Notes
+    * ================
+    * Emojis: Twitch filters out the ZWJ (Zero-Width Joiner) character which is used for merging many emojis.
+    *         This system makes use of basic character detection to correctly parse many standard ZWJ-style
+    *         emojis even without the ZWJ character, however more complicated sets such as the "family units"
+    *         are not possible to correctly handle. The alternative character 0xE0002 used by some third-party
+    *         Twitch chat projects will be correctly parsed as a ZWJ according to the rules laid out in the RFC:
+    *          https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
+    *
+    * Cheers: The cheer style will be used for kappagens. If a user cheers 1000 bits in a single 1000 bit emote,
+    *         then the kappagen will be made of the 1000-bit cheers. However, if the user cheers 1000 bits using
+    *         multiple smaller cheer emotes, those emotes will be used for the kappagen instead. If other, normal
+    *         emotes are included in the message, they will show up as normal emotes, not part of the kappa.
+    *
+    * Kappa:  Each emote-splosion uses the number of emotes defined in the kappa count preference mentioned above,
+    *         except Pyramid, which uses a constant number based on the pyramidDist array (below). If the trigger
+    *         includes specific emotes (via kappagen, cheer, or resub message), the ratio of one emote to another
+    *         will be maintained. If a user with kappa access posts "!kappagen PunchTrees PunchTrees SSSsss" then
+    *         two thirds of the emotes in the emote-splosion will be "PunchTrees", and one third will be "SSSsss".
+    *
+    * Gifts:  If both a first/resub and bomb setting are enabled, multiple emote-splosions will likely be triggered.
+    *         This means that if a user gifts 20 Tier 1 subs and all three settings are TRUE, there may be up to
+    *         21 emote-splosions shown. It's recommended to keep Tier 1 first and resub gifts set to FALSE so that
+    *         the bomb setting will show one emote-splosion rather than a series of kappas for each sub in a gift.
+    *         Tier 2 and 3 are less frequent and more "special" so you may want to let multiple kappas be triggered
+    *         in such cases.
+    *
+    * ZWEs:   Zero-Width emotes are not supported. I really wanted to add support for this, but it would take a lot
+    *         more processing power than it's worth. Emotes marked as zero-width will not show up on the emote wall.
+    *         If you remove an emote from the bttvZWE list (below), however, it will show up on the wall.
+    *
+    * OBS:    This emote wall may do better if the browser source has a frame rate limit of 30 or 60.
+    *         It may also work better using a smaller screen resolution (such as 720p on a 1080p screen) and then
+    *         stretching the browser source to fit to the screen using the OBS Transform feature.
+    *
+    * Sizes:  Emotes that are not square may display differently in different contexts. Usually the height of the
+    *         emote will take precedent, but in cases where the width is strictly limited (such as TheCube), the 
+    *         width will limit the height of the emote to keep things "square".
+    *
+    * Help:   Please contact @realityripple for assistance, bug reports, or questions.
+    */
+
+   var cfg = {
+    channel: 'CHANNEL_NAME',
+    login: {
+     client: '4umzcpmjkg6ar78b81s7302jlj33t8',
+     oauth: 'OAUTH_ID' //Requires chat:read
+    },
+    reddit: false,
+    display: {
+     styles: [
+      //'Still',        // No movement
+      'StraightLine', // Gentle movement in a random straight line
+      'Rise',         // Slowly rise to top while wobbling back and forth
+      'Bounce',       // Fall from the top at an angle and bounce along the bottom (Windows Solitaire style)
+      'Speed',        // Zoom across the screen
+      'Drop',         // Get stuck at the top and tumble down (no fade/zoom in, only out)
+      'Crazy',        // Bounce off the walls [Layout Shifts - Requires offset-anchor / offset-position directives]
+      'Confetti',     // Fall like confetti                   (no zoom, no fade in, only fade out)
+      'TheCube',      // Rotate a 3D cube of an emote         (no zoom, only fade)
+     ],
+     access: 0x800 | 0x400 | 0x200 | 0x100 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002 | 0x001,
+     duplicates: true,
+     useEmoji: true,
+     extended: {
+      useFFZ: true,
+      useBTTV: true,
+      use7TV: true
+     },
+     kappa: {
+      count: 150,
+      styles: [
+       'Rise',        // Slowly rise to top while wobbling back and forth
+       'Speed',       // Zoom across the screen
+       'Crazy',       // Bounce off the walls [Layout Shifts - Requires offset-anchor / offset-position directives]
+       'Burst',       // Expand from a center point
+       'Fireworks',   // Burst out from a single emote (no fade/zoom; half-size emotes)
+       'Pyramid',     // Build a pyramid        (no fade/zoom; specific-size emotes)
+       'Fountain',    // Spout from a fountain  (no fade/zoom)
+       'Stampede',    // Stampede of emotes     (no fade/zoom)
+       'Confetti',    // Fall like confetti     (no zoom, no fade in, only fade out; half-size emotes)
+      ],
+      access: 0x800 | 0x400 | 0x200 | 0x100 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002
+     }
+    },
+    emote: {
+     time: 5,
+     max: 0,
+     size: {
+      ratio: 1/12,
+      min: 16,
+      max: 112
+     },
+     in: {
+      fade: true,
+      zoom: true /* Layout Shifts - Requires independent scale directive */
+     },
+     out: {
+      fade: true,
+      zoom: true /* Layout Shifts - Requires independent scale directive */
+     }
+    },
+    event: {
+     raid: {
+      minimum: 2,
+      styles: false
+     },
+     sub: {
+      useMsg: true,
+      t1: {
+       first: false,
+       resub: true,
+       gift: {
+        first: false,
+        resub: false,
+        bomb: 5
+       }
+      },
+      t2: {
+       first: true,
+       resub: true,
+       gift: {
+        first: true,
+        resub: true,
+        bomb: 1
+       }
+      },
+      t3: {
+       first: true,
+       resub: true,
+       gift: {
+        first: true,
+        resub: true,
+        bomb: 1
+       }
+      },
+      prime: {
+       first: true,
+       resub: true
+      }
+     },
+     cheer: 50,
+     badge: {
+      '1': false,
+      '100': true
+     }
+    }
+   };
+
+   /* potentially alterable arrays */
+
+   // distribution of emojis for pyramid kappagen
+   var pyramidDist = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
+
+   // don't show these zero-width emote modifiers at all
+   var bttvZWE = [
+    "SoSnowy",  "IceCold",   "SantaHat", "TopHat",
+    "ReinDeer", "CandyCane", "cvMask",   "cvHazmat",
+   ];
+   //////////////////////////////////////////////////////////////////////////////
+   // don't mess with things below this line without knowing what you're doing //
+   //////////////////////////////////////////////////////////////////////////////
+  </script>
+  <title>Emote Wall</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+   :root
+   {
+    --height: 0px;
+    --width: 0px;
+    --emote-height: 0px;
+   }
+   body
+   {
+    margin: 0;
+    overflow: hidden;
+   }
+   img.emote
+   {
+    position: fixed;
+    will-change: transform;
+    height: 100%;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    offset-rotate: 0deg;
+   }
+
+   div.scene
+   {
+    position: fixed;
+    will-change: transform;
+    border: 0;
+    margin: 0;
+    padding: 0;
+   }
+   div.scene div.cube
+   {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+   }
+   div.scene div.cube img.cubeFace
+   {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.2);
+   }
+
+   @keyframes wiggleL
+   {
+    33%
+    {
+     transform: translateX(-50%);
+    }
+    66%
+    {
+     transform: translateX(50%);
+    }
+   }
+   @keyframes wiggleR
+   {
+    33%
+    {
+     transform: translateX(50%);
+    }
+    66%
+    {
+     transform: translateX(-50%);
+    }
+   }
+
+   @keyframes speedL
+   {
+    0%
+    {
+     transform: scale(1, 1);
+    }
+    10%
+    {
+     transform: scale(0.6, 1);
+    }
+    15%
+    {
+     transform: scale(0.6, 1);
+    }
+    20%
+    {
+     transform: scale(1, 0.4);
+    }
+    100%
+    {
+     transform: scale(1, 0.4) translate(calc(-1 * var(--width) * 4), 0);
+    }
+   }
+   @keyframes speedR
+   {
+    0%
+    {
+     transform: scale(1, 1);
+    }
+    10%
+    {
+     transform: scale(0.6, 1);
+    }
+    15%
+    {
+     transform: scale(0.6, 1);
+    }
+    20%
+    {
+     transform: scale(1, 0.4);
+    }
+    100%
+    {
+     transform: scale(1, 0.4) translate(calc(var(--width) * 4), 0);
+    }
+   }
+
+   @keyframes dropL
+   {
+    0%
+    {
+     transform: translateY(-100%);
+    }
+    10%
+    {
+     transform: translateY(0%);
+    }
+    20%
+    {
+     transform: translateY(0%);
+    }
+    25%
+    {
+     transform: translateY(0%) rotate(45deg);
+    }
+    27%
+    {
+     transform: translateY(0%) rotate(35deg);
+    }
+    30%
+    {
+     transform: translateY(0%) rotate(45deg);
+    }
+    100%
+    {
+     transform: translateY(var(--height)) rotate(350deg);
+    }
+   }
+   @keyframes dropR
+   {
+    0%
+    {
+     transform: translateY(-100%);
+    }
+    10%
+    {
+     transform: translateY(0%);
+    }
+    20%
+    {
+     transform: translateY(0%);
+    }
+    25%
+    {
+     transform: translateY(0%) rotate(-45deg);
+    }
+    27%
+    {
+     transform: translateY(0%) rotate(-35deg);
+    }
+    30%
+    {
+     transform: translateY(0%) rotate(-45deg);
+    }
+    100%
+    {
+     transform: translateY(var(--height)) rotate(-350deg);
+    }
+   }
+
+   @keyframes confettiA
+   {
+    0%
+    {
+     transform: translateY(-100%) rotate3d(0.25, 0.5, 0, 0deg);
+    }
+    100%
+    {
+     transform: translateY(var(--height)) rotate3d(0.25, 0.5, 0, -4500deg);
+    }
+   }
+
+   @keyframes confettiB
+   {
+    0%
+    {
+     transform: translateY(-100%) rotate3d(0.25, 0.5, 0, 0deg);
+    }
+    100%
+    {
+     transform: translateY(var(--height)) rotate3d(0.25, 0, 0, -4500deg);
+    }
+   }
+
+   @keyframes confettiC
+   {
+    0%
+    {
+     transform: translateY(-100%) rotate3d(0.25, 0.5, 0, 0deg);
+    }
+    100%
+    {
+     transform: translateY(var(--height)) rotate3d(0.25, -0.5, 0, -4500deg);
+    }
+   }
+
+   @keyframes offsetPath
+   {
+    0%
+    {
+     offset-distance: 0%;
+    }
+    100%
+    {
+     offset-distance: 100%;
+    }
+   }
+
+   @keyframes fadeIn
+   {
+    0%
+    {
+     opacity: 0;
+    }
+    100% /* 8% */
+    {
+     opacity: 1;
+    }
+   }
+
+   @keyframes fadeOut
+   {
+    0% /* 95% */
+    {
+     opacity: 1;
+    }
+    100%
+    {
+     opacity: 0;
+    }
+   }
+
+   @keyframes zoomIn
+   {
+    0%
+    {
+     margin: calc((var(--emote-height) - (var(--emote-height) * 0.1)) / 2);
+     max-height: calc(var(--emote-height) * 0.1);
+    }
+    24% /* 4% */
+    {
+     margin: calc((var(--emote-height) - (var(--emote-height) * 1.2)) / 2);
+     max-height: calc(var(--emote-height) * 1.2);
+    }
+    35% /* 6% */
+    {
+     margin: 0;
+     max-height: var(--emote-height);
+    }
+    47% /* 8% */
+    {
+     margin: calc((var(--emote-height) - (var(--emote-height) * 0.8)) / 2);
+     max-height: calc(var(--emote-height) * 0.8);
+    }
+    71% /* 12% */
+    {
+     margin: 0;
+     max-height: var(--emote-height);
+    }
+    88% /* 15% */
+    {
+     margin: calc((var(--emote-height) - (var(--emote-height) * 0.95)) / 2);
+     max-height: calc(var(--emote-height) * 0.95);
+    }
+    100% /* 17% */
+    {
+     margin: 0;
+     max-height: var(--emote-height);
+    }
+   }
+
+   @keyframes zoomOut
+   {
+    0% /* 95% */
+    {
+     margin: 0;
+     max-height: var(--emote-height);
+    }
+    100%
+    {
+     margin: calc((var(--emote-height) - (var(--emote-height) * 0.1)) / 2);
+     max-height: calc(var(--emote-height) * 0.1);
+    }
+   }
+  </style>
+  <script>
+   document.title = cfg.channel + ' Emote Wall';
+   /* global variables */
+   var channelID = 0;
+   var dead = false;
+   var toShow = [];
+   var toOverlay = [];
+   var eList = {};
+   var cList = [];
+   var fList = [];
+   var eActive = 0;
+   var tStart = 32;
+   var tAnim = {
+    fade: {
+     in: 8,
+     out: 8
+    },
+    zoom: {
+     in: 17,
+     out: 8
+    }
+   };
+
+   function sleep(ms)
+   {
+    return new Promise(resolve => setTimeout(resolve, ms));
+   }
+
+   function checkURL(url)
+   {
+    let p = new Promise(
+     async function(resolve, reject)
+     {
+      let x = new XMLHttpRequest();
+      x.open('HEAD', url);
+      x.onreadystatechange = function()
+      {
+       if (x.status == 200)
+        resolve(true);
+       else
+        resolve(false);
+      }
+      x.send();
+     }
+    );
+    return p;
+   }
+
+   function jSplit(s, sep, limit)
+   {
+    let arr = [];
+    let v = '';
+    for (let i = 0; i < s.length; i++)
+    {
+     if (arr.length < limit - 1)
+     {
+      if (s[i] === sep)
+      {
+       arr.push(v);
+       v = '';
+       continue;
+      }
+     }
+     v += s[i];
+    }
+    if (v.length > 0)
+     arr.push(v);
+    return arr;
+   }
+
+   function parseMsg(line)
+   {
+    let cmd = {};
+    if (line.slice(0, 1) === '@')
+    {
+     line = line.slice(1);
+     if (!line.includes(' '))
+     {
+      console.log('Unknown command structure: ' + line);
+      return false;
+     }
+     cmd.tags = [];
+     let t = line.slice(0, line.indexOf(' '));
+     line = line.slice(line.indexOf(' ') + 1);
+     let a = t.split(';');
+     for (let i = 0; i < a.length; i++)
+     {
+      let k = a[i].slice(0, a[i].indexOf('='));
+      let v = a[i].slice(a[i].indexOf('=') + 1);
+      cmd.tags[k] = v;
+     }
+    }
+    if (line.slice(0, 1) === ':')
+    {
+     line = line.slice(1);
+     if (!line.includes(' '))
+     {
+      console.log('Unknown command structure: ' + line);
+      return false;
+     }
+     cmd.prefix = line.slice(0, line.indexOf(' '));
+     line = line.slice(line.indexOf(' ') + 1);
+    }
+    if (!line.includes(' '))
+    {
+     cmd.command = line;
+     return cmd;
+    }
+    cmd.command = line.slice(0, line.indexOf(' '));
+    line = line.slice(line.indexOf(' ') + 1);
+    cmd.params = [];
+    if (!line.includes(' '))
+    {
+     cmd.params.push(line);
+     return cmd;
+    }
+    while (line.includes(' '))
+    {
+     if (line.slice(0, 1) === ':')
+     {
+      cmd.params.push(line.slice(1));
+      return cmd;
+     }
+     cmd.params.push(line.slice(0, line.indexOf(' ')));
+     line = line.slice(line.indexOf(' ') + 1);
+    }
+    if (line.slice(0, 1) === ':')
+     line = line.slice(1);
+    cmd.params.push(line);
+    return cmd;
+   }
+
+   function parseUser(cmd)
+   {
+    let data = cmd.prefix;
+    let ret = {};
+    if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('display-name'))
+     ret['display-name'] = cmd.tags['display-name'];
+    if (data.includes('!'))
+    {
+     ret.nick = data.slice(0, data.indexOf('!'));
+     data = data.slice(data.indexOf('!') + 1);
+    }
+    if (data.includes('@'))
+    {
+     ret.host = data.slice(0, data.indexOf('@'));
+     data = data.slice(data.indexOf('@') + 1);
+    }
+    ret.user = data;
+    return ret;
+   }
+
+   function loadEmote_channel(chID)
+   {
+    cList = [];
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.twitch.tv/helix/chat/emotes?broadcaster_id=' + chID);
+      x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
+      x.setRequestHeader('Client-Id', cfg.login.client);
+      x.onreadystatechange = function()
+      {
+       if (x.status !== 200)
+       {
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       if (!j.hasOwnProperty('data'))
+       {
+        resolve(false);
+        return;
+       }
+       let f = 'default';
+       let t = 'dark';
+       let r = '3.0';
+       for (let i = 0; i < j.data.length; i++)
+        cList.push({url: 'https://static-cdn.jtvnw.net/emoticons/v2/' + j.data[i].id + '/' + f + '/' + t + '/' + r});
+       resolve(true);
+      }
+      x.send();
+     }
+    );
+    return p;
+   }
+
+   function loadCheer_channel(chID)
+   {
+    eList.cheer = {};
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.twitch.tv/helix/bits/cheermotes?broadcaster_id=' + chID);
+      x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
+      x.setRequestHeader('Client-Id', cfg.login.client);
+      x.onreadystatechange = function()
+      {
+       if (x.status !== 200)
+       {
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       if (!j.hasOwnProperty('data'))
+       {
+        resolve(false);
+        return;
+       }
+       for (let c = 0; c < j.data.length; c++)
+       {
+        let set = j.data[c];
+        if (!set.hasOwnProperty('prefix'))
+         continue;
+        if (!set.hasOwnProperty('tiers'))
+         continue;
+        let prefix = set.prefix;
+        let tierList = [];
+        for (let i = set.tiers.length - 1; i >= 0; i--)
+        {
+         if (!set.tiers[i].hasOwnProperty('min_bits'))
+          continue;
+         if (!set.tiers[i].hasOwnProperty('images'))
+          continue;
+         let amt = set.tiers[i]['min_bits'];
+         let img = null;
+         if (set.tiers[i].images.hasOwnProperty('dark'))
+         {
+          if (set.tiers[i].images.dark.hasOwnProperty('animated'))
+          {
+           if (set.tiers[i].images.dark.animated.hasOwnProperty('4'))
+            img = set.tiers[i].images.dark.animated['4'];
+           else if (set.tiers[i].images.dark.animated.hasOwnProperty('3'))
+            img = set.tiers[i].images.dark.animated['3'];
+           else if (set.tiers[i].images.dark.animated.hasOwnProperty('2'))
+            img = set.tiers[i].images.dark.animated['2'];
+           else if (set.tiers[i].images.dark.animated.hasOwnProperty('1.5'))
+            img = set.tiers[i].images.dark.animated['1.5'];
+           else if (set.tiers[i].images.dark.animated.hasOwnProperty('1'))
+            img = set.tiers[i].images.dark.animated['1'];
+          }
+          else if (set.tiers[i].images.dark.hasOwnProperty('static'))
+          {
+           if (set.tiers[i].images.dark.static.hasOwnProperty('4'))
+            img = set.tiers[i].images.dark.static['4'];
+           else if (set.tiers[i].images.dark.static.hasOwnProperty('3'))
+            img = set.tiers[i].images.dark.static['3'];
+           else if (set.tiers[i].images.dark.static.hasOwnProperty('2'))
+            img = set.tiers[i].images.dark.static['2'];
+           else if (set.tiers[i].images.dark.static.hasOwnProperty('1.5'))
+            img = set.tiers[i].images.dark.static['1.5'];
+           else if (set.tiers[i].images.dark.static.hasOwnProperty('1'))
+            img = set.tiers[i].images.dark.static['1'];
+          }
+         }
+         else if (set.tiers[i].images.hasOwnProperty('light'))
+         {
+          if (set.tiers[i].images.light.hasOwnProperty('animated'))
+          {
+           if (set.tiers[i].images.light.animated.hasOwnProperty('4'))
+            img = set.tiers[i].images.light.animated['4'];
+           else if (set.tiers[i].images.light.animated.hasOwnProperty('3'))
+            img = set.tiers[i].images.light.animated['3'];
+           else if (set.tiers[i].images.light.animated.hasOwnProperty('2'))
+            img = set.tiers[i].images.light.animated['2'];
+           else if (set.tiers[i].images.light.animated.hasOwnProperty('1.5'))
+            img = set.tiers[i].images.light.animated['1.5'];
+           else if (set.tiers[i].images.light.animated.hasOwnProperty('1'))
+            img = set.tiers[i].images.light.animated['1'];
+          }
+          else if (set.tiers[i].images.light.hasOwnProperty('static'))
+          {
+           if (set.tiers[i].images.light.static.hasOwnProperty('4'))
+            img = set.tiers[i].images.light.static['4'];
+           else if (set.tiers[i].images.light.static.hasOwnProperty('3'))
+            img = set.tiers[i].images.light.static['3'];
+           else if (set.tiers[i].images.light.static.hasOwnProperty('2'))
+            img = set.tiers[i].images.light.static['2'];
+           else if (set.tiers[i].images.light.static.hasOwnProperty('1.5'))
+            img = set.tiers[i].images.light.static['1.5'];
+           else if (set.tiers[i].images.light.static.hasOwnProperty('1'))
+            img = set.tiers[i].images.light.static['1'];
+          }
+         }
+         if (img === null)
+          continue;
+         tierList.push({min: amt, img: img});
+        }
+        eList.cheer[prefix] = tierList;
+       }
+       resolve(true);
+      }
+      x.send();
+     }
+    );
+    return p;
+   }
+
+   function readFFZ_URL(entry)
+   {
+    if (!entry.hasOwnProperty('urls'))
+     return false;
+    if (entry.urls.hasOwnProperty('4'))
+    {
+     let u4 = entry.urls[4];
+     if (u4.slice(0, 2) === '//')
+      u4 = 'https:' + u4;
+     return u4;
+    }
+    if (entry.urls.hasOwnProperty('2'))
+    {
+     let u2 = entry.urls[2];
+     if (u2.slice(0, 2) === '//')
+      u2 = 'https:' + u2;
+     let u24 = u2;
+     if (u24.slice(-2) === '/2')
+      u24 = u24.slice(0, -1) + '4';
+     return u24;
+    }
+    if (entry.urls.hasOwnProperty('1'))
+    {
+     let u1 = entry.urls[1];
+     if (u1.slice(0, 2) === '//')
+      u1 = 'https:' + u1;
+     let u14 = u1;
+     if (u14.slice(-2) === '/1')
+      u14 = u14.slice(0, -1) + '4';
+     return u14;
+    }
+    return false;
+   }
+
+   function loadFFZ_global()
+   {
+    eList.ffz = {};
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.frankerfacez.com/v1/set/global');
+      x.onreadystatechange = function()
+      {
+       if (x.status !== 200)
+       {
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       if (!j.hasOwnProperty('sets'))
+       {
+        resolve(false);
+        return;
+       }
+       let usedSets = [];
+       if (j.hasOwnProperty('default_sets'))
+       {
+        for (let i = 0; i < j['default_sets'].length; i++)
+         usedSets.push(j['default_sets'][i]);
+       }
+       for (const set in j.sets)
+       {
+        if (!usedSets.includes(j.sets[set].id))
+         continue;
+        if (!j.sets[set].hasOwnProperty('emoticons'))
+         continue;
+        for (let i = 0; i < j.sets[set].emoticons.length; i++)
+        {
+         if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
+          continue;
+         let u = readFFZ_URL(j.sets[set].emoticons[i]);
+         if (u === false)
+          continue;
+         eList.ffz[j.sets[set].emoticons[i].name] = {url: u, users: null, scope: 'g'};
+        }
+       }
+       //user-specific, from here on everything resolve()s true
+       if (!j.hasOwnProperty('users'))
+       {
+        resolve(true);
+        return;
+       }
+       for (const setID in j.users)
+       {
+        let aList = j.users[setID];
+        if (!Array.isArray(aList))
+         continue;
+        for (const set in j.sets)
+        {
+         if (setID !== set)
+          continue;
+         if (!j.sets[set].hasOwnProperty('emoticons'))
+          continue;
+         for (let i = 0; i < j.sets[set].emoticons.length; i++)
+         {
+          if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
+           continue;
+          let u = readFFZ_URL(j.sets[set].emoticons[i]);
+          if (u === false)
+           continue;
+          eList.ffz[j.sets[set].emoticons[i].name] = {url: u, users: aList, scope: 'g'};
+         }
+        }
+       }
+       resolve(true);
+      }
+      x.send();
+     }
+    );
+    return p;
+   }
+
+   function loadFFZ_channel(chID)
+   {
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.frankerfacez.com/v1/room/id/' + chID);
+      x.onreadystatechange = function()
+      {
+       if (x.status != 200)
+       {
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       if (!j.hasOwnProperty('sets'))
+       {
+        resolve(false);
+        return;
+       }
+       for (const set in j.sets)
+       {
+        if (!j.sets[set].hasOwnProperty('emoticons'))
+         continue;
+        for (let i = 0; i < j.sets[set].emoticons.length; i++)
+        {
+         if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
+          continue;
+         let u = readFFZ_URL(j.sets[set].emoticons[i])
+         if (u === false)
+          continue;
+         cList.push({url: u});
+         eList.ffz[j.sets[set].emoticons[i].name] = {url: u, users: null, scope: 'c'};
+        }
+       }
+       resolve(true);
+      }
+      x.send();
+     }
+    );
+    return p;
+   }
+
+   function loadBTTV_global()
+   {
+    eList.bttv = {};
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.betterttv.net/3/cached/emotes/global');
+      x.onreadystatechange = function()
+      {
+       if (x.status != 200)
+       {
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       for (let i = 0; i < j.length; i++)
+       {
+        if (!j[i].hasOwnProperty('code'))
+         continue;
+        if (!j[i].hasOwnProperty('id'))
+         continue;
+        if (bttvZWE.includes(j[i].code))
+         continue;
+        eList.bttv[j[i].code] = {url: 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x', scope: 'g'};
+       }
+       resolve(true);
+      }
+      x.send();
+     }
+    );
+    return p;
+   }
+
+   function loadBTTV_channel(chID)
+   {
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.betterttv.net/3/cached/users/twitch/' + chID);
+      x.onreadystatechange = function()
+      {
+       if (x.status != 200)
+       {
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       if (j.hasOwnProperty('channelEmotes'))
+       {
+        for (let i = 0; i < j.channelEmotes.length; i++)
+        {
+         if (!j.channelEmotes[i].hasOwnProperty('code'))
+          continue;
+         if (!j.channelEmotes[i].hasOwnProperty('id'))
+          continue;
+         cList.push({url: 'https://cdn.betterttv.net/emote/' + j.channelEmotes[i].id + '/3x'});
+         eList.bttv[j.channelEmotes[i].code] = {url: 'https://cdn.betterttv.net/emote/' + j.channelEmotes[i].id + '/3x', scope: 'c'};
+        }
+       }
+       if (j.hasOwnProperty('sharedEmotes'))
+       {
+        for (let i = 0; i < j.sharedEmotes.length; i++)
+        {
+         if (!j.sharedEmotes[i].hasOwnProperty('code'))
+          continue;
+         if (!j.sharedEmotes[i].hasOwnProperty('id'))
+          continue;
+         cList.push({url: 'https://cdn.betterttv.net/emote/' + j.sharedEmotes[i].id + '/3x'});
+         eList.bttv[j.sharedEmotes[i].code] = {url: 'https://cdn.betterttv.net/emote/' + j.sharedEmotes[i].id + '/3x', scope: 'c'};
+        }
+       }
+       resolve(true);
+      }
+      x.send();
+     }
+    );
+    return p;
+   }
+
+   function load7TV_global()
+   {
+    eList['7tv'] = {};
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.7tv.app/v2/emotes/global');
+      x.onreadystatechange = function()
+      {
+       if (x.status != 200)
+       {
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       for (let i = 0; i < j.length; i++)
+       {
+        if (!j[i].hasOwnProperty('name'))
+         continue;
+        if (!j[i].hasOwnProperty('urls'))
+         continue;
+        let t4 = null;
+        for (let u = 0; u < j[i].urls.length; u++)
+        {
+         if (j[i].urls[u][0] === '1')
+         {
+          let t1 = j[i].urls[u][1];
+          if (t1.slice(-3) === '/1x')
+          {
+           if (t4 === null)
+            t4 = t1.slice(0, -2) + '4x';
+          }
+         }
+         if (j[i].urls[u][0] === '2')
+         {
+          let t2 = j[i].urls[u][1];
+          if (t2.slice(-3) === '/2x')
+          {
+           if (t4 === null)
+            t4 = t2.slice(0, -2) + '4x';
+          }
+         }
+         if (j[i].urls[u][0] === '3')
+         {
+          let t3 = j[i].urls[u][1];
+          if (t3.slice(-3) === '/3x')
+          {
+           if (t4 === null)
+            t4 = t3.slice(0, -2) + '4x';
+          }
+         }
+         if (j[i].urls[u][0] === '4')
+          t4 = j[i].urls[u][1];
+        }
+        if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
+         continue;
+        eList['7tv'][j[i].name] = {url: t4, scope: 'g'};
+       }
+       resolve(true);
+      }
+      x.send();
+     }
+    );
+    return p;
+   }
+
+   function load7TV_channel(chN)
+   {
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.7tv.app/v2/users/' + chN + '/emotes');
+      x.onreadystatechange = function()
+      {
+       if (x.status != 200)
+       {
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       for (let i = 0; i < j.length; i++)
+       {
+        if (!j[i].hasOwnProperty('name'))
+         continue;
+        if (!j[i].hasOwnProperty('urls'))
+         continue;
+        let t4 = null;
+        for (let u = 0; u < j[i].urls.length; u++)
+        {
+         if (j[i].urls[u][0] === '1')
+         {
+          let t1 = j[i].urls[u][1];
+          if (t1.slice(-3) === '/1x')
+          {
+           if (t4 === null)
+            t4 = t1.slice(0, -2) + '4x';
+          }
+         }
+         if (j[i].urls[u][0] === '2')
+         {
+          let t2 = j[i].urls[u][1];
+          if (t2.slice(-3) === '/2x')
+          {
+           if (t4 === null)
+            t4 = t2.slice(0, -2) + '4x';
+          }
+         }
+         if (j[i].urls[u][0] === '3')
+         {
+          let t3 = j[i].urls[u][1];
+          if (t3.slice(-3) === '/3x')
+          {
+           if (t4 === null)
+            t4 = t3.slice(0, -2) + '4x';
+          }
+         }
+         if (j[i].urls[u][0] === '4')
+          t4 = j[i].urls[u][1];
+        }
+        if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
+         continue;
+        cList.push({url: t4});
+        eList['7tv'][j[i].name] = {url: t4, scope: 'c'};
+       }
+       resolve(true);
+      }
+      x.send();
+     }
+    );
+    return p;
+   }
+
+   function showEmote_Rise(url, sW, sH, sS)
+   {
+    let img = document.createElement('img');
+    img.setAttribute('class', 'emote');
+    img.setAttribute('src', url);
+    img.setAttribute('alt', '');
+    let h = Math.floor(Math.random() * sW) - (sS / 2);
+    let v = Math.floor((Math.random() * 0.3) * sH) + Math.floor(0.8 * sH);
+    let s = 'left: ' + h + 'px;'
+    s += ' max-height: ' + sS + 'px;';
+    s += ' width: auto;';
+    s += ' offset-path: path("M 0 ' + v + ' L 0 ' + Math.floor(v * 0.05) + '") ;';
+    let aNames = [];
+    let aDelays = [];
+    let aDurs = [];
+    let aTimings = [];
+    let aFills = [];
+    let aIters = [];
+    if (Math.floor(Math.random() * 2) === 1)
+     aNames.push('wiggleL');
+    else
+     aNames.push('wiggleR');
+    let d = Math.floor(Math.random() * 600);
+    aDelays.push(d + 'ms');
+    let w = Math.floor(Math.random() * 3) + 2;
+    aDurs.push(w + 's');
+    aTimings.push('ease-in-out');
+    aFills.push('both');
+    aIters.push('infinite');
+
+    aNames.push('offsetPath');
+    aDelays.push('0s');
+    aDurs.push(cfg.emote.time + 's');
+    aTimings.push('linear');
+    aFills.push('forwards');
+    aIters.push('1');
+
+    if (cfg.emote.in.fade)
+    {
+     aNames.push('fadeIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('ease-in');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.in.zoom)
+    {
+     aNames.push('zoomIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.fade)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.zoom)
+    {
+     aNames.push('zoomOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    s += ' animation-name: ' + aNames.join() + ';';
+    s += ' animation-delay: ' + aDelays.join() + ';';
+    s += ' animation-duration: ' + aDurs.join() + ';';
+    s += ' animation-timing-function: ' + aTimings.join() + ';';
+    s += ' animation-fill-mode: ' + aFills.join() + ';';
+    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    img.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(img);
+    window.setTimeout(
+     function()
+     {
+      document.body.removeChild(img);
+      eActive--;
+     },
+     cfg.emote.time * 1000
+    );
+   }
+
+   function showEmote_Bounce(url, sW, sH, sS)
+   {
+    let ms = 20;
+    let img = document.createElement('img');
+    img.setAttribute('class', 'emote');
+    img.setAttribute('src', url);
+    img.setAttribute('alt', '');
+    let h = Math.floor(Math.random() * sW) - (sS / 2);
+    let v = Math.floor((Math.random() * 0.2) * sH);
+    let s = 'max-height: ' + sS + 'px;';
+    s += ' width: auto;';
+    let aNames = [];
+    let aDelays = [];
+    let aDurs = [];
+    let aTimings = [];
+    let aFills = [];
+    let aIters = [];
+    if (cfg.emote.in.fade)
+    {
+     aNames.push('fadeIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('ease-in');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.in.zoom)
+    {
+     aNames.push('zoomIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.fade)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.zoom)
+    {
+     aNames.push('zoomOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (aNames.length > 0)
+    {
+     s += ' animation-name: ' + aNames.join() + ';';
+     s += ' animation-delay: ' + aDelays.join() + ';';
+     s += ' animation-duration: ' + aDurs.join() + ';';
+     s += ' animation-timing-function: ' + aTimings.join() + ';';
+     s += ' animation-fill-mode: ' + aFills.join() + ';';
+     s += ' animation-iteration-count: ' + aIters.join() + ';';
+    }
+    s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+    let bX = h;
+    let bY = v;
+    let velX = Math.floor((Math.random() * 6) + 3);
+    let velY = Math.floor((Math.random() * 3) + 4);
+    if (bX + (sS / 2) > (sW / 2))
+     velX = -1 * velX;
+    let c = null;
+    let tmr = window.setTimeout(
+     function tLoop()
+     {
+      window.clearTimeout(tmr);
+      tmr = null;
+      bX += velX;
+      bY += velY;
+      velY += 1;
+      if (bY + sS >= sH)
+      {
+       bY = sH - sS;
+       velY *= -0.7;
+       velY = Math.floor(velY);
+      }
+      img.style.transform = 'translate(' + bX + 'px, ' + bY + 'px)';
+      if ((bX < 0 - sS) || (bX > sW))
+      {
+       if (c !== null)
+       {
+        window.clearTimeout(c);
+        c = null;
+        document.body.removeChild(img);
+        eActive--;
+       }
+       return;
+      }
+      tmr = window.setTimeout(tLoop, ms);
+     },
+     ms
+    );
+    img.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(img);
+    c = window.setTimeout(
+     function()
+     {
+      c = null;
+      window.clearTimeout(tmr);
+      tmr = null;
+      document.body.removeChild(img);
+      eActive--;
+     },
+     cfg.emote.time * 1000
+    );
+   }
+
+   function showEmote_Speed(url, sW, sH, sS)
+   {
+    let img = document.createElement('img');
+    img.setAttribute('class', 'emote');
+    img.setAttribute('src', url);
+    img.setAttribute('alt', '');
+    let h = Math.floor(Math.random() * sW) - (sS / 2);
+    let v = Math.floor((Math.random() * 0.4) * sH) + Math.floor(0.3 * sH);
+    let s = 'top: ' + v + 'px;';
+    s += ' left: ' + h + 'px;'
+    s += ' max-height: ' + sS + 'px;';
+    s += ' width: auto;';
+    let aNames = [];
+    let aDelays = [];
+    let aDurs = [];
+    let aTimings = [];
+    let aFills = [];
+    let aIters = [];
+    let goLeft = (h + (sS / 2) > (sW / 2));
+    if (goLeft)
+     s += ' transform-origin: center right;'
+    else
+     s += ' transform-origin: center left;'
+    if (goLeft)
+     aNames.push('speedL');
+    else
+     aNames.push('speedR');
+    aDelays.push('0.5s');
+    aDurs.push(cfg.emote.time + 's');
+    aTimings.push('ease-in');
+    aFills.push('forwards');
+    aIters.push('1');
+    if (cfg.emote.in.fade)
+    {
+     aNames.push('fadeIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('ease-in');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.in.zoom)
+    {
+     aNames.push('zoomIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.fade)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.zoom)
+    {
+     aNames.push('zoomOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    s += ' animation-name: ' + aNames.join() + ';';
+    s += ' animation-delay: ' + aDelays.join() + ';';
+    s += ' animation-duration: ' + aDurs.join() + ';';
+    s += ' animation-timing-function: ' + aTimings.join() + ';';
+    s += ' animation-fill-mode: ' + aFills.join() + ';';
+    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    img.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(img);
+    window.setTimeout(
+     function()
+     {
+      document.body.removeChild(img);
+      eActive--;
+     },
+     cfg.emote.time * 1000
+    );
+   }
+
+   function showEmote_Drop(url, sW, sH, sS)
+   {
+    let img = document.createElement('img');
+    img.setAttribute('class', 'emote');
+    img.setAttribute('src', url);
+    img.setAttribute('alt', '');
+    let h = Math.floor(Math.random() * sW) - (sS / 2);
+    let v = -1 * sS;
+    let s = 'left: ' + h + 'px;'
+    s += ' max-height: ' + sS + 'px;';
+    s += ' width: auto;';
+    let aNames = [];
+    let aDelays = [];
+    let aDurs = [];
+    let aTimings = [];
+    let aFills = [];
+    let aIters = [];
+    let goLeft = (Math.floor(Math.random() * 2) === 1);
+    if (goLeft)
+     s += ' transform-origin: top left;'
+    else
+     s += ' transform-origin: top right;'
+    if (goLeft)
+     aNames.push('dropL');
+    else
+     aNames.push('dropR');
+    aDelays.push('0s');
+    aDurs.push(cfg.emote.time + 's');
+    aTimings.push('ease-in');
+    aFills.push('forwards');
+    aIters.push('1');
+    if (cfg.emote.out.fade)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.zoom)
+    {
+     aNames.push('zoomOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    s += ' animation-name: ' + aNames.join() + ';';
+    s += ' animation-delay: ' + aDelays.join() + ';';
+    s += ' animation-duration: ' + aDurs.join() + ';';
+    s += ' animation-timing-function: ' + aTimings.join() + ';';
+    s += ' animation-fill-mode: ' + aFills.join() + ';';
+    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    img.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(img);
+    window.setTimeout(
+     function()
+     {
+      document.body.removeChild(img);
+      eActive--;
+     },
+     cfg.emote.time * 1000
+    );
+   }
+
+   function showEmote_Confetti(url, sW, sH, sS)
+   {
+    let img = document.createElement('img');
+    img.setAttribute('class', 'emote');
+    img.setAttribute('src', url);
+    img.setAttribute('alt', '');
+    let h = Math.floor(Math.random() * sW) - (sS / 2);
+    let s = 'left: ' + h + 'px;'
+    s += ' max-height: ' + sS + 'px;';
+    s += ' width: auto;';
+    s += ' transform-origin: center center;'
+    let aNames = [];
+    let aDelays = [];
+    let aDurs = [];
+    let aTimings = [];
+    let aFills = [];
+    let aIters = [];
+    let style = Math.floor(Math.random() * 3);
+    switch (style)
+    {
+     case 0:
+      aNames.push('confettiA');
+      break;
+     case 1:
+      aNames.push('confettiB');
+      break;
+     case 2:
+      aNames.push('confettiC');
+      break;
+    }
+    aDelays.push('0s');
+    aDurs.push(cfg.emote.time + 's');
+    aTimings.push('linear');
+    aFills.push('forwards');
+    aIters.push('1');
+    if (cfg.emote.out.fade)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    s += ' animation-name: ' + aNames.join() + ';';
+    s += ' animation-delay: ' + aDelays.join() + ';';
+    s += ' animation-duration: ' + aDurs.join() + ';';
+    s += ' animation-timing-function: ' + aTimings.join() + ';';
+    s += ' animation-fill-mode: ' + aFills.join() + ';';
+    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    img.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(img);
+    window.setTimeout(
+     function()
+     {
+      document.body.removeChild(img);
+      eActive--;
+     },
+     cfg.emote.time * 1000
+    );
+   }
+
+   function showEmote_Crazy(url, sW, sH, sS)
+   {
+    /* LAYOUT SHIFTS
+     * =============
+     * squashes via scale
+     * offset-path requires support for offset-anchor/offset-position
+     * due to transform-origin changes during squash
+     */
+    let squashT = 100;
+    let img = document.createElement('img');
+    img.setAttribute('class', 'emote');
+    img.setAttribute('src', url);
+    img.setAttribute('alt', '');
+    let h = Math.floor(Math.random() * (sW - sS - 5)) + 10;
+    let v = Math.floor(Math.random() * (sH - sS - 5)) + 10;
+    let s = 'top: ' + v + 'px;';
+    s += ' left: ' + h + 'px;'
+    s += ' max-height: ' + sS + 'px;';
+    s += ' width: auto;';
+    //s += ' transition: all 0.9s linear;';
+    let dests = [];
+    let lastW = -1;
+    let traj = {x: 0, y: 0};
+    traj.x = Math.random() * 11 - 5;
+    traj.y = Math.random() * 11 - 5;
+    let pos = {x: h, y: v, t: 0};
+    let t = 0;
+    let lastT = 0;
+    let bCt = 0;
+    while(pos.t + (bCt * (squashT * 2)) < (cfg.emote.time * 1000))
+    {
+     pos.x += traj.x;
+     pos.y += traj.y;
+     pos.t += 5;
+     let wall = false;
+     if (pos.x < 0)
+     {
+      pos.x = 0;
+      traj.x *= -1;
+      wall = 1;
+     }
+     else if (pos.x > (sW - sS))
+     {
+      pos.x = sW - sS;
+      traj.x *= -1;
+      wall = 3;
+     }
+     if (pos.y < 0)
+     {
+      pos.y = 0;
+      traj.y *= -1;
+      wall = 2;
+     }
+     else if (pos.y > (sH - sS))
+     {
+      pos.y = sH - sS;
+      traj.y *= -1;
+      wall = 4;
+     }
+     if (wall !== false)
+     {
+      bCt++;
+      dests.push({x: Math.floor(pos.x), y: Math.floor(pos.y), t: (pos.t - lastT), w: wall});
+      lastT = pos.t;
+     }
+    }
+    dests.push({x: pos.x, y: pos.y, t: (pos.t - lastT), w: 0});
+    let aNames = [];
+    let aDelays = [];
+    let aDurs = [];
+    let aTimings = [];
+    let aFills = [];
+    let aIters = [];
+    if (cfg.emote.in.fade)
+    {
+     aNames.push('fadeIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('ease-in');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.in.zoom)
+    {
+     aNames.push('zoomIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.fade)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.zoom)
+    {
+     aNames.push('zoomOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    s += ' animation-name: ' + aNames.join() + ';';
+    s += ' animation-delay: ' + aDelays.join() + ';';
+    s += ' animation-duration: ' + aDurs.join() + ';';
+    s += ' animation-timing-function: ' + aTimings.join() + ';';
+    s += ' animation-fill-mode: ' + aFills.join() + ';';
+    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    img.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(img);
+    window.setTimeout(
+     function()
+     {
+      document.body.removeChild(img);
+      eActive--;
+     },
+     cfg.emote.time * 1000
+    );
+    let d = 0;
+    let tmr = window.setTimeout(
+     function tLoop()
+     {
+      if (d >= dests.length)
+       return;
+      window.clearTimeout(tmr);
+      img.style.transformOrigin = 'center center';
+      img.style.transform = 'scale(1, 1)';
+      img.style.top = dests[d].y + 'px';
+      img.style.left = dests[d].x + 'px';
+      img.style.transition = 'all ' + dests[d].t + 'ms linear';
+      d++;
+      tmr = window.setTimeout(
+       function tSquash()
+       {
+        window.clearTimeout(tmr);
+        img.style.transition = 'transform ' + squashT + 'ms linear';
+        switch(dests[d-1].w)
+        {
+         case 1:
+          //left
+          img.style.transformOrigin = 'left center';
+          img.style.transform = 'scale(0.7, 2)';
+          break;
+         case 2:
+          //top
+          img.style.transformOrigin = 'center top';
+          img.style.transform = 'scale(2, 0.7)';
+          break;
+         case 3:
+          //right
+          img.style.transformOrigin = 'right center';
+          img.style.transform = 'scale(0.7, 2)';
+          break;
+         case 4:
+          //bottom
+          img.style.transformOrigin = 'center bottom';
+          img.style.transform = 'scale(2, 0.7)';
+          break;
+        }
+        tmr = window.setTimeout(
+         function tUnsquash()
+         {
+          window.clearTimeout(tmr);
+          img.style.transition = 'transform ' + squashT + 'ms linear';
+          img.style.transform = 'scale(1, 1)';
+          tmr = window.setTimeout(tLoop, squashT);
+         },
+         squashT
+        );
+       }, dests[d - 1].t
+      );
+     },
+     tStart
+    );
+   }
+
+   function showEmote_StraightLine(url, sW, sH, sS, x = false, y = false)
+   {
+    let img = document.createElement('img');
+    img.setAttribute('class', 'emote');
+    img.setAttribute('src', url);
+    img.setAttribute('alt', '');
+    let h = x;
+    if (h === false)
+     h = Math.floor((Math.random() * sW) - (sS / 2));
+    let v = y;
+    if (v == false)
+     v = Math.floor((Math.random() * sH) - (sS / 2));
+    let r = sW;
+    if (sH < r)
+     r = sH;
+    r = r * (Math.random() + 1);
+    let th = (Math.random() * 360);
+    let hD = Math.floor(h + r * Math.cos(th));
+    let vD = Math.floor(v + r * Math.sin(th));
+    if (!x && !y)
+    {
+     while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > (sW - sS) && hD > (sW - sS)) || (v > (sH - sS) && vD > (sH - sS)))
+     {
+      th = (Math.random() * 360);
+      hD = Math.floor(h + r * Math.cos(th));
+      vD = Math.floor(v + r * Math.sin(th));
+     }
+    }
+    let s = 'max-height: ' + sS + 'px;';
+    s += ' width: auto;';
+    s += ' transition: transform ' + cfg.emote.time + 's linear;';
+    s += ' transform: translate(' + h + 'px, ' + v + 'px);'
+    let aNames = [];
+    let aDelays = [];
+    let aDurs = [];
+    let aTimings = [];
+    let aFills = [];
+    let aIters = [];
+    if (cfg.emote.in.fade)
+    {
+     aNames.push('fadeIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('ease-in');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.in.zoom)
+    {
+     aNames.push('zoomIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.fade)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.zoom)
+    {
+     aNames.push('zoomOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    s += ' animation-name: ' + aNames.join() + ';';
+    s += ' animation-delay: ' + aDelays.join() + ';';
+    s += ' animation-duration: ' + aDurs.join() + ';';
+    s += ' animation-timing-function: ' + aTimings.join() + ';';
+    s += ' animation-fill-mode: ' + aFills.join() + ';';
+    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    img.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(img);
+    window.setTimeout(
+     function()
+     {
+      document.body.removeChild(img);
+      eActive--;
+     },
+     cfg.emote.time * 1000
+    );
+    window.setTimeout(
+     function()
+     {
+      img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+     },
+     tStart
+    );
+   }
+
+   function showEmote_Fountain(url, sW, sH, sS, fX, fY)
+   {
+    let aT = Math.floor((cfg.emote.time * 1000) / 2);
+    let img = document.createElement('img');
+    img.setAttribute('class', 'emote');
+    img.setAttribute('src', url);
+    img.setAttribute('alt', '');
+    let h = fX;
+    if (h === false)
+     h = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
+    let hD;
+    if (Math.floor(Math.random() * 2) === 0)
+     hD = h - Math.floor(Math.random() * ((sW - sS) * 0.2));
+    else
+     hD = h + Math.floor(Math.random() * ((sW - sS) * 0.2));
+    let s = 'max-height: ' + sS + 'px;';
+    s += ' width: auto;';
+    s += ' transition: transform ' + aT + 'ms cubic-bezier(0, 0, 0.58, 1);';
+    s += ' transform: translateX(' + h + 'px);'
+    s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY / 100 * sH + Math.floor(Math.random() * ((sH - sS) * 0.5))) + ' L 0 ' + sH + '");';
+    let aNames = [];
+    let aDelays = [];
+    let aDurs = [];
+    let aTimings = [];
+    let aFills = [];
+    let aIters = [];
+    aNames.push('offsetPath');
+    aDelays.push('0s');
+    aDurs.push(aT + 'ms');
+    aTimings.push('cubic-bezier(0, 0.9, 1, 0.15)');
+    aFills.push('forwards');
+    aIters.push('1');
+    s += ' animation-name: ' + aNames.join() + ';';
+    s += ' animation-delay: ' + aDelays.join() + ';';
+    s += ' animation-duration: ' + aDurs.join() + ';';
+    s += ' animation-timing-function: ' + aTimings.join() + ';';
+    s += ' animation-fill-mode: ' + aFills.join() + ';';
+    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    img.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(img);
+    window.setTimeout(
+     function()
+     {
+      document.body.removeChild(img);
+      eActive--;
+     },
+     aT
+    );
+    window.setTimeout(
+     function()
+     {
+      img.style.transform = 'translateX(' + hD + 'px)';
+     },
+     tStart
+    );
+   }
+
+   function showEmote_Still(url, sW, sH, sS)
+   {
+    let img = document.createElement('img');
+    img.setAttribute('class', 'emote');
+    let h = Math.floor(Math.random() * sW) - (sS / 2);
+    let v = Math.floor(Math.random() * sH) - (sS / 2);
+    img.setAttribute('src', url);
+    img.setAttribute('alt', '');
+    let s = 'top: ' + v + 'px;';
+    s += ' left: ' + h + 'px;'
+    s += ' max-height: ' + sS + 'px;';
+    s += ' width: auto;';
+    let aNames = [];
+    let aDelays = [];
+    let aDurs = [];
+    let aTimings = [];
+    let aFills = [];
+    let aIters = [];
+    if (cfg.emote.in.fade)
+    {
+     aNames.push('fadeIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('ease-in');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.in.zoom)
+    {
+     aNames.push('zoomIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.fade)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.zoom)
+    {
+     aNames.push('zoomOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (aNames.length > 0)
+    {
+     s += ' animation-name: ' + aNames.join() + ';';
+     s += ' animation-delay: ' + aDelays.join() + ';';
+     s += ' animation-duration: ' + aDurs.join() + ';';
+     s += ' animation-timing-function: ' + aTimings.join() + ';';
+     s += ' animation-fill-mode: ' + aFills.join() + ';';
+     s += ' animation-iteration-count: ' + aIters.join() + ';';
+    }
+    img.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(img);
+    window.setTimeout(
+     function()
+     {
+      document.body.removeChild(img);
+      eActive--;
+     },
+     cfg.emote.time * 1000
+    );
+   }
+
+   function showEmote_TheCube(url, sW, sH, sS)
+   {
+    let scene = document.createElement('div');
+    scene.setAttribute('class', 'scene');
+    scene.setAttribute('width', sS);
+    scene.setAttribute('height', sS);
+    let cube = document.createElement('div');
+    cube.setAttribute('class', 'cube');
+    cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
+    let f = 'width: 100%;';
+    f += ' height: auto;';
+    f += ' max-width: ' + sS + 'px;'
+    f += ' max-height: ' + sS + 'px;'
+    let cubeF = document.createElement('img');
+    cubeF.setAttribute('src', url);
+    cubeF.setAttribute('alt', '');
+    cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
+    cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+    cube.appendChild(cubeF);
+    let cubeB = document.createElement('img');
+    cubeB.setAttribute('src', url);
+    cubeB.setAttribute('alt', '');
+    cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
+    cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+    cube.appendChild(cubeB);
+    let cubeR = document.createElement('img');
+    cubeR.setAttribute('src', url);
+    cubeR.setAttribute('alt', '');
+    cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
+    cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+    cube.appendChild(cubeR);
+    let cubeL = document.createElement('img');
+    cubeL.setAttribute('src', url);
+    cubeL.setAttribute('alt', '');
+    cubeL.setAttribute('class', 'cubeFace cubeFaceLeft');
+    cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+    cube.appendChild(cubeL);
+    let cubeT = document.createElement('img');
+    cubeT.setAttribute('src', url);
+    cubeT.setAttribute('alt', '');
+    cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
+    cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+    cube.appendChild(cubeT);
+    let cubeU = document.createElement('img');
+    cubeU.setAttribute('src', url);
+    cubeU.setAttribute('alt', '');
+    cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
+    cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+    cube.appendChild(cubeU);
+    scene.appendChild(cube);
+    let h = Math.floor((Math.random() * sW) - (sS / 2));
+    let v = Math.floor((Math.random() * sH) - (sS / 2));
+    let r = sW;
+    if (sH < r)
+     r = sH;
+    r = r * (Math.random() + 1);
+    let th = (Math.random() * 360);
+    let hD = Math.floor(h + r * Math.cos(th));
+    let vD = Math.floor(v + r * Math.sin(th));
+    while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > (sW - sS) && hD > (sW - sS)) || (v > (sH - sS) && vD > (sH - sS)))
+    {
+     th = (Math.random() * 360);
+     hD = Math.floor(h + r * Math.cos(th));
+     vD = Math.floor(v + r * Math.sin(th));
+    }
+    let s = 'width: ' + sS + 'px;';
+    s += ' height: ' + sS + 'px;';
+    s += ' perspective: ' + (sS * 3)  + 'px;';
+    s += ' transition: all ' + cfg.emote.time + 's linear;';
+    s += ' transform: translate(' + h + 'px, ' + v + 'px);'
+    let aNames = [];
+    let aDelays = [];
+    let aDurs = [];
+    let aTimings = [];
+    let aFills = [];
+    let aIters = [];
+    if (cfg.emote.in.fade)
+    {
+     aNames.push('fadeIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('ease-in');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.fade)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (aNames.length > 0)
+    {
+     s += ' animation-name: ' + aNames.join() + ';';
+     s += ' animation-delay: ' + aDelays.join() + ';';
+     s += ' animation-duration: ' + aDurs.join() + ';';
+     s += ' animation-timing-function: ' + aTimings.join() + ';';
+     s += ' animation-fill-mode: ' + aFills.join() + ';';
+     s += ' animation-iteration-count: ' + aIters.join() + ';';
+    }
+    scene.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(scene);
+    window.setTimeout(
+     function()
+     {
+      document.body.removeChild(scene);
+      eActive--;
+     },
+     cfg.emote.time * 1000
+    );
+    window.setTimeout(
+     function()
+     {
+      let rX = Math.floor(180 - (Math.random() * 360)) * 10;
+      let rY = Math.floor(180 - (Math.random() * 360)) * 10;
+      cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
+      scene.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+     },
+     tStart
+    );
+   }
+
+   function showKappa_Fireworks(kList, sW, sH, sS)
+   {
+    let sendUp = 2;
+    let oX = (sW * 0.5) - (sS * 0.5);
+    let oY = sH;
+    let cX = oX;
+    switch(Math.floor(Math.random() * 3))
+    {
+     case 0:
+      cX = Math.floor(cX * 0.5);
+      break;
+     case 2:
+      cX = Math.floor(cX * 1.5);
+      break;
+    }
+    let cY = oY * 0.33;
+    function sparkler(url, r, d)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', url);
+     img.setAttribute('alt', '');
+     let th = (Math.random() * 360);
+     let hD = Math.floor(cX + r * Math.cos(th));
+     let vD = Math.floor(cY + r * Math.sin(th));
+     let s = 'max-height: ' + sS + 'px;';
+     s += ' width: auto;';
+     s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
+     s += ' transform: translate(' + cX + 'px, ' + cY + 'px);';
+     let aNames = [];
+     let aDelays = [];
+     let aDurs = [];
+     let aTimings = [];
+     let aFills = [];
+     let aIters = [];
+     aNames.push('fadeIn');
+     aDelays.push((d * 1000) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+
+     aNames.push('fadeOut');
+     aDelays.push((d * 1000) + Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+     s += ' animation-name: ' + aNames.join() + ';';
+     s += ' animation-delay: ' + aDelays.join() + ';';
+     s += ' animation-duration: ' + aDurs.join() + ';';
+     s += ' animation-timing-function: ' + aTimings.join() + ';';
+     s += ' animation-fill-mode: ' + aFills.join() + ';';
+     s += ' animation-iteration-count: ' + aIters.join() + ';';
+     img.setAttribute('style', s);
+     document.body.appendChild(img);
+     window.setTimeout(
+      function()
+      {
+       document.body.removeChild(img);
+       eActive--;
+      },
+      (d + cfg.emote.time) * 1000
+     );
+     window.setTimeout(
+      function()
+      {
+       img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+      },
+      (d * 1000) + tStart
+     );
+    }
+    let oURL = kList[Math.floor(Math.random() * kList.length)].url;
+    let img = document.createElement('img');
+    img.setAttribute('class', 'emote');
+    img.setAttribute('src', oURL);
+    img.setAttribute('alt', '');
+    let s = 'max-height: ' + sS + 'px;';
+    s += ' width: auto;';
+    s += ' transition: transform ' + sendUp + 's linear;';
+    s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
+    img.setAttribute('style', s);
+    document.body.appendChild(img);
+    window.setTimeout(
+     async function()
+     {
+      document.body.removeChild(img);
+      let r = sW;
+      if (sH < r)
+       r = sH;
+      r *= 0.66;
+      let bD = 0.5;
+      let inner = cfg.display.kappa.count / 8;
+      let outer = inner;
+      let core = cfg.display.kappa.count - (inner + outer);
+      let t = 0;
+      for (let i = 0; i < inner; i++)
+      {
+       sparkler(kList[Math.floor(Math.random() * kList.length)].url, r * 0.5, t);
+       if (i % Math.floor(outer / 3) === 0)
+        await sleep(1);
+      }
+      t += 0.5;
+      for (let i = 0; i < core; i++)
+      {
+       sparkler(kList[Math.floor(Math.random() * kList.length)].url, r, t);
+       t += 0.005;
+       if (i % Math.floor(outer / 9) === 0)
+        await sleep(1);
+      }
+      t += 0.25;
+      for (let i = 0; i < outer; i++)
+      {
+       sparkler(kList[Math.floor(Math.random() * kList.length)].url, r * 1.5, t);
+       if (i % Math.floor(outer / 3) === 0)
+        await sleep(1);
+      }
+     },
+     sendUp * 1000
+    );
+    window.setTimeout(
+     function()
+     {
+      img.style.transform = 'translate(' + cX + 'px, ' + cY + 'px)';
+     },
+     tStart
+    );
+   }
+
+   function showKappa_Pyramid(kList, sW, sH)
+   {
+    let tMul = 2;
+    let sS = sW / 19;
+    let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    let ct = 0;
+    for (let i = 0; i < pyramidDist.length; i++)
+     ct += pyramidDist[i];
+    let eT = cfg.emote.time * tMul * 1000;
+    let tPerB = Math.floor(eT / ct);
+    function block(url, x, t)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', url);
+     img.setAttribute('alt', '');
+     let h = sS * x;
+     let v = -1 * sS;
+     let vD = sH - (sS * (drawn[x] + 1));
+     let s = 'top: 0px;';
+     s += ' left: 0px;'
+     s += ' max-height: ' + sS + 'px;';
+     s += ' width: auto;';
+     s += ' transition: all ' + tPerB + 'ms ease-in;';
+     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+     img.setAttribute('style', s);
+     document.body.appendChild(img);
+     window.setTimeout(
+      function()
+      {
+       img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
+       img.style.transitionTime = '500ms';
+       window.setTimeout(
+        function()
+        {
+         document.body.removeChild(img);
+         eActive--;
+        },
+        500
+       );
+      },
+      eT + 500 + (t / 10)
+     );
+     window.setTimeout(
+      function()
+      {
+       img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
+      },
+      t
+     );
+    }
+    let t = 0;
+    for (let i = 0; i < ct; i++)
+    {
+     let x;
+     do
+      x = Math.floor(Math.random() * pyramidDist.length);
+     while(drawn[x] >= pyramidDist[x]);
+     block(kList[Math.floor(Math.random() * kList.length)].url, x, t);
+     drawn[x]++;
+     t += tPerB;
+    }
+   }
+
+   async function showKappa_Stampede(kList, sW, sH, sS)
+   {
+    let speed = 2000;
+    let bandHeight = sS * 3;
+    let bandTop = Math.floor(Math.random() * (sH - (sS * 2.5)));
+    function run(url)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', url);
+     img.setAttribute('alt', '');
+     let h = -1 * sS;
+     let v = Math.floor((Math.random() * bandHeight) + bandTop);
+     let s = 'top: 0px;';
+     s += ' left: 0px;'
+     s += ' max-height: ' + sS + 'px;';
+     s += ' width: auto;';
+     s += ' transition: all ' + (speed / 1000) + 's linear;';
+     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+     img.setAttribute('style', s);
+     document.body.appendChild(img);
+     window.setTimeout(
+      function()
+      {
+       document.body.removeChild(img);
+       img.setAttribute('deleted', true);
+       eActive--;
+      },
+      speed
+     );
+     window.setTimeout(
+      function()
+      {
+       img.style.transform = 'translate(' + (sW + sS) + 'px, ' + v + 'px)';
+      },
+      tStart
+     );
+     return img;
+    }
+    async function stampede(ct, pause)
+    {
+     let imgs = [];
+     for (let i = 0; i < ct; i++)
+     {
+      imgs.push(run(kList[Math.floor(Math.random() * kList.length)].url));
+      await sleep(Math.floor(Math.random() * 90) + 10);
+     }
+     if (pause === false)
+      return;
+     if (pause !== true)
+     {
+      await sleep(pause);
+      return
+     }
+     do
+     {
+      await sleep(50);
+      for (let i = 0; i < imgs.length; i++)
+      {
+       if (imgs[i] === null || imgs[i].hasAttribute('deleted'))
+        imgs.splice(i, 1);
+      }
+     } while (imgs.length > 0);
+    }
+    let b1 = Math.floor(Math.random() * 4) + 1;
+    let b2 = Math.floor(Math.random() * (8 - b1)) + b1;
+    let b4 = Math.floor(Math.random() * 4);
+    await stampede(b1, speed * 0.8);
+    await stampede(b2, speed * 0.4);
+    await stampede(cfg.display.kappa.count, (b4 > 0));
+    if (b4 > 0)
+     await stampede(b4, false);
+   }
+
+   function showEmote(url)
+   {
+    let sW = window.innerWidth;
+    let sH = window.innerHeight;
+    let sS = cfg.emote.size.max;
+    if (sW < sH)
+     sS = Math.floor(sW * cfg.emote.size.ratio);
+    else
+     sS = Math.floor(sH * cfg.emote.size.ratio);
+    if (sS > cfg.emote.size.max)
+     sS = cfg.emote.size.max;
+    if (sS < cfg.emote.size.min)
+     sS = cfg.emote.size.min;
+    document.documentElement.style.setProperty('--height', sH + 'px');
+    document.documentElement.style.setProperty('--width', sW + 'px');
+    document.documentElement.style.setProperty('--emote-height', sS + 'px');
+    let style = cfg.display.styles[(Math.floor(Math.random() * cfg.display.styles.length))];
+    window['showEmote_' + style](url, sW, sH, sS);
+   }
+
+   async function showEmotes()
+   {
+    while (true)
+    {
+     let e = toShow.shift();
+     if (e === undefined)
+      return;
+     if (cfg.emote.max > 0)
+     {
+      while (eActive > cfg.emote.max)
+       await sleep(1000);
+     }
+     showEmote(e.url);
+    }
+   }
+
+   async function showKappa(kList, kStyles = false)
+   {
+    if (!Array.isArray(kStyles) || kStyles.length < 1)
+    {
+     if (cfg.display.kappa.styles.length < 1)
+      return;
+     kStyles = cfg.display.kappa.styles;
+    }
+    if (!Array.isArray(kList) || kList.length < 1)
+     kList = cList;
+    let sW = window.innerWidth;
+    let sH = window.innerHeight;
+    let sS = cfg.emote.size.max;
+    if (sW < sH)
+     sS = Math.floor(sW * cfg.emote.size.ratio);
+    else
+     sS = Math.floor(sH * cfg.emote.size.ratio);
+    if (sS > cfg.emote.size.max)
+     sS = cfg.emote.size.max;
+    if (sS < cfg.emote.size.min)
+     sS = cfg.emote.size.min;
+    document.documentElement.style.setProperty('--height', sH + 'px');
+    document.documentElement.style.setProperty('--width', sW + 'px');
+    document.documentElement.style.setProperty('--emote-height', sS + 'px');
+    let style = kStyles[(Math.floor(Math.random() * kStyles.length))];
+    if (style === undefined)
+     return;
+    if (cfg.emote.max > 0)
+    {
+     let waitFor = cfg.display.kappa.count;
+     if (style === 'Pyramid')
+     {
+      for (let i = 0; i < pyramidDist.length; i++)
+       waitFor += pyramidDist[i];
+     }
+     while (eActive > cfg.emote.max - waitFor)
+      await sleep(1000);
+     eActive += waitFor;
+    }
+    switch(style)
+    {
+     case 'Stampede':
+      showKappa_Stampede(kList, sW, sH, sS);
+      break;
+     case 'Fireworks':
+      showKappa_Fireworks(kList, sW, sH, sS * 0.5); //half sized icons for better fireworks
+      break;
+     case 'Pyramid':
+      showKappa_Pyramid(kList, sW, sH);
+      break;
+     case 'Burst':
+      let oH = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
+      let oV = Math.floor((Math.random() * ((sH - sS) * 0.33)) + (sH - sS) * 0.33);
+      for (let i = 0; i < cfg.display.kappa.count; i++)
+      {
+       let r = Math.floor(Math.random() * kList.length);
+       eActive--;
+       showEmote_StraightLine(kList[r].url, sW, sH, sS, oH, oV);
+       await sleep(50);
+      }
+      break;
+     case 'Fountain':
+      let fX = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
+      let fY = Math.floor(Math.random() * 25) + 15;
+      for (let i = 0; i < cfg.display.kappa.count; i++)
+      {
+       let r = Math.floor(Math.random() * kList.length);
+       eActive--;
+       showEmote_Fountain(kList[r].url, sW, sH, sS, fX, fY);
+       await sleep(50);
+      }
+      break;
+     case 'Confetti':
+      for (let i = 0; i < cfg.display.kappa.count; i++)
+      {
+       let r = Math.floor(Math.random() * kList.length);
+       eActive--;
+       showEmote_Confetti(kList[r].url, sW, sH, sS * 0.5); //half sized icons for better confetti
+       await sleep(25);
+      }
+      break;
+     default:
+      for (let i = 0; i < cfg.display.kappa.count; i++)
+      {
+       let r = Math.floor(Math.random() * kList.length);
+       eActive--;
+       window['showEmote_' + style](kList[r].url, sW, sH, sS);
+       await sleep(100);
+      }
+    }
+   }
+
+   async function parseEmoji(cmd, set, dup = null)
+   {
+    if (cmd.params.length < 2)
+     return [];
+    let msg = cmd.params[1];
+    // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
+    msg = msg.replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
+    let eSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
+    let eList = [...msg.matchAll(eSeg)];
+    if (eList.length === 0)
+     return [];
+    if (dup === null)
+     dup = cfg.display.duplicates;
+    if (set === true)
+     set = 'twemoji'
+    let ret = [];
+    let uri = 'https://cdn.frankerfacez.com/static/emoji/images/' + set + '/';
+    let addList = [];
+    function showEmoji(c)
+    {
+     if (c.slice(-5) === '-fe0f' && !c.match(/-200d-264[0|2]-/))
+      c = c.slice(0, -5);
+     if (!addList.includes(c))
+      addList.push(c);
+     else if (!dup)
+      return false;
+     ret.push({svc: 'e', url: uri + c + '.png', str: c});
+     return true;
+    }
+    for (let i = 0; i < eList.length; i++)
+    {
+     let cpList = [];
+     for (let c of eList[i][0])
+     {
+      let p = c.codePointAt(0).toString(16);
+      if (cpList.length > 0)
+      {
+       if (p === 'fe0f') //emoji variation
+        cpList[cpList.length - 1] += '-' + p;
+       else if (p === '200d') //zwj
+        cpList[cpList.length - 1] += '-' + p;
+       else if (p.match(/1f3f[b-f]/)) //skin tone
+        cpList[cpList.length - 1] += '-' + p;
+       else if (p.match(/1f9b[0-3]/)) //hair
+       {
+        if (cpList[cpList.length - 1].slice(-5) === '-200d')
+         cpList[cpList.length - 1] += '-' + p;
+        else
+         cpList[cpList.length - 1] += '-200d-' + p;
+       }
+       else if (p.match(/264[0|2]/)) //gender
+       {
+        if (cpList[cpList.length - 1].slice(-5) === '-200d')
+         cpList[cpList.length - 1] += '-' + p;
+        else
+         cpList[cpList.length - 1] += '-200d-' + p;
+       }
+       else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[cpList.length - 1].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList.length < 11) //country code (2 chars max)
+        cpList[cpList.length - 1] += '-' + p;
+       else if (cpList[cpList.length - 1].slice(-5) === '-200d') //post-zwj
+        cpList[cpList.length - 1] += '-' + p;
+       else
+        cpList.push(p);
+      }
+      else
+       cpList.push(p);
+     }
+     let found = false;
+     if (cpList.length === 1)
+     {
+      let s = cpList[0];
+      let tU;
+      if (s.slice(-5) === '-fe0f')
+      {
+       if (s.match(/-200d-264[0|2]-/))
+        tU = uri + s + '.png';
+       else
+        tU = uri + s.slice(0, -5) + '.png';
+      }
+      else
+       tU = uri + s + '.png';
+      found = await checkURL(tU);
+      if (found)
+      {
+       showEmoji(s);
+       continue;
+      }
+      while (s.includes('-'))
+      {
+       s = s.slice(0, s.lastIndexOf('-'));
+       if (s.slice(-5) === '-fe0f')
+        tU = uri + s.slice(0, -5) + '.png';
+       else
+        tU = uri + s + '.png';
+       found = await checkURL(tU);
+       if (found)
+       {
+        showEmoji(s);
+        break;
+       }
+      }
+      continue;
+     }
+     for (let i = 0; i < cpList.length; i++)
+      showEmoji(cpList[i]);
+    }
+    return ret;
+   }
+
+   function parseT(cmd, dup = null)
+   {
+    if (!cmd.hasOwnProperty('tags'))
+     return [];
+    if (!cmd.tags.hasOwnProperty('emotes'))
+     return [];
+    if (cmd.tags.emotes == '')
+     return [];
+    let f = 'default';
+    let t = 'dark';
+    let r = '3.0';
+    let addList = [];
+    if (cmd.params.length < 2)
+     return [];
+    let m = cmd.params[1];
+    let e = cmd.tags.emotes.split('/');
+    if (dup === null)
+     dup = cfg.display.duplicates;
+    let ret = [];
+    for (let i = 0; i < e.length; i++)
+    {
+     let eID = e[i].slice(0, e[i].indexOf(':'));
+     let u = 'https://static-cdn.jtvnw.net/emoticons/v2/' + eID + '/' + f + '/' + t + '/' + r;
+     let eVals = e[i].slice(e[i].indexOf(':') + 1).split(',');
+     let eStart = parseInt(eVals[0].split('-')[0], 10);
+     let eEnd = parseInt(eVals[0].split('-')[1], 10);
+     let sName = m.slice(eStart, (eEnd + 1));
+     if (!addList.includes(sName))
+      addList.push(sName);
+     else if (!dup)
+      continue;
+     for (let c = 0; c < eVals.length; c++)
+      ret.push({svc: 't', url: u, str: sName});
+    }
+    return ret;
+   }
+
+   function parseFFZ(cmd, dup = null)
+   {
+    if (!eList.hasOwnProperty('ffz'))
+     return [];
+    let addList = [];
+    if (cmd.params.length < 2)
+     return [];
+    let m = cmd.params[1].split(' ');
+    if (dup === null)
+     dup = cfg.display.duplicates;
+    let ret = [];
+    for (let i = 0; i < m.length; i++)
+    {
+     if (!eList.ffz.hasOwnProperty(m[i]))
+      continue;
+     if (eList.ffz[m[i]].users !== null)
+     {
+      let u = parseUser(cmd);
+      if (!eList.ffz[m[i]].users.includes(u.host))
+       continue;
+     }
+     if (!addList.includes(m[i]))
+      addList.push(m[i]);
+     else if (!dup)
+      continue;
+     ret.push({svc: 'f', url: eList.ffz[m[i]].url, str: m[i], scope: eList.ffz[m[i]].scope});
+    }
+    return ret;
+   }
+
+   function parseBTTV(cmd, dup = null)
+   {
+    if (!eList.hasOwnProperty('bttv'))
+     return [];
+    let addList = [];
+    if (cmd.params.length < 2)
+     return [];
+    let m = cmd.params[1].split(' ');
+    if (dup === null)
+     dup = cfg.display.duplicates;
+    let ret = [];
+    for (let i = 0; i < m.length; i++)
+    {
+     if (!eList.bttv.hasOwnProperty(m[i]))
+      continue;
+     if (!addList.includes(m[i]))
+      addList.push(m[i]);
+     else if (!dup)
+      continue;
+     ret.push({svc: 'b', url: eList.bttv[m[i]].url, str: m[i], scope: eList.bttv[m[i]].scope});
+    }
+    return ret;
+   }
+
+   function parse7TV(cmd, dup = null)
+   {
+    if (!eList.hasOwnProperty('7tv'))
+     return [];
+    let addList = [];
+    if (cmd.params.length < 2)
+     return [];
+    let m = cmd.params[1].split(' ');
+    if (dup === null)
+     dup = cfg.display.duplicates;
+    let ret = [];
+    for (let i = 0; i < m.length; i++)
+    {
+     if (!eList['7tv'].hasOwnProperty(m[i]))
+      continue;
+     if (!addList.includes(m[i]))
+      addList.push(m[i]);
+     else if (!dup)
+      continue;
+     ret.push({svc: '7', url: eList['7tv'][m[i]].url, str: m[i], scope: eList['7tv'][m[i]].scope});
+    }
+    return ret;
+   }
+
+   function checkFollower(cmd)
+   {
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      if (fList.length > 0)
+      {
+       for (let i = 0; i < fList.length; i++)
+       {
+        if (fList[i].id === cmd.tags['user-id'])
+        {
+         let tDif = Math.floor((new Date().getTime() - fList[i].t) / 1000);
+         if (tDif > 3600)
+         {
+          fList.splice(i, 1);
+          break;
+         }
+         resolve(fList[i].value);
+         return;
+        }
+       }
+      }
+      let uID = cmd.tags['user-id'];
+      let chID = cmd.tags['room-id'];
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.twitch.tv/helix/users/follows?from_id=' + uID + '&to_id=' + chID);
+      x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
+      x.setRequestHeader('Client-Id', cfg.login.client);
+      x.onreadystatechange = async function()
+      {
+       if (x.status !== 200)
+       {
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       if (j.total > 0)
+       {
+        fList.push({id: uID, value: true, t: new Date().getTime()});
+        resolve(true);
+        return;
+       }
+       fList.push({id: uID, value: false, t: new Date().getTime()});
+       resolve(false);
+      };
+      x.send();
+     }
+    );
+    return p;
+   }
+
+   async function parseLevel(cmd)
+   {
+    let level = 0x001;
+    if (cmd.tags.hasOwnProperty('badges'))
+    {
+     let badges = cmd.tags.badges.split(',');
+     for (let i = 0; i < badges.length; i++)
+     {
+      let bData = jSplit(badges[i], '/', 2);
+      switch (bData[0])
+      {
+       case 'broadcaster':
+        level |= 0x800;
+        break;
+       case 'moderator':
+        level |= 0x400;
+        break;
+       case 'vip':
+        level |= 0x100;
+        break;
+       case 'founder':
+        level |= 0x200;
+        break;
+       case 'bits':
+        level |= 0x004;
+        break;
+       case 'subscriber':
+        let badge = parseInt(bData[1], 10);
+        if (badge < 2000)
+         level |= 0x010;
+        else if (badge < 3000)
+         level |= 0x020;
+        else
+         level |= 0x040;
+        break;
+      }
+     }
+    }
+
+    /* api-heavy, only check if follower access is allowed and there's a chance it matters */
+    let needF = false
+    if ((cfg.display.access & 0x002) === 0x002 && (cfg.display.access & 0x001) !== 0x001)
+     needF = true;
+    else if ((cfg.display.kappa.access & 0x002) === 0x002 && (cfg.display.kappa.access & 0x001) !== 0x001)
+     needF = true;
+    if (needF)
+    {
+     let f = await checkFollower(cmd);
+     if (f)
+      level |= 0x002;
+    }
+    return level;
+   }
+
+   function handleDuplicates(a)
+   {
+    if (a.length < 1)
+     return a;
+    let r = [];
+    for (let i = 0; i < a.length; i++)
+    {
+     if (a[i].svc === 't' || a[i].svc === 'c' || a[i].svc === 'e')
+      r.push(a[i]);
+    }
+    for (let i = 0; i < a.length; i++)
+    {
+     if ((a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7') && (a[i].scope === 'c'))
+     {
+      let f = false;
+      for (let j = 0; j < r.length; j++)
+      {
+       if (r[j].str === a[i].str)
+       {
+        f = true;
+        if (r[j].svc === a[i].svc)
+         r.push(a[i]);
+        break;
+       }
+      }
+      if (!f)
+       r.push(a[i]);
+     }
+    }
+    for (let i = 0; i < a.length; i++)
+    {
+     if ((a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7') && (a[i].scope !== 'c'))
+     {
+      let f = false;
+      for (let j = 0; j < r.length; j++)
+      {
+       if (r[j].str === a[i].str)
+       {
+        f = true;
+        if (r[j].svc === a[i].svc)
+         r.push(a[i]);
+        break;
+       }
+      }
+      if (!f)
+       r.push(a[i]);
+     }
+    }
+    return r;
+   }
+
+   async function parseCheer(cmd)
+   {
+    if (!eList.hasOwnProperty('cheer'))
+     return false;
+    if (!cmd.hasOwnProperty('tags'))
+     return false;
+    if (!cmd.tags.hasOwnProperty('bits'))
+     return false;
+    if (cmd.tags.bits < 1)
+     return false;
+    let addList = {};
+    let p = [];
+    let msg = cmd.params[1].split(' ');
+    for (const prefix in eList.cheer)
+    {
+     let firstChars = prefix.length;
+     for (let m = 0; m < msg.length; m++)
+     {
+      if (msg[m].slice(0, firstChars).toLowerCase() !== prefix.toLowerCase())
+       continue;
+      let match = msg[m].slice(0, firstChars);
+      let amt = msg[m].slice(firstChars);
+      if (isNaN(amt))
+       continue;
+      for (let i = 0; i < eList.cheer[prefix].length; i++)
+      {
+       if (parseInt(amt, 10) < eList.cheer[prefix][i].min)
+        continue;
+       let sName = prefix + eList.cheer[prefix][i].min;
+       p.push({svc: 'c', url: eList.cheer[prefix][i].img, str: sName});
+       break;
+      }
+     }
+    }
+    p = p.concat(parseT(cmd));
+    if (cfg.display.useEmoji)
+     p = p.concat(await parseEmoji(cmd, cfg.display.useEmoji));
+    if (cfg.display.extended.useFFZ)
+     p = p.concat(parseFFZ(cmd));
+    if (cfg.display.extended.useBTTV)
+     p = p.concat(parseBTTV(cmd));
+    if (cfg.display.extended.use7TV)
+     p = p.concat(parse7TV(cmd));
+    p = handleDuplicates(p);
+    if (p.length === 0)
+     return false;
+    if (cfg.event.cheer > 0 && cmd.tags.bits >= cfg.event.cheer)
+    {
+     showKappa(p);
+     return true;
+    }
+    toShow = toShow.concat(p);
+    showEmotes();
+    return true;
+   }
+
+   async function parseLine(cmd)
+   {
+    let level = -1;
+    if (cmd.params.length > 1)
+    {
+     let m = cmd.params[1].toLowerCase();
+     if (m === '!kappagen')
+     {
+      if (level === -1)
+       level = await parseLevel(cmd);
+      if ((level & cfg.display.kappa.access) !== 0)
+      {
+       showKappa(false);
+       return;
+      }
+     }
+     if (m.slice(0, 10) === '!kappagen ')
+     {
+      if (level === -1)
+       level = await parseLevel(cmd);
+      if ((level & cfg.display.kappa.access) !== 0)
+      {
+       let a = [];
+       a = a.concat(parseT(cmd, true));
+       if (cfg.display.useEmoji)
+        a = a.concat(await parseEmoji(cmd, cfg.display.useEmoji, true));
+       if (cfg.display.extended.useFFZ)
+        a = a.concat(parseFFZ(cmd, true));
+       if (cfg.display.extended.useBTTV)
+        a = a.concat(parseBTTV(cmd, true));
+       if (cfg.display.extended.use7TV)
+        a = a.concat(parse7TV(cmd, true));
+       a = handleDuplicates(a);
+       showKappa(a);
+       return;
+      }
+     }
+    }
+
+    let p = [];
+    p = p.concat(parseT(cmd));
+    if (cfg.display.useEmoji)
+     p = p.concat(await parseEmoji(cmd, cfg.display.useEmoji));
+    if (cfg.display.extended.useFFZ)
+     p = p.concat(parseFFZ(cmd));
+    if (cfg.display.extended.useBTTV)
+     p = p.concat(parseBTTV(cmd));
+    if (cfg.display.extended.use7TV)
+     p = p.concat(parse7TV(cmd));
+    p = handleDuplicates(p);
+    if (p.length === 0)
+     return;
+    if (level === -1)
+     level = await parseLevel(cmd);
+    if ((level & cfg.display.access) === 0)
+     return;
+    toShow = toShow.concat(p);
+    showEmotes();
+   }
+
+   function parseRaid(cmd)
+   {
+    if (cfg.event.raid.minimum < 1)
+     return;
+    if (!cmd.tags.hasOwnProperty('msg-param-viewerCount'))
+     return;
+    let c = cmd.tags['msg-param-viewerCount'];
+    if (c < cfg.event.raid.minimum)
+     return;
+    showKappa(false, cfg.event.raid.styles);
+   }
+
+   async function parseSub(cmd)
+   {
+    if (!cmd.tags.hasOwnProperty('msg-id'))
+     return;
+    if (!cmd.tags.hasOwnProperty('msg-param-sub-plan'))
+    {
+     console.log('NO PLAN: ', cmd);
+     return;
+    }
+    let a = [];
+    if (cmd.params.length > 1)
+    {
+     if (cfg.event.sub.useMsg)
+     {
+      a = a.concat(parseT(cmd, true));
+      if (cfg.display.useEmoji)
+       a = a.concat(await parseEmoji(cmd, cfg.display.useEmoji, true));
+      if (cfg.display.extended.useFFZ)
+       a = a.concat(parseFFZ(cmd, true));
+      if (cfg.display.extended.useBTTV)
+       a = a.concat(parseBTTV(cmd, true));
+      if (cfg.display.extended.use7TV)
+       a = a.concat(parse7TV(cmd, true));
+     }
+     else
+      await parseLine(cmd);
+    }
+
+    let subPlan = cmd.tags['msg-param-sub-plan'];
+    switch (cmd.tags['msg-id'])
+    {
+     case 'sub':
+      switch (subPlan)
+      {
+       case '1000':
+        if (cfg.event.sub.t1.first)
+         showKappa(a, cfg.event.sub.t1.first);
+        break;
+       case '2000':
+        if (cfg.event.sub.t2.first)
+         showKappa(a, cfg.event.sub.t2.first);
+        break;
+       case '3000':
+        if (cfg.event.sub.t3.first)
+         showKappa(a, cfg.event.sub.t3.first);
+        break;
+       case 'Prime':
+        if (cfg.event.sub.prime.first)
+         showKappa(a, cfg.event.sub.prime.first);
+        break;
+       default:
+        console.log('Unknown Sub Plan: ', subPlan, cmd);
+      }
+      break;
+     case 'resub':
+     case 'extendsub':
+     case 'primepaidupgrade':
+      switch (subPlan)
+      {
+       case '1000':
+        if (cfg.event.sub.t1.resub)
+         showKappa(a, cfg.event.sub.t1.resub);
+        break;
+       case '2000':
+        if (cfg.event.sub.t2.resub)
+         showKappa(a, cfg.event.sub.t2.resub);
+        break;
+       case '3000':
+        if (cfg.event.sub.t3.resub)
+         showKappa(a, cfg.event.sub.t3.resub);
+        break;
+       case 'Prime':
+        if (cfg.event.sub.prime.resub)
+         showKappa(a, cfg.event.sub.prime.resub);
+        break;
+       default:
+        console.log('Unknown Resub Plan: ', subPlan, cmd);
+      }
+      break;
+     case 'subgift':
+      let gm = 1;
+      if (cmd.tags.hasOwnProperty('msg-param-gift-months'))
+       sgm = parseInt(cmd.tags['msg-param-gift-months'], 10);
+      else if (cmd.tags.hasOwnProperty('msg-param-months'))
+       sgm = parseInt(cmd.tags['msg-param-months'], 10);
+      if (sgm > 1)
+      {
+       switch (subPlan)
+       {
+        case '1000':
+         if (cfg.event.sub.t1.gift.resub)
+          showKappa(a, cfg.event.sub.t1.gift.resub);
+         break;
+        case '2000':
+         if (cfg.event.sub.t2.gift.resub)
+          showKappa(a, cfg.event.sub.t2.gift.resub);
+         break;
+        case '3000':
+         if (cfg.event.sub.t3.gift.resub)
+          showKappa(a, cfg.event.sub.t3.gift.resub);
+         break;
+        default:
+        console.log('Unknown Gift Plan: ', subPlan, cmd);
+       }
+      }
+      else
+      {
+       switch (subPlan)
+       {
+        case '1000':
+         if (cfg.event.sub.t1.gift.first)
+          showKappa(a, cfg.event.sub.t1.gift.first);
+         break;
+        case '2000':
+         if (cfg.event.sub.t2.gift.first)
+          showKappa(a, cfg.event.sub.t2.gift.first);
+         break;
+        case '3000':
+         if (cfg.event.sub.t3.gift.first)
+          showKappa(a, cfg.event.sub.t3.gift.first);
+         break;
+        default:
+        console.log('Unknown Gift Plan: ', subPlan, cmd);
+       }
+      }
+      break;
+     case 'submysterygift':
+      let gc = cmd.tags['msg-param-mass-gift-count'];
+      switch (subPlan)
+      {
+       case '1000':
+        if (gc >= cfg.event.sub.t1.gift.bomb)
+         showKappa(a, cfg.event.sub.t1.gift.bomb);
+        break;
+       case '2000':
+        if (gc >= cfg.event.sub.t2.gift.bomb)
+         showKappa(a, cfg.event.sub.t2.gift.bomb);
+        break;
+       case '3000':
+        if (gc >= cfg.event.sub.t3.gift.bomb)
+         showKappa(a, cfg.event.sub.t3.gift.bomb);
+        break;
+       default:
+        console.log('Unknown Giftbomb Plan: ', subPlan, cmd);
+      }
+      break;
+     default:
+      console.log('Unknown Sub Type: ', cmd);
+    }
+   }
+
+   function parseBadge(cmd)
+   {
+    if (cfg.event.raid.minimum < 1)
+     return;
+    if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
+     return;
+    let c = cmd.tags['msg-param-threshold'];
+    if (cfg.event.badge.hasOwnProperty(c) && cfg.event.badge[c] !== false)
+    {
+     showKappa(false, cfg.event.badge[c]);
+     return;
+    }
+    let closest = null;
+    for (const b in cfg.event.badge)
+    {
+     if (closest === null)
+     {
+      closest = b;
+      continue;
+     }
+     if (Math.abs(parseInt(closest, 10) - parseInt(c, 10)) > Math.abs(parseInt(b, 10) - parseInt(c, 10)))
+      closest = b;
+    }
+    if (closest === null)
+     return;
+    if (cfg.event.badge[closest] === false)
+     return;
+    showKappa(false, cfg.event.badge[closest]);
+   }
+
+   function irc()
+   {
+    let firstRoomstate = true;
+    const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+    ws.onopen = function(event)
+    {
+     ws.send('PASS oauth:' + cfg.login.oauth);
+     ws.send('NICK ' + cfg.channel);
+     ws.send('CAP REQ :twitch.tv/commands\r\n');
+     ws.send('CAP REQ :twitch.tv/tags\r\n');
+     ws.send('JOIN #' + cfg.channel);
+    };
+    ws.onclose = function()
+    {
+     if (!dead)
+      window.setTimeout(irc, 5000);
+    };
+    ws.onmessage = async function(event)
+    {
+     let data = event.data.split('\r\n');
+     for (let i = 0; i < data.length; i++)
+     {
+      if (data[i].length == 0)
+       continue;
+      let cmd = parseMsg(data[i]);
+      if (cmd === false)
+      {
+       console.log('Unparsed command: ', data[i]);
+       continue;
+      }
+      switch(cmd.command)
+      {
+       case '001':
+       case '002':
+       case '003':
+       case '004':
+       case '353':
+       case '366':
+       case '372':
+       case '375':
+       case '376':
+       case 'CAP':
+       case 'JOIN':
+       case 'PART':
+       case 'WHISPER':
+       case 'CLEARCHAT':
+       case 'CLEARMSG':
+       case 'USERSTATE':
+        break;
+       case 'PING':
+        ws.send('PONG ' + cmd.params[0] + '\r\n');
+        break;
+       case 'PRIVMSG':
+        if (!await parseCheer(cmd))
+         parseLine(cmd);
+        break;
+       case 'NOTICE':
+        if (cmd.params.length > 1 && cmd.params[2] === 'Login authentication failed')
+         dead = true;
+        else
+         console.log('Unhandled NOTICE: ', cmd);
+        break;
+       case 'ROOMSTATE':
+        if (!cmd.hasOwnProperty('tags'))
+         continue;
+        if (!cmd.tags.hasOwnProperty('room-id'))
+         continue;
+        channelID = cmd.tags['room-id'];
+        if (firstRoomstate)
+        {
+         firstRoomstate = false;
+         loadEmote_channel(channelID);
+         loadCheer_channel(channelID);
+         if (cfg.display.extended.useFFZ)
+          loadFFZ_channel(channelID);
+         if (cfg.display.extended.useBTTV)
+          loadBTTV_channel(channelID);
+        }
+        break;
+       case 'USERNOTICE':
+        if (!cmd.hasOwnProperty('tags'))
+         continue;
+        if (!cmd.tags.hasOwnProperty('msg-id'))
+         continue;
+        let noteMsg = null;
+        switch (cmd.tags['msg-id'])
+        {
+         case 'raid':
+          parseRaid(cmd);
+          break;
+         case 'sub':
+         case 'resub':
+         case 'extendsub':
+         case 'subgift':
+         case 'submysterygift':
+         case 'primepaidupgrade':
+          parseSub(cmd);
+          break;
+         case 'bitsbadgetier':
+          parseBadge(cmd);
+          break;
+         default:
+          if (cmd.params.length > 1)
+           parseLine(cmd);
+          console.log('Unhandled USERNOTICE: ', cmd.tags['msg-id'], cmd);
+        }
+        break;
+       default:
+        console.log('Unhandled command: ', cmd.command, cmd);
+      }
+     }
+    };
+   }
+
+   function redditWS(wsURL)
+   {
+    const ws = new WebSocket(wsURL);
+    ws.onopen = function(event)
+    {
+    }
+    ws.onclose = function()
+    {
+     console.log('reddit closed');
+    }
+    ws.onmessage = async function(event)
+    {
+     let d = JSON.parse(event.data);
+     if (d.type !== 'new_comment')
+     {
+      console.log(d);
+      return;
+     }
+     console.log(d.payload.author, d.payload.body);
+     let cmd = {params: [d.payload.author, d.payload.body]};
+     let p = [];
+     p = await parseEmoji(cmd, cfg.display.useEmoji);
+     if (p.length === 0)
+      return;
+     toShow = toShow.concat(p);
+     showEmotes();
+    }
+   }
+
+   function reddit(rID)
+   {
+    let x = new XMLHttpRequest();
+    x.open('GET', 'https://strapi.reddit.com/videos/t3_' + rID);
+    x.onreadystatechange = function()
+    {
+     if (x.status !== 200)
+      return;
+     if (x.readyState !== 4)
+      return;
+     if (x.responseText === '')
+      return;
+     let j = JSON.parse(x.responseText);
+     if (!j.hasOwnProperty('data'))
+      return;
+     if (!j.data.hasOwnProperty('post'))
+      return;
+     if (!j.data.post.hasOwnProperty('liveCommentsWebsocket'))
+      return;
+     let ws = j.data.post.liveCommentsWebsocket;
+     redditWS(ws);
+    }
+    x.send();
+   }
+  </script>
+ </head>
+ <body>
+  <script>
+   async function startup()
+   {
+    if (cfg.display.extended.useFFZ)
+     await loadFFZ_global();
+    if (cfg.display.extended.useBTTV)
+     await loadBTTV_global();
+    if (cfg.display.extended.use7TV)
+    {
+     await load7TV_global();
+     await load7TV_channel(cfg.channel);
+    }
+    irc();
+    if (cfg.hasOwnProperty('reddit') && cfg.reddit !== false)
+     reddit(cfg.reddit);
+   }
+   startup();
+  </script>
+ </body>
+</html>
