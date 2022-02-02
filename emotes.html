@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.2.5 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.2.6 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -125,7 +125,7 @@
     *  time       The number of seconds an emote should show up on the screen for.
     *
     *  max        The maximum nuber of emotes to show on the screen at one time.
-    *             Set this value to 0 for infinite emotes (may eat your CPU, or may perform better).
+    *             Set this value to 0 for infinite emotes.
     *             This value should be greater than the "kappa count" value seen above (best would be 4x or more).
     *
     *  size       Settings related to the size of emotes.
@@ -711,6 +711,8 @@
    var channelID = 0;
    var dead = false;
    var toShow = [];
+   var toKappa = [];
+   var toGC = {};
    var toOverlay = [];
    var eList = {};
    var cList = [];
@@ -727,6 +729,10 @@
      out: 8
     }
    };
+   /* Timers */
+   var tEmote = false;
+   var tKappa = false;
+   var tGC = false;
 
    function sleep(ms)
    {
@@ -1408,6 +1414,56 @@
     return p;
    }
 
+   function doGC()
+   {
+    if (tGC === false)
+     return;
+    window.clearTimeout(tGC);
+    tGC = false;
+    let done = true;
+    for (let idx in toGC)
+    {
+     done = false;
+     let i = toGC[idx].img;
+     let t = toGC[idx].end;
+     let d = toGC[idx].dec;
+     if (toGC[idx].space)
+     {
+      let r = i.getBoundingClientRect();
+      if ((r.bottom > 0 && r.right > 0 && r.top < window.innerHeight && r.left < window.innerWidth) && t > new Date().getTime())
+       continue;
+     }
+     else
+     {
+      if (t > new Date().getTime())
+       continue;
+     }
+     delete toGC[idx];
+     if (d !== false)
+      window.clearTimeout(t);
+     document.body.removeChild(i);
+     if (d)
+      eActive--;
+    }
+    if (!done)
+     tGC = window.setTimeout(doGC, 500);
+   }
+
+   function gcEmote(img, space = true, decActive = true, t = false)
+   {
+    if (t === false)
+     t = cfg.emote.time * 1000;
+    let tCheck = false;
+    let x = 0;
+    do
+    {
+     x++;
+    } while(toGC.hasOwnProperty(x));
+    toGC[x] = {img: img, space: space, dec: decActive, end: new Date().getTime() + t};
+    if (tGC === false)
+     tGC = window.setTimeout(doGC, 500);
+   }
+
    function showEmote_Rise(url, sW, sH, sS)
    {
     let img = document.createElement('img');
@@ -1490,14 +1546,7 @@
     img.setAttribute('style', s);
     eActive++;
     document.body.appendChild(img);
-    window.setTimeout(
-     function()
-     {
-      document.body.removeChild(img);
-      eActive--;
-     },
-     cfg.emote.time * 1000
-    );
+    gcEmote(img, false);
    }
 
    function showEmote_Bounce(url, sW, sH, sS)
@@ -1693,14 +1742,7 @@
     img.setAttribute('style', s);
     eActive++;
     document.body.appendChild(img);
-    window.setTimeout(
-     function()
-     {
-      document.body.removeChild(img);
-      eActive--;
-     },
-     cfg.emote.time * 1000
-    );
+    gcEmote(img);
    }
 
    function showEmote_Drop(url, sW, sH, sS)
@@ -1761,14 +1803,7 @@
     img.setAttribute('style', s);
     eActive++;
     document.body.appendChild(img);
-    window.setTimeout(
-     function()
-     {
-      document.body.removeChild(img);
-      eActive--;
-     },
-     cfg.emote.time * 1000
-    );
+    gcEmote(img, false);
    }
 
    function showEmote_Confetti(url, sW, sH, sS)
@@ -1824,14 +1859,7 @@
     img.setAttribute('style', s);
     eActive++;
     document.body.appendChild(img);
-    window.setTimeout(
-     function()
-     {
-      document.body.removeChild(img);
-      eActive--;
-     },
-     cfg.emote.time * 1000
-    );
+    gcEmote(img, false);
    }
 
    function showEmote_Crazy(url, sW, sH, sS)
@@ -1952,14 +1980,7 @@
     img.setAttribute('style', s);
     eActive++;
     document.body.appendChild(img);
-    window.setTimeout(
-     function()
-     {
-      document.body.removeChild(img);
-      eActive--;
-     },
-     cfg.emote.time * 1000
-    );
+    gcEmote(img, false);
     let d = 0;
     let tmr = window.setTimeout(
      function tLoop()
@@ -2101,14 +2122,7 @@
     img.setAttribute('style', s);
     eActive++;
     document.body.appendChild(img);
-    window.setTimeout(
-     function()
-     {
-      document.body.removeChild(img);
-      eActive--;
-     },
-     cfg.emote.time * 1000
-    );
+    gcEmote(img);
     window.setTimeout(
      function()
      {
@@ -2159,14 +2173,7 @@
     img.setAttribute('style', s);
     eActive++;
     document.body.appendChild(img);
-    window.setTimeout(
-     function()
-     {
-      document.body.removeChild(img);
-      eActive--;
-     },
-     aT
-    );
+    gcEmote(img, true, true, aT);
     window.setTimeout(
      function()
      {
@@ -2242,14 +2249,7 @@
     img.setAttribute('style', s);
     eActive++;
     document.body.appendChild(img);
-    window.setTimeout(
-     function()
-     {
-      document.body.removeChild(img);
-      eActive--;
-     },
-     cfg.emote.time * 1000
-    );
+    gcEmote(img, false);
    }
 
    function showEmote_TheCube(url, sW, sH, sS)
@@ -2358,14 +2358,7 @@
     scene.setAttribute('style', s);
     eActive++;
     document.body.appendChild(scene);
-    window.setTimeout(
-     function()
-     {
-      document.body.removeChild(scene);
-      eActive--;
-     },
-     cfg.emote.time * 1000
-    );
+    gcEmote(scene);
     window.setTimeout(
      function()
      {
@@ -2396,10 +2389,10 @@
     let cY = oY * 0.33;
     function sparkler(url, r, d)
     {
-     let img = document.createElement('img');
-     img.setAttribute('class', 'emote');
-     img.setAttribute('src', url);
-     img.setAttribute('alt', '');
+     let simg = document.createElement('img');
+     simg.setAttribute('class', 'emote');
+     simg.setAttribute('src', url);
+     simg.setAttribute('alt', '');
      let th = (Math.random() * 360);
      let hD = Math.floor(cX + r * Math.cos(th));
      let vD = Math.floor(cY + r * Math.sin(th));
@@ -2432,20 +2425,13 @@
      s += ' animation-timing-function: ' + aTimings.join() + ';';
      s += ' animation-fill-mode: ' + aFills.join() + ';';
      s += ' animation-iteration-count: ' + aIters.join() + ';';
-     img.setAttribute('style', s);
-     document.body.appendChild(img);
+     simg.setAttribute('style', s);
+     document.body.appendChild(simg);
+     gcEmote(simg, true, true, (d + cfg.emote.time) * 1000);
      window.setTimeout(
       function()
       {
-       document.body.removeChild(img);
-       eActive--;
-      },
-      (d + cfg.emote.time) * 1000
-     );
-     window.setTimeout(
-      function()
-      {
-       img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+       simg.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
       },
       (d * 1000) + tStart
      );
@@ -2465,12 +2451,13 @@
      async function()
      {
       document.body.removeChild(img);
+      eActive--;
       let r = sW;
       if (sH < r)
        r = sH;
       r *= 0.66;
       let bD = 0.5;
-      let inner = cfg.display.kappa.count / 8;
+      let inner = Math.floor(cfg.display.kappa.count / 8);
       let outer = inner;
       let core = cfg.display.kappa.count - (inner + outer);
       let t = 0;
@@ -2539,14 +2526,7 @@
       {
        img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
        img.style.transitionTime = '500ms';
-       window.setTimeout(
-        function()
-        {
-         document.body.removeChild(img);
-         eActive--;
-        },
-        500
-       );
+       gcEmote(img, false, true, 500);
       },
       eT + 500 + (t / 10)
      );
@@ -2575,6 +2555,7 @@
    {
     let speed = 2000;
     let bandHeight = sS * 3;
+    let d = (Math.floor(Math.random() * 2) === 1);
     let bandTop = Math.floor(Math.random() * (sH - (sS * 2.5)));
     function run(url)
     {
@@ -2582,14 +2563,17 @@
      img.setAttribute('class', 'emote');
      img.setAttribute('src', url);
      img.setAttribute('alt', '');
-     let h = -1 * sS;
+     let h = -2 * sS;
      let v = Math.floor((Math.random() * bandHeight) + bandTop);
      let s = 'top: 0px;';
      s += ' left: 0px;'
      s += ' max-height: ' + sS + 'px;';
      s += ' width: auto;';
      s += ' transition: all ' + (speed / 1000) + 's linear;';
-     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+     if (d)
+      s += ' transform: translate(' + sW + 'px, ' + v + 'px);';
+     else
+      s += ' transform: translate(' + h + 'px, ' + v + 'px);';
      img.setAttribute('style', s);
      document.body.appendChild(img);
      window.setTimeout(
@@ -2597,14 +2581,16 @@
       {
        document.body.removeChild(img);
        img.setAttribute('deleted', true);
-       eActive--;
       },
       speed
      );
      window.setTimeout(
       function()
       {
-       img.style.transform = 'translate(' + (sW + sS) + 'px, ' + v + 'px)';
+       if (d)
+        img.style.transform = 'translate(' + h + 'px, ' + v + 'px)';
+       else
+        img.style.transform = 'translate(' + (sW + sS) + 'px, ' + v + 'px)';
       },
       tStart
      );
@@ -2627,7 +2613,7 @@
      }
      do
      {
-      await sleep(50);
+      await sleep(100);
       for (let i = 0; i < imgs.length; i++)
       {
        if (imgs[i] === null || imgs[i].hasAttribute('deleted'))
@@ -2667,17 +2653,49 @@
 
    async function showEmotes()
    {
-    while (true)
+    if (tEmote !== false)
     {
-     let e = toShow.shift();
-     if (e === undefined)
-      return;
-     if (cfg.emote.max > 0)
-     {
-      while (eActive > cfg.emote.max)
-       await sleep(1000);
-     }
+     window.clearTimeout(tEmote);
+     tEmote = false;
+    }
+    if (cfg.emote.max > 0 && eActive >= cfg.emote.max)
+    {
+     tEmote = window.setTimeout(showEmotes, 500);
+     return;
+    }
+    let e = null;
+    while ((e =  toShow.shift()) !== undefined)
+    {
      showEmote(e.url);
+     if (cfg.emote.max > 0 && eActive > cfg.emote.max)
+     {
+      tEmote = window.setTimeout(showEmotes, 500);
+      return;
+     }
+    }
+   }
+
+   function showKappas()
+   {
+    if (tKappa !== false)
+    {
+     window.clearTimeout(tKappa);
+     tKappa = false;
+    }
+    if (cfg.emote.max > 0 && eActive + cfg.display.kappa.count > cfg.emote.max)
+    {
+     tKappa = window.setTimeout(showKappas, 500);
+     return;
+    }
+    let e = null;
+    while ((e =  toKappa.shift()) !== undefined)
+    {
+     showKappa(e.list, [e.style]);
+     if (cfg.emote.max > 0 && eActive + cfg.display.kappa.count > cfg.emote.max)
+     {
+      tKappa = window.setTimeout(showKappas, 500);
+      return;
+     }
     }
    }
 
@@ -2708,22 +2726,39 @@
     let style = kStyles[(Math.floor(Math.random() * kStyles.length))];
     if (style === undefined)
      return;
-    if (cfg.emote.max > 0)
+    let waitFor = cfg.display.kappa.count;
+    switch (style)
     {
-     let waitFor = cfg.display.kappa.count;
-     if (style === 'Pyramid')
-     {
+     case 'Pyramid':
+      waitFor = 0;
       for (let i = 0; i < pyramidDist.length; i++)
        waitFor += pyramidDist[i];
-     }
-     while (eActive > cfg.emote.max - waitFor)
-      await sleep(1000);
-     eActive += waitFor;
+      break;
+     case 'Fireworks':
+      waitFor = 0;
+      let inner = Math.floor(cfg.display.kappa.count / 8);
+      let outer = inner;
+      let core = cfg.display.kappa.count - (inner + outer);
+      waitFor = 1 + inner + outer + core;
+      break;
     }
+    if ((cfg.emote.max > 0) && ((eActive + cfg.display.kappa.count) > cfg.emote.max))
+    {
+     toKappa.push({list: kList, style: style});
+     if (tKappa !== false)
+     {
+      window.clearTimeout(tKappa);
+      tKappa = false;
+     }
+     tKappa = window.setTimeout(showKappas, 500);
+     return;
+    }
+    eActive += waitFor;
     switch(style)
     {
      case 'Stampede':
-      showKappa_Stampede(kList, sW, sH, sS);
+      await showKappa_Stampede(kList, sW, sH, sS);
+      eActive -= cfg.display.kappa.count;
       break;
      case 'Fireworks':
       showKappa_Fireworks(kList, sW, sH, sS * 0.5); //half sized icons for better fireworks
@@ -2793,7 +2828,7 @@
     let addList = [];
     function showEmoji(c)
     {
-     if (c.slice(-5) === '-fe0f' && !c.match(/-200d-264[0|2]-/))
+     if (c.slice(-5) === '-fe0f' && !c.match(/-200d-264[0|2]-/) && !c.match(/-200d-26a7/) && !c.match(/-200d-2620/))
       c = c.slice(0, -5);
      if (!addList.includes(c))
       addList.push(c);
@@ -2823,15 +2858,19 @@
         else
          cpList[cpList.length - 1] += '-200d-' + p;
        }
-       else if (p.match(/264[0|2]/)) //gender
+       else if (p.match(/264[0|2]/) || p.match(/26a7/)) //gender
        {
         if (cpList[cpList.length - 1].slice(-5) === '-200d')
          cpList[cpList.length - 1] += '-' + p;
         else
          cpList[cpList.length - 1] += '-200d-' + p;
        }
-       else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[cpList.length - 1].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList.length < 11) //country code (2 chars max)
+       else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[cpList.length - 1].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[cpList.length - 1].length < 11) //country code (2 chars max)
         cpList[cpList.length - 1] += '-' + p;
+       else if (p === '1f308' && cpList[cpList.length - 1] === '1f3f3-fe0f') //rainbow flag
+        cpList[cpList.length - 1] += '-200d-' + p;
+       else if (p === '2620' && cpList[cpList.length - 1] === '1f3f4') //pirate flag
+        cpList[cpList.length - 1] += '-200d-' + p;
        else if (cpList[cpList.length - 1].slice(-5) === '-200d') //post-zwj
         cpList[cpList.length - 1] += '-' + p;
        else
@@ -2847,7 +2886,7 @@
       let tU;
       if (s.slice(-5) === '-fe0f')
       {
-       if (s.match(/-200d-264[0|2]-/))
+       if (s.match(/-200d-264[0|2]-/) || s.match(/-200d-26a7/) || s.match(/-200d-2620/))
         tU = uri + s + '.png';
        else
         tU = uri + s.slice(0, -5) + '.png';
