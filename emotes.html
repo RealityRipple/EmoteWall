@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.2.6 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.2.7 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -20,6 +20,16 @@
     * particularly resource-heavy drawing. If your computer has trouble with this
     * emote wall, please try disabling these options.
     *
+    * Update Procedure: To update this emote wall, simply use the Wizard to import
+    * and download it.
+    * 1) Visit the official page <https://realityripple.com/Tools/Twitch/EmoteWall/>.
+    * 2) Click "Config Wizard".
+    * 3) Import this HTML file by clicking Import.
+    * 4) Make any changes you need to make on each page.
+    * 5) At the end of your configuration, hit "Download".
+    * You will receive a new version of this HTML file with your previous settings.
+    *
+    * Updating is also the easiest way to update the OAuth Token (see below).
     *
     * Configuration Information
     * =========================
@@ -28,23 +38,23 @@
     *
     * login       Settings related to the login process.
     *
+    *             NOTE: OAuth tokens expire automatically (usually after 60 days).
+    *                   Please make sure to update these values on a regular basis.
+    *
     *  client     The Client ID value is used to track which third-party project is
-    *             accessing your account. This emote wall does not have a constant ID,
+    *             accessing your account. This emote wall does not require a constant ID,
     *             and will work with whatever tool you use to get an OAuth ID (see below).
     *
     *  oauth      The OAuth ID value is used in lieu of a password to access the Twitch API.
     *             Please generate an OAuth ID and matching Client ID:
-    *             - Visit https://twitchtokengenerator.com/
-    *             - Choose "Custom Scope Token"
-    *             - Scroll down to the "chat:read" scope option and choose "Yes"
-    *             - Scroll further down to the button that says "Generate Token!" and click it
-    *             - Choose "Authorize" to let Twitch Token Generator connect to Twitch
+    *             - Visit https://realityripple.com/Tools/Twitch/EmoteWall/
+    *             - Click the "Authenticate on Twitch" button and log in
     *             - Fill out the captcha prompt
     *             - Copy the Client ID value and paste it into "client:"
-    *             - Copy the Access Token value and paste it into "oauth:"
+    *             - Copy the OAuth ID value and paste it into "oauth:"
     *             If you ever stop using this emote wall, please log into Twitch and visit
     *             https://www.twitch.tv/settings/connections . Under "Other Connections",
-    *             click the "Disconnect" button next to "Twitch Token Generator".
+    *             click the "Disconnect" button next to "RealityRipple's Homemade Emote Wall".
     *             If you want to use a different Twitch OAuth generator (or do it yourself),
     *             feel free.
     *
@@ -394,8 +404,8 @@
 
    // don't show these zero-width emote modifiers at all
    var bttvZWE = [
-    "SoSnowy",  "IceCold",   "SantaHat", "TopHat",
-    "ReinDeer", "CandyCane", "cvMask",   "cvHazmat",
+    'SoSnowy',  'IceCold',   'SantaHat', 'TopHat',
+    'ReinDeer', 'CandyCane', 'cvMask',   'cvHazmat',
    ];
    //////////////////////////////////////////////////////////////////////////////
    // don't mess with things below this line without knowing what you're doing //
@@ -418,7 +428,6 @@
    img.emote
    {
     position: fixed;
-    will-change: transform;
     height: 100%;
     border: 0;
     margin: 0;
@@ -429,7 +438,6 @@
    div.scene
    {
     position: fixed;
-    will-change: transform;
     border: 0;
     margin: 0;
     padding: 0;
@@ -2151,7 +2159,7 @@
     s += ' width: auto;';
     s += ' transition: transform ' + aT + 'ms cubic-bezier(0, 0, 0.58, 1);';
     s += ' transform: translateX(' + h + 'px);'
-    s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY / 100 * sH + Math.floor(Math.random() * ((sH - sS) * 0.5))) + ' L 0 ' + sH + '");';
+    s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY / 100 * sH + Math.floor(Math.random() * ((sH - sS) * 0.5))) + ' L 0 ' + (sH + sS) + '");';
     let aNames = [];
     let aDelays = [];
     let aDurs = [];
@@ -2651,7 +2659,7 @@
     window['showEmote_' + style](url, sW, sH, sS);
    }
 
-   async function showEmotes()
+   function showEmotes()
    {
     if (tEmote !== false)
     {
@@ -2952,7 +2960,10 @@
       addList.push(sName);
      else if (!dup)
       continue;
-     for (let c = 0; c < eVals.length; c++)
+     let l = eVals.length;
+     if (!dup)
+      l = 1;
+     for (let c = 0; c < l; c++)
       ret.push({svc: 't', url: u, str: sName});
     }
     return ret;
@@ -3513,8 +3524,8 @@
     {
      ws.send('PASS oauth:' + cfg.login.oauth);
      ws.send('NICK ' + cfg.channel);
-     ws.send('CAP REQ :twitch.tv/commands\r\n');
-     ws.send('CAP REQ :twitch.tv/tags\r\n');
+     ws.send('CAP REQ :twitch.tv/commands');
+     ws.send('CAP REQ :twitch.tv/tags');
      ws.send('JOIN #' + cfg.channel);
     };
     ws.onclose = function()
@@ -3555,7 +3566,7 @@
        case 'USERSTATE':
         break;
        case 'PING':
-        ws.send('PONG ' + cmd.params[0] + '\r\n');
+        ws.send('PONG ' + cmd.params[0]);
         break;
        case 'PRIVMSG':
         if (!await parseCheer(cmd))
