@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.2.7 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.2.8 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -714,6 +714,8 @@
    }
   </style>
   <script>
+   if (typeof cfg === 'undefined')
+    throw new Error('Corrupted Configuration detected.');
    document.title = cfg.channel + ' Emote Wall';
    /* global variables */
    var channelID = 0;
@@ -885,6 +887,8 @@
       {
        if (x.status !== 200)
        {
+        if (x.status === 401)
+         blargIAmDead(3);
         resolve(false);
         return;
        }
@@ -925,6 +929,8 @@
       {
        if (x.status !== 200)
        {
+        if (x.status === 401)
+         blargIAmDead(3);
         resolve(false);
         return;
        }
@@ -3573,8 +3579,11 @@
          parseLine(cmd);
         break;
        case 'NOTICE':
-        if (cmd.params.length > 1 && cmd.params[2] === 'Login authentication failed')
+        if (cmd.params.length > 1 && cmd.params[1] === 'Login authentication failed')
+        {
          dead = true;
+         blargIAmDead(1);
+        }
         else
          console.log('Unhandled NOTICE: ', cmd);
         break;
@@ -3683,12 +3692,49 @@
     }
     x.send();
    }
+
+   function blargIAmDead(e)
+   {
+    switch (e)
+    {
+     case 1:
+      document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Connect to Twitch<br><br>Please Update Your OAuth Token</div>';
+      break;
+     case 2:
+      document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Corrupted Configuration<br><br>Please Check Your Browser\'s Error Console</div>';
+      break;
+     case 3:
+      document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Emotes<br><br>Please Check Your Client ID and OAuth Token</div>';
+      break;
+     case 4:
+      document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Warning:<br><br>Your Credentials Will Expire Soon<br><br>Please Update Your OAuth Token</div>';
+      break;
+    }
+    window.setTimeout(function(){document.body.innerHTML = '';}, 15000);
+   }
   </script>
  </head>
  <body>
   <script>
    async function startup()
    {
+    if (typeof cfg === 'undefined')
+    {
+     blargIAmDead(2);
+     return;
+    }
+    if (cfg.login.hasOwnProperty('expires') && cfg.login.expires > 0)
+    {
+     let expTime = cfg.login.expires - new Date().getTime();
+     if (expTime > 0)
+     {
+      let expDays = Math.floor(expTime / 1000 / 60 / 60 / 24);
+      if (expDays < 7)
+      {
+       blargIAmDead(4);
+      }
+     }
+    }
     if (cfg.display.extended.useFFZ)
      await loadFFZ_global();
     if (cfg.display.extended.useBTTV)
