@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.2.8 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.3 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -798,10 +798,7 @@
     {
      line = line.slice(1);
      if (!line.includes(' '))
-     {
-      console.log('Unknown command structure: ' + line);
       return false;
-     }
      cmd.tags = [];
      let t = line.slice(0, line.indexOf(' '));
      line = line.slice(line.indexOf(' ') + 1);
@@ -817,10 +814,7 @@
     {
      line = line.slice(1);
      if (!line.includes(' '))
-     {
-      console.log('Unknown command structure: ' + line);
       return false;
-     }
      cmd.prefix = line.slice(0, line.indexOf(' '));
      line = line.slice(line.indexOf(' ') + 1);
     }
@@ -1284,6 +1278,50 @@
      }
     );
     return p;
+   }
+
+   function loadBTTV_ws_channel(chID)
+   {
+    eList.bttvU = {};
+    const ws = new WebSocket('wss://sockets.betterttv.net/ws');
+    ws.onopen = function(event)
+    {
+     ws.send('{"name":"join_channel","data":{"name":"twitch:' + chID + '"}}');
+     ws.send('{"name":"broadcast_me","data":{"name":"' + cfg.channel + '","channel":"twitch:' + chID + '"}}');
+    }
+    ws.onclose = function()
+    {
+     console.log('BTTV WebSocket Closed');
+     window.setTimeout(function(){loadBTTV_ws_channel(chID);}, 5000);
+    }
+    ws.onmessage = function(event)
+    {
+     if (!event.isTrusted)
+      return;
+     let d = JSON.parse(event.data);
+     if (!d.hasOwnProperty('name'))
+      return;
+     if (!d.hasOwnProperty('data'))
+      return;
+     if (d.name !== 'lookup_user')
+     {
+      console.log('Unparsed BTTV Message: ', d);
+      return;
+     }
+     if (!d.data.hasOwnProperty('name'))
+      return;
+     if (!d.data.hasOwnProperty('emotes') || !Array.isArray(d.data.emotes) || d.data.emotes.length < 1)
+      return;
+     eList.bttvU[d.data.name] = {};
+     for (let i = 0; i < d.data.emotes.length; i++)
+     {
+      if (!d.data.emotes[i].hasOwnProperty('code'))
+       continue;
+      if (!d.data.emotes[i].hasOwnProperty('id'))
+       continue;
+      eList.bttvU[d.data.name][d.data.emotes[i].code] = {url: 'https://cdn.betterttv.net/emote/' + d.data.emotes[i].id + '/3x', scope: 'u'};
+     }
+    }
    }
 
    function load7TV_global()
@@ -3029,6 +3067,34 @@
     return ret;
    }
 
+   function parseBTTVU(cmd, dup = null)
+   {
+    if (!eList.hasOwnProperty('bttvU'))
+     return [];
+    let addList = [];
+    if (cmd.params.length < 2)
+     return [];
+    let u = parseUser(cmd);
+    if (!eList.bttvU.hasOwnProperty(u.host))
+     return [];
+    let m = cmd.params[1].split(' ');
+    if (dup === null)
+     dup = cfg.display.duplicates;
+    let ret = [];
+    for (let i = 0; i < m.length; i++)
+    {
+     if (!eList.bttvU[u.host].hasOwnProperty(m[i]))
+      continue;
+     if (!addList.includes(m[i]))
+      addList.push(m[i]);
+     else if (!dup)
+      continue;
+     console.log(u.host, m[i]);
+     ret.push({svc: 'b', url: eList.bttvU[u.host][m[i]].url, str: m[i], scope: eList.bttvU[u.host][m[i]].scope});
+    }
+    return ret;
+   }
+
    function parse7TV(cmd, dup = null)
    {
     if (!eList.hasOwnProperty('7tv'))
@@ -3169,6 +3235,11 @@
     let r = [];
     for (let i = 0; i < a.length; i++)
     {
+     if (a[i].scope === 'u')
+      r.push(a[i]);
+    }
+    for (let i = 0; i < a.length; i++)
+    {
      if (a[i].svc === 't' || a[i].svc === 'c' || a[i].svc === 'e')
       r.push(a[i]);
     }
@@ -3253,7 +3324,10 @@
     if (cfg.display.extended.useFFZ)
      p = p.concat(parseFFZ(cmd));
     if (cfg.display.extended.useBTTV)
+    {
      p = p.concat(parseBTTV(cmd));
+     p = p.concat(parseBTTVU(cmd));
+    }
     if (cfg.display.extended.use7TV)
      p = p.concat(parse7TV(cmd));
     p = handleDuplicates(p);
@@ -3298,7 +3372,10 @@
        if (cfg.display.extended.useFFZ)
         a = a.concat(parseFFZ(cmd, true));
        if (cfg.display.extended.useBTTV)
+       {
         a = a.concat(parseBTTV(cmd, true));
+        a = a.concat(parseBTTVU(cmd, true));
+       }
        if (cfg.display.extended.use7TV)
         a = a.concat(parse7TV(cmd, true));
        a = handleDuplicates(a);
@@ -3315,7 +3392,10 @@
     if (cfg.display.extended.useFFZ)
      p = p.concat(parseFFZ(cmd));
     if (cfg.display.extended.useBTTV)
+    {
      p = p.concat(parseBTTV(cmd));
+     p = p.concat(parseBTTVU(cmd));
+    }
     if (cfg.display.extended.use7TV)
      p = p.concat(parse7TV(cmd));
     p = handleDuplicates(p);
@@ -3346,10 +3426,7 @@
     if (!cmd.tags.hasOwnProperty('msg-id'))
      return;
     if (!cmd.tags.hasOwnProperty('msg-param-sub-plan'))
-    {
-     console.log('NO PLAN: ', cmd);
      return;
-    }
     let a = [];
     if (cmd.params.length > 1)
     {
@@ -3361,7 +3438,10 @@
       if (cfg.display.extended.useFFZ)
        a = a.concat(parseFFZ(cmd, true));
       if (cfg.display.extended.useBTTV)
+      {
        a = a.concat(parseBTTV(cmd, true));
+       a = a.concat(parseBTTVU(cmd, true));
+      }
       if (cfg.display.extended.use7TV)
        a = a.concat(parse7TV(cmd, true));
      }
@@ -3549,7 +3629,7 @@
       let cmd = parseMsg(data[i]);
       if (cmd === false)
       {
-       console.log('Unparsed command: ', data[i]);
+       console.log('Unparsed IRC Command: ', data[i]);
        continue;
       }
       switch(cmd.command)
@@ -3585,7 +3665,7 @@
          blargIAmDead(1);
         }
         else
-         console.log('Unhandled NOTICE: ', cmd);
+         console.log('Unhandled IRC NOTICE: ', cmd);
         break;
        case 'ROOMSTATE':
         if (!cmd.hasOwnProperty('tags'))
@@ -3601,7 +3681,10 @@
          if (cfg.display.extended.useFFZ)
           loadFFZ_channel(channelID);
          if (cfg.display.extended.useBTTV)
+         {
           loadBTTV_channel(channelID);
+          loadBTTV_ws_channel(channelID);
+         }
         }
         break;
        case 'USERNOTICE':
@@ -3629,11 +3712,11 @@
          default:
           if (cmd.params.length > 1)
            parseLine(cmd);
-          console.log('Unhandled USERNOTICE: ', cmd.tags['msg-id'], cmd);
+          console.log('Unhandled IRC USERNOTICE: ', cmd.tags['msg-id'], cmd);
         }
         break;
        default:
-        console.log('Unhandled command: ', cmd.command, cmd);
+        console.log('Unhandled IRC Command: ', cmd.command, cmd);
       }
      }
     };
@@ -3647,17 +3730,17 @@
     }
     ws.onclose = function()
     {
-     console.log('reddit closed');
+     window.setTimeout(function(){redditWS(wsURL);}, 5000);
     }
     ws.onmessage = async function(event)
     {
      let d = JSON.parse(event.data);
      if (d.type !== 'new_comment')
      {
-      console.log(d);
+      console.log('Unparsed Reddit Message: ', d);
       return;
      }
-     console.log(d.payload.author, d.payload.body);
+     console.log('Reddit Comment: ', d.payload.author, d.payload.body);
      let cmd = {params: [d.payload.author, d.payload.body]};
      let p = [];
      p = await parseEmoji(cmd, cfg.display.useEmoji);
