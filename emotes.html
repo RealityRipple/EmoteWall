@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.3.1 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.3.2 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -329,6 +329,7 @@
        'Fountain',    // Spout from a fountain  (no fade/zoom)
        'Stampede',    // Stampede of emotes     (no fade/zoom)
        'Confetti',    // Fall like confetti     (no zoom, no fade in, only fade out; half-size emotes)
+       'TheCube',     // Rotate a 3D cube of an emote (no zoom, only fade; 80% screen size emotes)
       ],
       access: 0x800 | 0x400 | 0x200 | 0x100 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002
      }
@@ -2426,6 +2427,111 @@
     );
    }
 
+   function showKappa_TheCube(url, sW, sH, sS)
+   {
+    let scene = document.createElement('div');
+    scene.setAttribute('class', 'scene');
+    scene.setAttribute('width', sS);
+    scene.setAttribute('height', sS);
+    let cube = document.createElement('div');
+    cube.setAttribute('class', 'cube');
+    cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
+    let f = 'width: 100%;';
+    f += ' height: auto;';
+    f += ' max-width: ' + sS + 'px;'
+    f += ' max-height: ' + sS + 'px;'
+    let cubeF = document.createElement('img');
+    cubeF.setAttribute('src', url);
+    cubeF.setAttribute('alt', '');
+    cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
+    cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+    cube.appendChild(cubeF);
+    let cubeB = document.createElement('img');
+    cubeB.setAttribute('src', url);
+    cubeB.setAttribute('alt', '');
+    cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
+    cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+    cube.appendChild(cubeB);
+    let cubeR = document.createElement('img');
+    cubeR.setAttribute('src', url);
+    cubeR.setAttribute('alt', '');
+    cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
+    cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+    cube.appendChild(cubeR);
+    let cubeL = document.createElement('img');
+    cubeL.setAttribute('src', url);
+    cubeL.setAttribute('alt', '');
+    cubeL.setAttribute('class', 'cubeFace cubeFaceLeft');
+    cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+    cube.appendChild(cubeL);
+    let cubeT = document.createElement('img');
+    cubeT.setAttribute('src', url);
+    cubeT.setAttribute('alt', '');
+    cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
+    cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+    cube.appendChild(cubeT);
+    let cubeU = document.createElement('img');
+    cubeU.setAttribute('src', url);
+    cubeU.setAttribute('alt', '');
+    cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
+    cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+    cube.appendChild(cubeU);
+    scene.appendChild(cube);
+    let h = Math.floor((sW / 2) - (sS / 2));
+    let v = Math.floor((sH / 2) - (sS / 2));
+    let s = 'width: ' + sS + 'px;';
+    s += ' height: ' + sS + 'px;';
+    s += ' perspective: ' + (sS * 3)  + 'px;';
+    s += ' transition: all ' + cfg.emote.time + 's linear;';
+    s += ' transform: translate(' + h + 'px, ' + v + 'px);'
+    let aNames = [];
+    let aDelays = [];
+    let aDurs = [];
+    let aTimings = [];
+    let aFills = [];
+    let aIters = [];
+    if (cfg.emote.in.fade)
+    {
+     aNames.push('fadeIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('ease-in');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.fade)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (aNames.length > 0)
+    {
+     s += ' animation-name: ' + aNames.join() + ';';
+     s += ' animation-delay: ' + aDelays.join() + ';';
+     s += ' animation-duration: ' + aDurs.join() + ';';
+     s += ' animation-timing-function: ' + aTimings.join() + ';';
+     s += ' animation-fill-mode: ' + aFills.join() + ';';
+     s += ' animation-iteration-count: ' + aIters.join() + ';';
+    }
+    scene.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(scene);
+    gcEmote(scene);
+    window.setTimeout(
+     function()
+     {
+      let rX = Math.floor(180 - (Math.random() * 360)) * 10;
+      let rY = Math.floor(180 - (Math.random() * 360)) * 10;
+      cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
+     },
+     tStart
+    );
+   }
+
    function showKappa_Fireworks(kList, sW, sH, sS)
    {
     let sendUp = 2;
@@ -2822,6 +2928,14 @@
       break;
      case 'Pyramid':
       showKappa_Pyramid(kList, sW, sH);
+      break;
+     case 'TheCube':
+      eActive -= waitFor;
+      let cS = sW;
+      if (sW > sH)
+       cS = sH;
+      let r = Math.floor(Math.random() * kList.length);
+      showKappa_TheCube(kList[r].url, sW, sH, Math.floor(cS * 0.8)); //80% of the smaller screen dimension
       break;
      case 'Burst':
       let oH = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
