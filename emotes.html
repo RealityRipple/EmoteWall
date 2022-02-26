@@ -3,25 +3,21 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.3.3 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.4 BETA)
     * ===================================
     *
     * Notes and Caveats
     *
-    * This emote wall uses normal <img> objects rather than a HTML Canvas
-    * While this lowers efficiency, it also adds better GIF file support
-    * and allows easier user manipulation.
+    * This emote wall uses normal <img> objects rather than a HTML Canvas. While this lowers efficiency, it also adds
+    * better GIF file support and allows easier user manipulation.
     *
-    * Note: At present, the "zoom in" and "zoom out" feature uses a resource-heavy
-    * design which can be replaced with the "scale: " CSS directive as soon as
-    * Chrome adds support. Additionally, the Bounce animation uses specific
-    * position-based drawing rather than actually being animated. Finally, the cube
-    * animation uses eight objects on screen for every image, making it a
-    * particularly resource-heavy drawing. If your computer has trouble with this
-    * emote wall, please try disabling these options.
+    * Note: At present, the "zoom in" and "zoom out" feature uses a resource-heavy design which can be replaced with
+    * the "scale: " CSS directive as soon as Chrome adds support. Additionally, the Bounce animation uses specific
+    * position-based drawing rather than actually being animated. Finally, The Cube animation uses eight objects
+    * on screen for every image, making it a particularly resource-heavy drawing. If your computer has trouble with
+    * this emote wall, please try disabling these options.
     *
-    * Update Procedure: To update this emote wall, simply use the Wizard to import
-    * and download it.
+    * Update Procedure: To update this emote wall, simply use the Wizard to import and download it.
     * 1) Visit the official page <https://realityripple.com/Tools/Twitch/EmoteWall/>.
     * 2) Click "Config Wizard".
     * 3) Import this HTML file by clicking Import.
@@ -38,12 +34,12 @@
     *
     * login       Settings related to the login process.
     *
-    *             NOTE: OAuth tokens expire automatically (usually after 60 days).
-    *                   Please make sure to update these values on a regular basis.
+    *             NOTE: OAuth tokens expire automatically (usually after 60 days). Please make sure to update
+    *                   these values on a regular basis.
     *
-    *  client     The Client ID value is used to track which third-party project is
-    *             accessing your account. This emote wall does not require a constant ID,
-    *             and will work with whatever tool you use to get an OAuth ID (see below).
+    *  client     The Client ID value is used to track which third-party project is accessing your account.
+    *             This emote wall does not require a constant ID, and will work with whatever tool you use to
+    *             get an OAuth ID (see below).
     *
     *  oauth      The OAuth ID value is used in lieu of a password to access the Twitch API.
     *             Please generate an OAuth ID and matching Client ID:
@@ -53,25 +49,23 @@
     *             - Copy the Client ID value and paste it into "client:"
     *             - Copy the OAuth ID value and paste it into "oauth:"
     *             If you ever stop using this emote wall, please log into Twitch and visit
-    *             https://www.twitch.tv/settings/connections . Under "Other Connections",
-    *             click the "Disconnect" button next to "RealityRipple's Homemade Emote Wall".
-    *             If you want to use a different Twitch OAuth generator (or do it yourself),
-    *             feel free.
+    *             https://www.twitch.tv/settings/connections . Under "Other Connections", click the "Disconnect" button
+    *             next to "RealityRipple's Homemade Emote Wall". If you want to use a different Twitch OAuth generator
+    *             (or do it yourself), feel free.
     *
-    * reddit      The unique ID of a Reddit RPAN session (usually 6 characters at the end of the URL).
-    *             If you don't use Reddit to stream, please keep this set to FALSE.
-    *             You must change this for every Reddit stream at present, unfortunately.
+    * reddit      The unique ID of a Reddit RPAN session (usually 6 characters at the end of the URL).  If you don't
+    *             use Reddit to stream, please keep this set to FALSE. You must change this for every Reddit stream
+    *             at present, unfortunately.
     *
     * display     Settings related to the animation of the emote wall.
     *
-    *  styles     An array of animation styles which individual emotes randomly perform.
-    *             You may turn on and off elements in this array by "commenting out" a style
-    *             by putting two slashes before the name:
+    *  styles     An array of animation styles which individual emotes randomly perform.  You may turn on and off
+    *             elements in this array by "commenting out" a style by putting two slashes before the name:
     *              // 'Still',        <-- disabled
     *                 'StraightLine', <-- allowed
     *
-    *  access     A bitwise flag representing which users' messages show up on the emote wall.
-    *             Account types are represented by the following values:
+    *  access     A bitwise flag representing which users' messages show up on the emote wall. Account types are
+    *             represented by the following values:
     *
     *              0x800 = broadcaster
     *              0x400 = moderator badge
@@ -84,8 +78,7 @@
     *              0x002 = follower
     *              0x001 = stranger
     *
-    *             Just put a vertical pipe " | " in between each of the values
-    *             representing levels of access:
+    *             Just put a vertical pipe " | " in between each of the values representing levels of access:
     *
     *              ACCESS                                 MEANING 
     *             0x800 | 0x400                           broadcaster and moderator only
@@ -103,8 +96,7 @@
     *             If TRUE, every emote posted in chat will be shown.
     *             If FALSE, only one of each emote per message will be shown.
     *
-    *  useEmoji   Toggles display of emojis on the emote wall, and lets you choose
-    *             an emoji font style.
+    *  useEmoji   Toggles display of emojis on the emote wall, and lets you choose an emoji font style.
     *             If TRUE, emojis will be shown using the "twemoji" font.
     *             If FALSE, emojis will not be shown on the emote wall.
     *             If 'twemoji', emojis will be shown using the "twemoji" font.
@@ -122,8 +114,8 @@
     *
     *  kappa      Settings related to emote-splosions and the !kappagen command.
     *
-    *   count     The number of emotes to display per kappagen. This value must be less than the
-    *             "emote max" value seen below (best would be 1/4th or less).
+    *   count     The number of emotes to display per kappagen. This value must be less than the "emote max" value
+    *             seen below (best would be 1/4th or less).
     *
     *   styles    Similar to the array of styles for normal emotes, but this one lists emote-splosion types.
     *             Please do not try to add normal styles to the kappa list or vice versa.
@@ -134,31 +126,42 @@
     *
     *  time       The number of seconds an emote should show up on the screen for.
     *
-    *  max        The maximum nuber of emotes to show on the screen at one time.
-    *             Set this value to 0 for infinite emotes.
-    *             This value should be greater than the "kappa count" value seen above (best would be 4x or more).
+    *  max        The maximum nuber of emotes to show on the screen at one time. Set this value to 0 for
+    *             infinite emotes. This value should be greater than the "kappa count" value seen above
+    *             (best would be 4x or more).
     *
     *  size       Settings related to the size of emotes.
-    *   ratio     A decimal value representing the height of each emote, relative
-    *             to the smallest screen dimension.  If the height of the screen
-    *             is less than the width, each emote will be equal to the height of
+    *
+    *   ratio     Emotes show up in multiple sizes due to the kappagen feature. There are a total of four sizes
+    *             that an emote can be:
+    *              - The Cube kappagen's faces are squares equal to 80% of the smaller screen dimension
+    *                (usually height on PC).
+    *              - Pyramid kappagen emotes have a height equal to 1/19th of the screen's width.
+    *              - Fireworks and Confetti kappagen emotes have a height equal to the small ratio (see below).
+    *              - All standard emotes and kappagens not listed above will use the normal ratio (see below).
+    *                Most normal emotes will limit by height, except The Cube, which fits in the center of every side.
+    *
+    *    normal   A decimal value representing the height of each emote, relative to the smallest screen dimension.
+    *             If the height of the screen is less than the width, each emote will be equal to the height of
     *             the screen multiplied by this ratio. Suggested "1 / n" where n is greater than 10.
+    *
+    *    small    A decimal value representing the height of small emotes, relative to the smallest screen dimension.
+    *             If the height of the screen is less than the width, each emote will be equal to the height of
+    *             the screen multiplied by this ratio. Suggested "1 / n" where n is greater than 20.
     *
     *   min       The minimum height of an emote, in pixels.
     *
     *   max       The maximum height of an emote, in pixels.
     *
     *  in         Settings related to the showing of an emote.
-    *             Note: some kappagen styles do not use these. See the notes
-    *             next to each kappagen style name.
+    *             Note: some kappagen styles do not use these. See the notes next to each kappagen style name.
     *
     *   fade      A boolean to toggle the "fade in" style.
     *
     *   zoom      A boolean to toggle the "zoom in" style.
     *
     *  out        Settings related to the hiding of an emote.
-    *             Note: some kappagen styles do not use these. See the notes
-    *             next to each kappagen style name.
+    *             Note: some kappagen styles do not use these. See the notes next to each kappagen style name.
     *
     *   fade      A boolean to toggle the "fade out" style.
     *
@@ -175,9 +178,8 @@
     *             If FALSE, the default "kappa styles" setting will be used instead.
     *
     *  sub        Settings related to kappagens on a subscribe event.
-    *             Note: Sub event booleans can also be arrays of kappa styles.
-    *             This will override the default list of kappa styles for the
-    *             particular event in question.
+    *             Note: Sub event booleans can also be arrays of kappa styles.  This will override the default list
+    *             of kappa styles for the particular event in question.
     *
     *   useMsg    If TRUE, any emotes in resub messages will be used for the kappagen.
     *             If FALSE, rany emotes in resub messages will show up like normal emotes.
@@ -209,8 +211,8 @@
     *     bomb    A user gifts multiple Tier 1 subscriptions.
     *             If 0, no kappagen will occur.
     *             If 1, a kappagen will occur on any random gift.
-    *             If greater than 1, the number of gifted users in a Tier 1 giftbomb must be
-    *             greater than or equal to this number to trigger a kappagen.
+    *             If greater than 1, the number of gifted users in a Tier 1 giftbomb must be greater than or equal to
+    *             this number to trigger a kappagen.
     *
     *   t2        Identical to t1, but for Tier 2 subscriptions.
     *
@@ -238,13 +240,15 @@
     *   '1'        If TRUE, a kappagen will occur when a user gets their 1 bit badge.
     *              If FALSE, no kappagen will occur for 1 bit badges.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
-    *             If a user earns a bits badge for a number not listed in the array, the system will
-    *             find the number which is closest to the badge, favoring the lower number in case of a tie.
+    *             If a user earns a bits badge for a number not listed in the array, the system will find the number
+    *             which is closest to the badge, favoring the lower number in case of a tie.
     *             For example:
     *   '100': false
     *   '5000': true
-    *              If a user earns their 1000 bits badge, no kappagen will occur because 1000 is closer to 100 than 5000.
-    *              If a user earns their 10000 bits badge, a kappagen will occur because 5000 is the closest listed number.
+    *              If a user earns their 1000 bits badge, no kappagen will occur because 1000 is closer to 100
+    *              than 5000.
+    *              If a user earns their 10000 bits badge, a kappagen will occur because 5000 is the closest
+    *              listed number.
     *             Note that the numbers must be strings (in 'single quotes') to function properly.
     *
     *
@@ -324,21 +328,29 @@
        'Speed',       // Zoom across the screen
        'Crazy',       // Bounce off the walls [Layout Shifts - Requires offset-anchor / offset-position directives]
        'Burst',       // Expand from a center point
-       'Fireworks',   // Burst out from a single emote (no fade/zoom; half-size emotes)
+       'Fireworks',   // Burst out from a single emote (no fade/zoom; small emotes)
        'Pyramid',     // Build a pyramid        (no fade/zoom; specific-size emotes)
+       'SmallPyramid',// Build a small pyramid  (no fade/zoom; small emotes)
        'Fountain',    // Spout from a fountain  (no fade/zoom)
        'Stampede',    // Stampede of emotes     (no fade/zoom)
-       'Confetti',    // Fall like confetti     (no zoom, no fade in, only fade out; half-size emotes)
+       'Confetti',    // Fall like confetti     (no zoom, no fade in, only fade out; small emotes)
        'TheCube',     // Rotate a 3D cube of an emote (no zoom, only fade; 80% screen size emotes)
       ],
-      access: 0x800 | 0x400 | 0x200 | 0x100 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002
+      access: 0x800 | 0x400 | 0x200 | 0x100 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002,
+      aliases: [      // !kappagen command aliases (must be lower-case)
+       '!kappagen',
+       '-kappagen'
+      ]
      }
     },
     emote: {
      time: 5,
      max: 0,
      size: {
-      ratio: 1/12,
+      ratio: {
+       normal: 1/12,
+       small: 1/24
+      },
       min: 16,
       max: 112
      },
@@ -400,7 +412,7 @@
 
    /* potentially alterable arrays */
 
-   // distribution of emojis for pyramid kappagen
+   // distribution of emojis for Pyramid and SmallPyramid kappagen
    var pyramidDist = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
 
    // don't show these zero-width emote modifiers at all
@@ -2712,6 +2724,68 @@
     }
    }
 
+   function showKappa_SmallPyramid(kList, sW, sH)
+   {
+    let tMul = 2;
+    let sS = sW / 19;
+    if (sS > Math.floor(sW * cfg.emote.size.ratio.small))
+     sS = Math.floor(sW * cfg.emote.size.ratio.small);
+    if (sS > Math.floor(sH * cfg.emote.size.ratio.small))
+     sS = Math.floor(sH * cfg.emote.size.ratio.small);
+    let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    let ct = 0;
+    for (let i = 0; i < pyramidDist.length; i++)
+     ct += pyramidDist[i];
+    let eT = cfg.emote.time * tMul * 1000;
+    let tPerB = Math.floor(eT / ct);
+    function block(url, oX, x, t)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', url);
+     img.setAttribute('alt', '');
+     let h = oX + sS * x;
+     let v = -1 * sS;
+     let vD = sH - (sS * (drawn[x] + 1));
+     let s = 'top: 0px;';
+     s += ' left: 0px;'
+     s += ' max-height: ' + sS + 'px;';
+     s += ' width: auto;';
+     s += ' transition: all ' + tPerB + 'ms ease-in;';
+     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+     img.setAttribute('style', s);
+     document.body.appendChild(img);
+     window.setTimeout(
+      function()
+      {
+       img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
+       img.style.transitionTime = '500ms';
+       gcEmote(img, false, true, 500);
+      },
+      eT + 500 + (t / 10)
+     );
+     window.setTimeout(
+      function()
+      {
+       img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
+      },
+      t
+     );
+    }
+    let oX = Math.floor(Math.random() * (sW - (sS * pyramidDist.length)));
+    let t = 0;
+    for (let i = 0; i < ct; i++)
+    {
+     let x;
+     do
+      x = Math.floor(Math.random() * pyramidDist.length);
+     while(drawn[x] >= pyramidDist[x]);
+     block(kList[Math.floor(Math.random() * kList.length)].url, oX, x, t);
+     drawn[x]++;
+     t += tPerB;
+    }
+   }
+
    async function showKappa_Stampede(kList, sW, sH, sS)
    {
     let speed = 2000;
@@ -2798,9 +2872,9 @@
     let sH = window.innerHeight;
     let sS = cfg.emote.size.max;
     if (sW < sH)
-     sS = Math.floor(sW * cfg.emote.size.ratio);
+     sS = Math.floor(sW * cfg.emote.size.ratio.normal);
     else
-     sS = Math.floor(sH * cfg.emote.size.ratio);
+     sS = Math.floor(sH * cfg.emote.size.ratio.normal);
     if (sS > cfg.emote.size.max)
      sS = cfg.emote.size.max;
     if (sS < cfg.emote.size.min)
@@ -2875,14 +2949,25 @@
     let sW = window.innerWidth;
     let sH = window.innerHeight;
     let sS = cfg.emote.size.max;
+    let sSm = Math.floor(sS / 2);
     if (sW < sH)
-     sS = Math.floor(sW * cfg.emote.size.ratio);
+    {
+     sS = Math.floor(sW * cfg.emote.size.ratio.normal);
+     sSm = Math.floor(sW * cfg.emote.size.ratio.small);
+    }
     else
-     sS = Math.floor(sH * cfg.emote.size.ratio);
+    {
+     sS = Math.floor(sH * cfg.emote.size.ratio.normal);
+     sSm = Math.floor(sH * cfg.emote.size.ratio.small);
+    }
     if (sS > cfg.emote.size.max)
      sS = cfg.emote.size.max;
     if (sS < cfg.emote.size.min)
      sS = cfg.emote.size.min;
+    if (sSm > cfg.emote.size.max)
+     sSm = cfg.emote.size.max;
+    if (sSm < cfg.emote.size.min)
+     sSm = cfg.emote.size.min;
     document.documentElement.style.setProperty('--height', sH + 'px');
     document.documentElement.style.setProperty('--width', sW + 'px');
     document.documentElement.style.setProperty('--emote-height', sS + 'px');
@@ -2893,6 +2978,7 @@
     switch (style)
     {
      case 'Pyramid':
+     case 'SmallPyramid':
       waitFor = 0;
       for (let i = 0; i < pyramidDist.length; i++)
        waitFor += pyramidDist[i];
@@ -2924,10 +3010,13 @@
       eActive -= cfg.display.kappa.count;
       break;
      case 'Fireworks':
-      showKappa_Fireworks(kList, sW, sH, sS * 0.5); //half sized icons for better fireworks
+      showKappa_Fireworks(kList, sW, sH, sSm);
       break;
      case 'Pyramid':
       showKappa_Pyramid(kList, sW, sH);
+      break;
+     case 'SmallPyramid':
+      showKappa_SmallPyramid(kList, sW, sH);
       break;
      case 'TheCube':
       eActive -= waitFor;
@@ -2964,7 +3053,7 @@
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
-       showEmote_Confetti(kList[r].url, sW, sH, sS * 0.5); //half sized icons for better confetti
+       showEmote_Confetti(kList[r].url, sW, sH, sSm);
        await sleep(25);
       }
       break;
@@ -3468,7 +3557,7 @@
     if (cmd.params.length > 1)
     {
      let m = cmd.params[1].toLowerCase();
-     if (m === '!kappagen')
+     if (cfg.display.kappa.aliases.includes(m))
      {
       if (level === -1)
        level = await parseLevel(cmd);
@@ -3478,7 +3567,16 @@
        return;
       }
      }
-     if (m.slice(0, 10) === '!kappagen ')
+     let foundCmd = false;
+     for (let i = 0; i < cfg.display.kappa.aliases.length; i++)
+     {
+      if (m.slice(0, cfg.display.kappa.aliases[i].length + 1) === cfg.display.kappa.aliases[i] + ' ')
+      {
+       foundCmd = true;
+       break;
+      }
+     }
+     if (foundCmd)
      {
       if (level === -1)
        level = await parseLevel(cmd);
