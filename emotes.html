@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.4 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.4.1 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -177,9 +177,14 @@
     *   styles    An array of kappagen styles to use for raid events.
     *             If FALSE, the default "kappa styles" setting will be used instead.
     *
+    *  follow     A user follows the channel.
+    *             If TRUE, a kappagen will occur.
+    *             If FALSE, no kappagen will occur.
+    *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
     *  sub        Settings related to kappagens on a subscribe event.
     *             Note: Sub event booleans can also be arrays of kappa styles.  This will override the default list
-    *             of kappa styles for the particular event in question.
+    *                   of kappa styles for the particular event in question.
     *
     *   useMsg    If TRUE, any emotes in resub messages will be used for the kappagen.
     *             If FALSE, rany emotes in resub messages will show up like normal emotes.
@@ -259,7 +264,15 @@
     *         emojis even without the ZWJ character, however more complicated sets such as the "family units"
     *         are not possible to correctly handle. The alternative character 0xE0002 used by some third-party
     *         Twitch chat projects will be correctly parsed as a ZWJ according to the rules laid out in the RFC:
-    *          https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
+    *          <https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f>
+    *
+    * Follow: Detecting followers on the current Twitch API is limited and relies on server-to-server events.
+    *         The current system uses a kludge and may have issues in rare situations. The current system regularly
+    *         grabs the most recent 100 followers and tries to find the previous request's latest follower, counting
+    *         how many followers exist in the list before the last known follower. If the latest follower is removed
+    *         from the list, or if more than 100 followers join between one check and another, the system will ignore
+    *         the event and assign a new latest follower. Real support for follow events requires an API change:
+    *          <https://twitch.uservoice.com/forums/310213/suggestions/41794465>
     *
     * Cheers: The cheer style will be used for kappagens. If a user cheers 1000 bits in a single 1000 bit emote,
     *         then the kappagen will be made of the 1000-bit cheers. However, if the user cheers 1000 bits using
@@ -271,13 +284,6 @@
     *         includes specific emotes (via kappagen, cheer, or resub message), the ratio of one emote to another
     *         will be maintained. If a user with kappa access posts "!kappagen PunchTrees PunchTrees SSSsss" then
     *         two thirds of the emotes in the emote-splosion will be "PunchTrees", and one third will be "SSSsss".
-    *
-    * Gifts:  If both a first/resub and bomb setting are enabled, multiple emote-splosions will likely be triggered.
-    *         This means that if a user gifts 20 Tier 1 subs and all three settings are TRUE, there may be up to
-    *         21 emote-splosions shown. It's recommended to keep Tier 1 first and resub gifts set to FALSE so that
-    *         the bomb setting will show one emote-splosion rather than a series of kappas for each sub in a gift.
-    *         Tier 2 and 3 are less frequent and more "special" so you may want to let multiple kappas be triggered
-    *         in such cases.
     *
     * ZWEs:   Zero-Width emotes are not supported. I really wanted to add support for this, but it would take a lot
     *         more processing power than it's worth. Emotes marked as zero-width will not show up on the emote wall.
@@ -368,6 +374,7 @@
       minimum: 2,
       styles: false
      },
+     follow: true,
      sub: {
       useMsg: true,
       t1: {
@@ -419,6 +426,11 @@
    var bttvZWE = [
     'SoSnowy',  'IceCold',   'SantaHat', 'TopHat',
     'ReinDeer', 'CandyCane', 'cvMask',   'cvHazmat',
+   ];
+
+   // list of default images to use if your channel has no emotes
+   var bareList = [
+    {url: 'https://cdn.betterttv.net/frankerfacez_emote/675080/4'}
    ];
    //////////////////////////////////////////////////////////////////////////////
    // don't mess with things below this line without knowing what you're doing //
@@ -673,6 +685,18 @@
     }
    }
 
+   @keyframes noFadeOut
+   {
+    99%
+    {
+     opacity: 1;
+    }
+    100%
+    {
+     opacity: 0;
+    }
+   }
+
    @keyframes zoomIn
    {
     0%
@@ -732,33 +756,33 @@
    document.title = cfg.channel + ' Emote Wall';
    /* global variables */
    var channelID = 0;
-   var dead = false;
-   var toShow = [];
-   var toKappa = [];
-   var toGC = {};
-   var toOverlay = [];
-   var eList = {};
-   var cList = [];
-   var bareList = [
-    {url: 'https://cdn.betterttv.net/frankerfacez_emote/675080/4'}
-   ];
-   var fList = [];
-   var eActive = 0;
-   var tStart = 32;
-   var tAnim = {
+   var dead = false;   // hard disconnect (usually caused by an error)
+   var toShow = [];    // emote queue
+   var toKappa = [];   // kappagen queue
+   var toGC = {};      // list of image elements to garbage collect
+   var eList = {};     // pre-listed emotes, sub-grouped into: cheer, ffz, 7tv, bttv, and bttvU (user-specific BTTV)
+   var cList = [];     // list of channel-specific emotes, used for kappagens
+   var fList = [];     // cache of users in chat and their follow status
+   var bList = [];     // list of giftbomb event origin ids (to prevent kappas for each gift in a bomb)
+   var eActive = 0;    // active emote count (effective, not actual)
+   var tStart = 32;    // time to wait for transition trigger (ms)
+   var uLF = false;    // user id of the most recent follower
+   var rFC = 2500;     // follower count interval (ms)
+   var tAnim = {       // animation timing constants
     fade: {
-     in: 8,
-     out: 8
+     in: 8,            // percentage of animation spent on fading in (8% of 5 seconds)
+     out: 8            // percentage of animation spent on fading out
     },
     zoom: {
-     in: 17,
-     out: 8
+     in: 17,           // percentage of animation spent on zooming in (17% of 5 seconds)
+     out: 8            // percentage of animation spent on zooming out
     }
    };
    /* Timers */
-   var tEmote = false;
-   var tKappa = false;
-   var tGC = false;
+   var tEmote = false; // emote queue timer
+   var tKappa = false; // kappagen queue timer
+   var tGC = false;    // garbage collection
+   var tFC = false;    // follower kludge
 
    function sleep(ms)
    {
@@ -815,7 +839,7 @@
      line = line.slice(1);
      if (!line.includes(' '))
       return false;
-     cmd.tags = [];
+     cmd.tags = {};
      let t = line.slice(0, line.indexOf(' '));
      line = line.slice(line.indexOf(' ') + 1);
      let a = t.split(';');
@@ -823,6 +847,7 @@
      {
       let k = a[i].slice(0, a[i].indexOf('='));
       let v = a[i].slice(a[i].indexOf('=') + 1);
+      v = v.replace(/\\s/g, ' ');
       cmd.tags[k] = v;
      }
     }
@@ -1543,7 +1568,10 @@
     let s = 'left: ' + h + 'px;'
     s += ' max-height: ' + sS + 'px;';
     s += ' width: auto;';
-    s += ' offset-path: path("M 0 ' + v + ' L 0 ' + Math.floor(v * 0.05) + '") ;';
+    if (cfg.emote.out.fade || cfg.emote.out.zoom)
+     s += ' offset-path: path("M 0 ' + v + ' L 0 ' + Math.floor(v * 0.05) + '") ;';
+    else
+     s += ' offset-path: path("M 0 ' + v + ' L 0 -' + sS + '") ;';
     let aNames = [];
     let aDelays = [];
     let aDurs = [];
@@ -1592,6 +1620,15 @@
      aNames.push('fadeOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+     aDurs.push('50ms');
      aTimings.push('ease-out');
      aFills.push('forwards');
      aIters.push('1');
@@ -1657,6 +1694,15 @@
      aNames.push('fadeOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+     aDurs.push('50ms');
      aTimings.push('ease-out');
      aFills.push('forwards');
      aIters.push('1');
@@ -1792,6 +1838,15 @@
      aFills.push('forwards');
      aIters.push('1');
     }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+     aDurs.push('50ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
     if (cfg.emote.out.zoom)
     {
      aNames.push('zoomOut');
@@ -1849,6 +1904,15 @@
      aNames.push('fadeOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+     aDurs.push('50ms');
      aTimings.push('ease-out');
      aFills.push('forwards');
      aIters.push('1');
@@ -1914,6 +1978,15 @@
      aNames.push('fadeOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+     aDurs.push('50ms');
      aTimings.push('ease-out');
      aFills.push('forwards');
      aIters.push('1');
@@ -2026,6 +2099,15 @@
      aNames.push('fadeOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+     aDurs.push('50ms');
      aTimings.push('ease-out');
      aFills.push('forwards');
      aIters.push('1');
@@ -2172,6 +2254,15 @@
      aFills.push('forwards');
      aIters.push('1');
     }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+     aDurs.push('50ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
     if (cfg.emote.out.zoom)
     {
      aNames.push('zoomOut');
@@ -2296,6 +2387,15 @@
      aFills.push('forwards');
      aIters.push('1');
     }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+     aDurs.push('50ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
     if (cfg.emote.out.zoom)
     {
      aNames.push('zoomOut');
@@ -2414,6 +2514,15 @@
      aFills.push('forwards');
      aIters.push('1');
     }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+     aDurs.push('50ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
     if (aNames.length > 0)
     {
      s += ' animation-name: ' + aNames.join() + ';';
@@ -2516,6 +2625,15 @@
      aNames.push('fadeOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+     aDurs.push('50ms');
      aTimings.push('ease-out');
      aFills.push('forwards');
      aIters.push('1');
@@ -3075,9 +3193,9 @@
     let msg = cmd.params[1];
     // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
     msg = msg.replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
-    let eSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
-    let eList = [...msg.matchAll(eSeg)];
-    if (eList.length === 0)
+    let emSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
+    let emList = [...msg.matchAll(emSeg)];
+    if (emList.length === 0)
      return [];
     if (dup === null)
      dup = cfg.display.duplicates;
@@ -3097,10 +3215,10 @@
      ret.push({svc: 'e', url: uri + c + '.png', str: c});
      return true;
     }
-    for (let i = 0; i < eList.length; i++)
+    for (let i = 0; i < emList.length; i++)
     {
      let cpList = [];
-     for (let c of eList[i][0])
+     for (let c of emList[i][0])
      {
       let p = c.codePointAt(0).toString(16);
       if (cpList.length > 0)
@@ -3325,6 +3443,73 @@
      ret.push({svc: '7', url: eList['7tv'][m[i]].url, str: m[i], scope: eList['7tv'][m[i]].scope});
     }
     return ret;
+   }
+
+   async function detectFollowers(chID)
+   {
+    if (tFC === false)
+     return;
+    window.clearTimeout(tFC);
+    tFC = false;
+    let fRet = await getFollowerChange(chID);
+    if (fRet !== false && fRet > 0)
+    {
+     console.log('detected ', fRet, ' new followers');
+     for (let i = 0; i < fRet; i++)
+     {
+      showKappa(false, cfg.event.follow);
+     }
+    }
+    tFC = window.setTimeout(detectFollowers, rFC, chID);
+   }
+
+   function getFollowerChange(chID)
+   {
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.twitch.tv/helix/users/follows?to_id=' + chID + '&first=100');
+      x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
+      x.setRequestHeader('Client-Id', cfg.login.client);
+      x.onreadystatechange = async function()
+      {
+       if (x.status !== 200)
+       {
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       if (j.total < 1 || !j.hasOwnProperty('data') || j.data.length < 1)
+       {
+        resolve(false);
+        return;
+       }
+       let findU = uLF;
+       uLF = j.data[0].from_id;
+       if (findU === false)
+       {
+        resolve(false);
+        return;
+       }
+       for (let i = 0; i < j.data.length; i++)
+       {
+        if (j.data[i].from_id === findU)
+        {
+         resolve(i);
+         return;
+        }
+       }
+       resolve(0);
+      };
+      x.send();
+     }
+    );
+    return p;
    }
 
    function checkFollower(cmd)
@@ -3644,6 +3829,12 @@
      return;
     if (!cmd.tags.hasOwnProperty('msg-param-sub-plan'))
      return;
+    if (cmd.tags.hasOwnProperty('msg-param-origin-id'))
+    {
+     let o = cmd.tags['msg-param-origin-id'];
+     if (bList.includes(o))
+      return;
+    }
     let a = [];
     if (cmd.params.length > 1)
     {
@@ -3765,6 +3956,8 @@
       }
       break;
      case 'submysterygift':
+      if (cmd.tags.hasOwnProperty('msg-param-origin-id'))
+       bList.push(cmd.tags['msg-param-origin-id']);
       let gc = cmd.tags['msg-param-mass-gift-count'];
       switch (subPlan)
       {
@@ -3902,6 +4095,8 @@
           loadBTTV_channel(channelID);
           loadBTTV_ws_channel(channelID);
          }
+         if (cfg.event.follow !== false)
+          tFC = window.setTimeout(detectFollowers, tStart, channelID);
         }
         break;
        case 'USERNOTICE':
