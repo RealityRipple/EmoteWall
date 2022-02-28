@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.4.1 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.4.2 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -92,9 +92,10 @@
     *             0xF77 ^ 0x003     all users except followers and strangers
     *             0x0F0             all subscribers
     *
-    *  duplicates A boolean to toggle duplicate emotes per message.
+    *  duplicates A boolean or integer to toggle duplicate emotes per message.
     *             If TRUE, every emote posted in chat will be shown.
     *             If FALSE, only one of each emote per message will be shown.
+    *             If greater than 1, sets the maximum number of identical emotes shown from any message.
     *
     *  useEmoji   Toggles display of emojis on the emote wall, and lets you choose an emoji font style.
     *             If TRUE, emojis will be shown using the "twemoji" font.
@@ -3203,15 +3204,21 @@
      set = 'twemoji'
     let ret = [];
     let uri = 'https://cdn.frankerfacez.com/static/emoji/images/' + set + '/';
-    let addList = [];
+    let addList = {};
     function showEmoji(c)
     {
      if (c.slice(-5) === '-fe0f' && !c.match(/-200d-264[0|2]-/) && !c.match(/-200d-26a7/) && !c.match(/-200d-2620/))
       c = c.slice(0, -5);
-     if (!addList.includes(c))
-      addList.push(c);
-     else if (!dup)
-      return false;
+     if (!addList.hasOwnProperty(c))
+      addList[c] = 0;
+     else
+     {
+      if (dup === false)
+       return false;
+      if (dup !== true && addList[c] >= dup)
+       return false;
+     }
+     addList[c]++;
      ret.push({svc: 'e', url: uri + c + '.png', str: c});
      return true;
     }
@@ -3310,7 +3317,6 @@
     let f = 'default';
     let t = 'dark';
     let r = '3.0';
-    let addList = [];
     if (cmd.params.length < 2)
      return [];
     let m = cmd.params[1];
@@ -3326,13 +3332,11 @@
      let eStart = parseInt(eVals[0].split('-')[0], 10);
      let eEnd = parseInt(eVals[0].split('-')[1], 10);
      let sName = m.slice(eStart, (eEnd + 1));
-     if (!addList.includes(sName))
-      addList.push(sName);
-     else if (!dup)
-      continue;
      let l = eVals.length;
-     if (!dup)
+     if (dup === false)
       l = 1;
+     else if (dup !== true && l > dup)
+      l = dup;
      for (let c = 0; c < l; c++)
       ret.push({svc: 't', url: u, str: sName});
     }
@@ -3343,13 +3347,13 @@
    {
     if (!eList.hasOwnProperty('ffz'))
      return [];
-    let addList = [];
     if (cmd.params.length < 2)
      return [];
     let m = cmd.params[1].split(' ');
     if (dup === null)
      dup = cfg.display.duplicates;
     let ret = [];
+    let addList = {};
     for (let i = 0; i < m.length; i++)
     {
      if (!eList.ffz.hasOwnProperty(m[i]))
@@ -3360,10 +3364,16 @@
       if (!eList.ffz[m[i]].users.includes(u.host))
        continue;
      }
-     if (!addList.includes(m[i]))
-      addList.push(m[i]);
-     else if (!dup)
-      continue;
+     if (!addList.hasOwnProperty(m[i]))
+      addList[m[i]] = 0;
+     else
+     {
+      if (dup === false)
+       continue;
+      if (dup !== true && addList[m[i]] >= dup)
+       continue;
+     }
+     addList[m[i]]++;
      ret.push({svc: 'f', url: eList.ffz[m[i]].url, str: m[i], scope: eList.ffz[m[i]].scope});
     }
     return ret;
@@ -3373,21 +3383,27 @@
    {
     if (!eList.hasOwnProperty('bttv'))
      return [];
-    let addList = [];
     if (cmd.params.length < 2)
      return [];
     let m = cmd.params[1].split(' ');
     if (dup === null)
      dup = cfg.display.duplicates;
     let ret = [];
+    let addList = {};
     for (let i = 0; i < m.length; i++)
     {
      if (!eList.bttv.hasOwnProperty(m[i]))
       continue;
-     if (!addList.includes(m[i]))
-      addList.push(m[i]);
-     else if (!dup)
-      continue;
+     if (!addList.hasOwnProperty(m[i]))
+      addList[m[i]] = 0;
+     else
+     {
+      if (dup === false)
+       continue;
+      if (dup !== true && addList[m[i]] >= dup)
+       continue;
+     }
+     addList[m[i]]++;
      ret.push({svc: 'b', url: eList.bttv[m[i]].url, str: m[i], scope: eList.bttv[m[i]].scope});
     }
     return ret;
@@ -3397,7 +3413,6 @@
    {
     if (!eList.hasOwnProperty('bttvU'))
      return [];
-    let addList = [];
     if (cmd.params.length < 2)
      return [];
     let u = parseUser(cmd);
@@ -3407,14 +3422,21 @@
     if (dup === null)
      dup = cfg.display.duplicates;
     let ret = [];
+    let addList = {};
     for (let i = 0; i < m.length; i++)
     {
      if (!eList.bttvU[u.host].hasOwnProperty(m[i]))
       continue;
-     if (!addList.includes(m[i]))
-      addList.push(m[i]);
-     else if (!dup)
-      continue;
+     if (!addList.hasOwnProperty(m[i]))
+      addList[m[i]] = 0;
+     else
+     {
+      if (dup === false)
+       continue;
+      if (dup !== true && addList[m[i]] >= dup)
+       continue;
+     }
+     addList[m[i]]++;
      console.log(u.host, m[i]);
      ret.push({svc: 'b', url: eList.bttvU[u.host][m[i]].url, str: m[i], scope: eList.bttvU[u.host][m[i]].scope});
     }
@@ -3425,21 +3447,27 @@
    {
     if (!eList.hasOwnProperty('7tv'))
      return [];
-    let addList = [];
     if (cmd.params.length < 2)
      return [];
     let m = cmd.params[1].split(' ');
     if (dup === null)
      dup = cfg.display.duplicates;
     let ret = [];
+    let addList = {};
     for (let i = 0; i < m.length; i++)
     {
      if (!eList['7tv'].hasOwnProperty(m[i]))
       continue;
-     if (!addList.includes(m[i]))
-      addList.push(m[i]);
-     else if (!dup)
-      continue;
+     if (!addList.hasOwnProperty(m[i]))
+      addList[m[i]] = 0;
+     else
+     {
+      if (dup === false)
+       continue;
+      if (dup !== true && addList[m[i]] >= dup)
+       continue;
+     }
+     addList[m[i]]++;
      ret.push({svc: '7', url: eList['7tv'][m[i]].url, str: m[i], scope: eList['7tv'][m[i]].scope});
     }
     return ret;
@@ -3456,9 +3484,7 @@
     {
      console.log('detected ', fRet, ' new followers');
      for (let i = 0; i < fRet; i++)
-     {
       showKappa(false, cfg.event.follow);
-     }
     }
     tFC = window.setTimeout(detectFollowers, rFC, chID);
    }
