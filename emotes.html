@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.4.2 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.4.3 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -123,6 +123,16 @@
     *
     *   access    Similar to the access flag for normal emotes, but controls which users can use the !kappagen command.
     *
+    *   cube      Settings related to The Cube kappagen.
+    *
+    *    size     A decimal value representing the height of The Cube kappagen, relative to the smallest
+    *             screen dimension.
+    *             If the height of the screen is less than the width, each emote will be equal to the height of
+    *             the screen multiplied by this ratio. Suggested "8 / 10" (80%).
+    *
+    *    center   If true, The Cube will show up in the exact center of the screen.
+    *             If false, The Cube will show up in a random location.
+    *
     * emote       Settings related to individual emote display.
     *
     *  time       The number of seconds an emote should show up on the screen for.
@@ -130,6 +140,9 @@
     *  max        The maximum nuber of emotes to show on the screen at one time. Set this value to 0 for
     *             infinite emotes. This value should be greater than the "kappa count" value seen above
     *             (best would be 4x or more).
+    *
+    *  queue      The maximum number of emotes to save in queue. Set this value to 0 for an infinite queue.
+    *             This value will be ignored if the previous value (cfg.emote.max) is infinite (0).
     *
     *  size       Settings related to the size of emotes.
     *
@@ -341,18 +354,23 @@
        'Fountain',    // Spout from a fountain  (no fade/zoom)
        'Stampede',    // Stampede of emotes     (no fade/zoom)
        'Confetti',    // Fall like confetti     (no zoom, no fade in, only fade out; small emotes)
-       'TheCube',     // Rotate a 3D cube of an emote (no zoom, only fade; 80% screen size emotes)
+       'TheCube',     // Rotate a 3D cube of an emote (no zoom, only fade; "cfg.display.kappa.cube.size"-size emotes)
       ],
       access: 0x800 | 0x400 | 0x200 | 0x100 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002,
       aliases: [      // !kappagen command aliases (must be lower-case)
        '!kappagen',
        '-kappagen'
-      ]
+      ],
+      cube: {
+       size: 8/10,
+       center: true
+      }
      }
     },
     emote: {
      time: 5,
      max: 0,
+     queue: 0,
      size: {
       ratio: {
        normal: 1/12,
@@ -2599,8 +2617,13 @@
     cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
     cube.appendChild(cubeU);
     scene.appendChild(cube);
-    let h = Math.floor((sW / 2) - (sS / 2));
-    let v = Math.floor((sH / 2) - (sS / 2));
+    let h = Math.floor(Math.random() * (sW - sS));
+    let v = Math.floor(Math.random() * (sH - sS));
+    if (cfg.display.kappa.cube.center)
+    {
+     h = Math.floor((sW / 2) - (sS / 2));
+     v = Math.floor((sH / 2) - (sS / 2));
+    }
     let s = 'width: ' + sS + 'px;';
     s += ' height: ' + sS + 'px;';
     s += ' perspective: ' + (sS * 3)  + 'px;';
@@ -3023,6 +3046,8 @@
      showEmote(e.url);
      if (cfg.emote.max > 0 && eActive > cfg.emote.max)
      {
+      if (cfg.emote.queue > 0 && toShow.length > cfg.emote.queue)
+       toShow.splice(0, toShow.length - cfg.emote.queue);
       tEmote = window.setTimeout(showEmotes, 500);
       return;
      }
@@ -3047,6 +3072,8 @@
      showKappa(e.list, [e.style]);
      if (cfg.emote.max > 0 && eActive + cfg.display.kappa.count > cfg.emote.max)
      {
+      if (cfg.emote.queue > 0 && toKappa.length > cfg.emote.queue)
+       toKappa.splice(0, toKappa.length - cfg.emote.queue);
       tKappa = window.setTimeout(showKappas, 500);
       return;
      }
@@ -3143,7 +3170,7 @@
       if (sW > sH)
        cS = sH;
       let r = Math.floor(Math.random() * kList.length);
-      showKappa_TheCube(kList[r].url, sW, sH, Math.floor(cS * 0.8)); //80% of the smaller screen dimension
+      showKappa_TheCube(kList[r].url, sW, sH, Math.floor(cS * cfg.display.kappa.cube.size));
       break;
      case 'Burst':
       let oH = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
