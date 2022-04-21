@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.4.3 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.4.4 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -183,13 +183,15 @@
     *
     * event       Settings related to channel events which trigger emote-splosions (kappagen).
     *
-    *  raid       Settings related to kappagens when being raided.
-    *
-    *   minimum   The minimum number of raiders required for a kappagen to be triggered.
-    *             Set to 0 to disable raid kappagens.
-    *
-    *   styles    An array of kappagen styles to use for raid events.
-    *             If FALSE, the default "kappa styles" setting will be used instead.
+    *  raid       Settings related to kappagens when being raided. This value can be an integer or an array:
+    *              If Integer, the value is the minimum raiders required for a raid to trigger a kappagen.
+    *               If 0, no kappagen will occur on raid.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-10' or '11-49', or an open-maximum range such as '50+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     *  follow     A user follows the channel.
     *             If TRUE, a kappagen will occur.
@@ -227,11 +229,18 @@
     *             If FALSE, no kappagen will occur.
     *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
-    *     bomb    A user gifts multiple Tier 1 subscriptions.
-    *             If 0, no kappagen will occur.
-    *             If 1, a kappagen will occur on any random gift.
-    *             If greater than 1, the number of gifted users in a Tier 1 giftbomb must be greater than or equal to
-    *             this number to trigger a kappagen.
+    *     bomb    A user gifts multiple Tier 1 subscriptions. This value can be an integer or an array:
+    *              If Integer, the value is the minimum gifts required for a gift bomb to trigger a kappagen.
+    *               If 0, no kappagen will occur.
+    *               If 1, a kappagen will occur on any random gift.
+    *               If greater than 1, the number of gifted users in a Tier 1 giftbomb must be greater than or equal to
+    *               this number to trigger a kappagen.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     *   t2        Identical to t1, but for Tier 2 subscriptions.
     *
@@ -249,8 +258,15 @@
     *             If FALSE, no kappagen will occur.
     *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
-    *  cheer      The minimum bits required for a cheer to trigger a kappagen.
-    *             If 0, no kappagen will occur on cheer.
+    *  cheer      Kappagens triggered from cheers. This value can be an integer or an array:
+    *              If Integer, the value is the minimum bits required for a cheer to trigger a kappagen.
+    *               If 0, no kappagen will occur on cheer.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-499' or '2500-4999', or an open-maximum range such as '7500+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     *  badge      Settings related to users earning bits badges.
     *             This section is more "fluid" than other sections.
@@ -389,10 +405,7 @@
      }
     },
     event: {
-     raid: {
-      minimum: 2,
-      styles: false
-     },
+     raid: 2,
      follow: true,
      sub: {
       useMsg: true,
@@ -848,6 +861,42 @@
     if (v.length > 0)
      arr.push(v);
     return arr;
+   }
+
+   function findInMaybeRange(r, v)
+   {
+    if (Number.isInteger(r))
+    {
+     if (r > 0 && v >= r)
+      return true;
+     return false;
+    }
+    if (Array.isArray(r))
+    {
+     for (const k in r)
+     {
+      let lower = 0;
+      let upper = 0;
+      if (k.slice(-1) === '+')
+      {
+       lower = parseInt(k.slice(0, -1), 10);
+       upper = Number.MAX_SAFE_INTEGER;
+      }
+      else if (k.indexOf('-') !== false)
+      {
+       lower = parseInt(k.slice(0, k.indexOf('-')), 10);
+       upper = parseInt(k.slice(k.indexOf('-') + 1), 10);
+      }
+      else
+      {
+       lower = parseInt(k, 10);
+       upper = parseInt(k, 10);
+      }
+      if (c >= lower && c <= upper)
+       return r[k];
+     }
+    }
+    return false;
    }
 
    function parseMsg(line)
@@ -3464,7 +3513,7 @@
        continue;
      }
      addList[m[i]]++;
-     console.log(u.host, m[i]);
+     console.log('User-Specific Global BTTV Emote: ', u.host, m[i], eList.bttvU[u.host][m[i]].url);
      ret.push({svc: 'b', url: eList.bttvU[u.host][m[i]].url, str: m[i], scope: eList.bttvU[u.host][m[i]].scope});
     }
     return ret;
@@ -3779,13 +3828,17 @@
     p = handleDuplicates(p);
     if (p.length === 0)
      return false;
-    if (cfg.event.cheer > 0 && cmd.tags.bits >= cfg.event.cheer)
+    let r = findInMaybeRange(cfg.event.cheer, cmd.tags.bits);
+    if (r === false)
     {
-     showKappa(p);
+     toShow = toShow.concat(p);
+     showEmotes();
      return true;
     }
-    toShow = toShow.concat(p);
-    showEmotes();
+    if (r === true)
+     showKappa(p);
+    else
+     showKappa(p, r);
     return true;
    }
 
@@ -3866,14 +3919,16 @@
 
    function parseRaid(cmd)
    {
-    if (cfg.event.raid.minimum < 1)
-     return;
     if (!cmd.tags.hasOwnProperty('msg-param-viewerCount'))
      return;
     let c = cmd.tags['msg-param-viewerCount'];
-    if (c < cfg.event.raid.minimum)
+    let r = findInMaybeRange(cfg.event.raid, c);
+    if (r === false)
      return;
-    showKappa(false, cfg.event.raid.styles);
+    if (r === true)
+     showKappa(false);
+    else
+     showKappa(false, r);
    }
 
    async function parseSub(cmd)
@@ -4015,16 +4070,34 @@
       switch (subPlan)
       {
        case '1000':
-        if (gc >= cfg.event.sub.t1.gift.bomb)
-         showKappa(a, cfg.event.sub.t1.gift.bomb);
+        let r1 = findInMaybeRange(cfg.event.sub.t1.gift.bomb, gc);
+        if (r1 !== false)
+        {
+         if (r1 === true)
+          showKappa(a);
+         else
+          showKappa(a, r1);
+        }
         break;
        case '2000':
-        if (gc >= cfg.event.sub.t2.gift.bomb)
-         showKappa(a, cfg.event.sub.t2.gift.bomb);
+        let r2 = findInMaybeRange(cfg.event.sub.t2.gift.bomb, gc);
+        if (r2 !== false)
+        {
+         if (r2 === true)
+          showKappa(a);
+         else
+          showKappa(a, r2);
+        }
         break;
        case '3000':
-        if (gc >= cfg.event.sub.t3.gift.bomb)
-         showKappa(a, cfg.event.sub.t3.gift.bomb);
+        let r3 = findInMaybeRange(cfg.event.sub.t3.gift.bomb, gc);
+        if (r3 !== false)
+        {
+         if (r3 === true)
+          showKappa(a);
+         else
+          showKappa(a, r3);
+        }
         break;
        default:
         console.log('Unknown Giftbomb Plan: ', subPlan, cmd);
@@ -4037,8 +4110,6 @@
 
    function parseBadge(cmd)
    {
-    if (cfg.event.raid.minimum < 1)
-     return;
     if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
      return;
     let c = cmd.tags['msg-param-threshold'];
