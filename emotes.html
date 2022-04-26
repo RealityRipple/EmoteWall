@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.4.4 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.4.5 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -865,36 +865,44 @@
 
    function findInMaybeRange(r, v)
    {
-    if (Number.isInteger(r))
+    let t = typeof r;
+    switch (t)
     {
-     if (r > 0 && v >= r)
-      return true;
-     return false;
-    }
-    if (Array.isArray(r))
-    {
-     for (const k in r)
-     {
-      let lower = 0;
-      let upper = 0;
-      if (k.slice(-1) === '+')
+     case 'undefined':
+      return false;
+     case 'boolean':
+      return false;
+     case 'number':
+      if (r > 0 && v >= r)
+       return true;
+      return false;
+     case 'object':
+      if (r === null)
+       return false;
+      for (const k in r)
       {
-       lower = parseInt(k.slice(0, -1), 10);
-       upper = Number.MAX_SAFE_INTEGER;
+       if (!r.hasOwnProperty(k))
+        continue;
+       let lower = 0;
+       let upper = 0;
+       if (k.slice(-1) === '+')
+       {
+        lower = parseInt(k.slice(0, -1), 10);
+        upper = Number.MAX_SAFE_INTEGER;
+       }
+       else if (k.indexOf('-') !== -1)
+       {
+        lower = parseInt(k.slice(0, k.indexOf('-')), 10);
+        upper = parseInt(k.slice(k.indexOf('-') + 1), 10);
+       }
+       else
+       {
+        lower = parseInt(k, 10);
+        upper = parseInt(k, 10);
+       }
+       if (v >= lower && v <= upper)
+        return r[k];
       }
-      else if (k.indexOf('-') !== false)
-      {
-       lower = parseInt(k.slice(0, k.indexOf('-')), 10);
-       upper = parseInt(k.slice(k.indexOf('-') + 1), 10);
-      }
-      else
-      {
-       lower = parseInt(k, 10);
-       upper = parseInt(k, 10);
-      }
-      if (c >= lower && c <= upper)
-       return r[k];
-     }
     }
     return false;
    }
@@ -3074,6 +3082,8 @@
     document.documentElement.style.setProperty('--width', sW + 'px');
     document.documentElement.style.setProperty('--emote-height', sS + 'px');
     let style = cfg.display.styles[(Math.floor(Math.random() * cfg.display.styles.length))];
+    if (style === undefined)
+     return;
     window['showEmote_' + style](url, sW, sH, sS);
    }
 
@@ -3253,6 +3263,8 @@
       }
       break;
      default:
+      if (typeof window['showEmote_' + style] === 'undefined')
+       return false
       for (let i = 0; i < cfg.display.kappa.count; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
@@ -3792,11 +3804,11 @@
     let addList = {};
     let p = [];
     let msg = cmd.params[1].split(' ');
-    for (const prefix in eList.cheer)
+    for (let m = 0; m < msg.length; m++)
     {
-     let firstChars = prefix.length;
-     for (let m = 0; m < msg.length; m++)
+     for (const prefix in eList.cheer)
      {
+      let firstChars = prefix.length;
       if (msg[m].slice(0, firstChars).toLowerCase() !== prefix.toLowerCase())
        continue;
       let match = msg[m].slice(0, firstChars);
