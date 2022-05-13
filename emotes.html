@@ -223,10 +223,32 @@
     *             If FALSE, no kappagen will occur.
     *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
-    *    resub    A user resubscribes or extends their subscription at Tier 1.
-    *             If TRUE, a kappagen will occur.
-    *             If FALSE, no kappagen will occur.
-    *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *    resub    A user resubscribes at Tier 1. This can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on all Tier 1 resubs.
+    *              If FALSE, no kappagen will occur on T1 resubs.
+    *              If Integer, the value is the minimum months required for a Tier 1 resub to trigger a kappagen.
+    *               If 0, no kappagen will occur.
+    *               If 1, a kappagen will occur every month.
+    *               If greater than 1, the number of months subscribed must be greater than or equal to this number
+    *               to trigger a kappagen.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    upgrade  Settings related to "converted" subscriptions.
+    *
+    *     gift     A user upgrades a gift sub to Tier 1.
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *     prime    A user upgrades a Prime sub to Tier 1.
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     *    gift     Settings related to tier 1 gifts.
     *
@@ -235,12 +257,24 @@
     *             If FALSE, no kappagen will occur.
     *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
-    *     resub   A user gifts another user a Tier 1 resubscription.
-    *             If TRUE, a kappagen will occur.
-    *             If FALSE, no kappagen will occur.
-    *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *     resub   A user gifts another user a Tier 1 resubscription. This can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on all Tier 1 gift resubs.
+    *              If FALSE, no kappagen will occur on T1 gift resubs.
+    *              If Integer, the value is the minimum months required for a Tier 1 gift resub to trigger a kappagen.
+    *               If 0, no kappagen will occur.
+    *               If 1, a kappagen will occur every month.
+    *               If greater than 1, the number of months subscribed must be greater than or equal to this number
+    *               to trigger a kappagen.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
-    *     bomb    A user gifts multiple Tier 1 subscriptions. This value can be an integer or an array:
+    *     bomb    A user gifts multiple Tier 1 subscriptions. This value can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on any random gift.
+    *              If FALSE, no kappagen will occur on giftbombs.
     *              If Integer, the value is the minimum gifts required for a gift bomb to trigger a kappagen.
     *               If 0, no kappagen will occur.
     *               If 1, a kappagen will occur on any random gift.
@@ -264,10 +298,20 @@
     *             If FALSE, no kappagen will occur.
     *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
-    *    resub    A user resubscribes or extends their Prime subscription.
-    *             If TRUE, a kappagen will occur.
-    *             If FALSE, no kappagen will occur.
-    *             If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *    resub    A user resubscribes with Prime. This can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on all Prime resubs.
+    *              If FALSE, no kappagen will occur on Prime resubs.
+    *              If Integer, the value is the minimum months required for a Prime resub to trigger a kappagen.
+    *               If 0, no kappagen will occur.
+    *               If 1, a kappagen will occur every month.
+    *               If greater than 1, the number of months subscribed must be greater than or equal to this number
+    *               to trigger a kappagen.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     *  cheer      Kappagens triggered from cheers. This value can be an integer or an array:
     *              If Integer, the value is the minimum bits required for a cheer to trigger a kappagen.
@@ -428,6 +472,10 @@
       t1: {
        first: false,
        resub: true,
+       upgrade: {
+        gift: false,
+        prime: false
+       },
        gift: {
         first: false,
         resub: false,
@@ -437,6 +485,10 @@
       t2: {
        first: true,
        resub: true,
+       upgrade: {
+        gift: false,
+        prime: false
+       },
        gift: {
         first: true,
         resub: true,
@@ -446,6 +498,10 @@
       t3: {
        first: true,
        resub: true,
+       upgrade: {
+        gift: false,
+        prime: false
+       },
        gift: {
         first: true,
         resub: true,
@@ -995,7 +1051,7 @@
      case 'undefined':
       return false;
      case 'boolean':
-      return false;
+      return (r === true);
      case 'number':
       if (r > 0 && v >= r)
        return true;
@@ -4249,16 +4305,32 @@
 
    async function parseSub(cmd)
    {
+    function parsePlan(c)
+    {
+     if (!c.tags.hasOwnProperty('msg-param-sub-plan'))
+      return;
+     let p = c.tags['msg-param-sub-plan'];
+     switch (p)
+     {
+      case '1000': return 't1';
+      case '2000': return 't2';
+      case '3000': return 't3';
+      case 'Prime': return 'prime';
+      default:
+     }
+     console.log('Unknown Sub Plan: ', p, c);
+     return false;
+    }
     if (!cmd.tags.hasOwnProperty('msg-id'))
      return;
-    if (!cmd.tags.hasOwnProperty('msg-param-sub-plan'))
+    let subPlan = parsePlan(cmd);
+    if (subPlan === false)
      return;
+    let mpoi = false;
     if (cmd.tags.hasOwnProperty('msg-param-origin-id'))
-    {
-     let o = cmd.tags['msg-param-origin-id'];
-     if (bList.includes(o))
-      return;
-    }
+     mpoi = cmd.tags['msg-param-origin-id'];
+    if (mpoi !== false && bList.includes(mpoi))
+     return;
     let a = [];
     if (cmd.params.length > 1)
     {
@@ -4280,143 +4352,99 @@
      else
       await parseLine(cmd);
     }
-    let subPlan = cmd.tags['msg-param-sub-plan'];
+    let mpm = 1;
+    if (cmd.tags.hasOwnProperty('msg-param-months'))
+     mpm = parseInt(cmd.tags['msg-param-months'], 10);
+    let mpcm = 1;
+    if (cmd.tags.hasOwnProperty('msg-param-cumulative-months'))
+     mpcm = parseInt(cmd.tags['msg-param-cumulative-months'], 10);
+    let mpmgc = 1;
+    if (cmd.tags.hasOwnProperty('msg-param-mass-gift-count'))
+     mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
     switch (cmd.tags['msg-id'])
     {
      case 'sub':
-      switch (subPlan)
-      {
-       case '1000':
-        if (cfg.event.sub.t1.first)
-         showKappa(a, cfg.event.sub.t1.first);
-        break;
-       case '2000':
-        if (cfg.event.sub.t2.first)
-         showKappa(a, cfg.event.sub.t2.first);
-        break;
-       case '3000':
-        if (cfg.event.sub.t3.first)
-         showKappa(a, cfg.event.sub.t3.first);
-        break;
-       case 'Prime':
-        if (cfg.event.sub.prime.first)
-         showKappa(a, cfg.event.sub.prime.first);
-        break;
-       default:
-        console.log('Unknown Sub Plan: ', subPlan, cmd);
-      }
+      if (!cfg.event.sub.hasOwnProperty(subPlan))
+       return;
+      if (!cfg.event.sub[subPlan].hasOwnProperty('first'))
+       return;
+      if (cfg.event.sub[subPlan].first === false)
+       return;
+      showKappa(a, cfg.event.sub[subPlan].first);
       break;
      case 'resub':
-     case 'extendsub':
+      if (!cfg.event.sub.hasOwnProperty(subPlan))
+       return;
+      if (!cfg.event.sub[subPlan].hasOwnProperty('resub'))
+       return;
+      let rs = findInMaybeRange(cfg.event.sub[subPlan].resub, mpcm);
+      if (rs === false)
+       return;
+      if (rs === true)
+       showKappa(a);
+      else
+       showKappa(a, rs);
+      break;
      case 'primepaidupgrade':
-      switch (subPlan)
-      {
-       case '1000':
-        if (cfg.event.sub.t1.resub)
-         showKappa(a, cfg.event.sub.t1.resub);
-        break;
-       case '2000':
-        if (cfg.event.sub.t2.resub)
-         showKappa(a, cfg.event.sub.t2.resub);
-        break;
-       case '3000':
-        if (cfg.event.sub.t3.resub)
-         showKappa(a, cfg.event.sub.t3.resub);
-        break;
-       case 'Prime':
-        if (cfg.event.sub.prime.resub)
-         showKappa(a, cfg.event.sub.prime.resub);
-        break;
-       default:
-        console.log('Unknown Resub Plan: ', subPlan, cmd);
-      }
+      if (!cfg.event.sub.hasOwnProperty(subPlan))
+       return;
+      if (!cfg.event.sub[subPlan].hasOwnProperty('upgrade'))
+       return;
+      if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('prime'))
+       return;
+      showKappa(a, cfg.event.sub[subPlan].upgrade.prime);
+      break;
+     case 'giftpaidupgrade':
+      if (!cfg.event.sub.hasOwnProperty(subPlan))
+       return;
+      if (!cfg.event.sub[subPlan].hasOwnProperty('upgrade'))
+       return;
+      if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('gift'))
+       return;
+      showKappa(a, cfg.event.sub[subPlan].upgrade.gift);
       break;
      case 'subgift':
-      let gm = 1;
-      if (cmd.tags.hasOwnProperty('msg-param-gift-months'))
-       sgm = parseInt(cmd.tags['msg-param-gift-months'], 10);
-      else if (cmd.tags.hasOwnProperty('msg-param-months'))
-       sgm = parseInt(cmd.tags['msg-param-months'], 10);
-      if (sgm > 1)
+      if (!cfg.event.sub.hasOwnProperty(subPlan))
+       return;
+      if (!cfg.event.sub[subPlan].hasOwnProperty('gift'))
+       return;
+      if (mpm === 1)
       {
-       switch (subPlan)
-       {
-        case '1000':
-         if (cfg.event.sub.t1.gift.resub)
-          showKappa(a, cfg.event.sub.t1.gift.resub);
-         break;
-        case '2000':
-         if (cfg.event.sub.t2.gift.resub)
-          showKappa(a, cfg.event.sub.t2.gift.resub);
-         break;
-        case '3000':
-         if (cfg.event.sub.t3.gift.resub)
-          showKappa(a, cfg.event.sub.t3.gift.resub);
-         break;
-        default:
-        console.log('Unknown Gift Plan: ', subPlan, cmd);
-       }
+       if (!cfg.event.sub[subPlan].gift.hasOwnProperty('first'))
+        return;
+       if (cfg.event.sub[subPlan].gift.first === false)
+        return;
+       showKappa(a, cfg.event.sub[subPlan].gift.first);
+       return;
       }
+      if (!cfg.event.sub[subPlan].gift.hasOwnProperty('resub'))
+       return;
+      let gpr = findInMaybeRange(cfg.event.sub[subPlan].gift.resub, mpm);
+      if (gpr === false)
+       return;
+      if (gpr === true)
+       showKappa(a);
       else
-      {
-       switch (subPlan)
-       {
-        case '1000':
-         if (cfg.event.sub.t1.gift.first)
-          showKappa(a, cfg.event.sub.t1.gift.first);
-         break;
-        case '2000':
-         if (cfg.event.sub.t2.gift.first)
-          showKappa(a, cfg.event.sub.t2.gift.first);
-         break;
-        case '3000':
-         if (cfg.event.sub.t3.gift.first)
-          showKappa(a, cfg.event.sub.t3.gift.first);
-         break;
-        default:
-        console.log('Unknown Gift Plan: ', subPlan, cmd);
-       }
-      }
+       showKappa(a, gpr);
       break;
      case 'submysterygift':
-      if (cmd.tags.hasOwnProperty('msg-param-origin-id'))
-       bList.push(cmd.tags['msg-param-origin-id']);
-      let gc = cmd.tags['msg-param-mass-gift-count'];
-      switch (subPlan)
-      {
-       case '1000':
-        let r1 = findInMaybeRange(cfg.event.sub.t1.gift.bomb, gc);
-        if (r1 !== false)
-        {
-         if (r1 === true)
-          showKappa(a);
-         else
-          showKappa(a, r1);
-        }
-        break;
-       case '2000':
-        let r2 = findInMaybeRange(cfg.event.sub.t2.gift.bomb, gc);
-        if (r2 !== false)
-        {
-         if (r2 === true)
-          showKappa(a);
-         else
-          showKappa(a, r2);
-        }
-        break;
-       case '3000':
-        let r3 = findInMaybeRange(cfg.event.sub.t3.gift.bomb, gc);
-        if (r3 !== false)
-        {
-         if (r3 === true)
-          showKappa(a);
-         else
-          showKappa(a, r3);
-        }
-        break;
-       default:
-        console.log('Unknown Giftbomb Plan: ', subPlan, cmd);
-      }
+      if (!cfg.event.sub.hasOwnProperty(subPlan))
+       return;
+      if (!cfg.event.sub[subPlan].hasOwnProperty('gift'))
+       return;
+      if (!cfg.event.sub[subPlan].gift.hasOwnProperty('bomb'))
+       return;
+      if (cfg.event.sub[subPlan].gift.bomb === false)
+       return;
+      if (mpoi !== false)
+       bList.push(mpoi);
+      let gpb = findInMaybeRange(cfg.event.sub[subPlan].gift.bomb, mpmgc);
+      if (gpb === false)
+       return;
+      if (gpb === true)
+       showKappa(a);
+      else
+       showKappa(a, gpb);
       break;
      default:
       console.log('Unknown Sub Type: ', cmd);
@@ -4552,9 +4580,9 @@
           break;
          case 'sub':
          case 'resub':
-         case 'extendsub':
          case 'subgift':
          case 'submysterygift':
+         case 'giftpaidupgrade':
          case 'primepaidupgrade':
           parseSub(cmd);
           break;
