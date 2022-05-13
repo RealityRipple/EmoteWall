@@ -170,6 +170,9 @@
     *
     *   max       The maximum height of an emote, in pixels.
     *
+    *   variation  An integer variable that determines how often occasional random large or small emotes show up.
+    *             If FALSE, no variations will occur.
+    *
     *  cube      Settings related to The Cube emote.
     *
     *   rotations  The maximum number of rotations a cube might spin while on screen. This effectively controls the
@@ -402,7 +405,8 @@
        small: 1/24
       },
       min: 16,
-      max: 112
+      max: 112,
+      variation: false
      },
      cube: {
       rotations: 5
@@ -488,6 +492,8 @@
     --height: 0px;
     --width: 0px;
     --emote-height: 0px;
+    --emote-height-s: 0px;
+    --emote-height-l: 0px;
    }
    body
    {
@@ -791,6 +797,112 @@
     {
      margin: calc((var(--emote-height) - (var(--emote-height) * 0.1)) / 2);
      max-height: calc(var(--emote-height) * 0.1);
+    }
+   }
+
+   @keyframes zoomInS
+   {
+    0%
+    {
+     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 0.1)) / 2);
+     max-height: calc(var(--emote-height-s) * 0.1);
+    }
+    24% /* 4% */
+    {
+     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 1.2)) / 2);
+     max-height: calc(var(--emote-height-s) * 1.2);
+    }
+    35% /* 6% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-s);
+    }
+    47% /* 8% */
+    {
+     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 0.8)) / 2);
+     max-height: calc(var(--emote-height-s) * 0.8);
+    }
+    71% /* 12% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-s);
+    }
+    88% /* 15% */
+    {
+     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 0.95)) / 2);
+     max-height: calc(var(--emote-height-s) * 0.95);
+    }
+    100% /* 17% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-s);
+    }
+   }
+
+   @keyframes zoomOutS
+   {
+    0% /* 95% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-s);
+    }
+    100%
+    {
+     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 0.1)) / 2);
+     max-height: calc(var(--emote-height-s) * 0.1);
+    }
+   }
+
+   @keyframes zoomInL
+   {
+    0%
+    {
+     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.1)) / 2);
+     max-height: calc(var(--emote-height-l) * 0.1);
+    }
+    24% /* 4% */
+    {
+     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 1.2)) / 2);
+     max-height: calc(var(--emote-height-l) * 1.2);
+    }
+    35% /* 6% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-l);
+    }
+    47% /* 8% */
+    {
+     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.8)) / 2);
+     max-height: calc(var(--emote-height-l) * 0.8);
+    }
+    71% /* 12% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-l);
+    }
+    88% /* 15% */
+    {
+     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.95)) / 2);
+     max-height: calc(var(--emote-height-l) * 0.95);
+    }
+    100% /* 17% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-l);
+    }
+   }
+
+   @keyframes zoomOutL
+   {
+    0% /* 95% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-l);
+    }
+    100%
+    {
+     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.1)) / 2);
+     max-height: calc(var(--emote-height-l) * 0.1);
     }
    }
   </style>
@@ -1652,12 +1764,23 @@
      tGC = window.setTimeout(doGC, 500);
    }
 
-   function showEmote_Rise(url, sW, sH, sS)
+   function showEmote_Rise(url, sW, sH, sS, canV = true)
    {
     let img = document.createElement('img');
     img.setAttribute('class', 'emote');
     img.setAttribute('src', url);
     img.setAttribute('alt', '');
+    let variationSize = 1;
+    if (canV && cfg.emote.size.variation !== false)
+    {
+     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     if (variationSize !== 0 && variationSize !== 2)
+      variationSize = 1;
+    }
+    if (variationSize === 0)
+     sS = Math.ceil(sS * 0.5);
+    else if (variationSize === 2)
+     sS = sS * 2;
     let h = Math.floor(Math.random() * sW) - (sS / 2);
     let v = Math.floor((Math.random() * 0.3) * sH) + Math.floor(0.8 * sH);
     let s = 'left: ' + h + 'px;';
@@ -1701,7 +1824,12 @@
     }
     if (cfg.emote.in.zoom)
     {
-     aNames.push('zoomIn');
+     if (variationSize === 0)
+      aNames.push('zoomInS');
+     else if (variationSize === 2)
+      aNames.push('zoomInL');
+     else
+      aNames.push('zoomIn');
      aDelays.push('0s');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
      aTimings.push('linear');
@@ -1728,7 +1856,12 @@
     }
     if (cfg.emote.out.zoom)
     {
-     aNames.push('zoomOut');
+     if (variationSize === 0)
+      aNames.push('zoomOutS');
+     else if (variationSize === 2)
+      aNames.push('zoomOutL');
+     else
+      aNames.push('zoomOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
      aTimings.push('linear');
@@ -1747,13 +1880,24 @@
     gcEmote(img, false);
    }
 
-   function showEmote_Bounce(url, sW, sH, sS)
+   function showEmote_Bounce(url, sW, sH, sS, canV = true)
    {
     let ms = 20;
     let img = document.createElement('img');
     img.setAttribute('class', 'emote');
     img.setAttribute('src', url);
     img.setAttribute('alt', '');
+    let variationSize = 1;
+    if (canV && cfg.emote.size.variation !== false)
+    {
+     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     if (variationSize !== 0 && variationSize !== 2)
+      variationSize = 1;
+    }
+    if (variationSize === 0)
+     sS = Math.ceil(sS * 0.5);
+    else if (variationSize === 2)
+     sS = sS * 2;
     let h = Math.floor(Math.random() * sW) - (sS / 2);
     let v = Math.floor((Math.random() * 0.2) * sH);
     let s = 'max-height: ' + sS + 'px;';
@@ -1775,7 +1919,12 @@
     }
     if (cfg.emote.in.zoom)
     {
-     aNames.push('zoomIn');
+     if (variationSize === 0)
+      aNames.push('zoomInS');
+     else if (variationSize === 2)
+      aNames.push('zoomInL');
+     else
+      aNames.push('zoomIn');
      aDelays.push('0s');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
      aTimings.push('linear');
@@ -1802,7 +1951,12 @@
     }
     if (cfg.emote.out.zoom)
     {
-     aNames.push('zoomOut');
+     if (variationSize === 0)
+      aNames.push('zoomOutS');
+     else if (variationSize === 2)
+      aNames.push('zoomOutL');
+     else
+      aNames.push('zoomOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
      aTimings.push('linear');
@@ -1872,12 +2026,23 @@
     );
    }
 
-   function showEmote_Speed(url, sW, sH, sS)
+   function showEmote_Speed(url, sW, sH, sS, canV = true)
    {
     let img = document.createElement('img');
     img.setAttribute('class', 'emote');
     img.setAttribute('src', url);
     img.setAttribute('alt', '');
+    let variationSize = 1;
+    if (canV && cfg.emote.size.variation !== false)
+    {
+     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     if (variationSize !== 0 && variationSize !== 2)
+      variationSize = 1;
+    }
+    if (variationSize === 0)
+     sS = Math.ceil(sS * 0.5);
+    else if (variationSize === 2)
+     sS = sS * 2;
     let h = Math.floor(Math.random() * sW) - (sS / 2);
     let v = Math.floor((Math.random() * 0.4) * sH) + Math.floor(0.3 * sH);
     let s = 'top: ' + v + 'px;';
@@ -1915,7 +2080,12 @@
     }
     if (cfg.emote.in.zoom)
     {
-     aNames.push('zoomIn');
+     if (variationSize === 0)
+      aNames.push('zoomInS');
+     else if (variationSize === 2)
+      aNames.push('zoomInL');
+     else
+      aNames.push('zoomIn');
      aDelays.push('0s');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
      aTimings.push('linear');
@@ -1942,7 +2112,12 @@
     }
     if (cfg.emote.out.zoom)
     {
-     aNames.push('zoomOut');
+     if (variationSize === 0)
+      aNames.push('zoomOutS');
+     else if (variationSize === 2)
+      aNames.push('zoomOutL');
+     else
+      aNames.push('zoomOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
      aTimings.push('linear');
@@ -1961,12 +2136,23 @@
     gcEmote(img);
    }
 
-   function showEmote_Drop(url, sW, sH, sS)
+   function showEmote_Drop(url, sW, sH, sS, canV = true)
    {
     let img = document.createElement('img');
     img.setAttribute('class', 'emote');
     img.setAttribute('src', url);
     img.setAttribute('alt', '');
+    let variationSize = 1;
+    if (canV && cfg.emote.size.variation !== false)
+    {
+     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     if (variationSize !== 0 && variationSize !== 2)
+      variationSize = 1;
+    }
+    if (variationSize === 0)
+     sS = Math.ceil(sS * 0.5);
+    else if (variationSize === 2)
+     sS = sS * 2;
     let h = Math.floor(Math.random() * sW) - (sS / 2);
     let s = 'left: ' + h + 'px;';
     s += ' max-height: ' + sS + 'px;';
@@ -2011,7 +2197,12 @@
     }
     if (cfg.emote.out.zoom)
     {
-     aNames.push('zoomOut');
+     if (variationSize === 0)
+      aNames.push('zoomOutS');
+     else if (variationSize === 2)
+      aNames.push('zoomOutL');
+     else
+      aNames.push('zoomOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
      aTimings.push('linear');
@@ -2030,12 +2221,23 @@
     gcEmote(img, false);
    }
 
-   function showEmote_Confetti(url, sW, sH, sS)
+   function showEmote_Confetti(url, sW, sH, sS, canV = true)
    {
     let img = document.createElement('img');
     img.setAttribute('class', 'emote');
     img.setAttribute('src', url);
     img.setAttribute('alt', '');
+    let variationSize = 1;
+    if (canV && cfg.emote.size.variation !== false)
+    {
+     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     if (variationSize !== 0 && variationSize !== 2)
+      variationSize = 1;
+    }
+    if (variationSize === 0)
+     sS = Math.ceil(sS * 0.5);
+    else if (variationSize === 2)
+     sS = sS * 2;
     let h = Math.floor(Math.random() * sW) - (sS / 2);
     let s = 'left: ' + h + 'px;';
     s += ' max-height: ' + sS + 'px;';
@@ -2095,7 +2297,7 @@
     gcEmote(img, false);
    }
 
-   function showEmote_Crazy(url, sW, sH, sS)
+   function showEmote_Crazy(url, sW, sH, sS, canV = true)
    {
     /* LAYOUT SHIFTS
      * =============
@@ -2108,6 +2310,17 @@
     img.setAttribute('class', 'emote');
     img.setAttribute('src', url);
     img.setAttribute('alt', '');
+    let variationSize = 1;
+    if (canV && cfg.emote.size.variation !== false)
+    {
+     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     if (variationSize !== 0 && variationSize !== 2)
+      variationSize = 1;
+    }
+    if (variationSize === 0)
+     sS = Math.ceil(sS * 0.5);
+    else if (variationSize === 2)
+     sS = sS * 2;
     let h = Math.floor(Math.random() * (sW - sS - 5)) + 10;
     let v = Math.floor(Math.random() * (sH - sS - 5)) + 10;
     let s = 'top: ' + v + 'px;';
@@ -2177,7 +2390,12 @@
     }
     if (cfg.emote.in.zoom)
     {
-     aNames.push('zoomIn');
+     if (variationSize === 0)
+      aNames.push('zoomInS');
+     else if (variationSize === 2)
+      aNames.push('zoomInL');
+     else
+      aNames.push('zoomIn');
      aDelays.push('0s');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
      aTimings.push('linear');
@@ -2204,7 +2422,12 @@
     }
     if (cfg.emote.out.zoom)
     {
-     aNames.push('zoomOut');
+     if (variationSize === 0)
+      aNames.push('zoomOutS');
+     else if (variationSize === 2)
+      aNames.push('zoomOutL');
+     else
+      aNames.push('zoomOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
      aTimings.push('linear');
@@ -2279,12 +2502,23 @@
     );
    }
 
-   function showEmote_StraightLine(url, sW, sH, sS, x = false, y = false)
+   function showEmote_StraightLine(url, sW, sH, sS, x = false, y = false, canV = true)
    {
     let img = document.createElement('img');
     img.setAttribute('class', 'emote');
     img.setAttribute('src', url);
     img.setAttribute('alt', '');
+    let variationSize = 1;
+    if (canV && cfg.emote.size.variation !== false)
+    {
+     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     if (variationSize !== 0 && variationSize !== 2)
+      variationSize = 1;
+    }
+    if (variationSize === 0)
+     sS = Math.ceil(sS * 0.5);
+    else if (variationSize === 2)
+     sS = sS * 2;
     let h = x;
     if (h === false)
      h = Math.floor((Math.random() * sW) - (sS / 2));
@@ -2328,7 +2562,12 @@
     }
     if (cfg.emote.in.zoom)
     {
-     aNames.push('zoomIn');
+     if (variationSize === 0)
+      aNames.push('zoomInS');
+     else if (variationSize === 2)
+      aNames.push('zoomInL');
+     else
+      aNames.push('zoomIn');
      aDelays.push('0s');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
      aTimings.push('linear');
@@ -2355,7 +2594,12 @@
     }
     if (cfg.emote.out.zoom)
     {
-     aNames.push('zoomOut');
+     if (variationSize === 0)
+      aNames.push('zoomOutS');
+     else if (variationSize === 2)
+      aNames.push('zoomOutL');
+     else
+      aNames.push('zoomOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
      aTimings.push('linear');
@@ -2381,13 +2625,24 @@
     );
    }
 
-   function showEmote_Fountain(url, sW, sH, sS, fX, fY)
+   function showEmote_Fountain(url, sW, sH, sS, fX, fY, canV = true)
    {
     let aT = Math.floor((cfg.emote.time * 1000) / 2);
     let img = document.createElement('img');
     img.setAttribute('class', 'emote');
     img.setAttribute('src', url);
     img.setAttribute('alt', '');
+    let variationSize = 1;
+    if (canV && cfg.emote.size.variation !== false)
+    {
+     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     if (variationSize !== 0 && variationSize !== 2)
+      variationSize = 1;
+    }
+    if (variationSize === 0)
+     sS = Math.ceil(sS * 0.5);
+    else if (variationSize === 2)
+     sS = sS * 2;
     let h = fX;
     if (h === false)
      h = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
@@ -2432,10 +2687,21 @@
     );
    }
 
-   function showEmote_Still(url, sW, sH, sS)
+   function showEmote_Still(url, sW, sH, sS, canV = true)
    {
     let img = document.createElement('img');
     img.setAttribute('class', 'emote');
+    let variationSize = 1;
+    if (canV, cfg.emote.size.variation !== false)
+    {
+     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     if (variationSize !== 0 && variationSize !== 2)
+      variationSize = 1;
+    }
+    if (variationSize === 0)
+     sS = Math.ceil(sS * 0.5);
+    else if (variationSize === 2)
+     sS = sS * 2;
     let h = Math.floor(Math.random() * sW) - (sS / 2);
     let v = Math.floor(Math.random() * sH) - (sS / 2);
     img.setAttribute('src', url);
@@ -2461,7 +2727,12 @@
     }
     if (cfg.emote.in.zoom)
     {
-     aNames.push('zoomIn');
+     if (variationSize === 0)
+      aNames.push('zoomInS');
+     else if (variationSize === 2)
+      aNames.push('zoomInL');
+     else
+      aNames.push('zoomIn');
      aDelays.push('0s');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
      aTimings.push('linear');
@@ -2488,7 +2759,12 @@
     }
     if (cfg.emote.out.zoom)
     {
-     aNames.push('zoomOut');
+     if (variationSize === 0)
+      aNames.push('zoomOutS');
+     else if (variationSize === 2)
+      aNames.push('zoomOutL');
+     else
+      aNames.push('zoomOut');
      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
      aTimings.push('linear');
@@ -2510,10 +2786,21 @@
     gcEmote(img, false);
    }
 
-   function showEmote_TheCube(url, sW, sH, sS)
+   function showEmote_TheCube(url, sW, sH, sS, canV = true)
    {
     let scene = document.createElement('div');
     scene.setAttribute('class', 'scene');
+    let variationSize = 1;
+    if (canV && cfg.emote.size.variation !== false)
+    {
+     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     if (variationSize !== 0 && variationSize !== 2)
+      variationSize = 1;
+    }
+    if (variationSize === 0)
+     sS = Math.ceil(sS * 0.5);
+    else if (variationSize === 2)
+     sS = sS * 2;
     scene.setAttribute('width', sS);
     scene.setAttribute('height', sS);
     let cube = document.createElement('div');
@@ -3093,6 +3380,8 @@
     document.documentElement.style.setProperty('--height', sH + 'px');
     document.documentElement.style.setProperty('--width', sW + 'px');
     document.documentElement.style.setProperty('--emote-height', sS + 'px');
+    document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
+    document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
     let style = cfg.display.styles[(Math.floor(Math.random() * cfg.display.styles.length))];
     if (style === undefined)
      return;
@@ -3188,6 +3477,8 @@
     document.documentElement.style.setProperty('--height', sH + 'px');
     document.documentElement.style.setProperty('--width', sW + 'px');
     document.documentElement.style.setProperty('--emote-height', sS + 'px');
+    document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
+    document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
     let style = kStyles[(Math.floor(Math.random() * kStyles.length))];
     if (style === undefined)
      return;
@@ -3250,7 +3541,7 @@
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
-       showEmote_StraightLine(kList[r].url, sW, sH, sS, oH, oV);
+       showEmote_StraightLine(kList[r].url, sW, sH, sS, oH, oV, false);
        await sleep(50);
       }
       break;
@@ -3261,7 +3552,7 @@
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
-       showEmote_Fountain(kList[r].url, sW, sH, sS, fX, fY);
+       showEmote_Fountain(kList[r].url, sW, sH, sS, fX, fY, false);
        await sleep(50);
       }
       break;
@@ -3270,7 +3561,7 @@
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
-       showEmote_Confetti(kList[r].url, sW, sH, sSm);
+       showEmote_Confetti(kList[r].url, sW, sH, sSm, false);
        await sleep(25);
       }
       break;
@@ -3281,7 +3572,10 @@
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
-       window['showEmote_' + style](kList[r].url, sW, sH, sS);
+       if (style === 'StraightLine')
+        showEmote_StraightLine(kList[r].url, sW, sH, sS, false, false, false);
+       else
+        window['showEmote_' + style](kList[r].url, sW, sH, sS, false);
        await sleep(100);
       }
     }
