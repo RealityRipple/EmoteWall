@@ -1211,6 +1211,8 @@
        }
        for (const set in j.sets)
        {
+        if (!j.sets.hasOwnProperty(set))
+         continue;
         if (!usedSets.includes(j.sets[set].id))
          continue;
         if (!j.sets[set].hasOwnProperty('emoticons'))
@@ -1233,11 +1235,15 @@
        }
        for (const setID in j.users)
        {
+        if (!j.users.hasOwnProperty(setID))
+         continue;
         let aList = j.users[setID];
         if (!Array.isArray(aList))
          continue;
         for (const set in j.sets)
         {
+         if (!j.sets.hasOwnProperty(set))
+          continue;
          if (setID !== set)
           continue;
          if (!j.sets[set].hasOwnProperty('emoticons'))
@@ -1592,6 +1598,8 @@
     let done = true;
     for (let idx in toGC)
     {
+     if (!toGC.hasOwnProperty(idx))
+      continue;
      done = false;
      let i = toGC[idx].img;
      let t = toGC[idx].end;
@@ -3798,6 +3806,8 @@
     {
      for (const prefix in eList.cheer)
      {
+      if (!eList.cheer.hasOwnProperty(prefix))
+       continue;
       let firstChars = prefix.length;
       if (msg[m].slice(0, firstChars).toLowerCase() !== prefix.toLowerCase())
        continue;
@@ -4120,6 +4130,8 @@
     let closest = null;
     for (const b in cfg.event.badge)
     {
+     if (!cfg.event.badge.hasOwnProperty(b))
+      continue;
      if (closest === null)
      {
       closest = b;
