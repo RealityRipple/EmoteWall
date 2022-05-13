@@ -133,6 +133,9 @@
     *    center   If TRUE, The Cube will show up in the exact center of the screen.
     *             If FALSE, The Cube will show up in a random location.
     *
+    *    rotations  The maximum number of rotations a kappa cube might spin while on screen. This effectively controls
+    *              the maximum possible speed at which cubes will rotate.
+    *
     * emote       Settings related to individual emote display.
     *
     *  time       The number of seconds an emote should show up on the screen for.
@@ -166,6 +169,11 @@
     *   min       The minimum height of an emote, in pixels.
     *
     *   max       The maximum height of an emote, in pixels.
+    *
+    *  cube      Settings related to The Cube emote.
+    *
+    *   rotations  The maximum number of rotations a cube might spin while on screen. This effectively controls the
+    *             maximum possible speed at which cubes will rotate.
     *
     *  in         Settings related to the showing of an emote.
     *             Note: some kappagen styles do not use these. See the notes next to each kappagen style name.
@@ -379,7 +387,8 @@
       ],
       cube: {
        size: 8/10,
-       center: true
+       center: true,
+       rotations: 5
       }
      }
     },
@@ -394,6 +403,9 @@
       },
       min: 16,
       max: 112
+     },
+     cube: {
+      rotations: 5
      },
      in: {
       fade: true,
@@ -2617,8 +2629,8 @@
     window.setTimeout(
      function()
      {
-      let rX = Math.floor(180 - (Math.random() * 360)) * 10;
-      let rY = Math.floor(180 - (Math.random() * 360)) * 10;
+      let rX = Math.floor(180 - (Math.random() * 360)) * (cfg.emote.cube.rotations * 2);
+      let rY = Math.floor(180 - (Math.random() * 360)) * (cfg.emote.cube.rotations * 2);
       cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
       scene.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
      },
@@ -2737,8 +2749,8 @@
     window.setTimeout(
      function()
      {
-      let rX = Math.floor(180 - (Math.random() * 360)) * 10;
-      let rY = Math.floor(180 - (Math.random() * 360)) * 10;
+      let rX = Math.floor(180 - (Math.random() * 360)) * (cfg.display.kappa.cube.rotations * 2);
+      let rY = Math.floor(180 - (Math.random() * 360)) * (cfg.display.kappa.cube.rotations * 2);
       cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
      },
      tStart
