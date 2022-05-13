@@ -313,7 +313,14 @@
     *               If FALSE, no kappagen will occur.
     *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
-    *  cheer      Kappagens triggered from cheers. This value can be an integer or an array:
+    *  cheer      Settings related to kappagens on a cheer event.
+    *
+    *   useMsg    If TRUE, any emotes in cheer messages will also be included in the kappagen.
+    *             If FALSE, any emotes in cheer messages will show up like normal emotes.
+    *
+    *   bits       Minimum number of bits for a kappagen. This value can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on all cheers.
+    *              If FALSE, no kappagen will occur on cheers.
     *              If Integer, the value is the minimum bits required for a cheer to trigger a kappagen.
     *               If 0, no kappagen will occur on cheer.
     *              If Array, each key of the array should be a string containing a range of integers,
@@ -513,7 +520,10 @@
        resub: true
       }
      },
-     cheer: 50,
+     cheer: {
+      useMsg: true,
+      bits: 50
+     },
      badge: {
       '1': false,
       '100': true
@@ -4186,22 +4196,27 @@
       }
      }
     }
-    p = p.concat(parseT(cmd));
-    if (cfg.display.useEmoji)
-     p = p.concat(await parseEmoji(cmd, cfg.display.useEmoji));
-    if (cfg.display.extended.useFFZ)
-     p = p.concat(parseFFZ(cmd));
-    if (cfg.display.extended.useBTTV)
+    if (cfg.event.cheer.useMsg)
     {
-     p = p.concat(parseBTTV(cmd));
-     p = p.concat(parseBTTVU(cmd));
+     p = p.concat(parseT(cmd));
+     if (cfg.display.useEmoji)
+      p = p.concat(await parseEmoji(cmd, cfg.display.useEmoji));
+     if (cfg.display.extended.useFFZ)
+      p = p.concat(parseFFZ(cmd));
+     if (cfg.display.extended.useBTTV)
+     {
+      p = p.concat(parseBTTV(cmd));
+      p = p.concat(parseBTTVU(cmd));
+     }
+     if (cfg.display.extended.use7TV)
+      p = p.concat(parse7TV(cmd));
     }
-    if (cfg.display.extended.use7TV)
-     p = p.concat(parse7TV(cmd));
+    else
+     await parseLine(cmd);
     p = handleDuplicates(p);
     if (p.length === 0)
      return false;
-    let r = findInMaybeRange(cfg.event.cheer, cmd.tags.bits);
+    let r = findInMaybeRange(cfg.event.cheer.bits, cmd.tags.bits);
     if (r === false)
     {
      toShow = toShow.concat(p);
