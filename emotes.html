@@ -25,12 +25,11 @@
     * 5) At the end of your configuration, hit "Download".
     * You will receive a new version of this HTML file with your previous settings.
     *
-    * Updating is also the easiest way to update the OAuth Token (see below).
-    *
     * Configuration Information
     * =========================
     *
     * channel     The name of the channel to join. Also used to choose an IRC nickname.
+    *             If FALSE, the interactive login process will be enabled.
     *
     * login       Settings related to the login process.
     *
@@ -52,6 +51,7 @@
     *             https://www.twitch.tv/settings/connections . Under "Other Connections", click the "Disconnect" button
     *             next to "RealityRipple's Homemade Emote Wall". If you want to use a different Twitch OAuth generator
     *             (or do it yourself), feel free.
+    *             If FALSE, the interactive login process will be enabled.
     *
     * reddit      The unique ID of a Reddit RPAN session (usually 6 characters at the end of the URL).  If you don't
     *             use Reddit to stream, please keep this set to FALSE. You must change this for every Reddit stream
@@ -982,6 +982,29 @@
      max-height: calc(var(--emote-height-l) * 0.1);
     }
    }
+   button
+   {
+    background-color: #7D5BBE;
+    transition: background 0.12s ease-in, color 0.12s ease-in;
+    white-space: nowrap;
+    cursor: pointer;
+    color: #FFFFFF;
+    border-radius: 4px;
+    border: none;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+   }
+   button:focus, button:hover
+   {
+    background-color: #772CE8;
+   }
+   button:focus
+   {
+    outline: none;
+   }
+   button:active
+   {
+    background-color: #5C16C5;
+   }
   </style>
   <script>
    if (typeof cfg === 'undefined')
@@ -990,6 +1013,7 @@
    /* global variables */
    var channelID = 0;
    var dead = false;   // hard disconnect (usually caused by an error)
+   var useL = false;   // interactive login in use
    var toShow = [];    // emote queue
    var toKappa = [];   // kappagen queue
    var toGC = {};      // list of image elements to garbage collect
@@ -1016,6 +1040,7 @@
    var tKappa = false; // kappagen queue timer
    var tGC = false;    // garbage collection
    var tFC = false;    // follower kludge
+   var tL = false;     // logout button display
 
    function sleep(ms)
    {
@@ -4702,24 +4727,202 @@
     x.send();
    }
 
+   function shouldUseLogin()
+   {
+    useL = false;
+    if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== 'CHANNEL_NAME' && cfg.hasOwnProperty('login') && cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== 'OAUTH_ID')
+     return false;
+    useL = true;
+    let lsChannel = window.localStorage.getItem('rrew.channel');
+    let lsClient  = window.localStorage.getItem('rrew.client');
+    let lsOAuth   = window.localStorage.getItem('rrew.oauth');
+    let lsExpires = window.localStorage.getItem('rrew.expires');
+    if (lsChannel === null || lsOAuth === null)
+    {
+     let h = getHashParams();
+     if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('expires'))
+     {
+      showLoginButton();
+      return true;
+     }
+     lsChannel = h.channel;
+     lsClient = h.client;
+     lsOAuth = h.oauth;
+     lsExpires = h.expires;
+     window.localStorage.setItem('rrew.channel', lsChannel);
+     window.localStorage.setItem('rrew.oauth', lsOAuth);
+     window.localStorage.setItem('rrew.client', lsClient);
+     window.localStorage.setItem('rrew.expires', lsExpires);
+    }
+    cfg.channel = lsChannel;
+    cfg.login.oauth = lsOAuth;
+    cfg.login.client = lsClient;
+    cfg.login.expires = lsExpires;
+    document.title = cfg.channel + ' Emote Wall';
+    showLogoutButton();
+    return false;
+   }
+
+   function getHashParams()
+   {
+    let d = function(s) {
+     let a = /\+/g;
+     return decodeURIComponent(s.replace(a, " "));
+    };
+    let hashParams = {};
+    let r = /([^&;=]+)=?([^&;]*)/g;
+    let q = window.location.hash.substring(1);
+    let e;
+    while (e = r.exec(q))
+    {
+     hashParams[d(e[1])] = d(e[2]);
+    }
+    return hashParams;
+   }
+
+   function doLogin()
+   {
+    let o = encodeURIComponent(btoa(window.location));
+    let u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8') + '&redirect_uri=' + encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php') + '&response_type=token&scope=' + encodeURIComponent('chat:read') + '&state=redirto_' + o + '&force_verify=true';
+    window.location = u;
+   }
+
+   function showLoginButton()
+   {
+    document.title = 'Log In to Access Emote Wall';
+    if (document.getElementById('cmdLogout'))
+     document.body.removeChild(document.getElementById('cmdLogout'));
+    window.localStorage.removeItem('rrew.channel');
+    window.localStorage.removeItem('rrew.oauth');
+    window.localStorage.removeItem('rrew.client');
+    window.localStorage.removeItem('rrew.expires');
+    let cmdLogin = document.createElement('button');
+    cmdLogin.setAttribute('id', 'cmdLogin');
+    cmdLogin.setAttribute('type', 'button');
+    cmdLogin.setAttribute('onclick', 'doLogin();');
+    let sStyle = 'z-index: 1000;';
+    sStyle += ' position: absolute;';
+    sStyle += ' top: 45%;';
+    sStyle += ' left: calc(50% - 6.5em);';
+    sStyle += ' width: 13em;';
+    sStyle += ' font-size: 3vw;';
+    sStyle += ' padding: 0.5em;';
+    cmdLogin.setAttribute('style', sStyle);
+    cmdLogin.innerHTML = 'Authenticate Emote Wall';
+    document.body.appendChild(cmdLogin);
+   }
+
+   function showLogoutButton(v = false)
+   {
+    let visTime = 5000;
+    if (document.getElementById('cmdLogout'))
+     document.body.removeChild(document.getElementById('cmdLogout'));
+    let cmdLogout = document.createElement('button');
+    if (tL !== false)
+    {
+     window.clearTimeout(tL);
+     tL = false;
+    }
+    cmdLogout.setAttribute('id', 'cmdLogout');
+    cmdLogout.setAttribute('type', 'button');
+    let sStyle = 'z-index: 1000;';
+    sStyle += ' transition: opacity 0.5s;';
+    sStyle += ' position: absolute;';
+    sStyle += ' top: 1em;';
+    sStyle += ' right: 1em;';
+    sStyle += ' width: 5em;';
+    sStyle += ' font-size: 1vw;';
+    sStyle += ' padding: 0.5em;';
+    document.addEventListener(
+     'mouseover',
+     function()
+     {
+      cmdLogout.style.opacity = '1';
+      if (tL !== false)
+      {
+       window.clearTimeout(tL);
+       tL = false;
+      }
+      tL = window.setTimeout(
+       function()
+       {
+        if (tL !== false)
+        {
+         window.clearTimeout(tL);
+         tL = false;
+        }
+        cmdLogout.style.opacity = '0';
+       },
+       visTime
+      );
+     }
+    );
+    if (v)
+    {
+     cmdLogout.setAttribute('onclick', 'doLogin();');
+     cmdLogout.innerHTML = 'Re-Auth';
+     sStyle += ' opacity: 1;';
+     tL = window.setTimeout(
+      function()
+      {
+       if (tL !== false)
+       {
+        window.clearTimeout(tL);
+        tL = false;
+       }
+       cmdLogout.style.opacity = '0';
+      },
+      visTime
+     );
+    }
+    else
+    {
+     cmdLogout.setAttribute('onclick', 'showLoginButton();');
+     cmdLogout.innerHTML = 'Log Out';
+     sStyle += ' opacity: 0;';
+    }
+    cmdLogout.setAttribute('style', sStyle);
+    document.body.appendChild(cmdLogout);
+   }
+
    function blargIAmDead(e)
    {
+    let showButton = false;
     switch (e)
     {
      case 1:
-      document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Connect to Twitch<br><br>Please Update Your OAuth Token</div>';
+      if (useL)
+      {
+       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Connect to Twitch<br><br>Please Log In Again</div>';
+       showButton = true;
+       showLoginButton();
+      }
+      else
+       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Connect to Twitch<br><br>Please Update Your OAuth Token</div>';
       break;
      case 2:
       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Corrupted Configuration<br><br>Please Check Your Browser\'s Error Console</div>';
       break;
      case 3:
-      document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Emotes<br><br>Please Check Your Client ID and OAuth Token</div>';
+      if (useL)
+      {
+       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Emotes<br><br>Please Log In Again</div>';
+       showButton = true;
+       showLoginButton();
+      }
+      else
+       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Emotes<br><br>Please Check Your Client ID and OAuth Token</div>';
       break;
      case 4:
+      if (useL)
+      {
+       showLogoutButton(true);
+       return;
+      }
       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Warning:<br><br>Your Credentials Will Expire Soon<br><br>Please Update Your OAuth Token</div>';
       break;
     }
-    window.setTimeout(function(){document.body.innerHTML = '';}, 15000);
+    window.setTimeout(function(){document.body.innerHTML = ''; if (showButton) showLoginButton();}, 15000);
    }
   </script>
  </head>
@@ -4732,6 +4935,8 @@
      blargIAmDead(2);
      return;
     }
+    if (shouldUseLogin() === true)
+     return;
     if (cfg.login.hasOwnProperty('expires') && cfg.login.expires > 0)
     {
      let expTime = cfg.login.expires - new Date().getTime();
