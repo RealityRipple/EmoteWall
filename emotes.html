@@ -1650,7 +1650,6 @@
     };
     ws.onclose = function()
     {
-     console.log('BTTV WebSocket Closed');
      window.setTimeout(function(){loadBTTV_ws_channel(chID);}, 5000);
     };
     ws.onmessage = function(event)
@@ -1663,10 +1662,7 @@
      if (!d.hasOwnProperty('data'))
       return;
      if (d.name !== 'lookup_user')
-     {
-      console.log('Unparsed BTTV Message: ', d);
       return;
-     }
      if (!d.data.hasOwnProperty('name'))
       return;
      if (!d.data.hasOwnProperty('emotes') || !Array.isArray(d.data.emotes) || d.data.emotes.length < 1)
@@ -3943,7 +3939,6 @@
        continue;
      }
      addList[m[i]]++;
-     console.log('User-Specific Global BTTV Emote: ', u.host, m[i], eList.bttvU[u.host][m[i]].url);
      ret.push({svc: 'b', url: eList.bttvU[u.host][m[i]].url, str: m[i], scope: eList.bttvU[u.host][m[i]].scope});
     }
     return ret;
@@ -3988,7 +3983,6 @@
     let fRet = await getFollowerChange(chID);
     if (fRet !== false && fRet > 0)
     {
-     console.log('detected ', fRet, ' new followers');
      for (let i = 0; i < fRet; i++)
       showKappa(false, cfg.event.follow);
     }
