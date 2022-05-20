@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.5 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.5.1 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -53,6 +53,51 @@
     *             (or do it yourself), feel free.
     *             If FALSE, the interactive login process will be enabled.
     *
+    * streamlabs  Settings related to Streamlabs tips.
+    *
+    *  token      The Socket Token is used in lieu of a password to access the Streamlabs API.
+    *             Please generate a Socket Token:
+    *             - Visit https://realityripple.com/Tools/Twitch/EmoteWall/
+    *             - Click the "Streamlabs Tip Support" button and log in
+    *             - Copy the Token value and paste it into "token:"
+    *             If you ever stop using this emote wall, please log into Streamlabs and visit
+    *             https://streamlabs.com/dashboard#/settings/api-settings . Under "Connected Apps", click the
+    *             "Revoke Access" button next to "RealityRipple's Homemade Emote Wall". If you want to use a different
+    *             Streamlabs OAuth generator (or do it yourself), feel free.
+    *
+    *  curMul     This value is the currency multiplier. The ranges of Streamlabs tip entries (see below) will
+    *             match against this multiplier. For example, if you use USD and want to set ranges by penny amount,
+    *             then set this value to 100. If you want to use dollar amounts, set the value to 1. Please note that
+    *             any decimal amount will be rounded down after multiplying, so $3.95 will be handled as "395" pennies
+    *             when multiplied by 100, or "3" dollars when multiplied by 1.
+    *
+    * streamelements  Settings related to StreamElements tips.
+    *
+    *  oauth      The OAuth ID value is used in lieu of a password to access the StreamElements API.
+    *             Please generate an OAuth ID:
+    *             - Visit https://realityripple.com/Tools/Twitch/EmoteWall/
+    *             - Click the "StreamElements Tip Support" button and log in
+    *             - Copy the OAuth ID value and paste it into "oauth:"
+    *             If you ever stop using this emote wall, please log into StreamElements and visit
+    *             https://streamelements.com/dashboard/account/security. Click the "Reset my Personal Access Token"
+    *             button. If you want to use a different StreamElements OAuth generator (or do it yourself), feel free.
+    *             Please only use oauth or token, not both. Token does not expire, but is also less secure. OAuth is
+    *             recommended, if possible.
+    *
+    *  token      The JWT Token is used in lieu of a password to access the StreamElements API.
+    *             Please grab your JWT Token from the StreamElements Dashboard:
+    *             - Visit https://streamelements.com/dashboard/account/channels
+    *             - Click the "Show secrets" button
+    *             - Copy the JWT Token value and paste it into "token:"
+    *             Please only use oauth or token, not both. Token does not expire, but is also less secure. OAuth is
+    *             recommended, if possible.
+    *
+    *  curMul     This value is the currency multiplier. The ranges of StreamElements tip entries (see below) will
+    *             match against this multiplier. For example, if you use USD and want to set ranges by penny amount,
+    *             then set this value to 100. If you want to use dollar amounts, set the value to 1. Please note that
+    *             any decimal amount will be rounded down after multiplying, so $3.95 will be handled as "395" pennies
+    *             when multiplied by 100, or "3" dollars when multiplied by 1.
+    *
     * reddit      The unique ID of a Reddit RPAN session (usually 6 characters at the end of the URL).  If you don't
     *             use Reddit to stream, please keep this set to FALSE. You must change this for every Reddit stream
     *             at present, unfortunately.
@@ -71,6 +116,7 @@
     *              0x400 = moderator badge
     *              0x200 = founder badge
     *              0x100 = vip badge
+    *              0x080 = artist badge
     *              0x040 = tier 3 subscriber badge
     *              0x020 = tier 2 subscriber badge
     *              0x010 = tier 1 subscriber badge
@@ -356,6 +402,38 @@
     *              listed number.
     *             Note that the numbers must be strings (in 'single quotes') to function properly.
     *
+    *  tip        Settings related to third-party tip systems.
+    *
+    *   streamlabs  Minimum tip amount through Streamlabs for a kappagen. This value can be a boolean, integer,
+    *              or array:
+    *              If TRUE, a kappagen will occur on all Streamlabs tips.
+    *              If FALSE, no kappagen will occur on tips.
+    *              If Integer, the value is the minimum amount required for a tip to trigger a kappagen.
+    *               If 0, no kappagen will occur on tips through Streamlabs.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-19', or an open-maximum range such as '20+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *              The values used in these ranges can be controlled with the cfg.streamlabs.curMul setting (see above)
+    *              based on your default currency in Streamlabs.
+    *
+    *   streamelements  Minimum tip amount through StreamElements for a kappagen. This value can be a boolean,
+    *                  integer, or array:
+    *              If TRUE, a kappagen will occur on all StreamElements tips.
+    *              If FALSE, no kappagen will occur on tips.
+    *              If Integer, the value is the minimum amount required for a tip to trigger a kappagen.
+    *               If 0, no kappagen will occur on tips through StreamElements.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-19', or an open-maximum range such as '20+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *              The values used in these ranges can be controlled with the cfg.streamelements.curMul setting (see above)
+    *              based on your default currency in StreamElements.
+    *
     *
     * Additional Notes
     * ================
@@ -405,6 +483,15 @@
      client: '4umzcpmjkg6ar78b81s7302jlj33t8',
      oauth: 'OAUTH_ID' //Requires chat:read
     },
+    streamlabs: {
+     token: 'SOCKET_TOKEN', //Requires socket.token
+     curMul: 100
+    },
+    streamelements: {
+     oauth: 'OAUTH_ID', //Requires tips:read
+     token: 'JWT_TOKEN',
+     curMul: 100
+    },
     reddit: false,
     display: {
      styles: [
@@ -418,7 +505,7 @@
       'Confetti',     // Fall like confetti                   (no zoom, no fade in, only fade out)
       'TheCube',      // Rotate a 3D cube of an emote         (no zoom, only fade)
      ],
-     access: 0x800 | 0x400 | 0x200 | 0x100 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002 | 0x001,
+     access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002 | 0x001,
      duplicates: true,
      useEmoji: true,
      extended: {
@@ -441,7 +528,7 @@
        'Confetti',    // Fall like confetti     (no zoom, no fade in, only fade out; small emotes)
        'TheCube',     // Rotate a 3D cube of an emote (no zoom, only fade; "cfg.display.kappa.cube.size"-size emotes)
       ],
-      access: 0x800 | 0x400 | 0x200 | 0x100 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002,
+      access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002,
       aliases: [      // !kappagen command aliases (must be lower-case)
        '!kappagen',
        '-kappagen'
@@ -537,6 +624,10 @@
      badge: {
       '1': false,
       '100': true
+     },
+     tip: {
+      streamlabs: false,
+      streamelements: false
      }
     }
    };
@@ -3973,6 +4064,180 @@
     return ret;
    }
 
+   function streamlabsWS()
+   {
+    let p = 0;
+    const ws = new WebSocket('wss://sockets.streamlabs.com/socket.io/?token=' + cfg.streamlabs.token + '&transport=websocket');
+    ws.onopen = function(event)
+    {
+     if (p !== 0)
+     {
+      window.clearInterval(p);
+      p = 0;
+     }
+    };
+    ws.onclose = function(event)
+    {
+     if (p !== 0)
+     {
+      window.clearInterval(p);
+      p = 0;
+     }
+     window.setTimeout(function(){streamlabsWS();}, 5000);
+    };
+    ws.onmessage = function(event)
+    {
+     let d = event.data;
+     if (d.length < 1)
+      return;
+     switch (d.slice(0, 1))
+     {
+      case '0':
+       let t = 20000;
+       if (d.length > 1)
+       {
+        let c = JSON.parse(d.slice(1));
+        if (c.hasOwnProperty('pingInterval'))
+         t = c.pingInterval;
+       }
+       if (p !== 0)
+       {
+        window.clearInterval(p);
+        p = 0;
+       }
+       p = window.setInterval(function(){ws.send('2');}, t);
+       break;
+      case '4':
+       if (d.slice(1, 2) !== '2')
+        return;
+       if (d.length < 2)
+        return;
+       let o = JSON.parse(d.slice(2));
+       if (o.length < 2)
+        return;
+       if (o[0] !== 'event')
+        return;
+       if (!o[1].hasOwnProperty('message'))
+        return;
+       let r = [];
+       for (let i = 0; i < o[1].message.length; i++)
+       {
+        if (!o[1].message[i].hasOwnProperty('amount'))
+         continue;
+        r.push(o[1].message[i].amount);
+       }
+       showStreamlabsTips(r);
+       break;
+     }
+    };
+   }
+
+   function showStreamlabsTips(dRet)
+   {
+    for (let i = 0; i < dRet.length; i++)
+    {
+     let v = Math.floor(dRet[i] * cfg.streamlabs.curMul);
+     let r = findInMaybeRange(cfg.event.tip.streamlabs, v);
+     if (r === false)
+      continue;
+     if (r === true)
+      showKappa(false);
+     else
+      showKappa(false, r);
+    }
+   }
+
+   function streamelementsWS()
+   {
+    let p = 0;
+    const ws = new WebSocket('wss://realtime.streamelements.com/socket.io/?transport=websocket');
+    ws.onopen = function(event)
+    {
+     if (p !== 0)
+     {
+      window.clearInterval(p);
+      p = 0;
+     }
+    };
+    ws.onclose = function(event)
+    {
+     if (p !== 0)
+     {
+      window.clearInterval(p);
+      p = 0;
+     }
+     window.setTimeout(function(){streamelementsWS();}, 5000);
+    };
+    ws.onmessage = function(event)
+    {
+     let d = event.data;
+     if (d.length < 1)
+      return;
+     switch (d.slice(0, 1))
+     {
+      case '0':
+       let t = 20000;
+       if (d.length > 1)
+       {
+        let c = JSON.parse(d.slice(1));
+        if (c.hasOwnProperty('pingInterval'))
+         t = c.pingInterval;
+       }
+       if (p !== 0)
+       {
+        window.clearInterval(p);
+        p = 0;
+       }
+       p = window.setInterval(function(){ws.send('2');}, t);
+       break;
+      case '4':
+       if (d.slice(1, 2) === '0')
+       {
+        let a = '';
+        if (cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID')
+         a = '["authenticate",{"method":"oauth2","token":"' + cfg.streamelements.oauth + '"}]';
+        else if (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN')
+         a = '["authenticate",{"method":"jwt","token":"' + cfg.streamelements.token + '"}]';
+        ws.send('42' + a);
+        return;
+       }
+       if (d.slice(1, 2) !== '2')
+        return;
+       if (d.length < 2)
+        return;
+       let o = JSON.parse(d.slice(2));
+       if (o.length < 2)
+        return;
+       if (o[0] !== 'event:update')
+        return;
+       if (!o[1].hasOwnProperty('name'))
+        return;
+       if (o[1].name !== 'tip-latest')
+        return;
+       if (!o[1].hasOwnProperty('data'))
+        return;
+       if (!o[1].data.hasOwnProperty('amount'))
+        return;
+       showStreamElementsTip(o[1].data.amount);
+       break;
+     }
+    };
+   }
+
+   function showStreamElementsTip(dRet)
+   {
+    let v = Math.floor(dRet * cfg.streamelements.curMul);
+    if (v < 1)
+     return;
+    let r = findInMaybeRange(cfg.event.tip.streamelements, v);
+    if (r === false)
+     return;
+    if (r === true)
+     showKappa(false);
+    else
+     showKappa(false, r);
+   }
+
    async function detectFollowers(chID)
    {
     if (tFC === false)
@@ -4111,6 +4376,9 @@
         break;
        case 'vip':
         level |= 0x100;
+        break;
+       case 'artist-badge':
+        level |= 0x080;
         break;
        case 'founder':
         level |= 0x200;
@@ -4942,6 +5210,10 @@
       }
      }
     }
+    if (cfg.hasOwnProperty('streamlabs') && cfg.streamlabs.hasOwnProperty('token') && cfg.streamlabs.token !== false && cfg.streamlabs.token !== 'SOCKET_TOKEN')
+     streamlabsWS();
+    if (cfg.hasOwnProperty('streamelements') && ((cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID') || (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN')))
+     streamelementsWS();
     if (cfg.display.extended.useFFZ)
      await loadFFZ_global();
     if (cfg.display.extended.useBTTV)
