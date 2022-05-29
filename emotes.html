@@ -200,7 +200,7 @@
     *              - The Cube kappagen's faces are squares equal to 80% of the smaller screen dimension
     *                (usually height on PC).
     *              - Pyramid kappagen emotes have a height equal to 1/19th of the screen's width.
-    *              - Fireworks and Confetti kappagen emotes have a height equal to the small ratio (see below).
+    *              - Fireworks, Spiral, and Confetti kappagen emotes have a height equal to the small ratio (see below).
     *              - All standard emotes and kappagens not listed above will use the normal ratio (see below).
     *                Most normal emotes will limit by height, except The Cube, which fits in the center of every side.
     *
@@ -521,6 +521,7 @@
        'Crazy',       // Bounce off the walls [Layout Shifts - Requires offset-anchor / offset-position directives]
        'Burst',       // Expand from a center point
        'Fireworks',   // Burst out from a single emote (no fade/zoom; small emotes)
+       'Spiral',      // Burst out from a single emote in a spiral (no fade/zoom; small emotes)
        'Pyramid',     // Build a pyramid        (no fade/zoom; specific-size emotes)
        'SmallPyramid',// Build a small pyramid  (no fade/zoom; small emotes)
        'Fountain',    // Spout from a fountain  (no fade/zoom)
@@ -3363,6 +3364,92 @@
     );
    }
 
+   function showKappa_Spiral(kList, sW, sH, sS)
+   {
+    let oX = Math.floor(Math.random() * (sW - sS));
+    let oY = Math.floor(Math.random() * (sH - sS));
+    function sparkler(url, r, th)
+    {
+     let simg = document.createElement('img');
+     simg.setAttribute('class', 'emote');
+     simg.setAttribute('src', url);
+     simg.setAttribute('alt', '');
+     let hD = Math.floor(oX + r * Math.cos(th));
+     let vD = Math.floor(oY + r * Math.sin(th));
+     let s = 'max-height: ' + sS + 'px;';
+     s += ' width: auto;';
+     s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
+     s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
+     let aNames = [];
+     let aDelays = [];
+     let aDurs = [];
+     let aTimings = [];
+     let aFills = [];
+     let aIters = [];
+     aNames.push('fadeIn');
+     aDelays.push('0ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+     s += ' animation-name: ' + aNames.join() + ';';
+     s += ' animation-delay: ' + aDelays.join() + ';';
+     s += ' animation-duration: ' + aDurs.join() + ';';
+     s += ' animation-timing-function: ' + aTimings.join() + ';';
+     s += ' animation-fill-mode: ' + aFills.join() + ';';
+     s += ' animation-iteration-count: ' + aIters.join() + ';';
+     simg.setAttribute('style', s);
+     document.body.appendChild(simg);
+     gcEmote(simg, true, true);
+     window.setTimeout(
+      function()
+      {
+       simg.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+      },
+      tStart
+     );
+    }
+    window.setTimeout(
+     async function()
+     {
+      let r = sW;
+      if (sH < r)
+       r = sH;
+      let l = cfg.display.kappa.count / 25 + 2;
+      l = l + (Math.random() * 4 - 2);
+      if (l < 0.1)
+       l = 0.1;
+      let c = (Math.PI * l) / cfg.display.kappa.count;
+      let th = (Math.random() * (Math.PI * 2));
+      let o = (Math.floor(Math.random() * 2) === 0);
+      for (let i = 0; i < cfg.display.kappa.count; i++)
+      {
+       if (o)
+       {
+        th-= c;
+        if (th <= 0)
+         th+= Math.PI * 2;
+       }
+       else
+       {
+        th+= c;
+        if (th >= Math.PI * 2)
+         th+= Math.PI * 2;
+       }
+       sparkler(kList[Math.floor(Math.random() * kList.length)].url, r, th);
+       await sleep(10);
+      }
+     },
+     tStart
+    );
+   }
+
    function showKappa_Pyramid(kList, sW, sH)
    {
     let tMul = 2;
@@ -3717,6 +3804,9 @@
       break;
      case 'Fireworks':
       showKappa_Fireworks(kList, sW, sH, sSm);
+      break;
+     case 'Spiral':
+      showKappa_Spiral(kList, sW, sH, sSm);
       break;
      case 'Pyramid':
       showKappa_Pyramid(kList, sW, sH);
