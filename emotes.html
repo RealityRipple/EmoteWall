@@ -528,6 +528,7 @@
        'Stampede',    // Stampede of emotes     (no fade/zoom)
        'Confetti',    // Fall like confetti     (no zoom, no fade in, only fade out; small emotes)
        'TheCube',     // Rotate a 3D cube of an emote (no zoom, only fade; "cfg.display.kappa.cube.size"-size emotes)
+       'Conga',       // Start a conga line     (no fade/zoom)
       ],
       access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002,
       aliases: [      // !kappagen command aliases (must be lower-case)
@@ -538,7 +539,8 @@
        size: 8/10,
        center: true,
        rotations: 5
-      }
+      },
+      conga: false    // false = no events, disperse as normal. true: more than 1 line triggers confetti ending
      }
     },
     emote: {
@@ -696,6 +698,87 @@
    {
     position: absolute;
     background-color: rgba(255, 255, 255, 0.2);
+   }
+
+   div.scene img.dancer
+   {
+    width: auto;
+    height: auto;
+    text-align: center;
+    position: relative;
+    animation: dance 4s linear infinite;
+   }
+
+   @keyframes dance
+   {
+    0%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+    6%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    13%
+    {
+     transform: translate(20%, 40%) rotate(-30deg);
+    }
+    19%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    25%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+    31%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    38%
+    {
+     transform: translate(20%, 40%) rotate(-30deg);
+    }
+    44%
+    {
+     transform: translate(20%, 10%) rotate(-30deg);
+    }
+    50%
+    {
+     transform: translate(20%, 40%) rotate(-30deg);
+    }
+    56%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    63%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+    69%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    75%
+    {
+     transform: translate(20%, 40%) rotate(-30deg);
+    }
+    81%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    88%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+    94%
+    {
+     transform: translate(80%, 10%) rotate(30deg);
+    }
+    100%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
    }
 
    @keyframes wiggleL
@@ -1112,6 +1195,7 @@
    var cList = [];     // list of channel-specific emotes, used for kappagens
    var fList = [];     // cache of users in chat and their follow status
    var bList = [];     // list of giftbomb event origin ids (to prevent kappas for each gift in a bomb)
+   var conga = [];     // CONGA TIME!
    var eActive = 0;    // active emote count (effective, not actual)
    var tStart = 32;    // time to wait for transition trigger (ms)
    var uLF = false;    // user id of the most recent follower
@@ -3649,6 +3733,162 @@
      await stampede(b4, false);
    }
 
+   async function showKappa_Conga(kList, sW, sH, sS)
+   {
+    let v = 0;
+    let unique = false;
+    let bS = Math.ceil(sS * (5/3));
+    let seg = Math.floor(bS / 2);
+    let sht = Math.floor(sH / seg);
+    let longWait = cfg.emote.time * 2;
+    while (conga.length >= sht)
+    {
+     await sleep(250);
+    }
+    while (!unique)
+    {
+     v = Math.floor(Math.random() * sht) * seg;
+     let found = false;
+     for (let i = 0; i < conga.length; i++)
+     {
+      if (conga[i].row === v)
+      {
+       found = true;
+       break;
+      }
+     }
+     if (!found)
+      unique = true;
+    }
+    conga.push({row: v, done: false});
+    let urls = [];
+    let ct = Math.floor(sW / bS);
+    for (let i = 0; i < ct; i++)
+    {
+     urls.push(kList[Math.floor(Math.random() * kList.length)].url);
+    }
+    let d = ((v / seg) % 2 === 1);
+    let xtra = Math.floor((sW - (ct * bS)) / 2);
+    function dance(url, col)
+    {
+     let box = document.createElement('div');
+     box.setAttribute('class', 'scene');
+     let img = document.createElement('img');
+     img.setAttribute('class', 'dancer');
+     img.setAttribute('src', url);
+     img.setAttribute('alt', '');
+     let s = 'max-width: ' + sS + 'px;';
+     s += ' max-height: ' + sS + 'px;';
+     img.setAttribute('style', s);
+     let sE = bS * col + xtra;
+     let sB = sE - sW;
+     if (d)
+     {
+      sE = bS * ((ct - 1) - col) + xtra;
+      sB = sE + sW;
+      img.setAttribute('title', 'd is true');
+     }
+     s = 'top: 0px;';
+     s += ' left: 0px;';
+     s += ' width: ' + bS + 'px;';
+     s += ' height: ' + bS + 'px;';
+     s += ' z-index: ' + v + ';';
+     s += ' transition: all ' + longWait + 's linear;';
+     s += ' transform: translate(' + sB + 'px, ' + v + 'px);';
+     box.setAttribute('style', s);
+     eActive++;
+     box.appendChild(img);
+     document.body.appendChild(box);
+     window.setTimeout(
+      function()
+      {
+       box.style.transform = 'translate(' + sE + 'px, ' + v + 'px)';
+      },
+      tStart
+     );
+     return box;
+    }
+    function endDance(box, col)
+    {
+     let sB = bS * col + xtra;
+     let sE = sB + sW;
+     if (d)
+     {
+      sB = bS * ((ct - 1) - col) + xtra;
+      sE = sB - sW;
+     }
+     let s = 'top: 0px;';
+     s += ' left: 0px;';
+     s += ' width: ' + bS + 'px;';
+     s += ' height: ' + bS + 'px;';
+     s += ' z-index: ' + v + ';';
+     s += ' transition: all ' + longWait + 's ease-in;';
+     s += ' transform: translate(' + sB + 'px, ' + v + 'px);';
+     box.setAttribute('style', s);
+     gcEmote(box, true, true, longWait * 1000 * 1.25);
+     window.setTimeout(
+      function()
+      {
+       box.style.transform = 'translate(' + sE + 'px, ' + v + 'px)';
+      },
+      tStart
+     );
+    }
+    let imgs = [];
+    for (let i = 0; i < ct; i++)
+    {
+     imgs.push(dance(urls[i], i));
+    }
+    await sleep(longWait * 1000);
+    let full = false;
+    if (conga.length == sht)
+     full = true;
+    await sleep(cfg.emote.time * 1000);
+    if (cfg.display.kappa.conga)
+    {
+     let ex = false;
+     if (conga.length > 1)
+      ex = true;
+     for (let i = 0; i < conga.length; i++)
+     {
+      if (conga[i].row !== v)
+       continue;
+      conga[i].done = true;
+      break;
+     }
+     let done = false;
+     while (!done)
+     {
+      if (!ex && conga.length > 1)
+       ex = true;
+      let notDone = false;
+      for (let i = 0; i < conga.length; i++)
+      {
+       if (conga[i].done === false)
+       {
+        notDone = true;
+        break;
+       }
+      }
+      if (notDone === false)
+       done = true;
+      await sleep(100);
+     }
+    }
+    for (let i = 0; i < imgs.length; i++)
+    {
+     endDance(imgs[i], i);
+    }
+    await sleep(longWait * 1000);
+    for (let i = 0; i < conga.length; i++)
+    {
+     if (conga[i].row !== v)
+      continue;
+     conga.splice(i, 1);
+     break;
+    }
+   }
+
    function showEmote(url)
    {
     let sW = window.innerWidth;
@@ -3764,7 +4004,11 @@
     document.documentElement.style.setProperty('--emote-height', sS + 'px');
     document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
     document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
-    let style = kStyles[(Math.floor(Math.random() * kStyles.length))];
+    let style;
+    if (cfg.display.kappa.conga && conga.length > 1)
+     style = 'Conga';
+    else
+     style = kStyles[(Math.floor(Math.random() * kStyles.length))];
     if (style === undefined)
      return;
     let waitFor = cfg.display.kappa.count;
@@ -3813,6 +4057,10 @@
       break;
      case 'SmallPyramid':
       showKappa_SmallPyramid(kList, sW, sH);
+      break;
+     case 'Conga':
+      eActive -= waitFor;
+      showKappa_Conga(kList, sW, sH, sS);
       break;
      case 'TheCube':
       eActive -= waitFor;
