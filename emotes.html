@@ -404,6 +404,9 @@
     *
     *  tip        Settings related to third-party tip systems.
     *
+    *   useProfileImage  If TRUE, tips will use the tipper's profile image instead of emotes.
+    *                   If FALSE, tips will use your standard kappagen emotes.
+    *
     *   streamlabs  Minimum tip amount through Streamlabs for a kappagen. This value can be a boolean, integer,
     *              or array:
     *              If TRUE, a kappagen will occur on all Streamlabs tips.
@@ -629,6 +632,7 @@
       '100': true
      },
      tip: {
+      useProfileImage: false,
       streamlabs: false,
       streamelements: false
      }
@@ -1383,6 +1387,48 @@
     }
     ret.user = data;
     return ret;
+   }
+
+   function getUserInfo(u)
+   {
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.twitch.tv/helix/users?login=' + u);
+      x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
+      x.setRequestHeader('Client-Id', cfg.login.client);
+      x.onreadystatechange = function()
+      {
+       if (x.status !== 200)
+       {
+        if (x.status === 401)
+         blargIAmDead(3);
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       if (!j.hasOwnProperty('data'))
+       {
+        resolve(false);
+        return;
+       }
+       if (j.data.length !== 1)
+       {
+        console.log('returned ', j.data.length, ' entries: ', j.data);
+        resolve(false);
+        return;
+       }
+       resolve(j.data[0]);
+      };
+      x.send();
+     }
+    );
+    return p;
    }
 
    function findEmote_channel(chID)
@@ -4423,7 +4469,7 @@
      }
      window.setTimeout(function(){streamlabsWS();}, 5000);
     };
-    ws.onmessage = function(event)
+    ws.onmessage = async function(event)
     {
      let d = event.data;
      if (d.length < 1)
@@ -4464,26 +4510,43 @@
          continue;
         if (!o[1].message[i].hasOwnProperty('type') || o[1].message[i].type !== 'donation')
          continue;
-        r.push(o[1].message[i].amount);
+        let n = false;
+        if (o[1].message[i].hasOwnProperty('name'))
+         n = o[1].message[i].name;
+        r.push({amt: o[1].message[i].amount, name: n});
        }
-       showStreamlabsTips(r);
+       await showStreamlabsTips(r);
        break;
      }
     };
    }
 
-   function showStreamlabsTips(dRet)
+   async function showStreamlabsTips(dRet)
    {
     for (let i = 0; i < dRet.length; i++)
     {
-     let v = Math.floor(dRet[i] * cfg.streamlabs.curMul);
+     let n = dRet[i].name;
+     let a = dRet[i].amt;
+     let v = Math.floor(a * cfg.streamlabs.curMul);
      let r = findInMaybeRange(cfg.event.tip.streamlabs, v);
      if (r === false)
       continue;
+     let p = false;
+     if (cfg.event.tip.useProfileImage && n !== false)
+     {
+      let u = await getUserInfo(n);
+      if (u !== false)
+      {
+       if (u.hasOwnProperty('profile_image_url'))
+        p = [
+         {url: u['profile_image_url']}
+        ];
+      }
+     }
      if (r === true)
-      showKappa(false);
+      showKappa(p);
      else
-      showKappa(false, r);
+      showKappa(p, r);
     }
    }
 
@@ -4508,7 +4571,7 @@
      }
      window.setTimeout(function(){streamelementsWS();}, 5000);
     };
-    ws.onmessage = function(event)
+    ws.onmessage = async function(event)
     {
      let d = event.data;
      if (d.length < 1)
@@ -4558,24 +4621,39 @@
         return;
        if (!o[1].data.hasOwnProperty('amount'))
         return;
-       showStreamElementsTip(o[1].data.amount);
+       let n = false;
+       if (o[1].data.hasOwnProperty('name'))
+        n = o[1].data.name;
+       await showStreamElementsTip(o[1].data.amount, n);
        break;
      }
     };
    }
 
-   function showStreamElementsTip(dRet)
+   async function showStreamElementsTip(dAmt, dName)
    {
-    let v = Math.floor(dRet * cfg.streamelements.curMul);
+    let v = Math.floor(dAmt * cfg.streamelements.curMul);
     if (v < 1)
      return;
     let r = findInMaybeRange(cfg.event.tip.streamelements, v);
     if (r === false)
      return;
+    let p = false;
+    if (cfg.event.tip.useProfileImage && dName !== false)
+    {
+     let u = await getUserInfo(dName);
+     if (u !== false)
+     {
+      if (u.hasOwnProperty('profile_image_url'))
+       p = [
+        {url: u['profile_image_url']}
+       ];
+     }
+    }
     if (r === true)
-     showKappa(false);
+     showKappa(p);
     else
-     showKappa(false, r);
+     showKappa(p, r);
    }
 
    async function detectFollowers(chID)
