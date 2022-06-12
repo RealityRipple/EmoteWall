@@ -19,7 +19,7 @@
     *
     * Update Procedure: To update this emote wall, simply use the Wizard to import and download it.
     * 1) Visit the official page <https://realityripple.com/Tools/Twitch/EmoteWall/>.
-    * 2) Click "Config Wizard".
+    * 2) Under "Config Wizard", click "Authorize on Twitch".
     * 3) Import this HTML file by clicking Import.
     * 4) Make any changes you need to make on each page.
     * 5) At the end of your configuration, hit "Download".
@@ -34,7 +34,7 @@
     * login       Settings related to the login process.
     *
     *             NOTE: OAuth tokens expire automatically (usually after 60 days). Please make sure to update
-    *                   these values on a regular basis.
+    *                   these values on a regular basis, if not using the interactive login process.
     *
     *  client     The Client ID value is used to track which third-party project is accessing your account.
     *             This emote wall does not require a constant ID, and will work with whatever tool you use to
@@ -43,8 +43,8 @@
     *  oauth      The OAuth ID value is used in lieu of a password to access the Twitch API.
     *             Please generate an OAuth ID and matching Client ID:
     *             - Visit https://realityripple.com/Tools/Twitch/EmoteWall/
-    *             - Click the "Authenticate on Twitch" button and log in
-    *             - Fill out the captcha prompt
+    *             - Click the "Authenticate on Twitch" button under "Do-it-Yourself" and log in
+    *             - Fill out the captcha prompt, if necessary
     *             - Copy the Client ID value and paste it into "client:"
     *             - Copy the OAuth ID value and paste it into "oauth:"
     *             If you ever stop using this emote wall, please log into Twitch and visit
@@ -134,9 +134,9 @@
     *             If you know how bitwise flags work, you can also use them
     *             in more complicated ways:
     *               ACCESS           MEANING
-    *             0xF77             all users from the broadcaster to strangers
-    *             0xF77 ^ 0x003     all users except followers and strangers
-    *             0x0F0             all subscribers
+    *             0xFF7             all users from the broadcaster to strangers
+    *             0xFF7 ^ 0x003     all users except followers and strangers
+    *             0x070             all subscribers
     *
     *  duplicates  A boolean or integer to toggle duplicate emotes per message.
     *             If TRUE, every emote posted in chat will be shown.
@@ -189,6 +189,13 @@
     *
     *    time     The number of seconds the Conga kappagen should show up on the screen for.
     *             This value lets you increase or decrease the chances of keeping a "contagious" Conga line going.
+    *
+    *   text      Settings related to Text kappagen.
+    *
+    *    message  An array of alphanumeric strings (letters, numbers, and spaces), one of which will randomly be used.
+    *
+    *    time     The number of seconds the Text kappagen should show the final result for.
+    *             This value should be adjusted depending on the average message length, for readability.
     *
     * emote       Settings related to individual emote display.
     *
@@ -478,6 +485,7 @@
     *         If you remove an emote from the bttvZWE list (below), however, it will show up on the wall.
     *
     * OBS:    This emote wall may do better if the browser source has a frame rate limit of 30 or 60.
+    *         If you use your GPU while streaming, you may wish to disable Browser Source Hardware Acceleration.
     *         It may also work better using a smaller screen resolution (such as 720p on a 1080p screen) and then
     *         stretching the browser source to fit to the screen using the OBS Transform feature.
     *
@@ -506,7 +514,7 @@
     reddit: false,
     display: {
      styles: [
-      //'Still',        // No movement
+    //'Still',        // No movement
       'StraightLine', // Gentle movement in a random straight line
       'Rise',         // Slowly rise to top while wobbling back and forth
       'Bounce',       // Fall from the top at an angle and bounce along the bottom (Windows Solitaire style)
