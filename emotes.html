@@ -182,6 +182,14 @@
     *    rotations  The maximum number of rotations a kappa cube might spin while on screen. This effectively controls
     *              the maximum possible speed at which cubes will rotate.
     *
+    *   conga     Settings related to Conga kappagen.
+    *
+    *    contagious  If TRUE, while one Conga kappagen is visible, all additional kappagens will also be Conga.
+    *               If FALSE, Conga kappagns will behave like any other kappagen.
+    *
+    *    time     The number of seconds the Conga kappagen should show up on the screen for.
+    *             This value lets you increase or decrease the chances of keeping a "contagious" Conga line going.
+    *
     * emote       Settings related to individual emote display.
     *
     *  time       The number of seconds an emote should show up on the screen for.
@@ -543,7 +551,10 @@
        center: true,
        rotations: 5
       },
-      conga: false    // false = no events, disperse as normal. true: more than 1 line triggers confetti ending
+      conga: {
+       contagious: false,
+       time: 5
+      }
      }
     },
     emote: {
@@ -3889,8 +3900,8 @@
     let full = false;
     if (conga.length == sht)
      full = true;
-    await sleep(cfg.emote.time * 1000);
-    if (cfg.display.kappa.conga)
+    await sleep(cfg.display.kappa.conga.time * 1000);
+    if (cfg.display.kappa.conga.contagious)
     {
      let ex = false;
      if (conga.length > 1)
@@ -4051,7 +4062,7 @@
     document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
     document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
     let style;
-    if (cfg.display.kappa.conga && conga.length > 0)
+    if (cfg.display.kappa.conga.contagious && conga.length > 0)
      style = 'Conga';
     else
      style = kStyles[(Math.floor(Math.random() * kStyles.length))];
