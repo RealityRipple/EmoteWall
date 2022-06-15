@@ -5139,10 +5139,16 @@
       window.clearInterval(p);
       p = 0;
      }
-     window.setTimeout(function(){streamlabsWS();}, 5000);
+     if (!dead)
+      window.setTimeout(function(){streamlabsWS();}, 5000);
     };
     ws.onmessage = async function(event)
     {
+     if (dead)
+     {
+      ws.close();
+      return;
+     }
      let d = event.data;
      if (d.length < 1)
       return;
@@ -5238,10 +5244,16 @@
       window.clearInterval(p);
       p = 0;
      }
-     window.setTimeout(function(){streamelementsWS();}, 5000);
+     if (!dead)
+      window.setTimeout(function(){streamelementsWS();}, 5000);
     };
     ws.onmessage = async function(event)
     {
+     if (dead)
+     {
+      ws.close();
+      return;
+     }
      let d = event.data;
      if (d.length < 1)
       return;
