@@ -1733,6 +1733,7 @@
     }
    };
    /* Timers */
+   var tIRC = false    // irc connection timeout
    var tEmote = false; // emote queue timer
    var tKappa = false; // kappagen queue timer
    var tGC = false;    // garbage collection
@@ -5905,6 +5906,19 @@
     const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
     ws.onopen = function(event)
     {
+     tIRC = setTimeout(
+      function()
+      {
+       dead = true;
+       if (tIRC !== false)
+       {
+        clearTimeout(tIRC);
+        tIRC = false;
+       }
+       ws.close();
+       blargIAmDead(5);
+      },
+      5000);
      ws.send('PASS oauth:' + cfg.login.oauth);
      ws.send('NICK ' + cfg.channel);
      ws.send('CAP REQ :twitch.tv/commands');
@@ -5913,6 +5927,11 @@
     };
     ws.onclose = function()
     {
+     if (tIRC !== false)
+     {
+      clearTimeout(tIRC);
+      tIRC = false;
+     }
      if (!dead)
       window.setTimeout(irc, 5000);
     };
@@ -5972,6 +5991,11 @@
         channelID = cmd.tags['room-id'];
         if (firstRoomstate)
         {
+         if (tIRC !== false)
+         {
+          clearTimeout(tIRC);
+          tIRC = false;
+         }
          firstRoomstate = false;
          await loadEmote_channel(channelID);
          loadCheer_channel(channelID);
@@ -6267,6 +6291,9 @@
        return;
       }
       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Warning:<br><br>Your Credentials Will Expire Soon<br><br>Please Update Your OAuth Token</div>';
+      break;
+     case 5:
+      document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>The connection to the IRC channel was incomplete.<br><br>Please check your Channel</div>';
       break;
     }
     window.setTimeout(function(){document.body.innerHTML = ''; if (showButton) showLoginButton();}, 15000);
