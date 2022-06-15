@@ -165,22 +165,32 @@
     *             seen below (best would be 1/4th or less).
     *
     *   styles    Similar to the array of styles for normal emotes, but this one lists emote-splosion types.
-    *             Please do not try to add normal styles to the kappa list or vice versa.
+    *             Please do not try to add normal styles to the kappa list or vice versa. This is an associative array
+    *             which can have custom settings for certain styles (namely The Cube and Text - see below).
     *
-    *   access    Similar to the access flag for normal emotes, but controls which users can use the !kappagen command.
+    *    TheCube  Settings related to The Cube kappagen. These settings will be the default for all instances of
+    *             TheCube kappagen.
     *
-    *   cube      Settings related to The Cube kappagen.
-    *
-    *    size     A decimal value representing the height of The Cube kappagen, relative to the smallest
+    *     size    A decimal value representing the height of The Cube kappagen, relative to the smallest
     *             screen dimension.
     *             If the height of the screen is less than the width, each emote will be equal to the height of
     *             the screen multiplied by this ratio. Suggested "8 / 10" (80%).
     *
-    *    center   If TRUE, The Cube will show up in the exact center of the screen.
+    *     center  If TRUE, The Cube will show up in the exact center of the screen.
     *             If FALSE, The Cube will show up in a random location.
     *
-    *    rotations  The maximum number of rotations a kappa cube might spin while on screen. This effectively controls
-    *              the maximum possible speed at which cubes will rotate.
+    *     rotations  The maximum number of rotations a kappa cube might spin while on screen. This effectively controls
+    *               the maximum possible speed at which cubes will rotate.
+    *
+    *    Text     Settings related to Text kappagen. These settings will be the default for all instances of Text
+    *             kappagen.
+    *
+    *     message  An array of alphanumeric strings (letters, numbers, and spaces), one of which will randomly be used.
+    *
+    *     time    The number of seconds the Text kappagen should show the final result for.
+    *             This value should be adjusted depending on the average message length, for readability.
+    *
+    *   access    Similar to the access flag for normal emotes, but controls which users can use the !kappagen command.
     *
     *   conga     Settings related to Conga kappagen.
     *
@@ -189,13 +199,6 @@
     *
     *    time     The number of seconds the Conga kappagen should show up on the screen for.
     *             This value lets you increase or decrease the chances of keeping a "contagious" Conga line going.
-    *
-    *   text      Settings related to Text kappagen.
-    *
-    *    message  An array of alphanumeric strings (letters, numbers, and spaces), one of which will randomly be used.
-    *
-    *    time     The number of seconds the Text kappagen should show the final result for.
-    *             This value should be adjusted depending on the average message length, for readability.
     *
     * emote       Settings related to individual emote display.
     *
@@ -268,6 +271,8 @@
     *               If TRUE, a kappagen will occur.
     *               If FALSE, no kappagen will occur.
     *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *                Keep in mind that kappagen arrays are also associative, and may have independent settings for
+    *                kappas such as TheCube and Text. This applies to all such arrays listed below as well.
     *
     *   originEmotes  A boolean to toggle the use of the raiding streamer's channel emotes for raid kappagens.
     *                If TRUE, raid kappagens will use channel emotes from the raider's channel (not including third-party).
@@ -534,39 +539,37 @@
      },
      kappa: {
       count: 150,
-      styles: [
-       'Rise',        // Slowly rise to top while wobbling back and forth
-       'Speed',       // Zoom across the screen
-       'Crazy',       // Bounce off the walls [Layout Shifts - Requires offset-anchor / offset-position directives]
-       'Burst',       // Expand from a center point
-       'Fireworks',   // Burst out from a single emote (no fade/zoom; small emotes)
-       'Spiral',      // Burst out from a single emote in a spiral (no fade/zoom; small emotes)
-       'Pyramid',     // Build a pyramid        (no fade/zoom; specific-size emotes)
-       'SmallPyramid',// Build a small pyramid  (no fade/zoom; small emotes)
-       'Fountain',    // Spout from a fountain  (no fade/zoom)
-       'Stampede',    // Stampede of emotes     (no fade/zoom)
-       'Confetti',    // Fall like confetti     (no zoom, no fade in, only fade out; small emotes)
-       'TheCube',     // Rotate a 3D cube of an emote (no zoom, only fade; "cfg.display.kappa.cube.size"-size emotes)
-       'Conga',       // Start a conga line     (no fade/zoom)
-       'Text',        // Show a message         (no fade/zoom; specific-size emotes)
-      ],
+      styles: {
+       'Rise': {},        // Slowly rise to top while wobbling back and forth
+       'Speed': {},       // Zoom across the screen
+       'Crazy': {},       // Bounce off the walls [Layout Shifts - Requires offset-anchor / offset-position directives]
+       'Burst': {},       // Expand from a center point
+       'Fireworks': {},   // Burst out from a single emote (no fade/zoom; small emotes)
+       'Spiral': {},      // Burst out from a single emote in a spiral (no fade/zoom; small emotes)
+       'Pyramid': {},     // Build a pyramid        (no fade/zoom; specific-size emotes)
+       'SmallPyramid': {},// Build a small pyramid  (no fade/zoom; small emotes)
+       'Fountain': {},    // Spout from a fountain  (no fade/zoom)
+       'Stampede': {},    // Stampede of emotes     (no fade/zoom)
+       'Confetti': {},    // Fall like confetti     (no zoom, no fade in, only fade out; small emotes)
+       'Conga': {},       // Start a conga line     (no fade/zoom)
+       'TheCube': {       // Rotate a 3D cube of an emote (no zoom, only fade)
+        size: 8/10,
+        center: true,
+        rotations: 5
+       },
+       'Text': {          // Show a message         (no fade/zoom; specific-size emotes)
+        message: ['HYPE!'],
+        time: 3
+       },
+      },
       access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002,
       aliases: [      // !kappagen command aliases (must be lower-case)
        '!kappagen',
        '-kappagen'
       ],
-      cube: {
-       size: 8/10,
-       center: true,
-       rotations: 5
-      },
       conga: {
        contagious: false,
        time: 5
-      },
-      text: {
-       message: ['Hype'],
-       time: 4
       }
      }
     },
@@ -669,249 +672,492 @@
    var pyramidDist = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
 
    // distribution of emojis for letters in message kappagens
-   var alnumDist_A = [
-    [1, 1, 1, 1, 1, 0, 0],
-    [0, 0, 0, 1, 0, 1, 0],
-    [0, 0, 0, 1, 0, 0, 1],
-    [0, 0, 0, 1, 0, 1, 0],
-    [1, 1, 1, 1, 1, 0, 0]
-   ];
-   var alnumDist_B = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [0, 1, 1, 0, 1, 1, 0]
-   ];
-   var alnumDist_C = [
-    [0, 1, 1, 1, 1, 1, 0],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [0, 1, 0, 0, 0, 1, 0]
-   ];
-   var alnumDist_D = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [0, 1, 1, 1, 1, 1, 0]
-   ];
-   var alnumDist_E = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1]
-   ];
-   var alnumDist_F = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 1, 0, 0, 1],
-    [0, 0, 0, 1, 0, 0, 1],
-    [0, 0, 0, 1, 0, 0, 1],
-    [0, 0, 0, 0, 0, 0, 1]
-   ];
-   var alnumDist_G = [
-    [0, 1, 1, 1, 1, 1, 0],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 1, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [0, 1, 1, 1, 0, 1, 0]
-   ];
-   var alnumDist_H = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0],
-    [1, 1, 1, 1, 1, 1, 1]
-   ];
-   var alnumDist_I = [
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 1]
-   ];
-   var alnumDist_J = [
-    [0, 1, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [0, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0, 0, 1]
-   ];
-   var alnumDist_K = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 1, 0, 1, 0, 0],
-    [0, 1, 0, 0, 0, 1, 0],
-    [1, 0, 0, 0, 0, 0, 1]
-   ];
-   var alnumDist_L = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0]
-   ];
-   var alnumDist_M = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0, 1, 0],
-    [0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0],
-    [1, 1, 1, 1, 1, 1, 1]
-   ];
-   var alnumDist_N = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0, 1, 0],
-    [0, 0, 1, 1, 1, 0, 0],
-    [0, 1, 0, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1, 1, 1]
-   ];
-   var alnumDist_O = [
-    [0, 1, 1, 1, 1, 1, 0],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [0, 1, 1, 1, 1, 1, 0]
-   ];
-   var alnumDist_P = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 1, 0, 0, 1],
-    [0, 0, 0, 1, 0, 0, 1],
-    [0, 0, 0, 0, 1, 1, 0]
-   ];
-   var alnumDist_Q = [
-    [0, 1, 1, 1, 1, 1, 0],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [0, 1, 0, 0, 0, 0, 1],
-    [1, 0, 1, 1, 1, 1, 0]
-   ];
-   var alnumDist_R = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 1, 0, 0, 1],
-    [0, 0, 0, 1, 0, 0, 1],
-    [0, 0, 0, 1, 0, 0, 1],
-    [1, 1, 1, 0, 1, 1, 0]
-   ];
-   var alnumDist_S = [
-    [0, 1, 0, 0, 1, 1, 0],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [0, 1, 1, 0, 0, 1, 0]
-   ];
-   var alnumDist_T = [
-    [0, 0, 0, 0, 0, 0, 1],
-    [0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0, 0, 1],
-    [0, 0, 0, 0, 0, 0, 1]
-   ];
-   var alnumDist_U = [
-    [0, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 1, 1, 1, 1]
-   ];
-   var alnumDist_V = [
-    [0, 0, 0, 1, 1, 1, 1],
-    [0, 1, 1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 0, 0, 0, 0],
-    [0, 0, 0, 1, 1, 1, 1]
-   ];
-   var alnumDist_W = [
-    [0, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 1, 1, 1, 1]
-   ];
-   var alnumDist_X = [
-    [1, 0, 0, 0, 0, 0, 1],
-    [0, 1, 1, 0, 1, 1, 0],
-    [0, 0, 0, 1, 0, 0, 0],
-    [0, 1, 1, 0, 1, 1, 0],
-    [1, 0, 0, 0, 0, 0, 1]
-   ];
-   var alnumDist_Y = [
-    [0, 0, 0, 0, 0, 1, 1],
-    [0, 0, 0, 1, 1, 0, 0],
-    [1, 1, 1, 0, 0, 0, 0],
-    [0, 0, 0, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0, 1, 1]
-   ];
-   var alnumDist_Z = [
-    [1, 1, 0, 0, 0, 0, 1],
-    [1, 0, 1, 0, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 0, 1, 0, 1],
-    [1, 0, 0, 0, 0, 1, 1]
-   ];
-   var alnumDist_1 = [
-    [1, 0, 0, 0, 0, 1, 0],
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0]
-   ];
-   var alnumDist_2 = [
-    [1, 1, 0, 0, 0, 1, 0],
-    [1, 0, 1, 0, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 0, 1, 0, 1],
-    [1, 0, 0, 0, 0, 1, 0]
-   ];
-   var alnumDist_3 = [
-    [0, 1, 0, 0, 0, 1, 0],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [0, 1, 1, 0, 1, 1, 0]
-   ];
-   var alnumDist_4 = [
-    [0, 0, 1, 1, 0, 0, 0],
-    [0, 0, 1, 0, 1, 1, 1],
-    [0, 0, 1, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 1, 0, 0, 0, 0]
-   ];
-   var alnumDist_5 = [
-    [0, 1, 0, 0, 1, 1, 1],
-    [1, 0, 0, 0, 1, 0, 1],
-    [1, 0, 0, 0, 1, 0, 1],
-    [0, 1, 1, 1, 0, 0, 1]
-   ];
-   var alnumDist_6 = [
-    [0, 1, 1, 1, 1, 0, 0],
-    [1, 0, 0, 1, 0, 1, 0],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [0, 1, 1, 0, 0, 0, 0]
-   ];
-   var alnumDist_7 = [
-    [0, 0, 0, 0, 0, 0, 1],
-    [0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 0, 0, 0, 1],
-    [0, 0, 0, 1, 1, 0, 1],
-    [0, 0, 0, 0, 0, 1, 1]
-   ];
-   var alnumDist_8 = [
-    [0, 1, 1, 0, 1, 1, 0],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [0, 1, 1, 0, 1, 1, 0]
-   ];
-   var alnumDist_9 = [
-    [0, 0, 0, 0, 1, 1, 0],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 1],
-    [0, 1, 0, 1, 0, 0, 1],
-    [0, 0, 1, 1, 1, 1, 0]
-   ];
-   var alnumDist_0 = [
-    [0, 1, 1, 1, 1, 1, 0],
-    [1, 1, 0, 0, 0, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 1, 1],
-    [0, 1, 1, 1, 1, 1, 0]
-   ];
+   var alnumDist = {
+    'A': [
+     [0, 1, 1, 1, 1, 1, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 1, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 0, 1, 0, 0],
+     [0, 1, 1, 1, 1, 1, 0, 0, 0]
+    ],
+    'a': [
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    'B': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 0, 1, 1, 0, 0]
+    ],
+    'b': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 1, 1, 1, 0, 0, 0, 0]
+    ],
+    'C': [
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 1, 0, 0, 0, 1, 0, 0]
+    ],
+    'c': [
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0]
+    ],
+    'D': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 1, 1, 1, 1, 1, 0, 0]
+    ],
+    'd': [
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    'E': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    'e': [
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0]
+    ],
+    'F': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    'f': [
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 0, 1, 0, 0]
+    ],
+    'G': [
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 1, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 1, 0, 1, 0, 0]
+    ],
+    'g': [
+     [1, 0, 0, 1, 1, 0, 0, 0, 0],
+     [1, 0, 1, 0, 0, 1, 0, 0, 0],
+     [1, 0, 1, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 0, 0, 0]
+    ],
+    'H': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    'h': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 1, 1, 0, 0, 0, 0, 0]
+    ],
+    'I': [
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    'i': [
+     [0, 1, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    'J': [
+     [0, 0, 1, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    'j': [
+     [1, 0, 0, 0, 0, 0, 0, 0, 0],
+     [1, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 1, 0, 0]
+    ],
+    'K': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 0, 0, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    'k': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+    ],
+    'L': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    'l': [
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    'M': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 0, 0, 1, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 0, 1, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    'm': [
+     [0, 1, 1, 1, 1, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 0, 0, 0]
+    ],
+    'N': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 0, 0, 1, 0, 0],
+     [0, 0, 0, 1, 1, 1, 0, 0, 0],
+     [0, 0, 1, 0, 0, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    'n': [
+     [0, 1, 1, 1, 1, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 0, 0, 0]
+    ],
+    'O': [
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 1, 1, 1, 1, 1, 0, 0]
+    ],
+    'o': [
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 1, 1, 1, 0, 0, 0, 0]
+    ],
+    'P': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 1, 1, 0, 0]
+    ],
+    'p': [
+     [1, 1, 1, 1, 1, 0, 0, 0, 0],
+     [0, 0, 1, 0, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 0, 1, 0, 0, 0],
+     [0, 0, 0, 1, 1, 0, 0, 0, 0]
+    ],
+    'Q': [
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 1, 0, 0, 0, 0, 1, 0],
+     [1, 1, 0, 1, 1, 1, 1, 0, 0]
+    ],
+    'q': [
+     [0, 0, 0, 1, 1, 0, 0, 0, 0],
+     [0, 0, 1, 0, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 0, 1, 0, 0, 0],
+     [1, 1, 1, 1, 1, 0, 0, 0, 0]
+    ],
+    'R': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 1, 1, 0, 0, 1, 0],
+     [0, 0, 1, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 1, 1, 0, 0]
+    ],
+    'r': [
+     [0, 1, 1, 1, 1, 1, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0]
+    ],
+    'S': [
+     [0, 0, 1, 0, 0, 1, 1, 0, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 0, 0, 1, 0, 0]
+    ],
+    's': [
+     [0, 1, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 0, 1, 0, 0, 0]
+    ],
+    'T': [
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    't': [
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0]
+    ],
+    'U': [
+     [0, 0, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    'u': [
+     [0, 0, 1, 1, 1, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 0, 0, 0]
+    ],
+    'V': [
+     [0, 0, 0, 0, 1, 1, 1, 1, 0],
+     [0, 0, 1, 1, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 0, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 1, 1, 1, 0]
+    ],
+    'v': [
+     [0, 0, 0, 0, 1, 1, 0, 0, 0],
+     [0, 0, 1, 1, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 0, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 1, 0, 0, 0]
+    ],
+    'W': [
+     [0, 0, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    'w': [
+     [0, 0, 1, 1, 1, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 1, 1, 0, 0, 0]
+    ],
+    'X': [
+     [0, 1, 1, 0, 0, 0, 1, 1, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 1, 1, 0, 0, 0, 1, 1, 0]
+    ],
+    'x': [
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 1, 0, 0, 0, 0, 0],
+     [0, 0, 1, 0, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0]
+    ],
+    'Y': [
+     [0, 0, 0, 0, 0, 0, 1, 1, 0],
+     [0, 0, 0, 0, 1, 1, 0, 0, 0],
+     [0, 1, 1, 1, 0, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 0, 1, 1, 0]
+    ],
+    'y': [
+     [1, 0, 0, 1, 1, 1, 0, 0, 0],
+     [1, 0, 1, 0, 0, 0, 0, 0, 0],
+     [1, 0, 1, 0, 0, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 0, 0, 0]
+    ],
+    'Z': [
+     [0, 1, 1, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 1, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 1, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 1, 1, 0]
+    ],
+    'z': [
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 1, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0]
+    ],
+    '1': [
+     [0, 1, 0, 0, 0, 0, 1, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    '2': [
+     [0, 1, 1, 0, 0, 0, 1, 0, 0],
+     [0, 1, 0, 1, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 1, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 1, 0, 0]
+    ],
+    '3': [
+     [0, 0, 1, 0, 0, 0, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 0, 1, 1, 0, 0]
+    ],
+    '4': [
+     [0, 0, 0, 1, 1, 0, 0, 0, 0],
+     [0, 0, 0, 1, 0, 1, 1, 1, 0],
+     [0, 0, 0, 1, 0, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 1, 0, 0, 0, 0, 0]
+    ],
+    '5': [
+     [0, 0, 1, 0, 0, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 1, 0, 1, 0],
+     [0, 1, 0, 0, 0, 1, 0, 1, 0],
+     [0, 0, 1, 1, 1, 0, 0, 1, 0]
+    ],
+    '6': [
+     [0, 0, 1, 1, 1, 1, 0, 0, 0],
+     [0, 1, 0, 0, 1, 0, 1, 0, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 0, 0, 0, 0, 0]
+    ],
+    '7': [
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 1, 1, 0, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 1, 0, 1, 0],
+     [0, 0, 0, 0, 0, 0, 1, 1, 0]
+    ],
+    '8': [
+     [0, 0, 1, 1, 0, 1, 1, 0, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 0, 1, 1, 0, 0]
+    ],
+    '9': [
+     [0, 0, 0, 0, 0, 1, 1, 0, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 1, 1, 1, 1, 0, 0]
+    ],
+    '0': [
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 1, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 1, 1, 1, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 1, 1, 0],
+     [0, 0, 1, 1, 1, 1, 1, 0, 0]
+    ],
+    ':': [
+     [0, 0, 1, 0, 0, 1, 0, 0, 0]
+    ],
+    '.': [
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    ',': [
+     [1, 0, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    '\'': [
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 0, 1]
+    ],
+    '-': [
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0]
+    ],
+    '_': [
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    '+': [
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0]
+    ],
+    '=': [
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0]
+    ],
+    '!': [
+     [0, 0, 0, 0, 0, 1, 1, 0, 0],
+     [0, 1, 0, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 0, 1, 1, 0, 0]
+    ],
+    '@': [
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 1, 0, 1, 0, 1, 0],
+     [0, 1, 0, 1, 0, 1, 0, 1, 0],
+     [0, 1, 0, 0, 1, 1, 1, 0, 0]
+    ],
+    '#': [
+     [0, 0, 0, 0, 1, 0, 1, 0, 0],
+     [0, 0, 0, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 1, 0, 0],
+     [0, 0, 0, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 1, 0, 0]
+    ],
+    '$': [
+     [0, 0, 1, 0, 0, 1, 1, 0, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [1, 1, 1, 1, 1, 1, 1, 1, 1],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 0, 0, 1, 0, 0]
+    ],
+    '%': [
+     [0, 1, 0, 0, 0, 0, 1, 1, 0],
+     [0, 0, 1, 1, 0, 0, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 1, 0, 0, 1, 1, 0, 0],
+     [0, 1, 1, 0, 0, 0, 0, 1, 0]
+    ],
+    '?': [
+     [0, 0, 0, 0, 0, 1, 1, 0, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 1, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 1, 1, 0, 0]
+    ]
+   };
 
    // don't show these zero-width emote modifiers at all
    var bttvZWE = [
@@ -1641,7 +1887,7 @@
     return cmd;
    }
 
-   function parseUser(cmd)
+   function parseUser(cmd, latinOnly = false)
    {
     let data = cmd.prefix;
     let ret = {};
@@ -1651,11 +1897,21 @@
     {
      ret.nick = data.slice(0, data.indexOf('!'));
      data = data.slice(data.indexOf('!') + 1);
+     if (!ret.hasOwnProperty('display-name') || (ret['display-name'] !== ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, '')))
+     {
+      console.log(ret['display-name'], ' should be known as ', ret.nick, ' because it isn\'t ', ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, ''));
+      ret['display-name'] = ret.nick;
+     }
     }
     if (data.includes('@'))
     {
      ret.host = data.slice(0, data.indexOf('@'));
      data = data.slice(data.indexOf('@') + 1);
+     if (!ret.hasOwnProperty('display-name') || (ret['display-name'] !== ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, '')))
+     {
+      console.log(ret['display-name'], ' should be known as ', ret.host, ' because it isn\'t ', ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, ''));
+      ret['display-name'] = ret.host;
+     }
     }
     ret.user = data;
     return ret;
@@ -3524,7 +3780,7 @@
     );
    }
 
-   function showKappa_TheCube(url, sW, sH, sS)
+   function showKappa_TheCube(url, sW, sH, sS, bC, iR)
    {
     let scene = document.createElement('div');
     scene.setAttribute('class', 'scene');
@@ -3574,7 +3830,7 @@
     scene.appendChild(cube);
     let h = Math.floor(Math.random() * (sW - sS));
     let v = Math.floor(Math.random() * (sH - sS));
-    if (cfg.display.kappa.cube.center)
+    if (bC)
     {
      h = Math.floor((sW / 2) - (sS / 2));
      v = Math.floor((sH / 2) - (sS / 2));
@@ -3633,8 +3889,8 @@
     window.setTimeout(
      function()
      {
-      let rX = Math.floor(180 - (Math.random() * 360)) * (cfg.display.kappa.cube.rotations * 2);
-      let rY = Math.floor(180 - (Math.random() * 360)) * (cfg.display.kappa.cube.rotations * 2);
+      let rX = Math.floor(180 - (Math.random() * 360)) * (iR * 2);
+      let rY = Math.floor(180 - (Math.random() * 360)) * (iR * 2);
       cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
      },
      tStart
@@ -4207,14 +4463,13 @@
     }
    }
 
-   function showKappa_Text(kList, sW, sH, sMsg)
+   function showKappa_Text(kList, sW, sH, sMsg, iTime)
    {
     function buildMsgArr(s)
     {
-     s = s.replaceAll(/[^A-Za-z0-9 ]/g, '');
      let o = [];
      let spc = [];
-     for (let y = 0; y < alnumDist_A[0].length; y++)
+     for (let y = 0; y < alnumDist['A'][0].length; y++)
      {
       spc.push(0);
      }
@@ -4228,7 +4483,10 @@
        o.push(spc);
        continue;
       }
-      let c = window['alnumDist_' + s[i].toUpperCase()];
+      let v = s[i];
+      if (!alnumDist.hasOwnProperty(v))
+       continue;
+      let c = alnumDist[v];
       for (let x = 0; x < c.length; x++)
       {
        o.push(c[x]);
@@ -4285,7 +4543,7 @@
        img.style.transitionTime = '500ms';
        gcEmote(img, false, true, 500);
       },
-      Math.floor(eT + (cfg.display.kappa.text.time * 1000) + (t / 10))
+      Math.floor(eT + (iTime * 1000) + (t / 10))
      );
      window.setTimeout(
       function()
@@ -4377,7 +4635,9 @@
     let e = null;
     while ((e =  toKappa.shift()) !== undefined)
     {
-     showKappa(e.list, [e.style]);
+     let a = [];
+     a[e.style] = e.prefs;
+     showKappa(e.list, a, e.params);
      if (cfg.emote.max > 0 && eActive + cfg.display.kappa.count > cfg.emote.max)
      {
       if (cfg.emote.queue > 0 && toKappa.length > cfg.emote.queue)
@@ -4388,9 +4648,9 @@
     }
    }
 
-   async function showKappa(kList, kStyles = false)
+   async function showKappa(kList, kStyles = false, kParams = false)
    {
-    if (!Array.isArray(kStyles) || kStyles.length < 1)
+    if (typeof kStyles !== 'object')
     {
      if (cfg.display.kappa.styles.length < 1)
       return;
@@ -4427,11 +4687,18 @@
     document.documentElement.style.setProperty('--emote-height', sS + 'px');
     document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
     document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
-    let style;
+    let style, prefs;
     if (cfg.display.kappa.conga.contagious && conga.length > 0)
+    {
      style = 'Conga';
+     prefs = {};
+    }
     else
-     style = kStyles[(Math.floor(Math.random() * kStyles.length))];
+    {
+     let keys = Object.keys(kStyles);
+     style = keys[(Math.floor(Math.random() * keys.length))];
+     prefs = kStyles[style];
+    }
     if (style === undefined)
      return;
     let waitFor = cfg.display.kappa.count;
@@ -4453,7 +4720,7 @@
     }
     if ((cfg.emote.max > 0) && ((eActive + cfg.display.kappa.count) > cfg.emote.max))
     {
-     toKappa.push({list: kList, style: style});
+     toKappa.push({list: kList, style: style, prefs: prefs, params: kParams});
      if (tKappa !== false)
      {
       window.clearTimeout(tKappa);
@@ -4487,8 +4754,21 @@
       break;
      case 'Text':
       eActive -= waitFor;
-      let sTM = cfg.display.kappa.text.message[Math.floor(Math.random() * cfg.display.kappa.text.message.length)];
-      showKappa_Text(kList, sW, sH, sTM);
+      let sTM = cfg.display.kappa.styles['Text'].message;
+      if (prefs.hasOwnProperty('message'))
+       sTM = prefs.message[Math.floor(Math.random() * prefs.message.length)];
+      let sTT = cfg.display.kappa.styles['Text'].time;
+      if (prefs.hasOwnProperty('time'))
+       sTT = prefs.time;
+      if (kParams !== false)
+      {
+       let pK = Object.keys(kParams);
+       for (let i = 0; i < pK.length; i++)
+       {
+        sTM = sTM.replace(pK[i], kParams[pK[i]]);
+       }
+      }
+      showKappa_Text(kList, sW, sH, sTM, sTT);
       break;
      case 'TheCube':
       eActive -= waitFor;
@@ -4496,7 +4776,16 @@
       if (sW > sH)
        cS = sH;
       let r = Math.floor(Math.random() * kList.length);
-      showKappa_TheCube(kList[r].url, sW, sH, Math.floor(cS * cfg.display.kappa.cube.size));
+      let sCS = cfg.display.kappa.styles['TheCube'].size;
+      if (prefs.hasOwnProperty('size'))
+       sCS = prefs.size;
+      let sCC = cfg.display.kappa.styles['TheCube'].center;
+      if (prefs.hasOwnProperty('center'))
+       sCC = prefs.center;
+      let sCR = cfg.display.kappa.styles['TheCube'].rotations;
+      if (prefs.hasOwnProperty('rotations'))
+       sCR = prefs.rotations;
+      showKappa_TheCube(kList[r].url, sW, sH, Math.floor(cS * sCS), sCC, sCR);
       break;
      case 'Burst':
       let oH = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
@@ -4925,10 +5214,7 @@
         ];
       }
      }
-     if (r === true)
-      showKappa(p);
-     else
-      showKappa(p, r);
+     showKappa(p, r, {'%USER%': n, '%AMOUNT%': Number.parseFloat(a).toFixed(2)});
     }
    }
 
@@ -5032,10 +5318,7 @@
        ];
      }
     }
-    if (r === true)
-     showKappa(p);
-    else
-     showKappa(p, r);
+    showKappa(p, r, {'%USER%': dName, '%AMOUNT%': Number.parseFloat(dAmt).toFixed(2)});
    }
 
    async function detectFollowers(chID)
@@ -5045,10 +5328,10 @@
     window.clearTimeout(tFC);
     tFC = false;
     let fRet = await getFollowerChange(chID);
-    if (fRet !== false && fRet > 0)
+    if (fRet !== false && fRet.length > 0)
     {
-     for (let i = 0; i < fRet; i++)
-      showKappa(false, cfg.event.follow);
+     for (let i = 0; i < fRet.length; i++)
+      showKappa(false, cfg.event.follow, {'%USER%': fRet[i]});
     }
     tFC = window.setTimeout(detectFollowers, rFC, chID);
    }
@@ -5086,15 +5369,17 @@
         resolve(false);
         return;
        }
+       let s = [];
        for (let i = 0; i < j.data.length; i++)
        {
         if (j.data[i].from_id === findU)
         {
-         resolve(i);
+         resolve(s);
          return;
         }
+        s.push(j.data[i].from_name);
        }
-       resolve(0);
+       resolve([]);
       };
       x.send();
      }
@@ -5330,10 +5615,11 @@
      showEmotes();
      return true;
     }
-    if (r === true)
-     showKappa(p);
-    else
-     showKappa(p, r);
+    let u = parseUser(cmd, true);
+    let dn = 'Anonymous';
+    if (u.hasOwnProperty('display-name'))
+     dn = u['display-name'];
+    showKappa(p, r, {'%USER%': dn, '%AMOUNT%': cmd.tags.bits});
     return true;
    }
 
@@ -5419,20 +5705,18 @@
     let r = findInMaybeRange(cfg.event.raid.raiders, c);
     if (r === false)
      return;
+    let u = parseUser(cmd, true);
+    let dn = 'Anonymous';
+    if (u.hasOwnProperty('display-name'))
+     dn = u['display-name'];
     if (!cfg.event.raid.originEmotes)
     {
-     if (r === true)
-      showKappa(false);
-     else
-      showKappa(false, r);
+     showKappa(false, r, {'%USER%': dn, '%AMOUNT%': c});
      return;
     }
-    let u = cmd.tags['user-id'];
-    let e = await findEmote_channel(u);
-    if (r === true)
-     showKappa(e);
-    else
-     showKappa(e, r);
+    let d = cmd.tags['user-id'];
+    let e = await findEmote_channel(d);
+    showKappa(e, r, {'%USER%': dn, '%AMOUNT%': c});
    }
 
    async function parseSub(cmd)
@@ -5493,6 +5777,13 @@
     let mpmgc = 1;
     if (cmd.tags.hasOwnProperty('msg-param-mass-gift-count'))
      mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
+    let u = parseUser(cmd, true);
+    let dn = 'Anonymous';
+    if (u.hasOwnProperty('display-name'))
+     dn = u['display-name'];
+    let mprdn = 'Anonymous';
+    if (cmd.tags.hasOwnProperty('msg-param-recipient-display-name'))
+     mprdn = cmd.tags['msg-param-recipient-display-name'];
     switch (cmd.tags['msg-id'])
     {
      case 'sub':
@@ -5502,7 +5793,7 @@
        return;
       if (cfg.event.sub[subPlan].first === false)
        return;
-      showKappa(a, cfg.event.sub[subPlan].first);
+      showKappa(a, cfg.event.sub[subPlan].first, {'%USER%': dn});
       break;
      case 'resub':
       if (!cfg.event.sub.hasOwnProperty(subPlan))
@@ -5512,10 +5803,7 @@
       let rs = findInMaybeRange(cfg.event.sub[subPlan].resub, mpcm);
       if (rs === false)
        return;
-      if (rs === true)
-       showKappa(a);
-      else
-       showKappa(a, rs);
+      showKappa(a, rs, {'%USER%': dn, '%AMOUNT%': mpcm});
       break;
      case 'primepaidupgrade':
       if (!cfg.event.sub.hasOwnProperty(subPlan))
@@ -5524,7 +5812,7 @@
        return;
       if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('prime'))
        return;
-      showKappa(a, cfg.event.sub[subPlan].upgrade.prime);
+      showKappa(a, cfg.event.sub[subPlan].upgrade.prime, {'%USER%': dn});
       break;
      case 'giftpaidupgrade':
       if (!cfg.event.sub.hasOwnProperty(subPlan))
@@ -5533,7 +5821,7 @@
        return;
       if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('gift'))
        return;
-      showKappa(a, cfg.event.sub[subPlan].upgrade.gift);
+      showKappa(a, cfg.event.sub[subPlan].upgrade.gift, {'%USER%': dn});
       break;
      case 'subgift':
       if (!cfg.event.sub.hasOwnProperty(subPlan))
@@ -5546,7 +5834,7 @@
         return;
        if (cfg.event.sub[subPlan].gift.first === false)
         return;
-       showKappa(a, cfg.event.sub[subPlan].gift.first);
+       showKappa(a, cfg.event.sub[subPlan].gift.first, {'%SENDER%': dn, '%USER%': mprdn});
        return;
       }
       if (!cfg.event.sub[subPlan].gift.hasOwnProperty('resub'))
@@ -5554,10 +5842,7 @@
       let gpr = findInMaybeRange(cfg.event.sub[subPlan].gift.resub, mpm);
       if (gpr === false)
        return;
-      if (gpr === true)
-       showKappa(a);
-      else
-       showKappa(a, gpr);
+      showKappa(a, gpr, {'%SENDER%': dn, '%USER%': mprdn, '%AMOUNT%': mpm});
       break;
      case 'submysterygift':
       if (!cfg.event.sub.hasOwnProperty(subPlan))
@@ -5573,10 +5858,7 @@
       let gpb = findInMaybeRange(cfg.event.sub[subPlan].gift.bomb, mpmgc);
       if (gpb === false)
        return;
-      if (gpb === true)
-       showKappa(a);
-      else
-       showKappa(a, gpb);
+      showKappa(a, gpb, {'%SENDER%': dn, '%AMOUNT%': mpmgc});
       break;
      default:
       console.log('Unknown Sub Type: ', cmd);
@@ -5588,9 +5870,13 @@
     if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
      return;
     let c = cmd.tags['msg-param-threshold'];
+    let u = parseUser(cmd, true);
+    let dn = 'Anonymous';
+    if (u.hasOwnProperty('display-name'))
+     dn = u['display-name'];
     if (cfg.event.badge.hasOwnProperty(c) && cfg.event.badge[c] !== false)
     {
-     showKappa(false, cfg.event.badge[c]);
+     showKappa(false, cfg.event.badge[c], {'%USER%': dn, '%AMOUNT%': c});
      return;
     }
     let closest = null;
@@ -5610,7 +5896,7 @@
      return;
     if (cfg.event.badge[closest] === false)
      return;
-    showKappa(false, cfg.event.badge[closest]);
+    showKappa(false, cfg.event.badge[closest], {'%USER%': dn, '%AMOUNT%': c});
    }
 
    function irc()
