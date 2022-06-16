@@ -3898,7 +3898,7 @@
     );
    }
 
-   function showKappa_Fireworks(kList, sW, sH, sS)
+   function showKappa_Fireworks(kList, sW, sH, sS, iKC)
    {
     let sendUp = 2;
     let oX = (sW * 0.5) - (sS * 0.5);
@@ -3982,9 +3982,9 @@
       if (sH < r)
        r = sH;
       r *= 0.66;
-      let inner = Math.floor(cfg.display.kappa.count / 8);
+      let inner = Math.floor(iKC / 8);
       let outer = inner;
-      let core = cfg.display.kappa.count - (inner + outer);
+      let core = iKC - (inner + outer);
       let t = 0;
       for (let i = 0; i < inner; i++)
       {
@@ -4019,7 +4019,7 @@
     );
    }
 
-   function showKappa_Spiral(kList, sW, sH, sS)
+   function showKappa_Spiral(kList, sW, sH, sS, iKC)
    {
     let oX = Math.floor(Math.random() * (sW - sS));
     let oY = Math.floor(Math.random() * (sH - sS));
@@ -4076,14 +4076,14 @@
       let r = sW;
       if (sH < r)
        r = sH;
-      let l = cfg.display.kappa.count / 25 + 2;
+      let l = iKC / 25 + 2;
       l = l + (Math.random() * 4 - 2);
       if (l < 0.1)
        l = 0.1;
-      let c = (Math.PI * l) / cfg.display.kappa.count;
+      let c = (Math.PI * l) / iKC;
       let th = (Math.random() * (Math.PI * 2));
       let o = (Math.floor(Math.random() * 2) === 0);
-      for (let i = 0; i < cfg.display.kappa.count; i++)
+      for (let i = 0; i < iKC; i++)
       {
        if (o)
        {
@@ -4228,7 +4228,7 @@
     }
    }
 
-   async function showKappa_Stampede(kList, sW, sH, sS)
+   async function showKappa_Stampede(kList, sW, sH, sS, iKC)
    {
     let speed = 2000;
     let bandHeight = sS * 3;
@@ -4303,7 +4303,7 @@
     let b4 = Math.floor(Math.random() * 4);
     await stampede(b1, speed * 0.8);
     await stampede(b2, speed * 0.4);
-    await stampede(cfg.display.kappa.count, (b4 > 0));
+    await stampede(iKC, (b4 > 0));
     if (b4 > 0)
      await stampede(b4, false);
    }
@@ -4702,7 +4702,12 @@
     }
     if (style === undefined)
      return;
-    let waitFor = cfg.display.kappa.count;
+    let iKC = cfg.display.kappa.count;
+    if (cfg.display.kappa.styles.hasOwnProperty(style) && cfg.display.kappa.styles[style].hasOwnProperty('count'))
+     iKC = cfg.display.kappa.styles[style].count;
+    if (prefs.hasOwnProperty('count'))
+     iKC = prefs.count;
+    let waitFor = iKC;
     switch (style)
     {
      case 'Pyramid':
@@ -4713,13 +4718,13 @@
       break;
      case 'Fireworks':
       waitFor = 0;
-      let inner = Math.floor(cfg.display.kappa.count / 8);
+      let inner = Math.floor(iKC / 8);
       let outer = inner;
-      let core = cfg.display.kappa.count - (inner + outer);
+      let core = iKC - (inner + outer);
       waitFor = 1 + inner + outer + core;
       break;
     }
-    if ((cfg.emote.max > 0) && ((eActive + cfg.display.kappa.count) > cfg.emote.max))
+    if ((cfg.emote.max > 0) && ((eActive + iKC) > cfg.emote.max))
     {
      toKappa.push({list: kList, style: style, prefs: prefs, params: kParams});
      if (tKappa !== false)
@@ -4734,14 +4739,17 @@
     switch(style)
     {
      case 'Stampede':
-      await showKappa_Stampede(kList, sW, sH, sS);
-      eActive -= cfg.display.kappa.count;
+      let iStampedeCount = cfg.display.kappa.styles['Text'].message;
+      if (prefs.hasOwnProperty('message'))
+       sTM = prefs.message[Math.floor(Math.random() * prefs.message.length)];
+      await showKappa_Stampede(kList, sW, sH, sS, iKC);
+      eActive -= iKC;
       break;
      case 'Fireworks':
-      showKappa_Fireworks(kList, sW, sH, sSm);
+      showKappa_Fireworks(kList, sW, sH, sSm, iKC);
       break;
      case 'Spiral':
-      showKappa_Spiral(kList, sW, sH, sSm);
+      showKappa_Spiral(kList, sW, sH, sSm, iKC);
       break;
      case 'Pyramid':
       showKappa_Pyramid(kList, sW, sH);
@@ -4795,7 +4803,7 @@
      case 'Burst':
       let oH = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
       let oV = Math.floor((Math.random() * ((sH - sS) * 0.33)) + (sH - sS) * 0.33);
-      for (let i = 0; i < cfg.display.kappa.count; i++)
+      for (let i = 0; i < iKC; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
@@ -4806,7 +4814,7 @@
      case 'Fountain':
       let fX = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
       let fY = Math.floor(Math.random() * 25) + 15;
-      for (let i = 0; i < cfg.display.kappa.count; i++)
+      for (let i = 0; i < iKC; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
@@ -4815,7 +4823,7 @@
       }
       break;
      case 'Confetti':
-      for (let i = 0; i < cfg.display.kappa.count; i++)
+      for (let i = 0; i < iKC; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
@@ -4826,7 +4834,7 @@
      default:
       if (typeof window['showEmote_' + style] === 'undefined')
        return false;
-      for (let i = 0; i < cfg.display.kappa.count; i++)
+      for (let i = 0; i < iKC; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
