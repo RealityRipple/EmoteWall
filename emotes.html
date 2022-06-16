@@ -174,6 +174,9 @@
     *     count   The number of emotes to display for this specific kappagen. This value must be less than the
     *             "emote max" value seen below (best would be 1/4th or less). If unset, this will default to the global
     *             kappa count preference listed above.
+    *             Additional Note: if this preference is in an event below (not in this general kappa context), then
+    *             an additional value is possible: -1, which will refer to the AMOUNT value present in the event.
+    *             This can be the number of raiders, bits cheered, dollars tipped, subs gifted, or months subscribed.
     *
     *    TheCube  Settings related to The Cube kappagen. These settings will be the default for all instances of
     *             TheCube kappagen.
@@ -4713,7 +4716,23 @@
     if (cfg.display.kappa.styles.hasOwnProperty(style) && cfg.display.kappa.styles[style].hasOwnProperty('count'))
      iKC = cfg.display.kappa.styles[style].count;
     if (prefs.hasOwnProperty('count'))
-     iKC = prefs.count;
+    {
+     let tKC = prefs.count;
+     if (tKC === -1 && kParams !== false)
+     {
+      let pK = Object.keys(kParams);
+      for (let i = 0; i < pK.length; i++)
+      {
+       if (pK[i] === '%AMOUNT%')
+       {
+        tKC = kParams[pK[i]];
+        break;
+       }
+      }
+     }
+     if (tKC !== -1)
+      iKC = tKC;
+    }
     let waitFor = iKC;
     switch (style)
     {
