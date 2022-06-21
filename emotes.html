@@ -161,8 +161,8 @@
     *
     *  kappa      Settings related to emote-splosions and the !kappagen command.
     *
-    *   count     The number of emotes to display per kappagen. This value must be less than the "emote max" value
-    *             seen below (best would be 1/4th or less).
+    *   count     The number of emotes to display per kappagen. This value should be less than the "emote max" value
+    *             seen below (best would be 1/4th or less), if "emote max" is used, or it will be truncated to match.
     *
     *   styles    Similar to the array of styles for normal emotes, but this one lists emote-splosion types.
     *             Please do not try to add normal styles to the kappa list or vice versa. This is an associative array
@@ -171,9 +171,9 @@
     *    [ALL]    Settings related to multiple kappagens. These settings will be the default for all instances of their
     *             respective kappagens. Each setting below may or may not apply to a specific kappagen style.
     *
-    *     count   The number of emotes to display for this specific kappagen. This value must be less than the
-    *             "emote max" value seen below (best would be 1/4th or less). If unset, this will default to the global
-    *             kappa count preference listed above.
+    *     count   The number of emotes to display for this specific kappagen. This value should be less than the
+    *             "emote max" value seen below (best would be 1/4th or less), if "emote max" is used, or it will be
+    *             truncated to match. If unset, this will default to the global kappa count preference listed above.
     *             Additional Note: if this preference is in an event below (not in this general kappa context), then
     *             an additional value is possible: -1, which will refer to the AMOUNT value present in the event.
     *             This can be the number of raiders, bits cheered, dollars tipped, subs gifted, or months subscribed.
@@ -215,8 +215,8 @@
     *  time       The number of seconds an emote should show up on the screen for.
     *
     *  max        The maximum nuber of emotes to show on the screen at one time. Set this value to 0 for
-    *             infinite emotes. This value should be greater than the "kappa count" value seen above
-    *             (best would be 4x or more).
+    *             infinite emotes. This value should be greater than any "kappa count" values seen above or below
+    *             (best would be 4x or more), as it will limit any single kappagen events to this maximum.
     *
     *  queue      The maximum number of emotes to save in queue. Set this value to 0 for an infinite queue.
     *             This value will be ignored if the previous value (cfg.emote.max) is infinite (0).
@@ -4638,7 +4638,14 @@
      window.clearTimeout(tKappa);
      tKappa = false;
     }
-    if (cfg.emote.max > 0 && eActive + cfg.display.kappa.count > cfg.emote.max)
+    let kC = cfg.display.kappa.count;
+    if (toKappa.length > 0)
+    {
+     let n = getNextKappa(toKappa[0]);
+     if (n !== false)
+      kC = n.count;
+    }
+    if (cfg.emote.max > 0 && eActive + kC > cfg.emote.max)
     {
      tKappa = window.setTimeout(showKappas, 500);
      return;
@@ -4649,7 +4656,14 @@
      let a = [];
      a[e.style] = e.prefs;
      showKappa(e.list, a, e.params);
-     if (cfg.emote.max > 0 && eActive + cfg.display.kappa.count > cfg.emote.max)
+     let tC = cfg.display.kappa.count;
+     if (toKappa.length > 0)
+     {
+      let t = getNextKappa(toKappa[0]);
+      if (t !== false)
+       tC = t.count;
+     }
+     if (cfg.emote.max > 0 && eActive + tC > cfg.emote.max)
      {
       if (cfg.emote.queue > 0 && toKappa.length > cfg.emote.queue)
        toKappa.splice(0, toKappa.length - cfg.emote.queue);
@@ -4659,14 +4673,58 @@
     }
    }
 
-   async function showKappa(kList, kStyles = false, kParams = false)
+   function getNextKappa(k)
    {
-    if (typeof kStyles !== 'object')
+    let a = [];
+    a[k.style] = k.prefs;
+    return getNextKappaEx(a, k.params);
+   }
+
+   function getNextKappaEx(kS = false, kP = false)
+   {
+    if (typeof kS !== 'object')
     {
      if (cfg.display.kappa.styles.length < 1)
-      return;
-     kStyles = cfg.display.kappa.styles;
+      return false;
+     kS = cfg.display.kappa.styles;
     }
+    let s, p;
+    if (cfg.display.kappa.conga.contagious && conga.length > 0)
+    {
+     s = 'Conga';
+     p = {};
+    }
+    else
+    {
+     let keys = Object.keys(kS);
+     s = keys[(Math.floor(Math.random() * keys.length))];
+     p = kS[s];
+    }
+    if (s === undefined)
+     return false;
+    let iKC = cfg.display.kappa.count;
+    if (cfg.display.kappa.styles.hasOwnProperty(s) && cfg.display.kappa.styles[s].hasOwnProperty('count'))
+     iKC = cfg.display.kappa.styles[s].count;
+    if (p.hasOwnProperty('count'))
+    {
+     let tKC = p.count;
+     if (tKC === -1 && kP !== false && kP.hasOwnProperty('%AMOUNT%') && Math.ceil(kP['%AMOUNT%']) > 0)
+      tKC = Math.ceil(kP['%AMOUNT%']);
+     if (tKC > 0)
+      iKC = tKC;
+    }
+    if ((cfg.emote.max > 0) && (iKC > cfg.emote.max))
+     iKC = cfg.emote.max;
+    return {style: s, prefs: p, count: iKC};
+   }
+
+   async function showKappa(kList, kStyles = false, kParams = false)
+   {
+    let kStyle = getNextKappaEx(kStyles, kParams);
+    if (kStyle === false)
+     return;
+    if (kStyle.style === undefined)
+     return;
     if (!Array.isArray(kList) || kList.length < 1)
      kList = cList;
     if (!Array.isArray(kList) || kList.length < 1)
@@ -4698,43 +4756,8 @@
     document.documentElement.style.setProperty('--emote-height', sS + 'px');
     document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
     document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
-    let style, prefs;
-    if (cfg.display.kappa.conga.contagious && conga.length > 0)
-    {
-     style = 'Conga';
-     prefs = {};
-    }
-    else
-    {
-     let keys = Object.keys(kStyles);
-     style = keys[(Math.floor(Math.random() * keys.length))];
-     prefs = kStyles[style];
-    }
-    if (style === undefined)
-     return;
-    let iKC = cfg.display.kappa.count;
-    if (cfg.display.kappa.styles.hasOwnProperty(style) && cfg.display.kappa.styles[style].hasOwnProperty('count'))
-     iKC = cfg.display.kappa.styles[style].count;
-    if (prefs.hasOwnProperty('count'))
-    {
-     let tKC = prefs.count;
-     if (tKC === -1 && kParams !== false)
-     {
-      let pK = Object.keys(kParams);
-      for (let i = 0; i < pK.length; i++)
-      {
-       if (pK[i] === '%AMOUNT%')
-       {
-        tKC = kParams[pK[i]];
-        break;
-       }
-      }
-     }
-     if (tKC !== -1)
-      iKC = tKC;
-    }
-    let waitFor = iKC;
-    switch (style)
+    let waitFor = kStyle.count;
+    switch (kStyle.style)
     {
      case 'Pyramid':
      case 'SmallPyramid':
@@ -4744,15 +4767,15 @@
       break;
      case 'Fireworks':
       waitFor = 0;
-      let inner = Math.floor(iKC / 8);
+      let inner = Math.floor(kStyle.count / 8);
       let outer = inner;
-      let core = iKC - (inner + outer);
+      let core = kStyle.count - (inner + outer);
       waitFor = 1 + inner + outer + core;
       break;
     }
-    if ((cfg.emote.max > 0) && ((eActive + iKC) > cfg.emote.max))
+    if ((cfg.emote.max > 0) && ((eActive + kStyle.count) > cfg.emote.max))
     {
-     toKappa.push({list: kList, style: style, prefs: prefs, params: kParams});
+     toKappa.push({list: kList, style: kStyle.style, prefs: kStyle.prefs, params: kParams});
      if (tKappa !== false)
      {
       window.clearTimeout(tKappa);
@@ -4762,20 +4785,20 @@
      return;
     }
     eActive += waitFor;
-    switch(style)
+    switch(kStyle.style)
     {
      case 'Stampede':
       let iStampedeCount = cfg.display.kappa.styles['Text'].message;
-      if (prefs.hasOwnProperty('message'))
-       sTM = prefs.message[Math.floor(Math.random() * prefs.message.length)];
-      await showKappa_Stampede(kList, sW, sH, sS, iKC);
-      eActive -= iKC;
+      if (kStyle.prefs.hasOwnProperty('message'))
+       sTM = kStyle.prefs.message[Math.floor(Math.random() * kStyle.prefs.message.length)];
+      await showKappa_Stampede(kList, sW, sH, sS, kStyle.count);
+      eActive -= kStyle.count;
       break;
      case 'Fireworks':
-      showKappa_Fireworks(kList, sW, sH, sSm, iKC);
+      showKappa_Fireworks(kList, sW, sH, sSm, kStyle.count);
       break;
      case 'Spiral':
-      showKappa_Spiral(kList, sW, sH, sSm, iKC);
+      showKappa_Spiral(kList, sW, sH, sSm, kStyle.count);
       break;
      case 'Pyramid':
       showKappa_Pyramid(kList, sW, sH);
@@ -4792,13 +4815,13 @@
       let sTM = 'HYPE!';
       if (cfg.display.kappa.styles.hasOwnProperty('Text') && cfg.display.kappa.styles['Text'].hasOwnProperty('message'))
        sTM = cfg.display.kappa.styles['Text'].message;
-      if (prefs.hasOwnProperty('message'))
-       sTM = prefs.message[Math.floor(Math.random() * prefs.message.length)];
+      if (kStyle.prefs.hasOwnProperty('message'))
+       sTM = kStyle.prefs.message[Math.floor(Math.random() * kStyle.prefs.message.length)];
       let sTT = cfg.emote.time;
       if (cfg.display.kappa.styles.hasOwnProperty('Text') && cfg.display.kappa.styles['Text'].hasOwnProperty('time'))
        sTT = cfg.display.kappa.styles['Text'].time;
-      if (prefs.hasOwnProperty('time'))
-       sTT = prefs.time;
+      if (kStyle.prefs.hasOwnProperty('time'))
+       sTT = kStyle.prefs.time;
       if (kParams !== false)
       {
        let pK = Object.keys(kParams);
@@ -4816,20 +4839,20 @@
        cS = sH;
       let r = Math.floor(Math.random() * kList.length);
       let sCS = cfg.display.kappa.styles['TheCube'].size;
-      if (prefs.hasOwnProperty('size'))
-       sCS = prefs.size;
+      if (kStyle.prefs.hasOwnProperty('size'))
+       sCS = kStyle.prefs.size;
       let sCC = cfg.display.kappa.styles['TheCube'].center;
-      if (prefs.hasOwnProperty('center'))
-       sCC = prefs.center;
+      if (kStyle.prefs.hasOwnProperty('center'))
+       sCC = kStyle.prefs.center;
       let sCR = cfg.display.kappa.styles['TheCube'].rotations;
-      if (prefs.hasOwnProperty('rotations'))
-       sCR = prefs.rotations;
+      if (kStyle.prefs.hasOwnProperty('rotations'))
+       sCR = kStyle.prefs.rotations;
       showKappa_TheCube(kList[r].url, sW, sH, Math.floor(cS * sCS), sCC, sCR);
       break;
      case 'Burst':
       let oH = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
       let oV = Math.floor((Math.random() * ((sH - sS) * 0.33)) + (sH - sS) * 0.33);
-      for (let i = 0; i < iKC; i++)
+      for (let i = 0; i < kStyle.count; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
@@ -4840,7 +4863,7 @@
      case 'Fountain':
       let fX = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
       let fY = Math.floor(Math.random() * 25) + 15;
-      for (let i = 0; i < iKC; i++)
+      for (let i = 0; i < kStyle.count; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
@@ -4849,7 +4872,7 @@
       }
       break;
      case 'Confetti':
-      for (let i = 0; i < iKC; i++)
+      for (let i = 0; i < kStyle.count; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
@@ -4858,16 +4881,16 @@
       }
       break;
      default:
-      if (typeof window['showEmote_' + style] === 'undefined')
+      if (typeof window['showEmote_' + kStyle.style] === 'undefined')
        return false;
-      for (let i = 0; i < iKC; i++)
+      for (let i = 0; i < kStyle.count; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
-       if (style === 'StraightLine')
+       if (kStyle.style === 'StraightLine')
         showEmote_StraightLine(kList[r].url, sW, sH, sS, false, false, false);
        else
-        window['showEmote_' + style](kList[r].url, sW, sH, sS, false);
+        window['showEmote_' + kStyle.style](kList[r].url, sW, sH, sS, false);
        await sleep(100);
       }
     }
