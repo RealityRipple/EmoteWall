@@ -202,6 +202,12 @@
     *
     *   access    Similar to the access flag for normal emotes, but controls which users can use the !kappagen command.
     *
+    *   aliases   An array of kappagen command aliases which can be used to force-trigger kappagens.
+    *
+    *   cooldown  The number of seconds between force-triggered kappagens using an above alias. Any commands sent before
+    *             the cooldown will be treated like normal text, which may include showing any emotes in the message as
+    *             normal emotes rather than in a kappagen.
+    *
     *   conga     Settings related to Conga kappagen.
     *
     *    contagious  If TRUE, while one Conga kappagen is visible, all additional kappagens will also be Conga.
@@ -577,6 +583,7 @@
        '!kappagen',
        '-kappagen'
       ],
+      cooldown: 0,
       conga: {
        contagious: false,
        time: 5
@@ -1728,6 +1735,7 @@
    var fList = [];     // cache of users in chat and their follow status
    var bList = [];     // list of giftbomb event origin ids (to prevent kappas for each gift in a bomb)
    var conga = [];     // CONGA TIME!
+   var kLast = 0;      // last kappagen command event (for cooldown)
    var eActive = 0;    // active emote count (effective, not actual)
    var tStart = 48;    // time to wait for transition trigger (ms)
    var uLF = false;    // user id of the most recent follower
@@ -5704,7 +5712,8 @@
    async function parseLine(cmd)
    {
     let level = -1;
-    if (cmd.params.length > 1)
+    let kNow = new Date().getTime();
+    if (cmd.params.length > 1 && (cfg.display.kappa.cooldown === 0 || (kNow - kLast) > (cfg.display.kappa.cooldown * 1000)))
     {
      let m = cmd.params[1].toLowerCase();
      if (cfg.display.kappa.aliases.includes(m))
@@ -5713,6 +5722,7 @@
        level = await parseLevel(cmd);
       if ((level & cfg.display.kappa.access) !== 0)
       {
+       kLast = kNow;
        showKappa(false);
        return;
       }
@@ -5746,6 +5756,7 @@
        if (cfg.display.extended.use7TV)
         a = a.concat(parse7TV(cmd, true));
        a = handleDuplicates(a);
+       kLast = kNow;
        showKappa(a);
        return;
       }
