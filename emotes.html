@@ -1751,7 +1751,7 @@
     }
    };
    /* Timers */
-   var tIRC = false    // irc connection timeout
+   var tIRC = false;   // irc connection timeout
    var tEmote = false; // emote queue timer
    var tKappa = false; // kappagen queue timer
    var tGC = false;    // garbage collection
@@ -1916,21 +1916,15 @@
     {
      ret.nick = data.slice(0, data.indexOf('!'));
      data = data.slice(data.indexOf('!') + 1);
-     if (!ret.hasOwnProperty('display-name') || (ret['display-name'] !== ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, '')))
-     {
-      console.log(ret['display-name'], ' should be known as ', ret.nick, ' because it isn\'t ', ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, ''));
+     if (!ret.hasOwnProperty('display-name') || (latinOnly && ret['display-name'] !== ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, '')))
       ret['display-name'] = ret.nick;
-     }
     }
     if (data.includes('@'))
     {
      ret.host = data.slice(0, data.indexOf('@'));
      data = data.slice(data.indexOf('@') + 1);
-     if (!ret.hasOwnProperty('display-name') || (ret['display-name'] !== ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, '')))
-     {
-      console.log(ret['display-name'], ' should be known as ', ret.host, ' because it isn\'t ', ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, ''));
+     if (!ret.hasOwnProperty('display-name') || (latinOnly && ret['display-name'] !== ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, '')))
       ret['display-name'] = ret.host;
-     }
     }
     ret.user = data;
     return ret;
@@ -2776,7 +2770,7 @@
      sS = sS * 2;
     let h = Math.floor(Math.random() * sW) - (sS / 2);
     let v = Math.floor((Math.random() * 0.2) * sH);
-    let s = ' height: ' + sS + 'px;';
+    let s = 'height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
     let aNames = [];
     let aDelays = [];
@@ -4434,7 +4428,7 @@
     }
     await sleep(longWait * 1000);
     let full = false;
-    if (conga.length == sht)
+    if (conga.length === sht)
      full = true;
     await sleep(cfg.display.kappa.conga.time * 1000);
     if (cfg.display.kappa.conga.contagious)
@@ -4796,9 +4790,6 @@
     switch(kStyle.style)
     {
      case 'Stampede':
-      let iStampedeCount = cfg.display.kappa.styles['Text'].message;
-      if (kStyle.prefs.hasOwnProperty('message'))
-       sTM = kStyle.prefs.message[Math.floor(Math.random() * kStyle.prefs.message.length)];
       await showKappa_Stampede(kList, sW, sH, sS, kStyle.count);
       eActive -= kStyle.count;
       break;
