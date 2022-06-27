@@ -71,6 +71,21 @@
     *             any decimal amount will be rounded down after multiplying, so $3.95 will be handled as "395" pennies
     *             when multiplied by 100, or "3" dollars when multiplied by 1.
     *
+    *  dispMul    This value is the currency multiplier when the currency is being displayed. For kappagen events such
+    *             as Text, the Streamlabs tip amount will be multiplied by this number before being displayed.
+    *             For example, if you use USD and want to display the value as cents, then set this value to 100. If
+    *             you want to show dollar amounts, set this value to 1.
+    *
+    *  dispDec    This value is the decimal count when the currency is being displayed. After being multiplied by the
+    *             dispMul value above, the Streamlabs tip amount will be rounded to this many decimal places.
+    *             For example, an amount of $3.95 rounded to "0" decimal places will be "3", to "1" would be "3.9", and
+    *             to "2" would be "3.95".
+    *
+    *  dispPre    This value should be added before any currency amount as a prefix, such as a dollar sign '$'.
+    *
+    *  dispSuf    This value should be added after any currency amount as a suffix, such as the word " dollars". Usually
+    *             only the prefix or the suffix should be used, not both at the same time.
+    *
     * streamelements  Settings related to StreamElements tips.
     *
     *  oauth      The OAuth ID value is used in lieu of a password to access the StreamElements API.
@@ -97,6 +112,21 @@
     *             then set this value to 100. If you want to use dollar amounts, set the value to 1. Please note that
     *             any decimal amount will be rounded down after multiplying, so $3.95 will be handled as "395" pennies
     *             when multiplied by 100, or "3" dollars when multiplied by 1.
+    *
+    *  dispMul    This value is the currency multiplier when the currency is being displayed. For kappagen events such
+    *             as Text, the StreamElements tip amount will be multiplied by this number before being displayed.
+    *             For example, if you use USD and want to display the value as cents, then set this value to 100. If
+    *             you want to show dollar amounts, set this value to 1.
+    *
+    *  dispDec    This value is the decimal count when the currency is being displayed. After being multiplied by the
+    *             dispMul value above, the StreamElements tip amount will be rounded to this many decimal places.
+    *             For example, an amount of $3.95 rounded to "0" decimal places will be "3", to "1" would be "3.9", and
+    *             to "2" would be "3.95".
+    *
+    *  dispPre    This value should be added before any currency amount as a prefix, such as a dollar sign '$'.
+    *
+    *  dispSuf    This value should be added after any currency amount as a suffix, such as the word " dollars". Usually
+    *             only the prefix or the suffix should be used, not both at the same time.
     *
     * reddit      The unique ID of a Reddit RPAN session (usually 6 characters at the end of the URL).  If you don't
     *             use Reddit to stream, please keep this set to FALSE. You must change this for every Reddit stream
@@ -525,12 +555,20 @@
     },
     streamlabs: {
      token: 'SOCKET_TOKEN', //Requires socket.token
-     curMul: 100
+     curMul: 100,
+     dispMul: 1,
+     dispDec: 2,
+     dispPre: '$',
+     dispSuf: false
     },
     streamelements: {
      oauth: 'OAUTH_ID', //Requires tips:read
      token: 'JWT_TOKEN',
-     curMul: 100
+     curMul: 100,
+     dispMul: 1,
+     dispDec: 2,
+     dispPre: '$',
+     dispSuf: false
     },
     reddit: false,
     display: {
@@ -5283,7 +5321,16 @@
         ];
       }
      }
-     showKappa(p, r, {'%USER%': n, '%AMOUNT%': Number.parseFloat(a).toFixed(2)});
+     let s = Number.parseFloat(a * cfg.streamlabs.dispMul);
+     if (cfg.streamlabs.dispDec > 0)
+      s = s.toFixed(cfg.streamlabs.dispDec);
+     else
+      s = Math.floor(s);
+     if (cfg.streamlabs.dispPre !== false)
+      s = cfg.streamlabs.dispPre + s;
+     if (cfg.streamlabs.dispSuf !== false)
+      s += cfg.streamlabs.dispSuf;
+     showKappa(p, r, {'%USER%': n, '%AMOUNT%': s});
     }
    }
 
@@ -5395,7 +5442,16 @@
        ];
      }
     }
-    showKappa(p, r, {'%USER%': dName, '%AMOUNT%': Number.parseFloat(dAmt).toFixed(2)});
+    let s = Number.parseFloat(dAmt * cfg.streamelements.dispMul);
+    if (cfg.streamelements.dispDec > 0)
+     s = s.toFixed(cfg.streamelements.dispDec);
+    else
+     s = Math.floor(s);
+    if (cfg.streamelements.dispPre !== false)
+     s = cfg.streamelements.dispPre + s;
+    if (cfg.streamlabs.dispSuf !== false)
+     s += cfg.streamelements.dispSuf;
+    showKappa(p, r, {'%USER%': dName, '%AMOUNT%': s});
    }
 
    async function detectFollowers(chID)
