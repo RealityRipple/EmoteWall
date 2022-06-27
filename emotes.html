@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.5.1.1 BETA)
+   /* RealityRipple's Homemade Emote Wall (Version 0.5.2 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -19,7 +19,7 @@
     *
     * Update Procedure: To update this emote wall, simply use the Wizard to import and download it.
     * 1) Visit the official page <https://realityripple.com/Tools/Twitch/EmoteWall/>.
-    * 2) Click "Config Wizard".
+    * 2) Under "Config Wizard", click "Authorize on Twitch".
     * 3) Import this HTML file by clicking Import.
     * 4) Make any changes you need to make on each page.
     * 5) At the end of your configuration, hit "Download".
@@ -34,7 +34,7 @@
     * login       Settings related to the login process.
     *
     *             NOTE: OAuth tokens expire automatically (usually after 60 days). Please make sure to update
-    *                   these values on a regular basis.
+    *                   these values on a regular basis, if not using the interactive login process.
     *
     *  client     The Client ID value is used to track which third-party project is accessing your account.
     *             This emote wall does not require a constant ID, and will work with whatever tool you use to
@@ -43,8 +43,8 @@
     *  oauth      The OAuth ID value is used in lieu of a password to access the Twitch API.
     *             Please generate an OAuth ID and matching Client ID:
     *             - Visit https://realityripple.com/Tools/Twitch/EmoteWall/
-    *             - Click the "Authenticate on Twitch" button and log in
-    *             - Fill out the captcha prompt
+    *             - Click the "Authenticate on Twitch" button under "Do-it-Yourself" and log in
+    *             - Fill out the captcha prompt, if necessary
     *             - Copy the Client ID value and paste it into "client:"
     *             - Copy the OAuth ID value and paste it into "oauth:"
     *             If you ever stop using this emote wall, please log into Twitch and visit
@@ -70,6 +70,21 @@
     *             then set this value to 100. If you want to use dollar amounts, set the value to 1. Please note that
     *             any decimal amount will be rounded down after multiplying, so $3.95 will be handled as "395" pennies
     *             when multiplied by 100, or "3" dollars when multiplied by 1.
+    *
+    *  dispMul    This value is the currency multiplier when the currency is being displayed. For kappagen events such
+    *             as Text, the Streamlabs tip amount will be multiplied by this number before being displayed.
+    *             For example, if you use USD and want to display the value as cents, then set this value to 100. If
+    *             you want to show dollar amounts, set this value to 1.
+    *
+    *  dispDec    This value is the decimal count when the currency is being displayed. After being multiplied by the
+    *             dispMul value above, the Streamlabs tip amount will be rounded to this many decimal places.
+    *             For example, an amount of $3.95 rounded to "0" decimal places will be "3", to "1" would be "3.9", and
+    *             to "2" would be "3.95".
+    *
+    *  dispPre    This value should be added before any currency amount as a prefix, such as a dollar sign '$'.
+    *
+    *  dispSuf    This value should be added after any currency amount as a suffix, such as the word " dollars". Usually
+    *             only the prefix or the suffix should be used, not both at the same time.
     *
     * streamelements  Settings related to StreamElements tips.
     *
@@ -97,6 +112,21 @@
     *             then set this value to 100. If you want to use dollar amounts, set the value to 1. Please note that
     *             any decimal amount will be rounded down after multiplying, so $3.95 will be handled as "395" pennies
     *             when multiplied by 100, or "3" dollars when multiplied by 1.
+    *
+    *  dispMul    This value is the currency multiplier when the currency is being displayed. For kappagen events such
+    *             as Text, the StreamElements tip amount will be multiplied by this number before being displayed.
+    *             For example, if you use USD and want to display the value as cents, then set this value to 100. If
+    *             you want to show dollar amounts, set this value to 1.
+    *
+    *  dispDec    This value is the decimal count when the currency is being displayed. After being multiplied by the
+    *             dispMul value above, the StreamElements tip amount will be rounded to this many decimal places.
+    *             For example, an amount of $3.95 rounded to "0" decimal places will be "3", to "1" would be "3.9", and
+    *             to "2" would be "3.95".
+    *
+    *  dispPre    This value should be added before any currency amount as a prefix, such as a dollar sign '$'.
+    *
+    *  dispSuf    This value should be added after any currency amount as a suffix, such as the word " dollars". Usually
+    *             only the prefix or the suffix should be used, not both at the same time.
     *
     * reddit      The unique ID of a Reddit RPAN session (usually 6 characters at the end of the URL).  If you don't
     *             use Reddit to stream, please keep this set to FALSE. You must change this for every Reddit stream
@@ -134,9 +164,9 @@
     *             If you know how bitwise flags work, you can also use them
     *             in more complicated ways:
     *               ACCESS           MEANING
-    *             0xF77             all users from the broadcaster to strangers
-    *             0xF77 ^ 0x003     all users except followers and strangers
-    *             0x0F0             all subscribers
+    *             0xFF7             all users from the broadcaster to strangers
+    *             0xFF7 ^ 0x003     all users except followers and strangers
+    *             0x070             all subscribers
     *
     *  duplicates  A boolean or integer to toggle duplicate emotes per message.
     *             If TRUE, every emote posted in chat will be shown.
@@ -161,34 +191,68 @@
     *
     *  kappa      Settings related to emote-splosions and the !kappagen command.
     *
-    *   count     The number of emotes to display per kappagen. This value must be less than the "emote max" value
-    *             seen below (best would be 1/4th or less).
+    *   count     The number of emotes to display per kappagen. This value should be less than the "emote max" value
+    *             seen below (best would be 1/4th or less), if "emote max" is used, or it will be truncated to match.
     *
     *   styles    Similar to the array of styles for normal emotes, but this one lists emote-splosion types.
-    *             Please do not try to add normal styles to the kappa list or vice versa.
+    *             Please do not try to add normal styles to the kappa list or vice versa. This is an associative array
+    *             which can have custom settings for certain styles (namely The Cube and Text - see below).
     *
-    *   access    Similar to the access flag for normal emotes, but controls which users can use the !kappagen command.
+    *    [ALL]    Settings related to multiple kappagens. These settings will be the default for all instances of their
+    *             respective kappagens. Each setting below may or may not apply to a specific kappagen style.
     *
-    *   cube      Settings related to The Cube kappagen.
+    *     count   The number of emotes to display for this specific kappagen. This value should be less than the
+    *             "emote max" value seen below (best would be 1/4th or less), if "emote max" is used, or it will be
+    *             truncated to match. If unset, this will default to the global kappa count preference listed above.
+    *             Additional Note: if this preference is in an event below (not in this general kappa context), then
+    *             an additional value is possible: -1, which will refer to the AMOUNT value present in the event.
+    *             This can be the number of raiders, bits cheered, dollars tipped, subs gifted, or months subscribed.
     *
-    *    size     A decimal value representing the height of The Cube kappagen, relative to the smallest
+    *    TheCube  Settings related to The Cube kappagen. These settings will be the default for all instances of
+    *             TheCube kappagen.
+    *
+    *     size    A decimal value representing the height of The Cube kappagen, relative to the smallest
     *             screen dimension.
     *             If the height of the screen is less than the width, each emote will be equal to the height of
     *             the screen multiplied by this ratio. Suggested "8 / 10" (80%).
     *
-    *    center   If TRUE, The Cube will show up in the exact center of the screen.
+    *     center  If TRUE, The Cube will show up in the exact center of the screen.
     *             If FALSE, The Cube will show up in a random location.
     *
-    *    rotations  The maximum number of rotations a kappa cube might spin while on screen. This effectively controls
-    *              the maximum possible speed at which cubes will rotate.
+    *     rotations  The maximum number of rotations a kappa cube might spin while on screen. This effectively controls
+    *               the maximum possible speed at which cubes will rotate.
+    *
+    *    Text     Settings related to Text kappagen. These settings will be the default for all instances of Text
+    *             kappagen.
+    *
+    *     message  An array of alphanumeric strings (letters, numbers, and spaces), one of which will randomly be used.
+    *
+    *     time    The number of seconds the Text kappagen should show the final result for.
+    *             This value should be adjusted depending on the average message length, for readability.
+    *
+    *   access    Similar to the access flag for normal emotes, but controls which users can use the !kappagen command.
+    *
+    *   aliases   An array of kappagen command aliases which can be used to force-trigger kappagens.
+    *
+    *   cooldown  The number of seconds between force-triggered kappagens using an above alias. Any commands sent before
+    *             the cooldown will be treated like normal text, which may include showing any emotes in the message as
+    *             normal emotes rather than in a kappagen.
+    *
+    *   conga     Settings related to Conga kappagen.
+    *
+    *    contagious  If TRUE, while one Conga kappagen is visible, all additional kappagens will also be Conga.
+    *               If FALSE, Conga kappagns will behave like any other kappagen.
+    *
+    *    time     The number of seconds the Conga kappagen should show up on the screen for.
+    *             This value lets you increase or decrease the chances of keeping a "contagious" Conga line going.
     *
     * emote       Settings related to individual emote display.
     *
     *  time       The number of seconds an emote should show up on the screen for.
     *
     *  max        The maximum nuber of emotes to show on the screen at one time. Set this value to 0 for
-    *             infinite emotes. This value should be greater than the "kappa count" value seen above
-    *             (best would be 4x or more).
+    *             infinite emotes. This value should be greater than any "kappa count" values seen above or below
+    *             (best would be 4x or more), as it will limit any single kappagen events to this maximum.
     *
     *  queue      The maximum number of emotes to save in queue. Set this value to 0 for an infinite queue.
     *             This value will be ignored if the previous value (cfg.emote.max) is infinite (0).
@@ -200,7 +264,7 @@
     *              - The Cube kappagen's faces are squares equal to 80% of the smaller screen dimension
     *                (usually height on PC).
     *              - Pyramid kappagen emotes have a height equal to 1/19th of the screen's width.
-    *              - Fireworks and Confetti kappagen emotes have a height equal to the small ratio (see below).
+    *              - Fireworks, Spiral, and Confetti kappagen emotes have a height equal to the small ratio (see below).
     *              - All standard emotes and kappagens not listed above will use the normal ratio (see below).
     *                Most normal emotes will limit by height, except The Cube, which fits in the center of every side.
     *
@@ -253,6 +317,8 @@
     *               If TRUE, a kappagen will occur.
     *               If FALSE, no kappagen will occur.
     *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *                Keep in mind that kappagen arrays are also associative, and may have independent settings for
+    *                kappas such as TheCube and Text. This applies to all such arrays listed below as well.
     *
     *   originEmotes  A boolean to toggle the use of the raiding streamer's channel emotes for raid kappagens.
     *                If TRUE, raid kappagens will use channel emotes from the raider's channel (not including third-party).
@@ -404,6 +470,9 @@
     *
     *  tip        Settings related to third-party tip systems.
     *
+    *   useProfileImage  If TRUE, tips will use the tipper's profile image instead of emotes.
+    *                   If FALSE, tips will use your standard kappagen emotes.
+    *
     *   streamlabs  Minimum tip amount through Streamlabs for a kappagen. This value can be a boolean, integer,
     *              or array:
     *              If TRUE, a kappagen will occur on all Streamlabs tips.
@@ -467,6 +536,7 @@
     *         If you remove an emote from the bttvZWE list (below), however, it will show up on the wall.
     *
     * OBS:    This emote wall may do better if the browser source has a frame rate limit of 30 or 60.
+    *         If you use your GPU while streaming, you may wish to disable Browser Source Hardware Acceleration.
     *         It may also work better using a smaller screen resolution (such as 720p on a 1080p screen) and then
     *         stretching the browser source to fit to the screen using the OBS Transform feature.
     *
@@ -485,17 +555,25 @@
     },
     streamlabs: {
      token: 'SOCKET_TOKEN', //Requires socket.token
-     curMul: 100
+     curMul: 100,
+     dispMul: 1,
+     dispDec: 2,
+     dispPre: '$',
+     dispSuf: false
     },
     streamelements: {
      oauth: 'OAUTH_ID', //Requires tips:read
      token: 'JWT_TOKEN',
-     curMul: 100
+     curMul: 100,
+     dispMul: 1,
+     dispDec: 2,
+     dispPre: '$',
+     dispSuf: false
     },
     reddit: false,
     display: {
      styles: [
-      //'Still',        // No movement
+    //'Still',        // No movement
       'StraightLine', // Gentle movement in a random straight line
       'Rise',         // Slowly rise to top while wobbling back and forth
       'Bounce',       // Fall from the top at an angle and bounce along the bottom (Windows Solitaire style)
@@ -515,28 +593,38 @@
      },
      kappa: {
       count: 150,
-      styles: [
-       'Rise',        // Slowly rise to top while wobbling back and forth
-       'Speed',       // Zoom across the screen
-       'Crazy',       // Bounce off the walls [Layout Shifts - Requires offset-anchor / offset-position directives]
-       'Burst',       // Expand from a center point
-       'Fireworks',   // Burst out from a single emote (no fade/zoom; small emotes)
-       'Pyramid',     // Build a pyramid        (no fade/zoom; specific-size emotes)
-       'SmallPyramid',// Build a small pyramid  (no fade/zoom; small emotes)
-       'Fountain',    // Spout from a fountain  (no fade/zoom)
-       'Stampede',    // Stampede of emotes     (no fade/zoom)
-       'Confetti',    // Fall like confetti     (no zoom, no fade in, only fade out; small emotes)
-       'TheCube',     // Rotate a 3D cube of an emote (no zoom, only fade; "cfg.display.kappa.cube.size"-size emotes)
-      ],
+      styles: {
+       'Rise': {},        // Slowly rise to top while wobbling back and forth
+       'Speed': {},       // Zoom across the screen
+       'Crazy': {},       // Bounce off the walls [Layout Shifts - Requires offset-anchor / offset-position directives]
+       'Burst': {},       // Expand from a center point
+       'Fireworks': {},   // Burst out from a single emote (no fade/zoom; small emotes)
+       'Spiral': {},      // Burst out from a single emote in a spiral (no fade/zoom; small emotes)
+       'Pyramid': {},     // Build a pyramid        (no fade/zoom; specific-size emotes)
+       'SmallPyramid': {},// Build a small pyramid  (no fade/zoom; small emotes)
+       'Fountain': {},    // Spout from a fountain  (no fade/zoom)
+       'Stampede': {},    // Stampede of emotes     (no fade/zoom)
+       'Confetti': {},    // Fall like confetti     (no zoom, no fade in, only fade out; small emotes)
+       'Conga': {},       // Start a conga line     (no fade/zoom)
+       'TheCube': {       // Rotate a 3D cube of an emote (no zoom, only fade)
+        size: 8/10,
+        center: true,
+        rotations: 5
+       },
+       'Text': {          // Show a message         (no fade/zoom; specific-size emotes)
+        message: ['HYPE!'],
+        time: 3
+       },
+      },
       access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002,
       aliases: [      // !kappagen command aliases (must be lower-case)
        '!kappagen',
        '-kappagen'
       ],
-      cube: {
-       size: 8/10,
-       center: true,
-       rotations: 5
+      cooldown: 0,
+      conga: {
+       contagious: false,
+       time: 5
       }
      }
     },
@@ -626,6 +714,7 @@
       '100': true
      },
      tip: {
+      useProfileImage: false,
       streamlabs: false,
       streamelements: false
      }
@@ -636,6 +725,522 @@
 
    // distribution of emojis for Pyramid and SmallPyramid kappagen
    var pyramidDist = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
+
+   // distribution of emojis for letters in message kappagens
+   var alnumDist = {
+    'A': [
+     [0, 1, 1, 1, 1, 1, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 1, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 0, 1, 0, 0],
+     [0, 1, 1, 1, 1, 1, 0, 0, 0]
+    ],
+    'a': [
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    'B': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 0, 1, 1, 0, 0]
+    ],
+    'b': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 1, 1, 1, 0, 0, 0, 0]
+    ],
+    'C': [
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 1, 0, 0, 0, 1, 0, 0]
+    ],
+    'c': [
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0]
+    ],
+    'D': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 1, 1, 1, 1, 1, 0, 0]
+    ],
+    'd': [
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    'E': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    'e': [
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0]
+    ],
+    'F': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    'f': [
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 0, 1, 0, 0]
+    ],
+    'G': [
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 1, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 1, 0, 1, 0, 0]
+    ],
+    'g': [
+     [1, 0, 0, 1, 1, 0, 0, 0, 0],
+     [1, 0, 1, 0, 0, 1, 0, 0, 0],
+     [1, 0, 1, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 0, 0, 0]
+    ],
+    'H': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    'h': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 1, 1, 0, 0, 0, 0, 0]
+    ],
+    'I': [
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    'i': [
+     [0, 1, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    'J': [
+     [0, 0, 1, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    'j': [
+     [1, 0, 0, 0, 0, 0, 0, 0, 0],
+     [1, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 1, 0, 0]
+    ],
+    'K': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 0, 0, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    'k': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+    ],
+    'L': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    'l': [
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    'M': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 0, 0, 1, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 0, 1, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    'm': [
+     [0, 1, 1, 1, 1, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 0, 0, 0]
+    ],
+    'N': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 0, 0, 1, 0, 0],
+     [0, 0, 0, 1, 1, 1, 0, 0, 0],
+     [0, 0, 1, 0, 0, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    'n': [
+     [0, 1, 1, 1, 1, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 0, 0, 0]
+    ],
+    'O': [
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 1, 1, 1, 1, 1, 0, 0]
+    ],
+    'o': [
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 1, 1, 1, 0, 0, 0, 0]
+    ],
+    'P': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 1, 1, 0, 0]
+    ],
+    'p': [
+     [1, 1, 1, 1, 1, 0, 0, 0, 0],
+     [0, 0, 1, 0, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 0, 1, 0, 0, 0],
+     [0, 0, 0, 1, 1, 0, 0, 0, 0]
+    ],
+    'Q': [
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 1, 0, 0, 0, 0, 1, 0],
+     [1, 1, 0, 1, 1, 1, 1, 0, 0]
+    ],
+    'q': [
+     [0, 0, 0, 1, 1, 0, 0, 0, 0],
+     [0, 0, 1, 0, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 0, 1, 0, 0, 0],
+     [1, 1, 1, 1, 1, 0, 0, 0, 0]
+    ],
+    'R': [
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 1, 1, 0, 0, 1, 0],
+     [0, 0, 1, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 1, 1, 0, 0]
+    ],
+    'r': [
+     [0, 1, 1, 1, 1, 1, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0]
+    ],
+    'S': [
+     [0, 0, 1, 0, 0, 1, 1, 0, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 0, 0, 1, 0, 0]
+    ],
+    's': [
+     [0, 1, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 0, 1, 0, 0, 0]
+    ],
+    'T': [
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    't': [
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 1, 0, 0, 0]
+    ],
+    'U': [
+     [0, 0, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    'u': [
+     [0, 0, 1, 1, 1, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 0, 0, 0]
+    ],
+    'V': [
+     [0, 0, 0, 0, 1, 1, 1, 1, 0],
+     [0, 0, 1, 1, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 0, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 1, 1, 1, 0]
+    ],
+    'v': [
+     [0, 0, 0, 0, 1, 1, 0, 0, 0],
+     [0, 0, 1, 1, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 0, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 1, 0, 0, 0]
+    ],
+    'W': [
+     [0, 0, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    'w': [
+     [0, 0, 1, 1, 1, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 1, 1, 1, 0, 0, 0]
+    ],
+    'X': [
+     [0, 1, 1, 0, 0, 0, 1, 1, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 1, 1, 0, 0, 0, 1, 1, 0]
+    ],
+    'x': [
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 1, 0, 0, 0, 0, 0],
+     [0, 0, 1, 0, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0]
+    ],
+    'Y': [
+     [0, 0, 0, 0, 0, 0, 1, 1, 0],
+     [0, 0, 0, 0, 1, 1, 0, 0, 0],
+     [0, 1, 1, 1, 0, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 1, 0, 0, 0],
+     [0, 0, 0, 0, 0, 0, 1, 1, 0]
+    ],
+    'y': [
+     [1, 0, 0, 1, 1, 1, 0, 0, 0],
+     [1, 0, 1, 0, 0, 0, 0, 0, 0],
+     [1, 0, 1, 0, 0, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 0, 0, 0]
+    ],
+    'Z': [
+     [0, 1, 1, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 1, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 1, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 1, 1, 0]
+    ],
+    'z': [
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [0, 1, 1, 0, 0, 1, 0, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 0, 0],
+     [0, 1, 0, 0, 1, 1, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0]
+    ],
+    '1': [
+     [0, 1, 0, 0, 0, 0, 1, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    '2': [
+     [0, 1, 1, 0, 0, 0, 1, 0, 0],
+     [0, 1, 0, 1, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 1, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 1, 0, 0]
+    ],
+    '3': [
+     [0, 0, 1, 0, 0, 0, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 0, 1, 1, 0, 0]
+    ],
+    '4': [
+     [0, 0, 0, 1, 1, 0, 0, 0, 0],
+     [0, 0, 0, 1, 0, 1, 1, 1, 0],
+     [0, 0, 0, 1, 0, 0, 0, 0, 0],
+     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 1, 0, 0, 0, 0, 0]
+    ],
+    '5': [
+     [0, 0, 1, 0, 0, 1, 1, 1, 0],
+     [0, 1, 0, 0, 0, 1, 0, 1, 0],
+     [0, 1, 0, 0, 0, 1, 0, 1, 0],
+     [0, 0, 1, 1, 1, 0, 0, 1, 0]
+    ],
+    '6': [
+     [0, 0, 1, 1, 1, 1, 0, 0, 0],
+     [0, 1, 0, 0, 1, 0, 1, 0, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 0, 0, 0, 0, 0]
+    ],
+    '7': [
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 1, 1, 0, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 1, 0, 1, 0],
+     [0, 0, 0, 0, 0, 0, 1, 1, 0]
+    ],
+    '8': [
+     [0, 0, 1, 1, 0, 1, 1, 0, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 0, 1, 1, 0, 0]
+    ],
+    '9': [
+     [0, 0, 0, 0, 0, 1, 1, 0, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 1, 1, 1, 1, 0, 0]
+    ],
+    '0': [
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 1, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 1, 1, 1, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 1, 1, 0],
+     [0, 0, 1, 1, 1, 1, 1, 0, 0]
+    ],
+    ':': [
+     [0, 0, 1, 0, 0, 1, 0, 0, 0]
+    ],
+    '.': [
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    ',': [
+     [1, 0, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    '\'': [
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 0, 0, 0, 1]
+    ],
+    '-': [
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0]
+    ],
+    '_': [
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    '+': [
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0]
+    ],
+    '=': [
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0]
+    ],
+    '!': [
+     [0, 0, 0, 0, 0, 1, 1, 0, 0],
+     [0, 1, 0, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 0, 1, 1, 0, 0]
+    ],
+    '@': [
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 1, 0, 1, 0, 1, 0],
+     [0, 1, 0, 1, 0, 1, 0, 1, 0],
+     [0, 1, 0, 0, 1, 1, 1, 0, 0]
+    ],
+    '#': [
+     [0, 0, 0, 0, 1, 0, 1, 0, 0],
+     [0, 0, 0, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 1, 0, 0],
+     [0, 0, 0, 1, 1, 1, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 1, 0, 0]
+    ],
+    '$': [
+     [0, 0, 1, 0, 0, 1, 1, 0, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [1, 1, 1, 1, 1, 1, 1, 1, 1],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 1, 1, 0, 0, 1, 0, 0]
+    ],
+    '\u00a2': [
+     [0, 0, 1, 1, 1, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
+     [1, 1, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0]
+    ],
+    '\u20ac': [
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+     [0, 1, 0, 1, 0, 1, 0, 1, 0],
+     [0, 1, 0, 1, 0, 1, 0, 1, 0],
+     [0, 1, 0, 1, 0, 1, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0]
+    ],
+    '\u00a3': [
+     [0, 1, 0, 0, 1, 0, 1, 0, 0],
+     [0, 1, 1, 1, 1, 1, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 1, 0, 0, 1, 0],
+     [0, 1, 0, 0, 0, 0, 1, 0, 0]
+    ],
+    '\u00a5': [
+     [0, 0, 0, 0, 1, 0, 1, 1, 0],
+     [0, 0, 1, 0, 1, 1, 0, 0, 0],
+     [0, 1, 1, 1, 1, 0, 0, 0, 0],
+     [0, 0, 1, 0, 1, 1, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 1, 1, 0]
+    ],
+    '%': [
+     [0, 1, 0, 0, 0, 0, 1, 1, 0],
+     [0, 0, 1, 1, 0, 0, 1, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 1, 1, 0, 0, 1, 1, 0, 0],
+     [0, 1, 1, 0, 0, 0, 0, 1, 0]
+    ],
+    '?': [
+     [0, 0, 0, 0, 0, 1, 1, 0, 0],
+     [0, 0, 0, 0, 0, 0, 0, 1, 0],
+     [0, 1, 0, 1, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 1, 0, 0, 1, 0],
+     [0, 0, 0, 0, 0, 1, 1, 0, 0]
+    ]
+   };
 
    // don't show these zero-width emote modifiers at all
    var bttvZWE = [
@@ -667,6 +1272,11 @@
     margin: 0;
     overflow: hidden;
    }
+   img
+   {
+    object-fit: contain;
+    object-position: 50% 50%;
+   }
    img.emote
    {
     position: fixed;
@@ -695,6 +1305,85 @@
    {
     position: absolute;
     background-color: rgba(255, 255, 255, 0.2);
+   }
+
+   div.scene img.dancer
+   {
+    text-align: center;
+    position: relative;
+    animation: dance 4s linear infinite;
+   }
+
+   @keyframes dance
+   {
+    0%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+    6%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    13%
+    {
+     transform: translate(20%, 40%) rotate(-30deg);
+    }
+    19%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    25%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+    31%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    38%
+    {
+     transform: translate(20%, 40%) rotate(-30deg);
+    }
+    44%
+    {
+     transform: translate(20%, 10%) rotate(-30deg);
+    }
+    50%
+    {
+     transform: translate(20%, 40%) rotate(-30deg);
+    }
+    56%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    63%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+    69%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    75%
+    {
+     transform: translate(20%, 40%) rotate(-30deg);
+    }
+    81%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    88%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+    94%
+    {
+     transform: translate(80%, 10%) rotate(30deg);
+    }
+    100%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
    }
 
    @keyframes wiggleL
@@ -1111,8 +1800,10 @@
    var cList = [];     // list of channel-specific emotes, used for kappagens
    var fList = [];     // cache of users in chat and their follow status
    var bList = [];     // list of giftbomb event origin ids (to prevent kappas for each gift in a bomb)
+   var conga = [];     // CONGA TIME!
+   var kLast = 0;      // last kappagen command event (for cooldown)
    var eActive = 0;    // active emote count (effective, not actual)
-   var tStart = 32;    // time to wait for transition trigger (ms)
+   var tStart = 48;    // time to wait for transition trigger (ms)
    var uLF = false;    // user id of the most recent follower
    var rFC = 2500;     // follower count interval (ms)
    var tAnim = {       // animation timing constants
@@ -1126,6 +1817,7 @@
     }
    };
    /* Timers */
+   var tIRC = false;   // irc connection timeout
    var tEmote = false; // emote queue timer
    var tKappa = false; // kappagen queue timer
    var tGC = false;    // garbage collection
@@ -1280,7 +1972,7 @@
     return cmd;
    }
 
-   function parseUser(cmd)
+   function parseUser(cmd, latinOnly = false)
    {
     let data = cmd.prefix;
     let ret = {};
@@ -1290,14 +1982,60 @@
     {
      ret.nick = data.slice(0, data.indexOf('!'));
      data = data.slice(data.indexOf('!') + 1);
+     if (!ret.hasOwnProperty('display-name') || (latinOnly && ret['display-name'] !== ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, '')))
+      ret['display-name'] = ret.nick;
     }
     if (data.includes('@'))
     {
      ret.host = data.slice(0, data.indexOf('@'));
      data = data.slice(data.indexOf('@') + 1);
+     if (!ret.hasOwnProperty('display-name') || (latinOnly && ret['display-name'] !== ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, '')))
+      ret['display-name'] = ret.host;
     }
     ret.user = data;
     return ret;
+   }
+
+   function getUserInfo(u)
+   {
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.twitch.tv/helix/users?login=' + u);
+      x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
+      x.setRequestHeader('Client-Id', cfg.login.client);
+      x.onreadystatechange = function()
+      {
+       if (x.status !== 200)
+       {
+        if (x.status === 401)
+         blargIAmDead(3);
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       if (!j.hasOwnProperty('data'))
+       {
+        resolve(false);
+        return;
+       }
+       if (j.data.length !== 1)
+       {
+        console.log('returned ', j.data.length, ' entries: ', j.data);
+        resolve(false);
+        return;
+       }
+       resolve(j.data[0]);
+      };
+      x.send();
+     }
+    );
+    return p;
    }
 
    function findEmote_channel(chID)
@@ -1982,8 +2720,8 @@
     let h = Math.floor(Math.random() * sW) - (sS / 2);
     let v = Math.floor((Math.random() * 0.3) * sH) + Math.floor(0.8 * sH);
     let s = 'left: ' + h + 'px;';
-    s += ' max-height: ' + sS + 'px;';
-    s += ' width: auto;';
+    s += ' height: ' + sS + 'px;';
+    s += ' width: ' + sS + 'px;';
     if (cfg.emote.out.fade || cfg.emote.out.zoom)
      s += ' offset-path: path("M 0 ' + v + ' L 0 ' + Math.floor(v * 0.05) + '") ;';
     else
@@ -2098,8 +2836,8 @@
      sS = sS * 2;
     let h = Math.floor(Math.random() * sW) - (sS / 2);
     let v = Math.floor((Math.random() * 0.2) * sH);
-    let s = 'max-height: ' + sS + 'px;';
-    s += ' width: auto;';
+    let s = 'height: ' + sS + 'px;';
+    s += ' width: ' + sS + 'px;';
     let aNames = [];
     let aDelays = [];
     let aDurs = [];
@@ -2245,8 +2983,8 @@
     let v = Math.floor((Math.random() * 0.4) * sH) + Math.floor(0.3 * sH);
     let s = 'top: ' + v + 'px;';
     s += ' left: ' + h + 'px;';
-    s += ' max-height: ' + sS + 'px;';
-    s += ' width: auto;';
+    s += ' height: ' + sS + 'px;';
+    s += ' width: ' + sS + 'px;';
     let aNames = [];
     let aDelays = [];
     let aDurs = [];
@@ -2353,8 +3091,8 @@
      sS = sS * 2;
     let h = Math.floor(Math.random() * sW) - (sS / 2);
     let s = 'left: ' + h + 'px;';
-    s += ' max-height: ' + sS + 'px;';
-    s += ' width: auto;';
+    s += ' height: ' + sS + 'px;';
+    s += ' width: ' + sS + 'px;';
     let aNames = [];
     let aDelays = [];
     let aDurs = [];
@@ -2438,8 +3176,8 @@
      sS = sS * 2;
     let h = Math.floor(Math.random() * sW) - (sS / 2);
     let s = 'left: ' + h + 'px;';
-    s += ' max-height: ' + sS + 'px;';
-    s += ' width: auto;';
+    s += ' height: ' + sS + 'px;';
+    s += ' width: ' + sS + 'px;';
     s += ' transform-origin: center center;';
     let aNames = [];
     let aDelays = [];
@@ -2523,8 +3261,8 @@
     let v = Math.floor(Math.random() * (sH - sS - 5)) + 10;
     let s = 'top: ' + v + 'px;';
     s += ' left: ' + h + 'px;';
-    s += ' max-height: ' + sS + 'px;';
-    s += ' width: auto;';
+    s += ' height: ' + sS + 'px;';
+    s += ' width: ' + sS + 'px;';
     //s += ' transition: all 0.9s linear;';
     let dests = [];
     let traj = {x: 0, y: 0};
@@ -2727,20 +3465,20 @@
     if (sH < r)
      r = sH;
     r = r * (Math.random() + 1);
-    let th = (Math.random() * 360);
+    let th = (Math.random() * (Math.PI * 2));
     let hD = Math.floor(h + r * Math.cos(th));
     let vD = Math.floor(v + r * Math.sin(th));
     if (!x && !y)
     {
      while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > (sW - sS) && hD > (sW - sS)) || (v > (sH - sS) && vD > (sH - sS)))
      {
-      th = (Math.random() * 360);
+      th = (Math.random() * (Math.PI * 2));
       hD = Math.floor(h + r * Math.cos(th));
       vD = Math.floor(v + r * Math.sin(th));
      }
     }
-    let s = 'max-height: ' + sS + 'px;';
-    s += ' width: auto;';
+    let s = 'height: ' + sS + 'px;';
+    s += ' width: ' + sS + 'px;';
     s += ' transition: transform ' + cfg.emote.time + 's linear;';
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
     let aNames = [];
@@ -2849,8 +3587,8 @@
      hD = h - Math.floor(Math.random() * ((sW - sS) * 0.2));
     else
      hD = h + Math.floor(Math.random() * ((sW - sS) * 0.2));
-    let s = 'max-height: ' + sS + 'px;';
-    s += ' width: auto;';
+    let s = 'height: ' + sS + 'px;';
+    s += ' width: ' + sS + 'px;';
     s += ' transition: transform ' + aT + 'ms cubic-bezier(0, 0, 0.58, 1);';
     s += ' transform: translateX(' + h + 'px);';
     s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY / 100 * sH + Math.floor(Math.random() * ((sH - sS) * 0.5))) + ' L 0 ' + (sH + sS) + '");';
@@ -2906,8 +3644,8 @@
     img.setAttribute('alt', '');
     let s = 'top: ' + v + 'px;';
     s += ' left: ' + h + 'px;';
-    s += ' max-height: ' + sS + 'px;';
-    s += ' width: auto;';
+    s += ' height: ' + sS + 'px;';
+    s += ' width: ' + sS + 'px;';
     let aNames = [];
     let aDelays = [];
     let aDurs = [];
@@ -3004,10 +3742,8 @@
     let cube = document.createElement('div');
     cube.setAttribute('class', 'cube');
     cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
-    let f = 'width: 100%;';
-    f += ' height: auto;';
-    f += ' max-width: ' + sS + 'px;';
-    f += ' max-height: ' + sS + 'px;';
+    let f = 'height: ' + sS + 'px;';
+    f += ' width: ' + sS + 'px;';
     let cubeF = document.createElement('img');
     cubeF.setAttribute('src', url);
     cubeF.setAttribute('alt', '');
@@ -3051,12 +3787,12 @@
     if (sH < r)
      r = sH;
     r = r * (Math.random() + 1);
-    let th = (Math.random() * 360);
+    let th = (Math.random() * (Math.PI * 2));
     let hD = Math.floor(h + r * Math.cos(th));
     let vD = Math.floor(v + r * Math.sin(th));
     while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > (sW - sS) && hD > (sW - sS)) || (v > (sH - sS) && vD > (sH - sS)))
     {
-     th = (Math.random() * 360);
+     th = (Math.random() * (Math.PI * 2));
      hD = Math.floor(h + r * Math.cos(th));
      vD = Math.floor(v + r * Math.sin(th));
     }
@@ -3123,7 +3859,7 @@
     );
    }
 
-   function showKappa_TheCube(url, sW, sH, sS)
+   function showKappa_TheCube(url, sW, sH, sS, bC, iR)
    {
     let scene = document.createElement('div');
     scene.setAttribute('class', 'scene');
@@ -3132,10 +3868,8 @@
     let cube = document.createElement('div');
     cube.setAttribute('class', 'cube');
     cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
-    let f = 'width: 100%;';
-    f += ' height: auto;';
-    f += ' max-width: ' + sS + 'px;';
-    f += ' max-height: ' + sS + 'px;';
+    let f = 'height: ' + sS + 'px;';
+    f += ' width: ' + sS + 'px;';
     let cubeF = document.createElement('img');
     cubeF.setAttribute('src', url);
     cubeF.setAttribute('alt', '');
@@ -3175,7 +3909,7 @@
     scene.appendChild(cube);
     let h = Math.floor(Math.random() * (sW - sS));
     let v = Math.floor(Math.random() * (sH - sS));
-    if (cfg.display.kappa.cube.center)
+    if (bC)
     {
      h = Math.floor((sW / 2) - (sS / 2));
      v = Math.floor((sH / 2) - (sS / 2));
@@ -3234,15 +3968,15 @@
     window.setTimeout(
      function()
      {
-      let rX = Math.floor(180 - (Math.random() * 360)) * (cfg.display.kappa.cube.rotations * 2);
-      let rY = Math.floor(180 - (Math.random() * 360)) * (cfg.display.kappa.cube.rotations * 2);
+      let rX = Math.floor(180 - (Math.random() * 360)) * (iR * 2);
+      let rY = Math.floor(180 - (Math.random() * 360)) * (iR * 2);
       cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
      },
      tStart
     );
    }
 
-   function showKappa_Fireworks(kList, sW, sH, sS)
+   function showKappa_Fireworks(kList, sW, sH, sS, iKC)
    {
     let sendUp = 2;
     let oX = (sW * 0.5) - (sS * 0.5);
@@ -3264,11 +3998,11 @@
      simg.setAttribute('class', 'emote');
      simg.setAttribute('src', url);
      simg.setAttribute('alt', '');
-     let th = (Math.random() * 360);
+     let th = (Math.random() * (Math.PI * 2));
      let hD = Math.floor(cX + r * Math.cos(th));
      let vD = Math.floor(cY + r * Math.sin(th));
-     let s = 'max-height: ' + sS + 'px;';
-     s += ' width: auto;';
+     let s = 'height: ' + sS + 'px;';
+     s += ' width: ' + sS + 'px;';
      s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
      s += ' transform: translate(' + cX + 'px, ' + cY + 'px);';
      let aNames = [];
@@ -3311,8 +4045,8 @@
     img.setAttribute('class', 'emote');
     img.setAttribute('src', oURL);
     img.setAttribute('alt', '');
-    let s = 'max-height: ' + sS + 'px;';
-    s += ' width: auto;';
+    let s = 'height: ' + sS + 'px;';
+    s += ' width: ' + sS + 'px;';
     s += ' transition: transform ' + sendUp + 's linear;';
     s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
     img.setAttribute('style', s);
@@ -3326,9 +4060,9 @@
       if (sH < r)
        r = sH;
       r *= 0.66;
-      let inner = Math.floor(cfg.display.kappa.count / 8);
+      let inner = Math.floor(iKC / 8);
       let outer = inner;
-      let core = cfg.display.kappa.count - (inner + outer);
+      let core = iKC - (inner + outer);
       let t = 0;
       for (let i = 0; i < inner; i++)
       {
@@ -3363,16 +4097,104 @@
     );
    }
 
+   function showKappa_Spiral(kList, sW, sH, sS, iKC)
+   {
+    let oX = Math.floor(Math.random() * (sW - sS));
+    let oY = Math.floor(Math.random() * (sH - sS));
+    function sparkler(url, r, th)
+    {
+     let simg = document.createElement('img');
+     simg.setAttribute('class', 'emote');
+     simg.setAttribute('src', url);
+     simg.setAttribute('alt', '');
+     let hD = Math.floor(oX + r * Math.cos(th));
+     let vD = Math.floor(oY + r * Math.sin(th));
+     let s = 'height: ' + sS + 'px;';
+     s += ' width: ' + sS + 'px;';
+     s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
+     s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
+     let aNames = [];
+     let aDelays = [];
+     let aDurs = [];
+     let aTimings = [];
+     let aFills = [];
+     let aIters = [];
+     aNames.push('fadeIn');
+     aDelays.push('0ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+     s += ' animation-name: ' + aNames.join() + ';';
+     s += ' animation-delay: ' + aDelays.join() + ';';
+     s += ' animation-duration: ' + aDurs.join() + ';';
+     s += ' animation-timing-function: ' + aTimings.join() + ';';
+     s += ' animation-fill-mode: ' + aFills.join() + ';';
+     s += ' animation-iteration-count: ' + aIters.join() + ';';
+     simg.setAttribute('style', s);
+     document.body.appendChild(simg);
+     gcEmote(simg, true, true);
+     window.setTimeout(
+      function()
+      {
+       simg.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+      },
+      tStart
+     );
+    }
+    window.setTimeout(
+     async function()
+     {
+      let r = sW;
+      if (sH < r)
+       r = sH;
+      let l = iKC / 25 + 2;
+      l = l + (Math.random() * 4 - 2);
+      if (l < 0.1)
+       l = 0.1;
+      let c = (Math.PI * l) / iKC;
+      let th = (Math.random() * (Math.PI * 2));
+      let o = (Math.floor(Math.random() * 2) === 0);
+      for (let i = 0; i < iKC; i++)
+      {
+       if (o)
+       {
+        th-= c;
+        if (th <= 0)
+         th+= Math.PI * 2;
+       }
+       else
+       {
+        th+= c;
+        if (th >= Math.PI * 2)
+         th+= Math.PI * 2;
+       }
+       sparkler(kList[Math.floor(Math.random() * kList.length)].url, r, th);
+       await sleep(10);
+      }
+     },
+     tStart
+    );
+   }
+
    function showKappa_Pyramid(kList, sW, sH)
    {
-    let tMul = 2;
     let sS = sW / 19;
     let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
     let ct = 0;
     for (let i = 0; i < pyramidDist.length; i++)
      ct += pyramidDist[i];
-    let eT = cfg.emote.time * tMul * 1000;
+    let eT = cfg.emote.time * 1000;
     let tPerB = Math.floor(eT / ct);
+    if (tPerB < 24)
+     tPerB = 24;
+    eT = tPerB * ct;
     function block(url, x, t)
     {
      let img = document.createElement('img');
@@ -3384,8 +4206,8 @@
      let vD = sH - (sS * (drawn[x] + 1));
      let s = 'top: 0px;';
      s += ' left: 0px;';
-     s += ' max-height: ' + sS + 'px;';
-     s += ' width: auto;';
+     s += ' height: ' + sS + 'px;';
+     s += ' width: ' + sS + 'px;';
      s += ' transition: all ' + tPerB + 'ms ease-in;';
      s += ' transform: translate(' + h + 'px, ' + v + 'px);';
      img.setAttribute('style', s);
@@ -3397,7 +4219,7 @@
        img.style.transitionTime = '500ms';
        gcEmote(img, false, true, 500);
       },
-      eT + 500 + (t / 10)
+      Math.floor(eT + (cfg.emote.time * 1000) + (t / 10))
      );
      window.setTimeout(
       function()
@@ -3422,7 +4244,6 @@
 
    function showKappa_SmallPyramid(kList, sW, sH)
    {
-    let tMul = 2;
     let sS = sW / 19;
     if (sS > Math.floor(sW * cfg.emote.size.ratio.small))
      sS = Math.floor(sW * cfg.emote.size.ratio.small);
@@ -3432,8 +4253,11 @@
     let ct = 0;
     for (let i = 0; i < pyramidDist.length; i++)
      ct += pyramidDist[i];
-    let eT = cfg.emote.time * tMul * 1000;
+    let eT = cfg.emote.time * 1000;
     let tPerB = Math.floor(eT / ct);
+    if (tPerB < 24)
+     tPerB = 24;
+    eT = tPerB * ct;
     function block(url, oX, x, t)
     {
      let img = document.createElement('img');
@@ -3445,8 +4269,8 @@
      let vD = sH - (sS * (drawn[x] + 1));
      let s = 'top: 0px;';
      s += ' left: 0px;';
-     s += ' max-height: ' + sS + 'px;';
-     s += ' width: auto;';
+     s += ' height: ' + sS + 'px;';
+     s += ' width: ' + sS + 'px;';
      s += ' transition: all ' + tPerB + 'ms ease-in;';
      s += ' transform: translate(' + h + 'px, ' + v + 'px);';
      img.setAttribute('style', s);
@@ -3458,7 +4282,7 @@
        img.style.transitionTime = '500ms';
        gcEmote(img, false, true, 500);
       },
-      eT + 500 + (t / 10)
+      Math.floor(eT + (cfg.emote.time * 1000) + (t / 10))
      );
      window.setTimeout(
       function()
@@ -3482,7 +4306,7 @@
     }
    }
 
-   async function showKappa_Stampede(kList, sW, sH, sS)
+   async function showKappa_Stampede(kList, sW, sH, sS, iKC)
    {
     let speed = 2000;
     let bandHeight = sS * 3;
@@ -3498,8 +4322,8 @@
      let v = Math.floor((Math.random() * bandHeight) + bandTop);
      let s = 'top: 0px;';
      s += ' left: 0px;';
-     s += ' max-height: ' + sS + 'px;';
-     s += ' width: auto;';
+     s += ' height: ' + sS + 'px;';
+     s += ' width: ' + sS + 'px;';
      s += ' transition: all ' + (speed / 1000) + 's linear;';
      if (d)
       s += ' transform: translate(' + sW + 'px, ' + v + 'px);';
@@ -3557,9 +4381,272 @@
     let b4 = Math.floor(Math.random() * 4);
     await stampede(b1, speed * 0.8);
     await stampede(b2, speed * 0.4);
-    await stampede(cfg.display.kappa.count, (b4 > 0));
+    await stampede(iKC, (b4 > 0));
     if (b4 > 0)
      await stampede(b4, false);
+   }
+
+   async function showKappa_Conga(kList, sW, sH, sS)
+   {
+    let v = 0;
+    let unique = false;
+    let bS = Math.ceil(sS * (5/3));
+    let seg = Math.floor(bS / 2);
+    let sht = Math.floor(sH / seg);
+    let longWait = cfg.emote.time * 2;
+    while (conga.length >= sht)
+    {
+     await sleep(250);
+    }
+    while (!unique)
+    {
+     v = Math.floor(Math.random() * sht) * seg;
+     let found = false;
+     for (let i = 0; i < conga.length; i++)
+     {
+      if (conga[i].row === v)
+      {
+       found = true;
+       break;
+      }
+     }
+     if (!found)
+      unique = true;
+    }
+    conga.push({row: v, done: false});
+    let urls = [];
+    let ct = Math.floor(sW / bS);
+    for (let i = 0; i < ct; i++)
+    {
+     urls.push(kList[Math.floor(Math.random() * kList.length)].url);
+    }
+    let d = ((v / seg) % 2 === 1);
+    let xtra = Math.floor((sW - (ct * bS)) / 2);
+    function dance(url, col)
+    {
+     let box = document.createElement('div');
+     box.setAttribute('class', 'scene');
+     let img = document.createElement('img');
+     img.setAttribute('class', 'dancer');
+     img.setAttribute('src', url);
+     img.setAttribute('alt', '');
+     let s = 'width: ' + sS + 'px;';
+     s += ' height: ' + sS + 'px;';
+     img.setAttribute('style', s);
+     let sE = bS * col + xtra;
+     let sB = sE - sW;
+     if (d)
+     {
+      sE = bS * ((ct - 1) - col) + xtra;
+      sB = sE + sW;
+      img.setAttribute('title', 'd is true');
+     }
+     s = 'top: 0px;';
+     s += ' left: 0px;';
+     s += ' width: ' + bS + 'px;';
+     s += ' height: ' + bS + 'px;';
+     s += ' z-index: ' + v + ';';
+     s += ' transition: all ' + longWait + 's linear;';
+     s += ' transform: translate(' + sB + 'px, ' + v + 'px);';
+     box.setAttribute('style', s);
+     eActive++;
+     box.appendChild(img);
+     document.body.appendChild(box);
+     window.setTimeout(
+      function()
+      {
+       box.style.transform = 'translate(' + sE + 'px, ' + v + 'px)';
+      },
+      tStart
+     );
+     return box;
+    }
+    function endDance(box, col)
+    {
+     let sB = bS * col + xtra;
+     let sE = sB + sW;
+     if (d)
+     {
+      sB = bS * ((ct - 1) - col) + xtra;
+      sE = sB - sW;
+     }
+     let s = 'top: 0px;';
+     s += ' left: 0px;';
+     s += ' width: ' + bS + 'px;';
+     s += ' height: ' + bS + 'px;';
+     s += ' z-index: ' + v + ';';
+     s += ' transition: all ' + longWait + 's ease-in;';
+     s += ' transform: translate(' + sB + 'px, ' + v + 'px);';
+     box.setAttribute('style', s);
+     gcEmote(box, true, true, longWait * 1000 * 1.25);
+     window.setTimeout(
+      function()
+      {
+       box.style.transform = 'translate(' + sE + 'px, ' + v + 'px)';
+      },
+      tStart
+     );
+    }
+    let imgs = [];
+    for (let i = 0; i < ct; i++)
+    {
+     imgs.push(dance(urls[i], i));
+    }
+    await sleep(longWait * 1000);
+    let full = false;
+    if (conga.length === sht)
+     full = true;
+    await sleep(cfg.display.kappa.conga.time * 1000);
+    if (cfg.display.kappa.conga.contagious)
+    {
+     let ex = false;
+     if (conga.length > 1)
+      ex = true;
+     for (let i = 0; i < conga.length; i++)
+     {
+      if (conga[i].row !== v)
+       continue;
+      conga[i].done = true;
+      break;
+     }
+     let done = false;
+     while (!done)
+     {
+      if (!ex && conga.length > 1)
+       ex = true;
+      let notDone = false;
+      for (let i = 0; i < conga.length; i++)
+      {
+       if (conga[i].done === false)
+       {
+        notDone = true;
+        break;
+       }
+      }
+      if (notDone === false)
+       done = true;
+      await sleep(100);
+     }
+    }
+    for (let i = 0; i < imgs.length; i++)
+    {
+     endDance(imgs[i], i);
+    }
+    await sleep(longWait * 1000);
+    for (let i = 0; i < conga.length; i++)
+    {
+     if (conga[i].row !== v)
+      continue;
+     conga.splice(i, 1);
+     break;
+    }
+   }
+
+   function showKappa_Text(kList, sW, sH, sMsg, iTime)
+   {
+    function buildMsgArr(s)
+    {
+     let o = [];
+     let spc = [];
+     for (let y = 0; y < alnumDist['A'][0].length; y++)
+     {
+      spc.push(0);
+     }
+     for (let i = 0; i < s.length; i++)
+     {
+      if (i > 0)
+       o.push(spc);
+      if (s[i] === ' ')
+      {
+       o.push(spc);
+       o.push(spc);
+       continue;
+      }
+      let v = s[i];
+      if (!alnumDist.hasOwnProperty(v))
+       continue;
+      let c = alnumDist[v];
+      for (let x = 0; x < c.length; x++)
+      {
+       o.push(c[x]);
+      }
+     }
+     return o;
+    }
+    let msgDist = buildMsgArr(sMsg);
+    let ct = 0;
+    let ctT = 0;
+    let drawn = [];
+    for (let x = 0; x < msgDist.length; x++)
+    {
+     for (let y = 0; y < msgDist[x].length; y++)
+     {
+      if (msgDist[x][y] !== 0)
+       ctT += 1;
+     }
+     ct += msgDist[x].length;
+     drawn.push(0);
+    }
+    let sS = Math.floor(sW / (msgDist.length + 2));
+    if (sS > Math.floor(sW * cfg.emote.size.ratio.small))
+     sS = Math.floor(sW * cfg.emote.size.ratio.small);
+    if (sS > Math.floor(sH * cfg.emote.size.ratio.small))
+     sS = Math.floor(sH * cfg.emote.size.ratio.small);
+    let eT = cfg.emote.time * 1000;
+    let tPerB = Math.floor(eT / ctT);
+    if (tPerB < 24)
+     tPerB = 24;
+    eT = tPerB * ctT;
+    let vH = Math.floor(Math.random() * (sH - (sS * msgDist[0].length))) + (sS * msgDist[0].length);
+    function block(url, oX, x, t)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', url);
+     img.setAttribute('alt', '');
+     let h = oX + sS * x;
+     let v = -1 * sS;
+     let vD = vH - (sS * (drawn[x] + 1));
+     let s = 'top: 0px;';
+     s += ' left: 0px;';
+     s += ' height: ' + sS + 'px;';
+     s += ' width: ' + sS + 'px;';
+     s += ' transition: all ' + tPerB + 'ms ease-in;';
+     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+     img.setAttribute('style', s);
+     document.body.appendChild(img);
+     window.setTimeout(
+      function()
+      {
+       img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
+       img.style.transitionTime = '500ms';
+       gcEmote(img, false, true, 500);
+      },
+      Math.floor(eT + (iTime * 1000) + (t / 10))
+     );
+     window.setTimeout(
+      function()
+      {
+       img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
+      },
+      t
+     );
+    }
+    let oX = Math.floor(Math.random() * (sW - (sS * msgDist.length)));
+    let t = 0;
+    for (let i = 0; i < ct; i++)
+    {
+     let x;
+     do
+      x = Math.floor(Math.random() * msgDist.length);
+     while(drawn[x] >= msgDist[x].length);
+     if (msgDist[x][drawn[x]] !== 0)
+     {
+      block(kList[Math.floor(Math.random() * kList.length)].url, oX, x, t);
+      t += tPerB;
+     }
+     drawn[x]++;
+    }
    }
 
    function showEmote(url)
@@ -3619,7 +4706,14 @@
      window.clearTimeout(tKappa);
      tKappa = false;
     }
-    if (cfg.emote.max > 0 && eActive + cfg.display.kappa.count > cfg.emote.max)
+    let kC = cfg.display.kappa.count;
+    if (toKappa.length > 0)
+    {
+     let n = getNextKappa(toKappa[0]);
+     if (n !== false)
+      kC = n.count;
+    }
+    if (cfg.emote.max > 0 && eActive + kC > cfg.emote.max)
     {
      tKappa = window.setTimeout(showKappas, 500);
      return;
@@ -3627,8 +4721,17 @@
     let e = null;
     while ((e =  toKappa.shift()) !== undefined)
     {
-     showKappa(e.list, [e.style]);
-     if (cfg.emote.max > 0 && eActive + cfg.display.kappa.count > cfg.emote.max)
+     let a = [];
+     a[e.style] = e.prefs;
+     showKappa(e.list, a, e.params);
+     let tC = cfg.display.kappa.count;
+     if (toKappa.length > 0)
+     {
+      let t = getNextKappa(toKappa[0]);
+      if (t !== false)
+       tC = t.count;
+     }
+     if (cfg.emote.max > 0 && eActive + tC > cfg.emote.max)
      {
       if (cfg.emote.queue > 0 && toKappa.length > cfg.emote.queue)
        toKappa.splice(0, toKappa.length - cfg.emote.queue);
@@ -3638,14 +4741,58 @@
     }
    }
 
-   async function showKappa(kList, kStyles = false)
+   function getNextKappa(k)
    {
-    if (!Array.isArray(kStyles) || kStyles.length < 1)
+    let a = [];
+    a[k.style] = k.prefs;
+    return getNextKappaEx(a, k.params);
+   }
+
+   function getNextKappaEx(kS = false, kP = false)
+   {
+    if (typeof kS !== 'object')
     {
      if (cfg.display.kappa.styles.length < 1)
-      return;
-     kStyles = cfg.display.kappa.styles;
+      return false;
+     kS = cfg.display.kappa.styles;
     }
+    let s, p;
+    if (cfg.display.kappa.conga.contagious && conga.length > 0)
+    {
+     s = 'Conga';
+     p = {};
+    }
+    else
+    {
+     let keys = Object.keys(kS);
+     s = keys[(Math.floor(Math.random() * keys.length))];
+     p = kS[s];
+    }
+    if (s === undefined)
+     return false;
+    let iKC = cfg.display.kappa.count;
+    if (cfg.display.kappa.styles.hasOwnProperty(s) && cfg.display.kappa.styles[s].hasOwnProperty('count'))
+     iKC = cfg.display.kappa.styles[s].count;
+    if (p.hasOwnProperty('count'))
+    {
+     let tKC = p.count;
+     if (tKC === -1 && kP !== false && kP.hasOwnProperty('%AMOUNT%') && Math.ceil(kP['%AMOUNT%']) > 0)
+      tKC = Math.ceil(kP['%AMOUNT%']);
+     if (tKC > 0)
+      iKC = tKC;
+    }
+    if ((cfg.emote.max > 0) && (iKC > cfg.emote.max))
+     iKC = cfg.emote.max;
+    return {style: s, prefs: p, count: iKC};
+   }
+
+   async function showKappa(kList, kStyles = false, kParams = false)
+   {
+    let kStyle = getNextKappaEx(kStyles, kParams);
+    if (kStyle === false)
+     return;
+    if (kStyle.style === undefined)
+     return;
     if (!Array.isArray(kList) || kList.length < 1)
      kList = cList;
     if (!Array.isArray(kList) || kList.length < 1)
@@ -3677,11 +4824,8 @@
     document.documentElement.style.setProperty('--emote-height', sS + 'px');
     document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
     document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
-    let style = kStyles[(Math.floor(Math.random() * kStyles.length))];
-    if (style === undefined)
-     return;
-    let waitFor = cfg.display.kappa.count;
-    switch (style)
+    let waitFor = kStyle.count;
+    switch (kStyle.style)
     {
      case 'Pyramid':
      case 'SmallPyramid':
@@ -3691,15 +4835,15 @@
       break;
      case 'Fireworks':
       waitFor = 0;
-      let inner = Math.floor(cfg.display.kappa.count / 8);
+      let inner = Math.floor(kStyle.count / 8);
       let outer = inner;
-      let core = cfg.display.kappa.count - (inner + outer);
+      let core = kStyle.count - (inner + outer);
       waitFor = 1 + inner + outer + core;
       break;
     }
-    if ((cfg.emote.max > 0) && ((eActive + cfg.display.kappa.count) > cfg.emote.max))
+    if ((cfg.emote.max > 0) && ((eActive + kStyle.count) > cfg.emote.max))
     {
-     toKappa.push({list: kList, style: style});
+     toKappa.push({list: kList, style: kStyle.style, prefs: kStyle.prefs, params: kParams});
      if (tKappa !== false)
      {
       window.clearTimeout(tKappa);
@@ -3709,14 +4853,17 @@
      return;
     }
     eActive += waitFor;
-    switch(style)
+    switch(kStyle.style)
     {
      case 'Stampede':
-      await showKappa_Stampede(kList, sW, sH, sS);
-      eActive -= cfg.display.kappa.count;
+      await showKappa_Stampede(kList, sW, sH, sS, kStyle.count);
+      eActive -= kStyle.count;
       break;
      case 'Fireworks':
-      showKappa_Fireworks(kList, sW, sH, sSm);
+      showKappa_Fireworks(kList, sW, sH, sSm, kStyle.count);
+      break;
+     case 'Spiral':
+      showKappa_Spiral(kList, sW, sH, sSm, kStyle.count);
       break;
      case 'Pyramid':
       showKappa_Pyramid(kList, sW, sH);
@@ -3724,18 +4871,53 @@
      case 'SmallPyramid':
       showKappa_SmallPyramid(kList, sW, sH);
       break;
+     case 'Conga':
+      eActive -= waitFor;
+      showKappa_Conga(kList, sW, sH, sS);
+      break;
+     case 'Text':
+      eActive -= waitFor;
+      let sTM = 'HYPE!';
+      if (cfg.display.kappa.styles.hasOwnProperty('Text') && cfg.display.kappa.styles['Text'].hasOwnProperty('message'))
+       sTM = cfg.display.kappa.styles['Text'].message;
+      if (kStyle.prefs.hasOwnProperty('message'))
+       sTM = kStyle.prefs.message[Math.floor(Math.random() * kStyle.prefs.message.length)];
+      let sTT = cfg.emote.time;
+      if (cfg.display.kappa.styles.hasOwnProperty('Text') && cfg.display.kappa.styles['Text'].hasOwnProperty('time'))
+       sTT = cfg.display.kappa.styles['Text'].time;
+      if (kStyle.prefs.hasOwnProperty('time'))
+       sTT = kStyle.prefs.time;
+      if (kParams !== false)
+      {
+       let pK = Object.keys(kParams);
+       for (let i = 0; i < pK.length; i++)
+       {
+        sTM = sTM.replace(pK[i], kParams[pK[i]]);
+       }
+      }
+      showKappa_Text(kList, sW, sH, sTM, sTT);
+      break;
      case 'TheCube':
       eActive -= waitFor;
       let cS = sW;
       if (sW > sH)
        cS = sH;
       let r = Math.floor(Math.random() * kList.length);
-      showKappa_TheCube(kList[r].url, sW, sH, Math.floor(cS * cfg.display.kappa.cube.size));
+      let sCS = cfg.display.kappa.styles['TheCube'].size;
+      if (kStyle.prefs.hasOwnProperty('size'))
+       sCS = kStyle.prefs.size;
+      let sCC = cfg.display.kappa.styles['TheCube'].center;
+      if (kStyle.prefs.hasOwnProperty('center'))
+       sCC = kStyle.prefs.center;
+      let sCR = cfg.display.kappa.styles['TheCube'].rotations;
+      if (kStyle.prefs.hasOwnProperty('rotations'))
+       sCR = kStyle.prefs.rotations;
+      showKappa_TheCube(kList[r].url, sW, sH, Math.floor(cS * sCS), sCC, sCR);
       break;
      case 'Burst':
       let oH = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
       let oV = Math.floor((Math.random() * ((sH - sS) * 0.33)) + (sH - sS) * 0.33);
-      for (let i = 0; i < cfg.display.kappa.count; i++)
+      for (let i = 0; i < kStyle.count; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
@@ -3746,7 +4928,7 @@
      case 'Fountain':
       let fX = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
       let fY = Math.floor(Math.random() * 25) + 15;
-      for (let i = 0; i < cfg.display.kappa.count; i++)
+      for (let i = 0; i < kStyle.count; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
@@ -3755,7 +4937,7 @@
       }
       break;
      case 'Confetti':
-      for (let i = 0; i < cfg.display.kappa.count; i++)
+      for (let i = 0; i < kStyle.count; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
@@ -3764,16 +4946,16 @@
       }
       break;
      default:
-      if (typeof window['showEmote_' + style] === 'undefined')
+      if (typeof window['showEmote_' + kStyle.style] === 'undefined')
        return false;
-      for (let i = 0; i < cfg.display.kappa.count; i++)
+      for (let i = 0; i < kStyle.count; i++)
       {
        let r = Math.floor(Math.random() * kList.length);
        eActive--;
-       if (style === 'StraightLine')
+       if (kStyle.style === 'StraightLine')
         showEmote_StraightLine(kList[r].url, sW, sH, sS, false, false, false);
        else
-        window['showEmote_' + style](kList[r].url, sW, sH, sS, false);
+        window['showEmote_' + kStyle.style](kList[r].url, sW, sH, sS, false);
        await sleep(100);
       }
     }
@@ -4083,10 +5265,16 @@
       window.clearInterval(p);
       p = 0;
      }
-     window.setTimeout(function(){streamlabsWS();}, 5000);
+     if (!dead)
+      window.setTimeout(function(){streamlabsWS();}, 5000);
     };
-    ws.onmessage = function(event)
+    ws.onmessage = async function(event)
     {
+     if (dead)
+     {
+      ws.close();
+      return;
+     }
      let d = event.data;
      if (d.length < 1)
       return;
@@ -4126,26 +5314,51 @@
          continue;
         if (!o[1].message[i].hasOwnProperty('type') || o[1].message[i].type !== 'donation')
          continue;
-        r.push(o[1].message[i].amount);
+        let n = false;
+        if (o[1].message[i].hasOwnProperty('name'))
+         n = o[1].message[i].name;
+        r.push({amt: o[1].message[i].amount, name: n});
        }
-       showStreamlabsTips(r);
+       await showStreamlabsTips(r);
        break;
      }
     };
    }
 
-   function showStreamlabsTips(dRet)
+   async function showStreamlabsTips(dRet)
    {
     for (let i = 0; i < dRet.length; i++)
     {
-     let v = Math.floor(dRet[i] * cfg.streamlabs.curMul);
+     let n = dRet[i].name;
+     let a = dRet[i].amt;
+     let v = Math.floor(a * cfg.streamlabs.curMul);
      let r = findInMaybeRange(cfg.event.tip.streamlabs, v);
      if (r === false)
       continue;
-     if (r === true)
-      showKappa(false);
+     let p = false;
+     if (cfg.event.tip.useProfileImage && n !== false)
+     {
+      let u = false;
+      if (!(/[^A-Za-z0-9_]/).test(n))
+       u = await getUserInfo(n);
+      if (u !== false)
+      {
+       if (u.hasOwnProperty('profile_image_url'))
+        p = [
+         {url: u['profile_image_url']}
+        ];
+      }
+     }
+     let s = Number.parseFloat(a * cfg.streamlabs.dispMul);
+     if (cfg.streamlabs.dispDec > 0)
+      s = s.toFixed(cfg.streamlabs.dispDec);
      else
-      showKappa(false, r);
+      s = Math.floor(s);
+     if (cfg.streamlabs.dispPre !== false)
+      s = cfg.streamlabs.dispPre + s;
+     if (cfg.streamlabs.dispSuf !== false)
+      s += cfg.streamlabs.dispSuf;
+     showKappa(p, r, {'%USER%': n, '%AMOUNT%': s});
     }
    }
 
@@ -4168,10 +5381,16 @@
       window.clearInterval(p);
       p = 0;
      }
-     window.setTimeout(function(){streamelementsWS();}, 5000);
+     if (!dead)
+      window.setTimeout(function(){streamelementsWS();}, 5000);
     };
-    ws.onmessage = function(event)
+    ws.onmessage = async function(event)
     {
+     if (dead)
+     {
+      ws.close();
+      return;
+     }
      let d = event.data;
      if (d.length < 1)
       return;
@@ -4220,24 +5439,47 @@
         return;
        if (!o[1].data.hasOwnProperty('amount'))
         return;
-       showStreamElementsTip(o[1].data.amount);
+       let n = false;
+       if (o[1].data.hasOwnProperty('name'))
+        n = o[1].data.name;
+       await showStreamElementsTip(o[1].data.amount, n);
        break;
      }
     };
    }
 
-   function showStreamElementsTip(dRet)
+   async function showStreamElementsTip(dAmt, dName)
    {
-    let v = Math.floor(dRet * cfg.streamelements.curMul);
+    let v = Math.floor(dAmt * cfg.streamelements.curMul);
     if (v < 1)
      return;
     let r = findInMaybeRange(cfg.event.tip.streamelements, v);
     if (r === false)
      return;
-    if (r === true)
-     showKappa(false);
+    let p = false;
+    if (cfg.event.tip.useProfileImage && dName !== false)
+    {
+     let u = false;
+     if (!(/[^A-Za-z0-9_]/).test(dName))
+      u = await getUserInfo(dName);
+     if (u !== false)
+     {
+      if (u.hasOwnProperty('profile_image_url'))
+       p = [
+        {url: u['profile_image_url']}
+       ];
+     }
+    }
+    let s = Number.parseFloat(dAmt * cfg.streamelements.dispMul);
+    if (cfg.streamelements.dispDec > 0)
+     s = s.toFixed(cfg.streamelements.dispDec);
     else
-     showKappa(false, r);
+     s = Math.floor(s);
+    if (cfg.streamelements.dispPre !== false)
+     s = cfg.streamelements.dispPre + s;
+    if (cfg.streamlabs.dispSuf !== false)
+     s += cfg.streamelements.dispSuf;
+    showKappa(p, r, {'%USER%': dName, '%AMOUNT%': s});
    }
 
    async function detectFollowers(chID)
@@ -4247,10 +5489,10 @@
     window.clearTimeout(tFC);
     tFC = false;
     let fRet = await getFollowerChange(chID);
-    if (fRet !== false && fRet > 0)
+    if (fRet !== false && fRet.length > 0)
     {
-     for (let i = 0; i < fRet; i++)
-      showKappa(false, cfg.event.follow);
+     for (let i = 0; i < fRet.length; i++)
+      showKappa(false, cfg.event.follow, {'%USER%': fRet[i]});
     }
     tFC = window.setTimeout(detectFollowers, rFC, chID);
    }
@@ -4288,15 +5530,17 @@
         resolve(false);
         return;
        }
+       let s = [];
        for (let i = 0; i < j.data.length; i++)
        {
         if (j.data[i].from_id === findU)
         {
-         resolve(i);
+         resolve(s);
          return;
         }
+        s.push(j.data[i].from_name);
        }
-       resolve(0);
+       resolve([]);
       };
       x.send();
      }
@@ -4532,17 +5776,19 @@
      showEmotes();
      return true;
     }
-    if (r === true)
-     showKappa(p);
-    else
-     showKappa(p, r);
+    let u = parseUser(cmd, true);
+    let dn = 'Anonymous';
+    if (u.hasOwnProperty('display-name'))
+     dn = u['display-name'];
+    showKappa(p, r, {'%USER%': dn, '%AMOUNT%': cmd.tags.bits});
     return true;
    }
 
    async function parseLine(cmd)
    {
     let level = -1;
-    if (cmd.params.length > 1)
+    let kNow = new Date().getTime();
+    if (cmd.params.length > 1 && (cfg.display.kappa.cooldown === 0 || (kNow - kLast) > (cfg.display.kappa.cooldown * 1000)))
     {
      let m = cmd.params[1].toLowerCase();
      if (cfg.display.kappa.aliases.includes(m))
@@ -4551,6 +5797,7 @@
        level = await parseLevel(cmd);
       if ((level & cfg.display.kappa.access) !== 0)
       {
+       kLast = kNow;
        showKappa(false);
        return;
       }
@@ -4584,6 +5831,7 @@
        if (cfg.display.extended.use7TV)
         a = a.concat(parse7TV(cmd, true));
        a = handleDuplicates(a);
+       kLast = kNow;
        showKappa(a);
        return;
       }
@@ -4621,20 +5869,18 @@
     let r = findInMaybeRange(cfg.event.raid.raiders, c);
     if (r === false)
      return;
+    let u = parseUser(cmd, true);
+    let dn = 'Anonymous';
+    if (u.hasOwnProperty('display-name'))
+     dn = u['display-name'];
     if (!cfg.event.raid.originEmotes)
     {
-     if (r === true)
-      showKappa(false);
-     else
-      showKappa(false, r);
+     showKappa(false, r, {'%USER%': dn, '%AMOUNT%': c});
      return;
     }
-    let u = cmd.tags['user-id'];
-    let e = await findEmote_channel(u);
-    if (r === true)
-     showKappa(e);
-    else
-     showKappa(e, r);
+    let d = cmd.tags['user-id'];
+    let e = await findEmote_channel(d);
+    showKappa(e, r, {'%USER%': dn, '%AMOUNT%': c});
    }
 
    async function parseSub(cmd)
@@ -4695,6 +5941,13 @@
     let mpmgc = 1;
     if (cmd.tags.hasOwnProperty('msg-param-mass-gift-count'))
      mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
+    let u = parseUser(cmd, true);
+    let dn = 'Anonymous';
+    if (u.hasOwnProperty('display-name'))
+     dn = u['display-name'];
+    let mprdn = 'Anonymous';
+    if (cmd.tags.hasOwnProperty('msg-param-recipient-display-name'))
+     mprdn = cmd.tags['msg-param-recipient-display-name'];
     switch (cmd.tags['msg-id'])
     {
      case 'sub':
@@ -4704,7 +5957,7 @@
        return;
       if (cfg.event.sub[subPlan].first === false)
        return;
-      showKappa(a, cfg.event.sub[subPlan].first);
+      showKappa(a, cfg.event.sub[subPlan].first, {'%USER%': dn});
       break;
      case 'resub':
       if (!cfg.event.sub.hasOwnProperty(subPlan))
@@ -4714,10 +5967,7 @@
       let rs = findInMaybeRange(cfg.event.sub[subPlan].resub, mpcm);
       if (rs === false)
        return;
-      if (rs === true)
-       showKappa(a);
-      else
-       showKappa(a, rs);
+      showKappa(a, rs, {'%USER%': dn, '%AMOUNT%': mpcm});
       break;
      case 'primepaidupgrade':
       if (!cfg.event.sub.hasOwnProperty(subPlan))
@@ -4726,7 +5976,7 @@
        return;
       if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('prime'))
        return;
-      showKappa(a, cfg.event.sub[subPlan].upgrade.prime);
+      showKappa(a, cfg.event.sub[subPlan].upgrade.prime, {'%USER%': dn});
       break;
      case 'giftpaidupgrade':
       if (!cfg.event.sub.hasOwnProperty(subPlan))
@@ -4735,7 +5985,7 @@
        return;
       if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('gift'))
        return;
-      showKappa(a, cfg.event.sub[subPlan].upgrade.gift);
+      showKappa(a, cfg.event.sub[subPlan].upgrade.gift, {'%USER%': dn});
       break;
      case 'subgift':
       if (!cfg.event.sub.hasOwnProperty(subPlan))
@@ -4748,7 +5998,7 @@
         return;
        if (cfg.event.sub[subPlan].gift.first === false)
         return;
-       showKappa(a, cfg.event.sub[subPlan].gift.first);
+       showKappa(a, cfg.event.sub[subPlan].gift.first, {'%SENDER%': dn, '%USER%': mprdn});
        return;
       }
       if (!cfg.event.sub[subPlan].gift.hasOwnProperty('resub'))
@@ -4756,10 +6006,7 @@
       let gpr = findInMaybeRange(cfg.event.sub[subPlan].gift.resub, mpm);
       if (gpr === false)
        return;
-      if (gpr === true)
-       showKappa(a);
-      else
-       showKappa(a, gpr);
+      showKappa(a, gpr, {'%SENDER%': dn, '%USER%': mprdn, '%AMOUNT%': mpm});
       break;
      case 'submysterygift':
       if (!cfg.event.sub.hasOwnProperty(subPlan))
@@ -4775,10 +6022,7 @@
       let gpb = findInMaybeRange(cfg.event.sub[subPlan].gift.bomb, mpmgc);
       if (gpb === false)
        return;
-      if (gpb === true)
-       showKappa(a);
-      else
-       showKappa(a, gpb);
+      showKappa(a, gpb, {'%SENDER%': dn, '%AMOUNT%': mpmgc});
       break;
      default:
       console.log('Unknown Sub Type: ', cmd);
@@ -4790,9 +6034,13 @@
     if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
      return;
     let c = cmd.tags['msg-param-threshold'];
+    let u = parseUser(cmd, true);
+    let dn = 'Anonymous';
+    if (u.hasOwnProperty('display-name'))
+     dn = u['display-name'];
     if (cfg.event.badge.hasOwnProperty(c) && cfg.event.badge[c] !== false)
     {
-     showKappa(false, cfg.event.badge[c]);
+     showKappa(false, cfg.event.badge[c], {'%USER%': dn, '%AMOUNT%': c});
      return;
     }
     let closest = null;
@@ -4812,7 +6060,7 @@
      return;
     if (cfg.event.badge[closest] === false)
      return;
-    showKappa(false, cfg.event.badge[closest]);
+    showKappa(false, cfg.event.badge[closest], {'%USER%': dn, '%AMOUNT%': c});
    }
 
    function irc()
@@ -4821,6 +6069,19 @@
     const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
     ws.onopen = function(event)
     {
+     tIRC = setTimeout(
+      function()
+      {
+       dead = true;
+       if (tIRC !== false)
+       {
+        clearTimeout(tIRC);
+        tIRC = false;
+       }
+       ws.close();
+       blargIAmDead(5);
+      },
+      5000);
      ws.send('PASS oauth:' + cfg.login.oauth);
      ws.send('NICK ' + cfg.channel);
      ws.send('CAP REQ :twitch.tv/commands');
@@ -4829,6 +6090,11 @@
     };
     ws.onclose = function()
     {
+     if (tIRC !== false)
+     {
+      clearTimeout(tIRC);
+      tIRC = false;
+     }
      if (!dead)
       window.setTimeout(irc, 5000);
     };
@@ -4888,6 +6154,11 @@
         channelID = cmd.tags['room-id'];
         if (firstRoomstate)
         {
+         if (tIRC !== false)
+         {
+          clearTimeout(tIRC);
+          tIRC = false;
+         }
          firstRoomstate = false;
          await loadEmote_channel(channelID);
          loadCheer_channel(channelID);
@@ -5183,6 +6454,9 @@
        return;
       }
       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Warning:<br><br>Your Credentials Will Expire Soon<br><br>Please Update Your OAuth Token</div>';
+      break;
+     case 5:
+      document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>The connection to the IRC channel was incomplete.<br><br>Please check your Channel</div>';
       break;
     }
     window.setTimeout(function(){document.body.innerHTML = ''; if (showButton) showLoginButton();}, 15000);
