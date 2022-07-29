@@ -208,6 +208,12 @@
     *             an additional value is possible: -1, which will refer to the AMOUNT value present in the event.
     *             This can be the number of raiders, bits cheered, dollars tipped, subs gifted, or months subscribed.
     *
+    *     command Settings related to triggering a specific kappagen style by chat command.
+    *
+    *      access A bitwise flag representing which users can trigger this kappagen with a command.
+    *
+    *      aliases  An array of style-specific kappa command aliases which can be used to force-trigger this kappagen.
+    *
     *    TheCube  Settings related to The Cube kappagen. These settings will be the default for all instances of
     *             TheCube kappagen.
     *
@@ -5790,6 +5796,64 @@
     if (cmd.params.length > 1 && (cfg.display.kappa.cooldown === 0 || (kNow - kLast) > (cfg.display.kappa.cooldown * 1000)))
     {
      let m = cmd.params[1].toLowerCase();
+     for (const k in cfg.display.kappa.styles)
+     {
+      if (!cfg.display.kappa.styles.hasOwnProperty(k))
+       continue;
+      if (!cfg.display.kappa.styles[k].hasOwnProperty('command'))
+       continue;
+      if (!cfg.display.kappa.styles[k].command.hasOwnProperty('aliases'))
+       continue;
+      if (!cfg.display.kappa.styles[k].command.hasOwnProperty('access'))
+       continue;
+      let kC = {};
+      kC[k] = cfg.display.kappa.styles[k];
+      if (cfg.display.kappa.styles[k].command.aliases.includes(m))
+      {
+       if (level === -1)
+        level = await parseLevel(cmd);
+       if ((level & cfg.display.kappa.styles[k].command.access) !== 0)
+       {
+        kLast = kNow;
+        showKappa(false, kC);
+        return;
+       }
+      }
+      let foundKCmd = false;
+      for (let i = 0; i < cfg.display.kappa.styles[k].command.aliases.length; i++)
+      {
+       if (m.slice(0, cfg.display.kappa.styles[k].command.aliases[i].length + 1) === cfg.display.kappa.styles[k].command.aliases[i] + ' ')
+       {
+        foundKCmd = true;
+        break;
+       }
+      }
+      if (foundKCmd)
+      {
+       if (level === -1)
+        level = await parseLevel(cmd);
+       if ((level & cfg.display.kappa.styles[k].command.access) !== 0)
+       {
+        let a = [];
+        a = a.concat(parseT(cmd, true));
+        if (cfg.display.useEmoji)
+         a = a.concat(await parseEmoji(cmd, cfg.display.useEmoji, true));
+        if (cfg.display.extended.useFFZ)
+         a = a.concat(parseFFZ(cmd, true));
+        if (cfg.display.extended.useBTTV)
+        {
+         a = a.concat(parseBTTV(cmd, true));
+         a = a.concat(parseBTTVU(cmd, true));
+        }
+        if (cfg.display.extended.use7TV)
+         a = a.concat(parse7TV(cmd, true));
+        a = handleDuplicates(a);
+        kLast = kNow;
+        showKappa(a, kC);
+        return;
+       }
+      }
+     }
      if (cfg.display.kappa.aliases.includes(m))
      {
       if (level === -1)
