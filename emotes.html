@@ -216,6 +216,13 @@
     *
     *     redeem  An array of style-specific channel point reward names which can be used to force-trigger this kappagen.
     *
+    *    Conga    Settings related to Conga kappagen. These settings will be the default for all instances of
+    *             Conga kappagen.
+    *
+    *     avoidMiddle  If TRUE, conga lines will only show up on the top or bottom three rows to avoid the middle off
+    *                 the screen.
+    *             If FALSE, conga lines will show up on any row of the screen.
+    *
     *    TheCube  Settings related to The Cube kappagen. These settings will be the default for all instances of
     *             TheCube kappagen.
     *
@@ -253,6 +260,10 @@
     *
     *    time     The number of seconds the Conga kappagen should show up on the screen for.
     *             This value lets you increase or decrease the chances of keeping a "contagious" Conga line going.
+    *
+    *    avoidMiddle  If TRUE, conga lines will only show up on the top or bottom three rows to avoid the middle off
+    *                the screen globally.
+    *             If FALSE, the setting will default to any more specific avoidMiddle Conga settings.
     *
     * emote       Settings related to individual emote display.
     *
@@ -4394,7 +4405,7 @@
      await stampede(b4, false);
    }
 
-   async function showKappa_Conga(kList, sW, sH, sS)
+   async function showKappa_Conga(kList, sW, sH, sS, nM)
    {
     let v = 0;
     let unique = false;
@@ -4402,13 +4413,23 @@
     let seg = Math.floor(bS / 2);
     let sht = Math.floor(sH / seg);
     let longWait = cfg.emote.time * 2;
-    while (conga.length >= sht)
+    let lns = sht;
+    if (nM)
+     lns = 6;
+    while (conga.length >= lns)
     {
      await sleep(250);
     }
     while (!unique)
     {
      v = Math.floor(Math.random() * sht) * seg;
+     if (nM)
+     {
+      v = Math.floor(Math.random() * 6);
+      if (v > 2)
+       v = (sht - 1) - (v - 3);
+      v *= seg;
+     }
      let found = false;
      for (let i = 0; i < conga.length; i++)
      {
@@ -4883,7 +4904,12 @@
       break;
      case 'Conga':
       eActive -= waitFor;
-      showKappa_Conga(kList, sW, sH, sS);
+      let avoidMiddle = false;
+      if (cfg.display.kappa.conga.hasOwnProperty('avoidMiddle') && cfg.display.kappa.conga.avoidMiddle === true)
+       avoidMiddle = true;
+      if (kStyle.prefs.hasOwnProperty('avoidMiddle') && kStyle.prefs.avoidMiddle === true)
+       avoidMiddle = true;
+      showKappa_Conga(kList, sW, sH, sS, avoidMiddle);
       break;
      case 'Text':
       eActive -= waitFor;
