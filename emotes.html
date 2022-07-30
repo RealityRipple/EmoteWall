@@ -1819,6 +1819,7 @@
    var fList = [];     // cache of users in chat and their follow status
    var bList = [];     // list of giftbomb event origin ids (to prevent kappas for each gift in a bomb)
    var rList = {};     // list of triggered channel point redeems to match to PubSub events
+   var uList = {};     // checkURL Cache
    var conga = [];     // CONGA TIME!
    var kLast = 0;      // last kappagen command event (for cooldown)
    var eActive = 0;    // active emote count (effective, not actual)
@@ -1853,14 +1854,25 @@
     let p = new Promise(
      async function(resolve, reject)
      {
+      if (uList.hasOwnProperty(url))
+      {
+       resolve(uList[url]);
+       return;
+      }
       let x = new XMLHttpRequest();
       x.open('HEAD', url);
       x.onreadystatechange = function()
       {
        if (x.status === 200)
+       {
+        uList[url] = true;
         resolve(true);
+       }
        else
+       {
+        uList[url] = false;
         resolve(false);
+       }
       };
       x.send();
      }
@@ -5111,7 +5123,11 @@
       continue;
      }
      for (let i = 0; i < cpList.length; i++)
-      showEmoji(cpList[i]);
+     {
+      found = await checkURL(uri + cpList[i] + '.png');
+      if (found)
+       showEmoji(cpList[i]);
+     }
     }
     return ret;
    }
