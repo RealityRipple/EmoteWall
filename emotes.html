@@ -5702,6 +5702,23 @@
      needF = true;
     else if ((cfg.display.kappa.access & 0x002) === 0x002 && (cfg.display.kappa.access & 0x001) !== 0x001)
      needF = true;
+    else
+    {
+     for (const k in cfg.display.kappa.styles)
+     {
+      if (!cfg.display.kappa.styles.hasOwnProperty(k))
+       continue;
+      if (!cfg.display.kappa.styles[k].hasOwnProperty('command'))
+       continue;
+      if (!cfg.display.kappa.styles[k].command.hasOwnProperty('access'))
+       continue;
+      if ((cfg.display.kappa.styles[k].command.access & 0x002) === 0x002 && (cfg.display.kappa.styles[k].command.access & 0x001) !== 0x001)
+      {
+       needF = true;
+       break;
+      }
+     }
+    }
     if (needF)
     {
      let f = await checkFollower(cmd);
