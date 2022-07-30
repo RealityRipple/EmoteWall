@@ -214,6 +214,8 @@
     *
     *      aliases  An array of style-specific kappa command aliases which can be used to force-trigger this kappagen.
     *
+    *     redeem  An array of style-specific channel point reward names which can be used to force-trigger this kappagen.
+    *
     *    TheCube  Settings related to The Cube kappagen. These settings will be the default for all instances of
     *             TheCube kappagen.
     *
@@ -556,7 +558,7 @@
     channel: 'CHANNEL_NAME',
     login: {
      client: '4umzcpmjkg6ar78b81s7302jlj33t8',
-     oauth: 'OAUTH_ID' //Requires chat:read
+     oauth: 'OAUTH_ID' //Requires chat:read; channel:read:redemptions
     },
     streamlabs: {
      token: 'SOCKET_TOKEN', //Requires socket.token
@@ -1805,6 +1807,7 @@
    var cList = [];     // list of channel-specific emotes, used for kappagens
    var fList = [];     // cache of users in chat and their follow status
    var bList = [];     // list of giftbomb event origin ids (to prevent kappas for each gift in a bomb)
+   var rList = {};     // list of triggered channel point redeems to match to PubSub events
    var conga = [];     // CONGA TIME!
    var kLast = 0;      // last kappagen command event (for cooldown)
    var eActive = 0;    // active emote count (effective, not actual)
@@ -5793,6 +5796,23 @@
    {
     let level = -1;
     let kNow = new Date().getTime();
+    if (cmd.tags.hasOwnProperty('custom-reward-id'))
+    {
+     let lnID = cmd.tags['custom-reward-id'];
+     if (!rList.hasOwnProperty(lnID))
+     {
+      rList[lnID] = {name: false, cmds: [cmd]};
+      return;
+     }
+     rList[lnID].cmds.push(cmd);
+     if (rList[lnID].name === false)
+      return;
+     while (rList[lnID].cmds.length > 0)
+     {
+      await parseRedeem(rList[lnID].name, rList[lnID].cmds.shift());
+     }
+     return;
+    }
     if (cmd.params.length > 1 && (cfg.display.kappa.cooldown === 0 || (kNow - kLast) > (cfg.display.kappa.cooldown * 1000)))
     {
      let m = cmd.params[1].toLowerCase();
@@ -6092,6 +6112,45 @@
     }
    }
 
+   async function parseRedeem(title, cmd)
+   {
+    let kNow = new Date().getTime();
+    for (const k in cfg.display.kappa.styles)
+    {
+     if (!cfg.display.kappa.styles.hasOwnProperty(k))
+      continue;
+     if (!cfg.display.kappa.styles[k].hasOwnProperty('redeem'))
+      continue;
+     if (!cfg.display.kappa.styles[k].redeem.includes(title))
+      continue;
+     let kC = {};
+     kC[k] = cfg.display.kappa.styles[k];
+     if (cmd === false)
+     {
+      kLast = kNow;
+      showKappa(false, kC);
+      return;
+     }
+     let a = [];
+     a = a.concat(parseT(cmd, true));
+     if (cfg.display.useEmoji)
+      a = a.concat(await parseEmoji(cmd, cfg.display.useEmoji, true));
+     if (cfg.display.extended.useFFZ)
+      a = a.concat(parseFFZ(cmd, true));
+     if (cfg.display.extended.useBTTV)
+     {
+      a = a.concat(parseBTTV(cmd, true));
+      a = a.concat(parseBTTVU(cmd, true));
+     }
+     if (cfg.display.extended.use7TV)
+      a = a.concat(parse7TV(cmd, true));
+     a = handleDuplicates(a);
+     kLast = kNow;
+     showKappa(a, kC);
+     return;
+    }
+   }
+
    function parseBadge(cmd)
    {
     if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
@@ -6234,6 +6293,7 @@
          }
          if (cfg.event.follow !== false)
           tFC = window.setTimeout(detectFollowers, tStart, channelID);
+         pubSub();
         }
         break;
        case 'USERNOTICE':
@@ -6266,6 +6326,105 @@
        default:
         console.log('Unhandled IRC Command: ', cmd.command, cmd);
       }
+     }
+    };
+   }
+
+   function pubSub()
+   {
+    const ws = new WebSocket('wss://pubsub-edge.twitch.tv:443');
+    let tmrPing = null;
+    ws.onopen = function(event)
+    {
+     tmrPing = window.setInterval(function(){ws.send('{"type": "PING"}');}, 4 * 60 * 1000);
+     let req = {};
+     req.type = 'LISTEN';
+     req.nonce = 'init';
+     req.data = {};
+     req.data.topics = [];
+     req.data.topics.push('channel-points-channel-v1.' + channelID);
+     req.data.auth_token = cfg.login.oauth;
+     ws.send(JSON.stringify(req));
+    };
+    ws.onclose = function()
+    {
+     if (tmrPing !== null)
+     {
+      window.clearInterval(tmrPing);
+      tmrPing = null;
+     }
+     if (!dead)
+      window.setTimeout(pubSub, 5000);
+    };
+    ws.onmessage = async function(event)
+    {
+     if (dead)
+     {
+      ws.close();
+      return;
+     }
+     let r = JSON.parse(event.data);
+     if (!r.hasOwnProperty('type'))
+      return;
+     switch (r.type)
+     {
+      case 'RESPONSE':
+       if (r.hasOwnProperty('error') && r.error !== '')
+       {
+        ws.close();
+        if (r.error === 'ERR_BADAUTH')
+        {
+         dead = true;
+         blargIAmDead(6);
+         return;
+        }
+        alert('Error Connecting to Twitch PubSub: ' + r.error);
+        return;
+       }
+       break;
+      case 'MESSAGE':
+       if (!r.hasOwnProperty('data'))
+        return;
+       if (!r.data.hasOwnProperty('topic'))
+        return;
+       if (r.data.topic !== 'channel-points-channel-v1.' + channelID)
+        return;
+       if (!r.data.hasOwnProperty('message'))
+        return;
+       let d = JSON.parse(r.data.message);
+       if (!d.hasOwnProperty('type'))
+        return;
+       if (d.type !== 'reward-redeemed')
+        return;
+       if (!d.hasOwnProperty('data'))
+        return;
+       if (!d.data.hasOwnProperty('redemption'))
+        return;
+       if (!d.data.redemption.hasOwnProperty('status') || d.data.redemption.status !== 'FULFILLED')
+        return;
+       if (!d.data.redemption.hasOwnProperty('reward'))
+        return;
+       if (!d.data.redemption.reward.hasOwnProperty('title'))
+        return;
+       let n = d.data.redemption.reward.title;
+       if (!d.data.redemption.hasOwnProperty('user_input'))
+       {
+        await parseRedeem(n, false);
+        return;
+       }
+       let lnID = d.data.redemption.reward.id;
+       if (!rList.hasOwnProperty(lnID))
+       {
+        rList[lnID] = {name: n, cmds: []};
+        return;
+       }
+       if (rList[lnID].name === false)
+        rList[lnID].name = n;
+       while (rList[lnID].cmds.length > 0)
+       {
+        await parseRedeem(n, rList[lnID].cmds.shift());
+       }
+       break;
      }
     };
    }
@@ -6380,7 +6539,7 @@
    function doLogin()
    {
     let o = encodeURIComponent(btoa(window.location));
-    let u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8') + '&redirect_uri=' + encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php') + '&response_type=token&scope=' + encodeURIComponent('chat:read') + '&state=redirto_' + o + '&force_verify=true';
+    let u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8') + '&redirect_uri=' + encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php') + '&response_type=token&scope=' + encodeURIComponent('chat:read channel:read:redemptions') + '&state=redirto_' + o + '&force_verify=true';
     window.location = u;
    }
 
@@ -6520,6 +6679,16 @@
       break;
      case 5:
       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>The connection to the IRC channel was incomplete.<br><br>Please check your Channel</div>';
+      break;
+     case 6:
+      if (useL)
+      {
+       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Point Redeems<br><br>Please Log In Again</div>';
+       showButton = true;
+       showLoginButton();
+      }
+      else
+       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Point Redeems<br><br>Please Check Your Client ID and OAuth Token</div>';
       break;
     }
     window.setTimeout(function(){document.body.innerHTML = ''; if (showButton) showLoginButton();}, 15000);
