@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Homemade Emote Wall (Version 0.5.2 BETA)
+   /* RealityRipple's Home-Made Emote Wall (Version 0.5.3 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -49,7 +49,7 @@
     *             - Copy the OAuth ID value and paste it into "oauth:"
     *             If you ever stop using this emote wall, please log into Twitch and visit
     *             https://www.twitch.tv/settings/connections . Under "Other Connections", click the "Disconnect" button
-    *             next to "RealityRipple's Homemade Emote Wall". If you want to use a different Twitch OAuth generator
+    *             next to "RealityRipple's Home-Made Emote Wall". If you want to use a different Twitch OAuth generator
     *             (or do it yourself), feel free.
     *             If FALSE, the interactive login process will be enabled.
     *
@@ -62,7 +62,7 @@
     *             - Copy the Token value and paste it into "token:"
     *             If you ever stop using this emote wall, please log into Streamlabs and visit
     *             https://streamlabs.com/dashboard#/settings/api-settings . Under "Connected Apps", click the
-    *             "Revoke Access" button next to "RealityRipple's Homemade Emote Wall". If you want to use a different
+    *             "Revoke Access" button next to "RealityRipple's Home-Made Emote Wall". If you want to use a different
     *             Streamlabs OAuth generator (or do it yourself), feel free.
     *
     *  curMul     This value is the currency multiplier. The ranges of Streamlabs tip entries (see below) will
@@ -208,6 +208,21 @@
     *             an additional value is possible: -1, which will refer to the AMOUNT value present in the event.
     *             This can be the number of raiders, bits cheered, dollars tipped, subs gifted, or months subscribed.
     *
+    *     command Settings related to triggering a specific kappagen style by chat command.
+    *
+    *      access A bitwise flag representing which users can trigger this kappagen with a command.
+    *
+    *      aliases  An array of style-specific kappa command aliases which can be used to force-trigger this kappagen.
+    *
+    *     redeem  An array of style-specific channel point reward names which can be used to force-trigger this kappagen.
+    *
+    *    Conga    Settings related to Conga kappagen. These settings will be the default for all instances of
+    *             Conga kappagen.
+    *
+    *     avoidMiddle  If TRUE, conga lines will only show up on the top or bottom three rows to avoid the middle off
+    *                 the screen.
+    *             If FALSE, conga lines will show up on any row of the screen.
+    *
     *    TheCube  Settings related to The Cube kappagen. These settings will be the default for all instances of
     *             TheCube kappagen.
     *
@@ -245,6 +260,10 @@
     *
     *    time     The number of seconds the Conga kappagen should show up on the screen for.
     *             This value lets you increase or decrease the chances of keeping a "contagious" Conga line going.
+    *
+    *    avoidMiddle  If TRUE, conga lines will only show up on the top or bottom three rows to avoid the middle off
+    *                the screen globally.
+    *             If FALSE, the setting will default to any more specific avoidMiddle Conga settings.
     *
     * emote       Settings related to individual emote display.
     *
@@ -520,6 +539,7 @@
     *         from the list, or if more than 100 followers join between one check and another, the system will ignore
     *         the event and assign a new latest follower. Real support for follow events requires an API change:
     *          <https://twitch.uservoice.com/forums/310213/suggestions/41794465>
+    *          <https://twitch.uservoice.com/forums/310213/suggestions/40423873>
     *
     * Cheers: The cheer style will be used for kappagens. If a user cheers 1000 bits in a single 1000 bit emote,
     *         then the kappagen will be made of the 1000-bit cheers. However, if the user cheers 1000 bits using
@@ -540,9 +560,7 @@
     *         It may also work better using a smaller screen resolution (such as 720p on a 1080p screen) and then
     *         stretching the browser source to fit to the screen using the OBS Transform feature.
     *
-    * Sizes:  Emotes that are not square may display differently in different contexts. Usually the height of the
-    *         emote will take precedent, but in cases where the width is strictly limited (such as TheCube), the 
-    *         width will limit the height of the emote to keep things "square".
+    * Sizes:  Emotes that are not square will be shrunk to fit while maintaining the original aspect ratio.
     *
     * Help:   Please contact @realityripple for assistance, bug reports, or questions.
     */
@@ -551,7 +569,7 @@
     channel: 'CHANNEL_NAME',
     login: {
      client: '4umzcpmjkg6ar78b81s7302jlj33t8',
-     oauth: 'OAUTH_ID' //Requires chat:read
+     oauth: 'OAUTH_ID' //Requires chat:read; channel:read:redemptions
     },
     streamlabs: {
      token: 'SOCKET_TOKEN', //Requires socket.token
@@ -1800,6 +1818,8 @@
    var cList = [];     // list of channel-specific emotes, used for kappagens
    var fList = [];     // cache of users in chat and their follow status
    var bList = [];     // list of giftbomb event origin ids (to prevent kappas for each gift in a bomb)
+   var rList = {};     // list of triggered channel point redeems to match to PubSub events
+   var uList = {};     // checkURL Cache
    var conga = [];     // CONGA TIME!
    var kLast = 0;      // last kappagen command event (for cooldown)
    var eActive = 0;    // active emote count (effective, not actual)
@@ -1834,14 +1854,25 @@
     let p = new Promise(
      async function(resolve, reject)
      {
+      if (uList.hasOwnProperty(url))
+      {
+       resolve(uList[url]);
+       return;
+      }
       let x = new XMLHttpRequest();
       x.open('HEAD', url);
       x.onreadystatechange = function()
       {
        if (x.status === 200)
+       {
+        uList[url] = true;
         resolve(true);
+       }
        else
+       {
+        uList[url] = false;
         resolve(false);
+       }
       };
       x.send();
      }
@@ -4386,7 +4417,7 @@
      await stampede(b4, false);
    }
 
-   async function showKappa_Conga(kList, sW, sH, sS)
+   async function showKappa_Conga(kList, sW, sH, sS, nM)
    {
     let v = 0;
     let unique = false;
@@ -4394,13 +4425,23 @@
     let seg = Math.floor(bS / 2);
     let sht = Math.floor(sH / seg);
     let longWait = cfg.emote.time * 2;
-    while (conga.length >= sht)
+    let lns = sht;
+    if (nM)
+     lns = 6;
+    while (conga.length >= lns)
     {
      await sleep(250);
     }
     while (!unique)
     {
      v = Math.floor(Math.random() * sht) * seg;
+     if (nM)
+     {
+      v = Math.floor(Math.random() * 6);
+      if (v > 2)
+       v = (sht - 1) - (v - 3);
+      v *= seg;
+     }
      let found = false;
      for (let i = 0; i < conga.length; i++)
      {
@@ -4757,21 +4798,23 @@
      kS = cfg.display.kappa.styles;
     }
     let s, p;
+    let keys = Object.keys(kS);
     if (cfg.display.kappa.conga.contagious && conga.length > 0)
     {
      s = 'Conga';
      p = {};
+     if (keys.includes('Conga'))
+      p = kS['Conga'];
     }
     else
     {
-     let keys = Object.keys(kS);
      s = keys[(Math.floor(Math.random() * keys.length))];
      p = kS[s];
     }
     if (s === undefined)
      return false;
     let iKC = cfg.display.kappa.count;
-    if (cfg.display.kappa.styles.hasOwnProperty(s) && cfg.display.kappa.styles[s].hasOwnProperty('count'))
+    if (cfg.display.kappa.styles.hasOwnProperty(s) && cfg.display.kappa.styles[s].hasOwnProperty('count') && cfg.display.kappa.styles[s].count > 0)
      iKC = cfg.display.kappa.styles[s].count;
     if (p.hasOwnProperty('count'))
     {
@@ -4873,7 +4916,12 @@
       break;
      case 'Conga':
       eActive -= waitFor;
-      showKappa_Conga(kList, sW, sH, sS);
+      let avoidMiddle = false;
+      if (cfg.display.kappa.conga.hasOwnProperty('avoidMiddle') && cfg.display.kappa.conga.avoidMiddle === true)
+       avoidMiddle = true;
+      if (kStyle.prefs.hasOwnProperty('avoidMiddle') && kStyle.prefs.avoidMiddle === true)
+       avoidMiddle = true;
+      showKappa_Conga(kList, sW, sH, sS, avoidMiddle);
       break;
      case 'Text':
       eActive -= waitFor;
@@ -5075,7 +5123,11 @@
       continue;
      }
      for (let i = 0; i < cpList.length; i++)
-      showEmoji(cpList[i]);
+     {
+      found = await checkURL(uri + cpList[i] + '.png');
+      if (found)
+       showEmoji(cpList[i]);
+     }
     }
     return ret;
    }
@@ -5650,6 +5702,23 @@
      needF = true;
     else if ((cfg.display.kappa.access & 0x002) === 0x002 && (cfg.display.kappa.access & 0x001) !== 0x001)
      needF = true;
+    else
+    {
+     for (const k in cfg.display.kappa.styles)
+     {
+      if (!cfg.display.kappa.styles.hasOwnProperty(k))
+       continue;
+      if (!cfg.display.kappa.styles[k].hasOwnProperty('command'))
+       continue;
+      if (!cfg.display.kappa.styles[k].command.hasOwnProperty('access'))
+       continue;
+      if ((cfg.display.kappa.styles[k].command.access & 0x002) === 0x002 && (cfg.display.kappa.styles[k].command.access & 0x001) !== 0x001)
+      {
+       needF = true;
+       break;
+      }
+     }
+    }
     if (needF)
     {
      let f = await checkFollower(cmd);
@@ -5788,9 +5857,85 @@
    {
     let level = -1;
     let kNow = new Date().getTime();
+    if (cmd.tags.hasOwnProperty('custom-reward-id'))
+    {
+     let lnID = cmd.tags['custom-reward-id'];
+     if (!rList.hasOwnProperty(lnID))
+     {
+      rList[lnID] = {name: false, cmds: [cmd]};
+      return;
+     }
+     rList[lnID].cmds.push(cmd);
+     if (rList[lnID].name === false)
+      return;
+     while (rList[lnID].cmds.length > 0)
+     {
+      await parseRedeem(rList[lnID].name, rList[lnID].cmds.shift());
+     }
+     return;
+    }
     if (cmd.params.length > 1 && (cfg.display.kappa.cooldown === 0 || (kNow - kLast) > (cfg.display.kappa.cooldown * 1000)))
     {
      let m = cmd.params[1].toLowerCase();
+     for (const k in cfg.display.kappa.styles)
+     {
+      if (!cfg.display.kappa.styles.hasOwnProperty(k))
+       continue;
+      if (!cfg.display.kappa.styles[k].hasOwnProperty('command'))
+       continue;
+      if (!cfg.display.kappa.styles[k].command.hasOwnProperty('aliases'))
+       continue;
+      let kAccess = cfg.display.kappa.access;
+      if (cfg.display.kappa.styles[k].command.hasOwnProperty('access'))
+       kAccess = cfg.display.kappa.styles[k].command.access;
+      let kC = {};
+      kC[k] = cfg.display.kappa.styles[k];
+      if (cfg.display.kappa.styles[k].command.aliases.includes(m))
+      {
+       if (level === -1)
+        level = await parseLevel(cmd);
+       if ((level & kAccess) !== 0)
+       {
+        kLast = kNow;
+        showKappa(false, kC);
+        return;
+       }
+      }
+      let foundKCmd = false;
+      for (let i = 0; i < cfg.display.kappa.styles[k].command.aliases.length; i++)
+      {
+       if (m.slice(0, cfg.display.kappa.styles[k].command.aliases[i].length + 1) === cfg.display.kappa.styles[k].command.aliases[i] + ' ')
+       {
+        foundKCmd = true;
+        break;
+       }
+      }
+      if (foundKCmd)
+      {
+       if (level === -1)
+        level = await parseLevel(cmd);
+       if ((level & kAccess) !== 0)
+       {
+        let a = [];
+        a = a.concat(parseT(cmd, true));
+        if (cfg.display.useEmoji)
+         a = a.concat(await parseEmoji(cmd, cfg.display.useEmoji, true));
+        if (cfg.display.extended.useFFZ)
+         a = a.concat(parseFFZ(cmd, true));
+        if (cfg.display.extended.useBTTV)
+        {
+         a = a.concat(parseBTTV(cmd, true));
+         a = a.concat(parseBTTVU(cmd, true));
+        }
+        if (cfg.display.extended.use7TV)
+         a = a.concat(parse7TV(cmd, true));
+        a = handleDuplicates(a);
+        kLast = kNow;
+        showKappa(a, kC);
+        return;
+       }
+      }
+     }
      if (cfg.display.kappa.aliases.includes(m))
      {
       if (level === -1)
@@ -6029,6 +6174,45 @@
     }
    }
 
+   async function parseRedeem(title, cmd)
+   {
+    let kNow = new Date().getTime();
+    for (const k in cfg.display.kappa.styles)
+    {
+     if (!cfg.display.kappa.styles.hasOwnProperty(k))
+      continue;
+     if (!cfg.display.kappa.styles[k].hasOwnProperty('redeem'))
+      continue;
+     if (!cfg.display.kappa.styles[k].redeem.includes(title))
+      continue;
+     let kC = {};
+     kC[k] = cfg.display.kappa.styles[k];
+     if (cmd === false)
+     {
+      kLast = kNow;
+      showKappa(false, kC);
+      return;
+     }
+     let a = [];
+     a = a.concat(parseT(cmd, true));
+     if (cfg.display.useEmoji)
+      a = a.concat(await parseEmoji(cmd, cfg.display.useEmoji, true));
+     if (cfg.display.extended.useFFZ)
+      a = a.concat(parseFFZ(cmd, true));
+     if (cfg.display.extended.useBTTV)
+     {
+      a = a.concat(parseBTTV(cmd, true));
+      a = a.concat(parseBTTVU(cmd, true));
+     }
+     if (cfg.display.extended.use7TV)
+      a = a.concat(parse7TV(cmd, true));
+     a = handleDuplicates(a);
+     kLast = kNow;
+     showKappa(a, kC);
+     return;
+    }
+   }
+
    function parseBadge(cmd)
    {
     if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
@@ -6171,6 +6355,7 @@
          }
          if (cfg.event.follow !== false)
           tFC = window.setTimeout(detectFollowers, tStart, channelID);
+         pubSub();
         }
         break;
        case 'USERNOTICE':
@@ -6203,6 +6388,105 @@
        default:
         console.log('Unhandled IRC Command: ', cmd.command, cmd);
       }
+     }
+    };
+   }
+
+   function pubSub()
+   {
+    const ws = new WebSocket('wss://pubsub-edge.twitch.tv:443');
+    let tmrPing = null;
+    ws.onopen = function(event)
+    {
+     tmrPing = window.setInterval(function(){ws.send('{"type": "PING"}');}, 4 * 60 * 1000);
+     let req = {};
+     req.type = 'LISTEN';
+     req.nonce = 'init';
+     req.data = {};
+     req.data.topics = [];
+     req.data.topics.push('channel-points-channel-v1.' + channelID);
+     req.data.auth_token = cfg.login.oauth;
+     ws.send(JSON.stringify(req));
+    };
+    ws.onclose = function()
+    {
+     if (tmrPing !== null)
+     {
+      window.clearInterval(tmrPing);
+      tmrPing = null;
+     }
+     if (!dead)
+      window.setTimeout(pubSub, 5000);
+    };
+    ws.onmessage = async function(event)
+    {
+     if (dead)
+     {
+      ws.close();
+      return;
+     }
+     let r = JSON.parse(event.data);
+     if (!r.hasOwnProperty('type'))
+      return;
+     switch (r.type)
+     {
+      case 'RESPONSE':
+       if (r.hasOwnProperty('error') && r.error !== '')
+       {
+        ws.close();
+        if (r.error === 'ERR_BADAUTH')
+        {
+         dead = true;
+         blargIAmDead(6);
+         return;
+        }
+        alert('Error Connecting to Twitch PubSub: ' + r.error);
+        return;
+       }
+       break;
+      case 'MESSAGE':
+       if (!r.hasOwnProperty('data'))
+        return;
+       if (!r.data.hasOwnProperty('topic'))
+        return;
+       if (r.data.topic !== 'channel-points-channel-v1.' + channelID)
+        return;
+       if (!r.data.hasOwnProperty('message'))
+        return;
+       let d = JSON.parse(r.data.message);
+       if (!d.hasOwnProperty('type'))
+        return;
+       if (d.type !== 'reward-redeemed')
+        return;
+       if (!d.hasOwnProperty('data'))
+        return;
+       if (!d.data.hasOwnProperty('redemption'))
+        return;
+       if (!d.data.redemption.hasOwnProperty('status') || d.data.redemption.status !== 'FULFILLED')
+        return;
+       if (!d.data.redemption.hasOwnProperty('reward'))
+        return;
+       if (!d.data.redemption.reward.hasOwnProperty('title'))
+        return;
+       let n = d.data.redemption.reward.title;
+       if (!d.data.redemption.hasOwnProperty('user_input'))
+       {
+        await parseRedeem(n, false);
+        return;
+       }
+       let lnID = d.data.redemption.reward.id;
+       if (!rList.hasOwnProperty(lnID))
+       {
+        rList[lnID] = {name: n, cmds: []};
+        return;
+       }
+       if (rList[lnID].name === false)
+        rList[lnID].name = n;
+       while (rList[lnID].cmds.length > 0)
+       {
+        await parseRedeem(n, rList[lnID].cmds.shift());
+       }
+       break;
      }
     };
    }
@@ -6317,7 +6601,7 @@
    function doLogin()
    {
     let o = encodeURIComponent(btoa(window.location));
-    let u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8') + '&redirect_uri=' + encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php') + '&response_type=token&scope=' + encodeURIComponent('chat:read') + '&state=redirto_' + o + '&force_verify=true';
+    let u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8') + '&redirect_uri=' + encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php') + '&response_type=token&scope=' + encodeURIComponent('chat:read channel:read:redemptions') + '&state=redirto_' + o + '&force_verify=true';
     window.location = u;
    }
 
@@ -6457,6 +6741,16 @@
       break;
      case 5:
       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>The connection to the IRC channel was incomplete.<br><br>Please check your Channel</div>';
+      break;
+     case 6:
+      if (useL)
+      {
+       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Point Redeems<br><br>Please Log In Again</div>';
+       showButton = true;
+       showLoginButton();
+      }
+      else
+       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Point Redeems<br><br>Please Check Your Client ID and OAuth Token</div>';
       break;
     }
     window.setTimeout(function(){document.body.innerHTML = ''; if (showButton) showLoginButton();}, 15000);
