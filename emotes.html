@@ -5868,15 +5868,16 @@
        continue;
       if (!cfg.display.kappa.styles[k].command.hasOwnProperty('aliases'))
        continue;
-      if (!cfg.display.kappa.styles[k].command.hasOwnProperty('access'))
-       continue;
+      let kAccess = cfg.display.kappa.access;
+      if (cfg.display.kappa.styles[k].command.hasOwnProperty('access'))
+       kAccess = cfg.display.kappa.styles[k].command.access;
       let kC = {};
       kC[k] = cfg.display.kappa.styles[k];
       if (cfg.display.kappa.styles[k].command.aliases.includes(m))
       {
        if (level === -1)
         level = await parseLevel(cmd);
-       if ((level & cfg.display.kappa.styles[k].command.access) !== 0)
+       if ((level & kAccess) !== 0)
        {
         kLast = kNow;
         showKappa(false, kC);
@@ -5896,7 +5897,7 @@
       {
        if (level === -1)
         level = await parseLevel(cmd);
-       if ((level & cfg.display.kappa.styles[k].command.access) !== 0)
+       if ((level & kAccess) !== 0)
        {
         let a = [];
         a = a.concat(parseT(cmd, true));
