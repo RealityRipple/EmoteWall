@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Home-Made Emote Wall (Version 0.5.3 BETA)
+   /* RealityRipple's Home-Made Emote Wall (Version 0.5.4 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -884,9 +884,9 @@
     ],
     'k': [
      [0, 1, 1, 1, 1, 1, 1, 1, 0],
-     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 0, 1, 0, 0, 0, 0, 0],
      [0, 0, 1, 0, 1, 0, 0, 0, 0],
-     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+     [0, 1, 0, 0, 0, 1, 0, 0, 0],
     ],
     'L': [
      [0, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -1779,6 +1779,7 @@
      max-height: calc(var(--emote-height-l) * 0.1);
     }
    }
+
    button
    {
     background-color: #7D5BBE;
@@ -3881,8 +3882,13 @@
     window.setTimeout(
      function()
      {
-      let rX = Math.floor(180 - (Math.random() * 360)) * (cfg.emote.cube.rotations * 2);
-      let rY = Math.floor(180 - (Math.random() * 360)) * (cfg.emote.cube.rotations * 2);
+      let rX = 0;
+      let rY = 0;
+      while ((Math.abs(rX) + Math.abs(rY)) < 45)
+      {
+       rX = (360 - (Math.random() * 720)) * cfg.emote.cube.rotations;
+       rY = (360 - (Math.random() * 720)) * cfg.emote.cube.rotations;
+      }
       cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
       scene.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
      },
@@ -3999,8 +4005,13 @@
     window.setTimeout(
      function()
      {
-      let rX = Math.floor(180 - (Math.random() * 360)) * (iR * 2);
-      let rY = Math.floor(180 - (Math.random() * 360)) * (iR * 2);
+      let rX = 0;
+      let rY = 0;
+      while ((Math.abs(rX) + Math.abs(rY)) < 45)
+      {
+       rX = (360 - (Math.random() * 720)) * iR;
+       rY = (360 - (Math.random() * 720)) * iR;
+      }
       cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
      },
      tStart
@@ -4221,11 +4232,12 @@
     let ct = 0;
     for (let i = 0; i < pyramidDist.length; i++)
      ct += pyramidDist[i];
-    let eT = cfg.emote.time * 1000;
+    let eT = (cfg.emote.time * 1000) * 0.8;
     let tPerB = Math.floor(eT / ct);
-    if (tPerB < 24)
-     tPerB = 24;
+    if (tPerB < 50)
+     tPerB = 50;
     eT = tPerB * ct;
+    let dT = (cfg.emote.time * 1000) * 0.2;
     function block(url, x, t)
     {
      let img = document.createElement('img');
@@ -4250,7 +4262,7 @@
        img.style.transitionTime = '500ms';
        gcEmote(img, false, true, 500);
       },
-      Math.floor(eT + (cfg.emote.time * 1000) + (t / 10))
+      Math.floor(eT + dT + (t / 10))
      );
      window.setTimeout(
       function()
@@ -4284,11 +4296,12 @@
     let ct = 0;
     for (let i = 0; i < pyramidDist.length; i++)
      ct += pyramidDist[i];
-    let eT = cfg.emote.time * 1000;
+    let eT = (cfg.emote.time * 1000) * 0.8;
     let tPerB = Math.floor(eT / ct);
-    if (tPerB < 24)
-     tPerB = 24;
+    if (tPerB < 75)
+     tPerB = 75;
     eT = tPerB * ct;
+    let dT = (cfg.emote.time * 1000) * 0.2;
     function block(url, oX, x, t)
     {
      let img = document.createElement('img');
@@ -4313,7 +4326,7 @@
        img.style.transitionTime = '500ms';
        gcEmote(img, false, true, 500);
       },
-      Math.floor(eT + (cfg.emote.time * 1000) + (t / 10))
+      Math.floor(eT + dT + (t / 10))
      );
      window.setTimeout(
       function()
@@ -4740,6 +4753,21 @@
     }
    }
 
+   function canShowKappa(k)
+   {
+    if (cfg.emote.max < 1)
+     return true;
+    if (eActive < 1)
+     return true;
+    let tC = cfg.display.kappa.count;
+    if (k !== false)
+     tC = getKappaCountEstimate(k);
+    let cM = cfg.emote.max;
+    if (tC > cM)
+     cM = tC;
+    return (eActive + tC < cM);
+   }
+
    function showKappas()
    {
     if (tKappa !== false)
@@ -4747,32 +4775,29 @@
      window.clearTimeout(tKappa);
      tKappa = false;
     }
-    let kC = cfg.display.kappa.count;
-    if (toKappa.length > 0)
-    {
-     let n = getNextKappa(toKappa[0]);
-     if (n !== false)
-      kC = n.count;
-    }
-    if (cfg.emote.max > 0 && eActive + kC > cfg.emote.max)
+    if (toKappa.length < 1)
+     return;
+    let nK = getNextKappa(toKappa[0]);
+    if (nK === false)
+     return;
+    if (!canShowKappa(nK))
     {
      tKappa = window.setTimeout(showKappas, 500);
      return;
     }
     let e = null;
-    while ((e =  toKappa.shift()) !== undefined)
+    while ((e = toKappa.shift()) !== undefined)
     {
-     let a = [];
+     nK = false;
+     let a = {};
      a[e.style] = e.prefs;
      showKappa(e.list, a, e.params);
-     let tC = cfg.display.kappa.count;
-     if (toKappa.length > 0)
-     {
-      let t = getNextKappa(toKappa[0]);
-      if (t !== false)
-       tC = t.count;
-     }
-     if (cfg.emote.max > 0 && eActive + tC > cfg.emote.max)
+     if (toKappa.length < 1)
+      return;
+     nK = getNextKappa(toKappa[0]);
+     if (nK === false)
+      return;
+     if (!canShowKappa(nK))
      {
       if (cfg.emote.queue > 0 && toKappa.length > cfg.emote.queue)
        toKappa.splice(0, toKappa.length - cfg.emote.queue);
@@ -4816,6 +4841,8 @@
     let iKC = cfg.display.kappa.count;
     if (cfg.display.kappa.styles.hasOwnProperty(s) && cfg.display.kappa.styles[s].hasOwnProperty('count') && cfg.display.kappa.styles[s].count > 0)
      iKC = cfg.display.kappa.styles[s].count;
+    if (p === undefined)
+     p = {};
     if (p.hasOwnProperty('count'))
     {
      let tKC = p.count;
@@ -4827,6 +4854,39 @@
     if ((cfg.emote.max > 0) && (iKC > cfg.emote.max))
      iKC = cfg.emote.max;
     return {style: s, prefs: p, count: iKC};
+   }
+
+   function getKappaCountEstimate(k)
+   {
+    switch (k.style)
+    {
+     case 'Pyramid':
+     case 'SmallPyramid':
+      let c = 0;
+      for (let i = 0; i < pyramidDist.length; i++)
+       c += pyramidDist[i];
+      return c;
+     case 'Fireworks':
+      let inner = Math.floor(k.count / 8);
+      let outer = inner;
+      let core = k.count - (inner + outer);
+      return 1 + inner + core + outer;
+     case 'Conga':
+      let sW = window.innerWidth;
+      let sH = window.innerHeight;
+      let sS = cfg.emote.size.max;
+      if (sW < sH)
+       sS = Math.floor(sW * cfg.emote.size.ratio.normal);
+      else
+       sS = Math.floor(sH * cfg.emote.size.ratio.normal);
+      if (sS > cfg.emote.size.max)
+       sS = cfg.emote.size.max;
+      if (sS < cfg.emote.size.min)
+       sS = cfg.emote.size.min;
+      let bS = Math.ceil(sS * (5/3));
+      return Math.floor(sW / bS);
+    }
+    return k.count;
    }
 
    async function showKappa(kList, kStyles = false, kParams = false)
@@ -4867,24 +4927,8 @@
     document.documentElement.style.setProperty('--emote-height', sS + 'px');
     document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
     document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
-    let waitFor = kStyle.count;
-    switch (kStyle.style)
-    {
-     case 'Pyramid':
-     case 'SmallPyramid':
-      waitFor = 0;
-      for (let i = 0; i < pyramidDist.length; i++)
-       waitFor += pyramidDist[i];
-      break;
-     case 'Fireworks':
-      waitFor = 0;
-      let inner = Math.floor(kStyle.count / 8);
-      let outer = inner;
-      let core = kStyle.count - (inner + outer);
-      waitFor = 1 + inner + outer + core;
-      break;
-    }
-    if ((cfg.emote.max > 0) && ((eActive + kStyle.count) > cfg.emote.max))
+    let waitFor = getKappaCountEstimate(kStyle);
+    if (!canShowKappa(kStyle))
     {
      toKappa.push({list: kList, style: kStyle.style, prefs: kStyle.prefs, params: kParams});
      if (tKappa !== false)
@@ -4927,7 +4971,7 @@
       eActive -= waitFor;
       let sTM = 'HYPE!';
       if (cfg.display.kappa.styles.hasOwnProperty('Text') && cfg.display.kappa.styles['Text'].hasOwnProperty('message'))
-       sTM = cfg.display.kappa.styles['Text'].message;
+       sTM = cfg.display.kappa.styles['Text'].message[Math.floor(Math.random() * cfg.display.kappa.styles['Text'].message.length)];
       if (kStyle.prefs.hasOwnProperty('message'))
        sTM = kStyle.prefs.message[Math.floor(Math.random() * kStyle.prefs.message.length)];
       let sTT = cfg.emote.time;
@@ -6313,6 +6357,7 @@
        case 'CLEARCHAT':
        case 'CLEARMSG':
        case 'USERSTATE':
+       case 'GLOBALUSERSTATE':
         break;
        case 'PING':
         ws.send('PONG ' + cmd.params[0]);
