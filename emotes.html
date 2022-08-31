@@ -599,6 +599,7 @@
       'Drop',         // Get stuck at the top and tumble down (no fade/zoom in, only out)
       'Crazy',        // Bounce off the walls [Layout Shifts - Requires offset-anchor / offset-position directives]
       'Confetti',     // Fall like confetti                   (no zoom, no fade in, only fade out)
+      'Throw',        // Toss at the middle and tumble down (no fade/zoom in, only out)
       'TheCube',      // Rotate a 3D cube of an emote         (no zoom, only fade)
      ],
      access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002 | 0x001,
@@ -3652,6 +3653,108 @@
       img.style.transform = 'translateX(' + hD + 'px)';
      },
      tStart
+    );
+   }
+
+   function showEmote_Throw(url, sW, sH, sS, canV = true)
+   {
+    let img = document.createElement('img');
+    img.setAttribute('class', 'emote');
+    img.setAttribute('src', url);
+    img.setAttribute('alt', '');
+    let variationSize = 1;
+    if (canV && cfg.emote.size.variation !== false)
+    {
+     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     if (variationSize !== 0 && variationSize !== 2)
+      variationSize = 1;
+    }
+    if (variationSize === 0)
+     sS = Math.ceil(sS * 0.5);
+    else if (variationSize === 2)
+     sS = sS * 2;
+    let h = (Math.random() * 2 < 1) ? (- 1 * sS) : sW;
+    let v = Math.floor((Math.random() * sH + sS) - sS);
+    let hD = Math.floor((Math.random() * ((sW - sS) * 0.4)) + (sW - sS) * 0.3);
+    let vD = Math.floor((Math.random() * ((sH - sS) * 0.4)) + (sH - sS) * 0.3);
+    let t1 = cfg.emote.time * 140;
+    let t2 = cfg.emote.time * 200;
+    let t3 = cfg.emote.time * 800;
+
+    let s = 'height: ' + sS + 'px;';
+    s += ' width: ' + sS + 'px;';
+    s += ' transition: transform ' + t1 + 'ms cubic-bezier(0.32, 0, 0.67, 0);';
+    s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+
+    img.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(img);
+    gcEmote(img, false);
+    window.setTimeout(
+     function()
+     {
+      img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+     },
+     tStart
+    );
+
+    window.setTimeout(
+     function()
+     {
+      let s2 = 'height: ' + sS + 'px;';
+      s2 += ' width: ' + sS + 'px;';
+      s2 += ' transition: transform ' + t3 + 'ms cubic-bezier(0.5, 0, 0.75, 0);';
+      let r = '360';
+      if (h > 0)
+       r = '-360';
+      s2 += ' transform: translate(' + hD + 'px, ' + (sH - (Math.random() * sS)) + 'px) rotate(' + r + 'deg);';
+      let aNames = [];
+      let aDelays = [];
+      let aDurs = [];
+      let aTimings = [];
+      let aFills = [];
+      let aIters = [];
+      if (cfg.emote.out.fade)
+      {
+       aNames.push('fadeOut');
+       aDelays.push(Math.floor(t3 - (t3 * (tAnim.fade.out / 100))) + 'ms');
+       aDurs.push(Math.floor(t3 * (tAnim.fade.out / 100)) + 'ms');
+       aTimings.push('ease-out');
+       aFills.push('forwards');
+       aIters.push('1');
+      }
+      else
+      {
+       aNames.push('noFadeOut');
+       aDelays.push((t3 - 50) + 'ms');
+       aDurs.push('50ms');
+       aTimings.push('ease-out');
+       aFills.push('forwards');
+       aIters.push('1');
+      }
+      if (cfg.emote.out.zoom)
+      {
+       if (variationSize === 0)
+        aNames.push('zoomOutS');
+       else if (variationSize === 2)
+        aNames.push('zoomOutL');
+       else
+        aNames.push('zoomOut');
+       aDelays.push(Math.floor(t3 - (t3 * (tAnim.zoom.out / 100))) + 'ms');
+       aDurs.push(Math.floor(t3 * (tAnim.zoom.out / 100)) + 'ms');
+       aTimings.push('linear');
+       aFills.push('forwards');
+       aIters.push('1');
+      }
+      s2 += ' animation-name: ' + aNames.join() + ';';
+      s2 += ' animation-delay: ' + aDelays.join() + ';';
+      s2 += ' animation-duration: ' + aDurs.join() + ';';
+      s2 += ' animation-timing-function: ' + aTimings.join() + ';';
+      s2 += ' animation-fill-mode: ' + aFills.join() + ';';
+      s2 += ' animation-iteration-count: ' + aIters.join() + ';';
+      img.setAttribute('style', s2);
+     },
+     t2
     );
    }
 
