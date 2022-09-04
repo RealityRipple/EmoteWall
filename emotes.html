@@ -5805,6 +5805,10 @@
    async function parseLevel(cmd)
    {
     let level = 0x001;
+    if (cmd.tags.hasOwnProperty('mod') && cmd.tags.mod === '1')
+     level |= 0x400;
+    if (cmd.tags.hasOwnProperty('vip') && cmd.tags.vip === '1')
+     level |= 0x100;
     if (cmd.tags.hasOwnProperty('badges'))
     {
      let badges = cmd.tags.badges.split(',');
