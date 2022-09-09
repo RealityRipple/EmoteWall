@@ -492,12 +492,29 @@
     *   useProfileImage  If TRUE, tips will use the tipper's profile image instead of emotes.
     *                   If FALSE, tips will use your standard kappagen emotes.
     *
-    *   streamlabs  Minimum tip amount through Streamlabs for a kappagen. This value can be a boolean, integer,
+    *   streamlabs  Settings related to Streamlabs payment events.
+    *
+    *    donation  Minimum tip amount through Streamlabs for a kappagen. This value can be a boolean, integer,
     *              or array:
     *              If TRUE, a kappagen will occur on all Streamlabs tips.
     *              If FALSE, no kappagen will occur on tips.
     *              If Integer, the value is the minimum amount required for a tip to trigger a kappagen.
     *               If 0, no kappagen will occur on tips through Streamlabs.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-19', or an open-maximum range such as '20+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *              The values used in these ranges can be controlled with the cfg.streamlabs.curMul setting (see above)
+    *              based on your default currency in Streamlabs.
+    *
+    *    pledge    Minimum pledge amount through Streamlabs for a kappagen. This value can be a boolean, integer,
+    *              or array:
+    *              If TRUE, a kappagen will occur on all Streamlabs pledges.
+    *              If FALSE, no kappagen will occur on pledges.
+    *              If Integer, the value is the minimum amount required for a tip to trigger a kappagen.
+    *               If 0, no kappagen will occur on pledges through Streamlabs.
     *              If Array, each key of the array should be a string containing a range of integers,
     *              such as '1', '2-4' or '5-19', or an open-maximum range such as '20+'.
     *              Each value follows the standard rule:
@@ -734,7 +751,10 @@
      },
      tip: {
       useProfileImage: false,
-      streamlabs: false,
+      streamlabs: {
+       donation: false,
+       pledge: false
+      },
       streamelements: false
      }
     }
@@ -5506,32 +5526,83 @@
         return;
        if (!o[1].hasOwnProperty('message'))
         return;
-       let r = [];
+       let rD = [];
+       let rP = [];
        for (let i = 0; i < o[1].message.length; i++)
        {
         if (!o[1].message[i].hasOwnProperty('amount'))
          continue;
-        if (!o[1].message[i].hasOwnProperty('type') || o[1].message[i].type !== 'donation')
+        if (!o[1].message[i].hasOwnProperty('type'))
          continue;
-        let n = false;
-        if (o[1].message[i].hasOwnProperty('name'))
-         n = o[1].message[i].name;
-        r.push({amt: o[1].message[i].amount, name: n});
+        if (o[1].message[i].type === 'donation')
+        {
+         let n = false;
+         if (o[1].message[i].hasOwnProperty('name'))
+          n = o[1].message[i].name;
+         rD.push({amt: o[1].message[i].amount, name: n});
+        }
+        if (o[1].message[i].type === 'pledge')
+        {
+         let n = false;
+         if (o[1].message[i].hasOwnProperty('name'))
+          n = o[1].message[i].name;
+         rP.push({amt: o[1].message[i].amount, name: n});
+        }
        }
-       await showStreamlabsTips(r);
+       if (rD.length > 0)
+        await showStreamlabsDonations(rD);
+       if (rP.length > 0)
+        await showStreamlabsPledges(rP);
        break;
      }
     };
    }
 
-   async function showStreamlabsTips(dRet)
+   async function showStreamlabsDonations(dRet)
    {
     for (let i = 0; i < dRet.length; i++)
     {
      let n = dRet[i].name;
      let a = dRet[i].amt;
      let v = Math.floor(a * cfg.streamlabs.curMul);
-     let r = findInMaybeRange(cfg.event.tip.streamlabs, v);
+     let r = findInMaybeRange(cfg.event.tip.streamlabs.donation, v);
+     if (r === false)
+      continue;
+     let p = false;
+     if (cfg.event.tip.useProfileImage && n !== false)
+     {
+      let u = false;
+      if (!(/[^A-Za-z0-9_]/).test(n))
+       u = await getUserInfo(n);
+      if (u !== false)
+      {
+       if (u.hasOwnProperty('profile_image_url'))
+        p = [
+         {url: u['profile_image_url']}
+        ];
+      }
+     }
+     let s = Number.parseFloat(a * cfg.streamlabs.dispMul);
+     if (cfg.streamlabs.dispDec > 0)
+      s = s.toFixed(cfg.streamlabs.dispDec);
+     else
+      s = Math.floor(s);
+     if (cfg.streamlabs.dispPre !== false)
+      s = cfg.streamlabs.dispPre + s;
+     if (cfg.streamlabs.dispSuf !== false)
+      s += cfg.streamlabs.dispSuf;
+     showKappa(p, r, {'%USER%': n, '%AMOUNT%': s});
+    }
+   }
+
+   async function showStreamlabsPledges(pRet)
+   {
+    for (let i = 0; i < pRet.length; i++)
+    {
+     let n = pRet[i].name;
+     let a = pRet[i].amt;
+     let v = Math.floor(a * cfg.streamlabs.curMul);
+     let r = findInMaybeRange(cfg.event.tip.streamlabs.pledge, v);
      if (r === false)
       continue;
      let p = false;
