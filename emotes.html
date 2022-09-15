@@ -3,7 +3,7 @@
  <head>
   <meta charset="utf-8" />
   <script>
-   /* RealityRipple's Home-Made Emote Wall (Version 0.5.4 BETA)
+   /* RealityRipple's Home-Made Emote Wall (Version 0.5.5 BETA)
     * ===================================
     *
     * Notes and Caveats
@@ -492,12 +492,29 @@
     *   useProfileImage  If TRUE, tips will use the tipper's profile image instead of emotes.
     *                   If FALSE, tips will use your standard kappagen emotes.
     *
-    *   streamlabs  Minimum tip amount through Streamlabs for a kappagen. This value can be a boolean, integer,
+    *   streamlabs  Settings related to Streamlabs payment events.
+    *
+    *    donation  Minimum tip amount through Streamlabs for a kappagen. This value can be a boolean, integer,
     *              or array:
     *              If TRUE, a kappagen will occur on all Streamlabs tips.
     *              If FALSE, no kappagen will occur on tips.
     *              If Integer, the value is the minimum amount required for a tip to trigger a kappagen.
     *               If 0, no kappagen will occur on tips through Streamlabs.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-19', or an open-maximum range such as '20+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *              The values used in these ranges can be controlled with the cfg.streamlabs.curMul setting (see above)
+    *              based on your default currency in Streamlabs.
+    *
+    *    pledge    Minimum pledge amount through Streamlabs for a kappagen. This value can be a boolean, integer,
+    *              or array:
+    *              If TRUE, a kappagen will occur on all Streamlabs pledges.
+    *              If FALSE, no kappagen will occur on pledges.
+    *              If Integer, the value is the minimum amount required for a tip to trigger a kappagen.
+    *               If 0, no kappagen will occur on pledges through Streamlabs.
     *              If Array, each key of the array should be a string containing a range of integers,
     *              such as '1', '2-4' or '5-19', or an open-maximum range such as '20+'.
     *              Each value follows the standard rule:
@@ -599,6 +616,7 @@
       'Drop',         // Get stuck at the top and tumble down (no fade/zoom in, only out)
       'Crazy',        // Bounce off the walls [Layout Shifts - Requires offset-anchor / offset-position directives]
       'Confetti',     // Fall like confetti                   (no zoom, no fade in, only fade out)
+      'Throw',        // Toss at the middle and tumble down (no fade/zoom in, only out)
       'TheCube',      // Rotate a 3D cube of an emote         (no zoom, only fade)
      ],
      access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002 | 0x001,
@@ -733,7 +751,10 @@
      },
      tip: {
       useProfileImage: false,
-      streamlabs: false,
+      streamlabs: {
+       donation: false,
+       pledge: false
+      },
       streamelements: false
      }
     }
@@ -1268,7 +1289,7 @@
 
    // list of default images to use if your channel has no emotes
    var bareList = [
-    {url: 'https://cdn.betterttv.net/frankerfacez_emote/675080/4'}
+    {url: 'https://cdn.frankerfacez.com/emoticon/675080/4'}
    ];
    //////////////////////////////////////////////////////////////////////////////
    // don't mess with things below this line without knowing what you're doing //
@@ -3655,6 +3676,108 @@
     );
    }
 
+   function showEmote_Throw(url, sW, sH, sS, canV = true)
+   {
+    let img = document.createElement('img');
+    img.setAttribute('class', 'emote');
+    img.setAttribute('src', url);
+    img.setAttribute('alt', '');
+    let variationSize = 1;
+    if (canV && cfg.emote.size.variation !== false)
+    {
+     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     if (variationSize !== 0 && variationSize !== 2)
+      variationSize = 1;
+    }
+    if (variationSize === 0)
+     sS = Math.ceil(sS * 0.5);
+    else if (variationSize === 2)
+     sS = sS * 2;
+    let h = (Math.random() * 2 < 1) ? (- 1 * sS) : sW;
+    let v = Math.floor((Math.random() * sH + sS) - sS);
+    let hD = Math.floor((Math.random() * ((sW - sS) * 0.4)) + (sW - sS) * 0.3);
+    let vD = Math.floor((Math.random() * ((sH - sS) * 0.4)) + (sH - sS) * 0.3);
+    let t1 = cfg.emote.time * 140;
+    let t2 = cfg.emote.time * 200;
+    let t3 = cfg.emote.time * 800;
+
+    let s = 'height: ' + sS + 'px;';
+    s += ' width: ' + sS + 'px;';
+    s += ' transition: transform ' + t1 + 'ms cubic-bezier(0.32, 0, 0.67, 0);';
+    s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+
+    img.setAttribute('style', s);
+    eActive++;
+    document.body.appendChild(img);
+    gcEmote(img, false);
+    window.setTimeout(
+     function()
+     {
+      img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+     },
+     tStart
+    );
+
+    window.setTimeout(
+     function()
+     {
+      let s2 = 'height: ' + sS + 'px;';
+      s2 += ' width: ' + sS + 'px;';
+      s2 += ' transition: transform ' + t3 + 'ms cubic-bezier(0.5, 0, 0.75, 0);';
+      let r = '360';
+      if (h > 0)
+       r = '-360';
+      s2 += ' transform: translate(' + hD + 'px, ' + (sH - (Math.random() * sS)) + 'px) rotate(' + r + 'deg);';
+      let aNames = [];
+      let aDelays = [];
+      let aDurs = [];
+      let aTimings = [];
+      let aFills = [];
+      let aIters = [];
+      if (cfg.emote.out.fade)
+      {
+       aNames.push('fadeOut');
+       aDelays.push(Math.floor(t3 - (t3 * (tAnim.fade.out / 100))) + 'ms');
+       aDurs.push(Math.floor(t3 * (tAnim.fade.out / 100)) + 'ms');
+       aTimings.push('ease-out');
+       aFills.push('forwards');
+       aIters.push('1');
+      }
+      else
+      {
+       aNames.push('noFadeOut');
+       aDelays.push((t3 - 50) + 'ms');
+       aDurs.push('50ms');
+       aTimings.push('ease-out');
+       aFills.push('forwards');
+       aIters.push('1');
+      }
+      if (cfg.emote.out.zoom)
+      {
+       if (variationSize === 0)
+        aNames.push('zoomOutS');
+       else if (variationSize === 2)
+        aNames.push('zoomOutL');
+       else
+        aNames.push('zoomOut');
+       aDelays.push(Math.floor(t3 - (t3 * (tAnim.zoom.out / 100))) + 'ms');
+       aDurs.push(Math.floor(t3 * (tAnim.zoom.out / 100)) + 'ms');
+       aTimings.push('linear');
+       aFills.push('forwards');
+       aIters.push('1');
+      }
+      s2 += ' animation-name: ' + aNames.join() + ';';
+      s2 += ' animation-delay: ' + aDelays.join() + ';';
+      s2 += ' animation-duration: ' + aDurs.join() + ';';
+      s2 += ' animation-timing-function: ' + aTimings.join() + ';';
+      s2 += ' animation-fill-mode: ' + aFills.join() + ';';
+      s2 += ' animation-iteration-count: ' + aIters.join() + ';';
+      img.setAttribute('style', s2);
+     },
+     t2
+    );
+   }
+
    function showEmote_Still(url, sW, sH, sS, canV = true)
    {
     let img = document.createElement('img');
@@ -5403,32 +5526,83 @@
         return;
        if (!o[1].hasOwnProperty('message'))
         return;
-       let r = [];
+       let rD = [];
+       let rP = [];
        for (let i = 0; i < o[1].message.length; i++)
        {
         if (!o[1].message[i].hasOwnProperty('amount'))
          continue;
-        if (!o[1].message[i].hasOwnProperty('type') || o[1].message[i].type !== 'donation')
+        if (!o[1].message[i].hasOwnProperty('type'))
          continue;
-        let n = false;
-        if (o[1].message[i].hasOwnProperty('name'))
-         n = o[1].message[i].name;
-        r.push({amt: o[1].message[i].amount, name: n});
+        if (o[1].message[i].type === 'donation')
+        {
+         let n = false;
+         if (o[1].message[i].hasOwnProperty('name'))
+          n = o[1].message[i].name;
+         rD.push({amt: o[1].message[i].amount, name: n});
+        }
+        if (o[1].message[i].type === 'pledge')
+        {
+         let n = false;
+         if (o[1].message[i].hasOwnProperty('name'))
+          n = o[1].message[i].name;
+         rP.push({amt: o[1].message[i].amount, name: n});
+        }
        }
-       await showStreamlabsTips(r);
+       if (rD.length > 0)
+        await showStreamlabsDonations(rD);
+       if (rP.length > 0)
+        await showStreamlabsPledges(rP);
        break;
      }
     };
    }
 
-   async function showStreamlabsTips(dRet)
+   async function showStreamlabsDonations(dRet)
    {
     for (let i = 0; i < dRet.length; i++)
     {
      let n = dRet[i].name;
      let a = dRet[i].amt;
      let v = Math.floor(a * cfg.streamlabs.curMul);
-     let r = findInMaybeRange(cfg.event.tip.streamlabs, v);
+     let r = findInMaybeRange(cfg.event.tip.streamlabs.donation, v);
+     if (r === false)
+      continue;
+     let p = false;
+     if (cfg.event.tip.useProfileImage && n !== false)
+     {
+      let u = false;
+      if (!(/[^A-Za-z0-9_]/).test(n))
+       u = await getUserInfo(n);
+      if (u !== false)
+      {
+       if (u.hasOwnProperty('profile_image_url'))
+        p = [
+         {url: u['profile_image_url']}
+        ];
+      }
+     }
+     let s = Number.parseFloat(a * cfg.streamlabs.dispMul);
+     if (cfg.streamlabs.dispDec > 0)
+      s = s.toFixed(cfg.streamlabs.dispDec);
+     else
+      s = Math.floor(s);
+     if (cfg.streamlabs.dispPre !== false)
+      s = cfg.streamlabs.dispPre + s;
+     if (cfg.streamlabs.dispSuf !== false)
+      s += cfg.streamlabs.dispSuf;
+     showKappa(p, r, {'%USER%': n, '%AMOUNT%': s});
+    }
+   }
+
+   async function showStreamlabsPledges(pRet)
+   {
+    for (let i = 0; i < pRet.length; i++)
+    {
+     let n = pRet[i].name;
+     let a = pRet[i].amt;
+     let v = Math.floor(a * cfg.streamlabs.curMul);
+     let r = findInMaybeRange(cfg.event.tip.streamlabs.pledge, v);
      if (r === false)
       continue;
      let p = false;
@@ -5573,7 +5747,7 @@
      s = Math.floor(s);
     if (cfg.streamelements.dispPre !== false)
      s = cfg.streamelements.dispPre + s;
-    if (cfg.streamlabs.dispSuf !== false)
+    if (cfg.streamelements.dispSuf !== false)
      s += cfg.streamelements.dispSuf;
     showKappa(p, r, {'%USER%': dName, '%AMOUNT%': s});
    }
@@ -5702,6 +5876,10 @@
    async function parseLevel(cmd)
    {
     let level = 0x001;
+    if (cmd.tags.hasOwnProperty('mod') && cmd.tags.mod === '1')
+     level |= 0x400;
+    if (cmd.tags.hasOwnProperty('vip') && cmd.tags.vip === '1')
+     level |= 0x100;
     if (cmd.tags.hasOwnProperty('badges'))
     {
      let badges = cmd.tags.badges.split(',');
@@ -6077,7 +6255,7 @@
     function parsePlan(c)
     {
      if (!c.tags.hasOwnProperty('msg-param-sub-plan'))
-      return;
+      return false;
      let p = c.tags['msg-param-sub-plan'];
      switch (p)
      {
@@ -6300,6 +6478,8 @@
      tIRC = setTimeout(
       function()
       {
+       if (dead === true)
+        return;
        dead = true;
        if (tIRC !== false)
        {
@@ -6310,10 +6490,9 @@
        blargIAmDead(5);
       },
       5000);
+     ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
      ws.send('PASS oauth:' + cfg.login.oauth);
      ws.send('NICK ' + cfg.channel);
-     ws.send('CAP REQ :twitch.tv/commands');
-     ws.send('CAP REQ :twitch.tv/tags');
      ws.send('JOIN #' + cfg.channel);
     };
     ws.onclose = function()
@@ -6596,10 +6775,30 @@
     if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== 'CHANNEL_NAME' && cfg.hasOwnProperty('login') && cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== 'OAUTH_ID')
      return false;
     useL = true;
-    let lsChannel = window.localStorage.getItem('rrew.channel');
-    let lsClient  = window.localStorage.getItem('rrew.client');
-    let lsOAuth   = window.localStorage.getItem('rrew.oauth');
-    let lsExpires = window.localStorage.getItem('rrew.expires');
+    if (window.localStorage.getItem('rrew.channel') !== null)
+    {
+     window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.channel', window.localStorage.getItem('rrew.channel'));
+     window.localStorage.removeItem('rrew.channel');
+    }
+    if (window.localStorage.getItem('rrew.client') !== null)
+    {
+     window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.client', window.localStorage.getItem('rrew.client'));
+     window.localStorage.removeItem('rrew.client');
+    }
+    if (window.localStorage.getItem('rrew.oauth') !== null)
+    {
+     window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.oauth', window.localStorage.getItem('rrew.oauth'));
+     window.localStorage.removeItem('rrew.oauth');
+    }
+    if (window.localStorage.getItem('rrew.expires') !== null)
+    {
+     window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.expires', window.localStorage.getItem('rrew.expires'));
+     window.localStorage.removeItem('rrew.expires');
+    }
+    let lsChannel = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.channel');
+    let lsClient  = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.client');
+    let lsOAuth   = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.oauth');
+    let lsExpires = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.expires');
     if (lsChannel === null || lsOAuth === null)
     {
      let h = getHashParams();
@@ -6612,10 +6811,10 @@
      lsClient = h.client;
      lsOAuth = h.oauth;
      lsExpires = h.expires;
-     window.localStorage.setItem('rrew.channel', lsChannel);
-     window.localStorage.setItem('rrew.oauth', lsOAuth);
-     window.localStorage.setItem('rrew.client', lsClient);
-     window.localStorage.setItem('rrew.expires', lsExpires);
+     window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.channel', lsChannel);
+     window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.oauth', lsOAuth);
+     window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.client', lsClient);
+     window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.expires', lsExpires);
     }
     cfg.channel = lsChannel;
     cfg.login.oauth = lsOAuth;
@@ -6645,6 +6844,10 @@
 
    function doLogin()
    {
+    window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.channel');
+    window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.oauth');
+    window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.client');
+    window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.expires');
     let o = encodeURIComponent(btoa(window.location));
     let u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8') + '&redirect_uri=' + encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php') + '&response_type=token&scope=' + encodeURIComponent('chat:read channel:read:redemptions') + '&state=redirto_' + o + '&force_verify=true';
     window.location = u;
@@ -6655,10 +6858,10 @@
     document.title = 'Log In to Access Emote Wall';
     if (document.getElementById('cmdLogout'))
      document.body.removeChild(document.getElementById('cmdLogout'));
-    window.localStorage.removeItem('rrew.channel');
-    window.localStorage.removeItem('rrew.oauth');
-    window.localStorage.removeItem('rrew.client');
-    window.localStorage.removeItem('rrew.expires');
+    window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.channel');
+    window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.oauth');
+    window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.client');
+    window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.expires');
     let cmdLogin = document.createElement('button');
     cmdLogin.setAttribute('id', 'cmdLogin');
     cmdLogin.setAttribute('type', 'button');
@@ -6758,7 +6961,7 @@
       {
        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Connect to Twitch<br><br>Please Log In Again</div>';
        showButton = true;
-       showLoginButton();
+       showLogoutButton(true);
       }
       else
        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Connect to Twitch<br><br>Please Update Your OAuth Token</div>';
@@ -6777,12 +6980,13 @@
        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Emotes<br><br>Please Check Your Client ID and OAuth Token</div>';
       break;
      case 4:
+      document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Warning:<br><br>Your Credentials Will Expire Soon<br><br>Please Update Your OAuth Token</div>';
       if (useL)
       {
        showLogoutButton(true);
+       window.setTimeout(function(){document.body.innerHTML = ''; showLogoutButton(true);}, 15000);
        return;
       }
-      document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Warning:<br><br>Your Credentials Will Expire Soon<br><br>Please Update Your OAuth Token</div>';
       break;
      case 5:
       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>The connection to the IRC channel was incomplete.<br><br>Please check your Channel</div>';
@@ -6800,10 +7004,7 @@
     }
     window.setTimeout(function(){document.body.innerHTML = ''; if (showButton) showLoginButton();}, 15000);
    }
-  </script>
- </head>
- <body>
-  <script>
+
    async function startup()
    {
     if (typeof cfg === 'undefined')
@@ -6842,7 +7043,8 @@
     if (cfg.hasOwnProperty('reddit') && cfg.reddit !== false)
      reddit(cfg.reddit);
    }
-   startup();
+
+   window.addEventListener('load', startup);
   </script>
- </body>
+ </head>
 </html>
