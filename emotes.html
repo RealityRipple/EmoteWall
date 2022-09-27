@@ -1871,6 +1871,18 @@
     return new Promise(resolve => setTimeout(resolve, ms));
    }
 
+   function rnd(m)
+   {
+    let r = new Uint32Array(1);
+    window.crypto.getRandomValues(r);
+    let f = r[0] / 4294967295;
+    if (m === undefined)
+     return f;
+    if (m < 1)
+     return f * m;
+    return Math.floor(f * m);
+   }
+
    function checkURL(url)
    {
     let p = new Promise(
@@ -2762,7 +2774,7 @@
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
-     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     variationSize = rnd(cfg.emote.size.variation + 2);
      if (variationSize !== 0 && variationSize !== 2)
       variationSize = 1;
     }
@@ -2770,8 +2782,8 @@
      sS = Math.ceil(sS * 0.5);
     else if (variationSize === 2)
      sS = sS * 2;
-    let h = Math.floor(Math.random() * sW) - (sS / 2);
-    let v = Math.floor((Math.random() * 0.3) * sH) + Math.floor(0.8 * sH);
+    let h = rnd(sW) - (sS / 2);
+    let v = Math.floor(rnd(0.3) * sH) + Math.floor(0.8 * sH);
     let s = 'left: ' + h + 'px;';
     s += ' height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
@@ -2785,13 +2797,13 @@
     let aTimings = [];
     let aFills = [];
     let aIters = [];
-    if (Math.floor(Math.random() * 2) === 1)
+    if (rnd(2) === 1)
      aNames.push('wiggleL');
     else
      aNames.push('wiggleR');
-    let d = Math.floor(Math.random() * 600);
+    let d = rnd(600);
     aDelays.push(d + 'ms');
-    let w = Math.floor(Math.random() * 3) + 2;
+    let w = rnd(3) + 2;
     aDurs.push(w + 's');
     aTimings.push('ease-in-out');
     aFills.push('both');
@@ -2879,7 +2891,7 @@
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
-     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     variationSize = rnd(cfg.emote.size.variation + 2);
      if (variationSize !== 0 && variationSize !== 2)
       variationSize = 1;
     }
@@ -2887,8 +2899,8 @@
      sS = Math.ceil(sS * 0.5);
     else if (variationSize === 2)
      sS = sS * 2;
-    let h = Math.floor(Math.random() * sW) - (sS / 2);
-    let v = Math.floor((Math.random() * 0.2) * sH);
+    let h = rnd(sW) - (sS / 2);
+    let v = Math.floor(rnd(0.2) * sH);
     let s = 'height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
     let aNames = [];
@@ -2964,8 +2976,8 @@
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
     let bX = h;
     let bY = v;
-    let velX = Math.floor((Math.random() * 6) + 3);
-    let velY = Math.floor((Math.random() * 3) + 4);
+    let velX = rnd(6) + 3;
+    let velY = rnd(3) + 4;
     if (bX + (sS / 2) > (sW / 2))
      velX = -1 * velX;
     let c = null;
@@ -3024,7 +3036,7 @@
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
-     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     variationSize = rnd(cfg.emote.size.variation + 2);
      if (variationSize !== 0 && variationSize !== 2)
       variationSize = 1;
     }
@@ -3032,8 +3044,8 @@
      sS = Math.ceil(sS * 0.5);
     else if (variationSize === 2)
      sS = sS * 2;
-    let h = Math.floor(Math.random() * sW) - (sS / 2);
-    let v = Math.floor((Math.random() * 0.4) * sH) + Math.floor(0.3 * sH);
+    let h = rnd(sW) - (sS / 2);
+    let v = Math.floor(rnd(0.4) * sH) + Math.floor(0.3 * sH);
     let s = 'top: ' + v + 'px;';
     s += ' left: ' + h + 'px;';
     s += ' height: ' + sS + 'px;';
@@ -3134,7 +3146,7 @@
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
-     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     variationSize = rnd(cfg.emote.size.variation + 2);
      if (variationSize !== 0 && variationSize !== 2)
       variationSize = 1;
     }
@@ -3142,7 +3154,7 @@
      sS = Math.ceil(sS * 0.5);
     else if (variationSize === 2)
      sS = sS * 2;
-    let h = Math.floor(Math.random() * sW) - (sS / 2);
+    let h = rnd(sW) - (sS / 2);
     let s = 'left: ' + h + 'px;';
     s += ' height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
@@ -3152,7 +3164,7 @@
     let aTimings = [];
     let aFills = [];
     let aIters = [];
-    let goLeft = (Math.floor(Math.random() * 2) === 1);
+    let goLeft = (rnd(2) === 1);
     if (goLeft)
      s += ' transform-origin: top left;';
     else
@@ -3219,7 +3231,7 @@
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
-     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     variationSize = rnd(cfg.emote.size.variation + 2);
      if (variationSize !== 0 && variationSize !== 2)
       variationSize = 1;
     }
@@ -3227,7 +3239,7 @@
      sS = Math.ceil(sS * 0.5);
     else if (variationSize === 2)
      sS = sS * 2;
-    let h = Math.floor(Math.random() * sW) - (sS / 2);
+    let h = rnd(sW) - (sS / 2);
     let s = 'left: ' + h + 'px;';
     s += ' height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
@@ -3238,7 +3250,7 @@
     let aTimings = [];
     let aFills = [];
     let aIters = [];
-    let style = Math.floor(Math.random() * 3);
+    let style = rnd(3);
     switch (style)
     {
      case 0:
@@ -3302,7 +3314,7 @@
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
-     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     variationSize = rnd(cfg.emote.size.variation + 2);
      if (variationSize !== 0 && variationSize !== 2)
       variationSize = 1;
     }
@@ -3310,8 +3322,8 @@
      sS = Math.ceil(sS * 0.5);
     else if (variationSize === 2)
      sS = sS * 2;
-    let h = Math.floor(Math.random() * (sW - sS - 5)) + 10;
-    let v = Math.floor(Math.random() * (sH - sS - 5)) + 10;
+    let h = rnd(sW - sS - 5) + 10;
+    let v = rnd(sH - sS - 5) + 10;
     let s = 'top: ' + v + 'px;';
     s += ' left: ' + h + 'px;';
     s += ' height: ' + sS + 'px;';
@@ -3319,8 +3331,8 @@
     //s += ' transition: all 0.9s linear;';
     let dests = [];
     let traj = {x: 0, y: 0};
-    traj.x = Math.random() * 11 - 5;
-    traj.y = Math.random() * 11 - 5;
+    traj.x = rnd() * 11 - 5;
+    traj.y = rnd() * 11 - 5;
     let pos = {x: h, y: v, t: 0};
     let lastT = 0;
     let bCt = 0;
@@ -3500,7 +3512,7 @@
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
-     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     variationSize = rnd(cfg.emote.size.variation + 2);
      if (variationSize !== 0 && variationSize !== 2)
       variationSize = 1;
     }
@@ -3510,22 +3522,22 @@
      sS = sS * 2;
     let h = x;
     if (h === false)
-     h = Math.floor((Math.random() * sW) - (sS / 2));
+     h = rnd(sW) - (sS / 2);
     let v = y;
     if (v === false)
-     v = Math.floor((Math.random() * sH) - (sS / 2));
+     v = rnd(sH) - (sS / 2);
     let r = sW;
     if (sH < r)
      r = sH;
-    r = r * (Math.random() + 1);
-    let th = (Math.random() * (Math.PI * 2));
+    r = r * (rnd() + 1);
+    let th = (rnd() * (Math.PI * 2));
     let hD = Math.floor(h + r * Math.cos(th));
     let vD = Math.floor(v + r * Math.sin(th));
     if (!x && !y)
     {
      while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > (sW - sS) && hD > (sW - sS)) || (v > (sH - sS) && vD > (sH - sS)))
      {
-      th = (Math.random() * (Math.PI * 2));
+      th = (rnd() * (Math.PI * 2));
       hD = Math.floor(h + r * Math.cos(th));
       vD = Math.floor(v + r * Math.sin(th));
      }
@@ -3624,7 +3636,7 @@
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
-     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     variationSize = rnd(cfg.emote.size.variation + 2);
      if (variationSize !== 0 && variationSize !== 2)
       variationSize = 1;
     }
@@ -3634,17 +3646,17 @@
      sS = sS * 2;
     let h = fX;
     if (h === false)
-     h = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
+     h = Math.floor((rnd() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
     let hD;
-    if (Math.floor(Math.random() * 2) === 0)
-     hD = h - Math.floor(Math.random() * ((sW - sS) * 0.2));
+    if (rnd(2) === 0)
+     hD = h - rnd((sW - sS) * 0.2);
     else
-     hD = h + Math.floor(Math.random() * ((sW - sS) * 0.2));
+     hD = h + rnd((sW - sS) * 0.2);
     let s = 'height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
     s += ' transition: transform ' + aT + 'ms cubic-bezier(0, 0, 0.58, 1);';
     s += ' transform: translateX(' + h + 'px);';
-    s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY / 100 * sH + Math.floor(Math.random() * ((sH - sS) * 0.5))) + ' L 0 ' + (sH + sS) + '");';
+    s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY / 100 * sH + rnd((sH - sS) * 0.5)) + ' L 0 ' + (sH + sS) + '");';
     let aNames = [];
     let aDelays = [];
     let aDurs = [];
@@ -3685,7 +3697,7 @@
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
-     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     variationSize = rnd(cfg.emote.size.variation + 2);
      if (variationSize !== 0 && variationSize !== 2)
       variationSize = 1;
     }
@@ -3693,10 +3705,10 @@
      sS = Math.ceil(sS * 0.5);
     else if (variationSize === 2)
      sS = sS * 2;
-    let h = (Math.random() * 2 < 1) ? (- 1 * sS) : sW;
-    let v = Math.floor((Math.random() * sH + sS) - sS);
-    let hD = Math.floor((Math.random() * ((sW - sS) * 0.4)) + (sW - sS) * 0.3);
-    let vD = Math.floor((Math.random() * ((sH - sS) * 0.4)) + (sH - sS) * 0.3);
+    let h = (rnd(2) === 1) ? (- 1 * sS) : sW;
+    let v = rnd(sH + sS) - sS;
+    let hD = Math.floor((rnd() * ((sW - sS) * 0.4)) + (sW - sS) * 0.3);
+    let vD = Math.floor((rnd() * ((sH - sS) * 0.4)) + (sH - sS) * 0.3);
     let t1 = cfg.emote.time * 140;
     let t2 = cfg.emote.time * 200;
     let t3 = cfg.emote.time * 800;
@@ -3727,7 +3739,7 @@
       let r = '360';
       if (h > 0)
        r = '-360';
-      s2 += ' transform: translate(' + hD + 'px, ' + (sH - (Math.random() * sS)) + 'px) rotate(' + r + 'deg);';
+      s2 += ' transform: translate(' + hD + 'px, ' + (sH - (rnd() * sS)) + 'px) rotate(' + r + 'deg);';
       let aNames = [];
       let aDelays = [];
       let aDurs = [];
@@ -3785,7 +3797,7 @@
     let variationSize = 1;
     if (canV, cfg.emote.size.variation !== false)
     {
-     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     variationSize = rnd(cfg.emote.size.variation + 2);
      if (variationSize !== 0 && variationSize !== 2)
       variationSize = 1;
     }
@@ -3793,8 +3805,8 @@
      sS = Math.ceil(sS * 0.5);
     else if (variationSize === 2)
      sS = sS * 2;
-    let h = Math.floor(Math.random() * sW) - (sS / 2);
-    let v = Math.floor(Math.random() * sH) - (sS / 2);
+    let h = rnd(sW) - (sS / 2);
+    let v = rnd(sH) - (sS / 2);
     img.setAttribute('src', url);
     img.setAttribute('alt', '');
     let s = 'top: ' + v + 'px;';
@@ -3884,7 +3896,7 @@
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
-     variationSize = Math.floor(Math.random() * (cfg.emote.size.variation + 2));
+     variationSize = rnd(cfg.emote.size.variation + 2);
      if (variationSize !== 0 && variationSize !== 2)
       variationSize = 1;
     }
@@ -3936,18 +3948,18 @@
     cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
     cube.appendChild(cubeU);
     scene.appendChild(cube);
-    let h = Math.floor((Math.random() * sW) - (sS / 2));
-    let v = Math.floor((Math.random() * sH) - (sS / 2));
+    let h = rnd(sW) - (sS / 2);
+    let v = rnd(sH) - (sS / 2);
     let r = sW;
     if (sH < r)
      r = sH;
-    r = r * (Math.random() + 1);
-    let th = (Math.random() * (Math.PI * 2));
+    r = r * (rnd() + 1);
+    let th = (rnd() * (Math.PI * 2));
     let hD = Math.floor(h + r * Math.cos(th));
     let vD = Math.floor(v + r * Math.sin(th));
     while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > (sW - sS) && hD > (sW - sS)) || (v > (sH - sS) && vD > (sH - sS)))
     {
-     th = (Math.random() * (Math.PI * 2));
+     th = (rnd() * (Math.PI * 2));
      hD = Math.floor(h + r * Math.cos(th));
      vD = Math.floor(v + r * Math.sin(th));
     }
@@ -4009,8 +4021,8 @@
       let rY = 0;
       while ((Math.abs(rX) + Math.abs(rY)) < 45)
       {
-       rX = (360 - (Math.random() * 720)) * cfg.emote.cube.rotations;
-       rY = (360 - (Math.random() * 720)) * cfg.emote.cube.rotations;
+       rX = (360 - (rnd() * 720)) * cfg.emote.cube.rotations;
+       rY = (360 - (rnd() * 720)) * cfg.emote.cube.rotations;
       }
       cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
       scene.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
@@ -4067,8 +4079,8 @@
     cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
     cube.appendChild(cubeU);
     scene.appendChild(cube);
-    let h = Math.floor(Math.random() * (sW - sS));
-    let v = Math.floor(Math.random() * (sH - sS));
+    let h = rnd(sW - sS);
+    let v = rnd(sH - sS);
     if (bC)
     {
      h = Math.floor((sW / 2) - (sS / 2));
@@ -4132,8 +4144,8 @@
       let rY = 0;
       while ((Math.abs(rX) + Math.abs(rY)) < 45)
       {
-       rX = (360 - (Math.random() * 720)) * iR;
-       rY = (360 - (Math.random() * 720)) * iR;
+       rX = (360 - (rnd() * 720)) * iR;
+       rY = (360 - (rnd() * 720)) * iR;
       }
       cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
      },
@@ -4147,7 +4159,7 @@
     let oX = (sW * 0.5) - (sS * 0.5);
     let oY = sH;
     let cX = oX;
-    switch(Math.floor(Math.random() * 3))
+    switch(rnd(3))
     {
      case 0:
       cX = Math.floor(cX * 0.5);
@@ -4163,7 +4175,7 @@
      simg.setAttribute('class', 'emote');
      simg.setAttribute('src', url);
      simg.setAttribute('alt', '');
-     let th = (Math.random() * (Math.PI * 2));
+     let th = (rnd() * (Math.PI * 2));
      let hD = Math.floor(cX + r * Math.cos(th));
      let vD = Math.floor(cY + r * Math.sin(th));
      let s = 'height: ' + sS + 'px;';
@@ -4205,7 +4217,7 @@
       (d * 1000) + tStart
      );
     }
-    let oURL = kList[Math.floor(Math.random() * kList.length)].url;
+    let oURL = kList[rnd(kList.length)].url;
     let img = document.createElement('img');
     img.setAttribute('class', 'emote');
     img.setAttribute('src', oURL);
@@ -4231,14 +4243,14 @@
       let t = 0;
       for (let i = 0; i < inner; i++)
       {
-       sparkler(kList[Math.floor(Math.random() * kList.length)].url, r * 0.5, t);
+       sparkler(kList[rnd(kList.length)].url, r * 0.5, t);
        if (i % Math.floor(outer / 3) === 0)
         await sleep(1);
       }
       t += 0.5;
       for (let i = 0; i < core; i++)
       {
-       sparkler(kList[Math.floor(Math.random() * kList.length)].url, r, t);
+       sparkler(kList[rnd(kList.length)].url, r, t);
        t += 0.005;
        if (i % Math.floor(outer / 9) === 0)
         await sleep(1);
@@ -4246,7 +4258,7 @@
       t += 0.25;
       for (let i = 0; i < outer; i++)
       {
-       sparkler(kList[Math.floor(Math.random() * kList.length)].url, r * 1.5, t);
+       sparkler(kList[rnd(kList.length)].url, r * 1.5, t);
        if (i % Math.floor(outer / 3) === 0)
         await sleep(1);
       }
@@ -4264,8 +4276,8 @@
 
    function showKappa_Spiral(kList, sW, sH, sS, iKC)
    {
-    let oX = Math.floor(Math.random() * (sW - sS));
-    let oY = Math.floor(Math.random() * (sH - sS));
+    let oX = rnd(sW - sS);
+    let oY = rnd(sH - sS);
     function sparkler(url, r, th)
     {
      let simg = document.createElement('img');
@@ -4320,12 +4332,12 @@
       if (sH < r)
        r = sH;
       let l = iKC / 25 + 2;
-      l = l + (Math.random() * 4 - 2);
+      l = l + (rnd() * 4 - 2);
       if (l < 0.1)
        l = 0.1;
       let c = (Math.PI * l) / iKC;
-      let th = (Math.random() * (Math.PI * 2));
-      let o = (Math.floor(Math.random() * 2) === 0);
+      let th = (rnd() * (Math.PI * 2));
+      let o = (rnd(2) === 0);
       for (let i = 0; i < iKC; i++)
       {
        if (o)
@@ -4340,7 +4352,7 @@
         if (th >= Math.PI * 2)
          th+= Math.PI * 2;
        }
-       sparkler(kList[Math.floor(Math.random() * kList.length)].url, r, th);
+       sparkler(kList[rnd(kList.length)].url, r, th);
        await sleep(10);
       }
      },
@@ -4400,9 +4412,9 @@
     {
      let x;
      do
-      x = Math.floor(Math.random() * pyramidDist.length);
+      x = rnd(pyramidDist.length);
      while(drawn[x] >= pyramidDist[x]);
-     block(kList[Math.floor(Math.random() * kList.length)].url, x, t);
+     block(kList[rnd(kList.length)].url, x, t);
      drawn[x]++;
      t += tPerB;
     }
@@ -4459,15 +4471,15 @@
       t
      );
     }
-    let oX = Math.floor(Math.random() * (sW - (sS * pyramidDist.length)));
+    let oX = rnd(sW - (sS * pyramidDist.length));
     let t = 0;
     for (let i = 0; i < ct; i++)
     {
      let x;
      do
-      x = Math.floor(Math.random() * pyramidDist.length);
+      x = rnd(pyramidDist.length);
      while(drawn[x] >= pyramidDist[x]);
-     block(kList[Math.floor(Math.random() * kList.length)].url, oX, x, t);
+     block(kList[rnd(kList.length)].url, oX, x, t);
      drawn[x]++;
      t += tPerB;
     }
@@ -4477,8 +4489,8 @@
    {
     let speed = 2000;
     let bandHeight = sS * 3;
-    let d = (Math.floor(Math.random() * 2) === 1);
-    let bandTop = Math.floor(Math.random() * (sH - (sS * 2.5)));
+    let d = (rnd(2) === 1);
+    let bandTop = rnd(sH - (sS * 2.5));
     function run(url)
     {
      let img = document.createElement('img');
@@ -4486,7 +4498,7 @@
      img.setAttribute('src', url);
      img.setAttribute('alt', '');
      let h = -2 * sS;
-     let v = Math.floor((Math.random() * bandHeight) + bandTop);
+     let v = rnd(bandHeight) + bandTop;
      let s = 'top: 0px;';
      s += ' left: 0px;';
      s += ' height: ' + sS + 'px;';
@@ -4523,8 +4535,8 @@
      let imgs = [];
      for (let i = 0; i < ct; i++)
      {
-      imgs.push(run(kList[Math.floor(Math.random() * kList.length)].url));
-      await sleep(Math.floor(Math.random() * 90) + 10);
+      imgs.push(run(kList[rnd(kList.length)].url));
+      await sleep(rnd(90) + 10);
      }
      if (pause === false)
       return;
@@ -4543,9 +4555,9 @@
       }
      } while (imgs.length > 0);
     }
-    let b1 = Math.floor(Math.random() * 4) + 1;
-    let b2 = Math.floor(Math.random() * (8 - b1)) + b1;
-    let b4 = Math.floor(Math.random() * 4);
+    let b1 = rnd(4) + 1;
+    let b2 = rnd(8 - b1) + b1;
+    let b4 = rnd(4);
     await stampede(b1, speed * 0.8);
     await stampede(b2, speed * 0.4);
     await stampede(iKC, (b4 > 0));
@@ -4570,10 +4582,10 @@
     }
     while (!unique)
     {
-     v = Math.floor(Math.random() * sht) * seg;
+     v = rnd(sht) * seg;
      if (nM)
      {
-      v = Math.floor(Math.random() * 6);
+      v = rnd(6);
       if (v > 2)
        v = (sht - 1) - (v - 3);
       v *= seg;
@@ -4595,7 +4607,7 @@
     let ct = Math.floor(sW / bS);
     for (let i = 0; i < ct; i++)
     {
-     urls.push(kList[Math.floor(Math.random() * kList.length)].url);
+     urls.push(kList[rnd(kList.length)].url);
     }
     let d = ((v / seg) % 2 === 1);
     let xtra = Math.floor((sW - (ct * bS)) / 2);
@@ -4774,7 +4786,7 @@
     if (tPerB < 24)
      tPerB = 24;
     eT = tPerB * ctT;
-    let vH = Math.floor(Math.random() * (sH - (sS * msgDist[0].length))) + (sS * msgDist[0].length);
+    let vH = rnd(sH - (sS * msgDist[0].length)) + (sS * msgDist[0].length);
     function block(url, oX, x, t)
     {
      let img = document.createElement('img');
@@ -4809,17 +4821,17 @@
       t
      );
     }
-    let oX = Math.floor(Math.random() * (sW - (sS * msgDist.length)));
+    let oX = rnd(sW - (sS * msgDist.length));
     let t = 0;
     for (let i = 0; i < ct; i++)
     {
      let x;
      do
-      x = Math.floor(Math.random() * msgDist.length);
+      x = rnd(msgDist.length);
      while(drawn[x] >= msgDist[x].length);
      if (msgDist[x][drawn[x]] !== 0)
      {
-      block(kList[Math.floor(Math.random() * kList.length)].url, oX, x, t);
+      block(kList[rnd(kList.length)].url, oX, x, t);
       t += tPerB;
      }
      drawn[x]++;
@@ -4844,7 +4856,7 @@
     document.documentElement.style.setProperty('--emote-height', sS + 'px');
     document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
     document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
-    let style = cfg.display.styles[(Math.floor(Math.random() * cfg.display.styles.length))];
+    let style = cfg.display.styles[rnd(cfg.display.styles.length)];
     if (style === undefined)
      return;
     window['showEmote_' + style](url, sW, sH, sS);
@@ -4956,7 +4968,7 @@
     }
     else
     {
-     s = keys[(Math.floor(Math.random() * keys.length))];
+     s = keys[rnd(keys.length)];
      p = kS[s];
     }
     if (s === undefined)
@@ -5094,9 +5106,9 @@
       eActive -= waitFor;
       let sTM = 'HYPE!';
       if (cfg.display.kappa.styles.hasOwnProperty('Text') && cfg.display.kappa.styles['Text'].hasOwnProperty('message'))
-       sTM = cfg.display.kappa.styles['Text'].message[Math.floor(Math.random() * cfg.display.kappa.styles['Text'].message.length)];
+       sTM = cfg.display.kappa.styles['Text'].message[rnd(cfg.display.kappa.styles['Text'].message.length)];
       if (kStyle.prefs.hasOwnProperty('message'))
-       sTM = kStyle.prefs.message[Math.floor(Math.random() * kStyle.prefs.message.length)];
+       sTM = kStyle.prefs.message[rnd(kStyle.prefs.message.length)];
       let sTT = cfg.emote.time;
       if (cfg.display.kappa.styles.hasOwnProperty('Text') && cfg.display.kappa.styles['Text'].hasOwnProperty('time'))
        sTT = cfg.display.kappa.styles['Text'].time;
@@ -5117,7 +5129,7 @@
       let cS = sW;
       if (sW > sH)
        cS = sH;
-      let r = Math.floor(Math.random() * kList.length);
+      let r = rnd(kList.length);
       let sCS = cfg.display.kappa.styles['TheCube'].size;
       if (kStyle.prefs.hasOwnProperty('size'))
        sCS = kStyle.prefs.size;
@@ -5130,22 +5142,22 @@
       showKappa_TheCube(kList[r].url, sW, sH, Math.floor(cS * sCS), sCC, sCR);
       break;
      case 'Burst':
-      let oH = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
-      let oV = Math.floor((Math.random() * ((sH - sS) * 0.33)) + (sH - sS) * 0.33);
+      let oH = Math.floor((rnd() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
+      let oV = Math.floor((rnd() * ((sH - sS) * 0.33)) + (sH - sS) * 0.33);
       for (let i = 0; i < kStyle.count; i++)
       {
-       let r = Math.floor(Math.random() * kList.length);
+       let r = rnd(kList.length);
        eActive--;
        showEmote_StraightLine(kList[r].url, sW, sH, sS, oH, oV, false);
        await sleep(50);
       }
       break;
      case 'Fountain':
-      let fX = Math.floor((Math.random() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
-      let fY = Math.floor(Math.random() * 25) + 15;
+      let fX = Math.floor((rnd() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
+      let fY = rnd(25) + 15;
       for (let i = 0; i < kStyle.count; i++)
       {
-       let r = Math.floor(Math.random() * kList.length);
+       let r = rnd(kList.length);
        eActive--;
        showEmote_Fountain(kList[r].url, sW, sH, sS, fX, fY, false);
        await sleep(50);
@@ -5154,7 +5166,7 @@
      case 'Confetti':
       for (let i = 0; i < kStyle.count; i++)
       {
-       let r = Math.floor(Math.random() * kList.length);
+       let r = rnd(kList.length);
        eActive--;
        showEmote_Confetti(kList[r].url, sW, sH, sSm, false);
        await sleep(25);
@@ -5165,7 +5177,7 @@
        return false;
       for (let i = 0; i < kStyle.count; i++)
       {
-       let r = Math.floor(Math.random() * kList.length);
+       let r = rnd(kList.length);
        eActive--;
        if (kStyle.style === 'StraightLine')
         showEmote_StraightLine(kList[r].url, sW, sH, sS, false, false, false);
