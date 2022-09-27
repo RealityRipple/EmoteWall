@@ -2643,13 +2643,13 @@
     return p;
    }
 
-   function load7TV_channel(chN)
+   function load7TV_channel(chID)
    {
     let p = new Promise(
      (resolve, reject) =>
      {
       let x = new XMLHttpRequest();
-      x.open('GET', 'https://api.7tv.app/v2/users/' + chN + '/emotes');
+      x.open('GET', 'https://api.7tv.app/v2/users/' + chID + '/emotes');
       x.onreadystatechange = function()
       {
        if (x.status !== 200)
@@ -6589,6 +6589,8 @@
           loadBTTV_channel(channelID);
           loadBTTV_ws_channel(channelID);
          }
+         if (cfg.display.extended.use7TV)
+          load7TV_channel(channelID);
          if (cfg.event.follow !== false)
           tFC = window.setTimeout(detectFollowers, tStart, channelID);
          pubSub();
@@ -7047,10 +7049,7 @@
     if (cfg.display.extended.useBTTV)
      await loadBTTV_global();
     if (cfg.display.extended.use7TV)
-    {
      await load7TV_global();
-     await load7TV_channel(cfg.channel);
-    }
     irc();
     if (cfg.hasOwnProperty('reddit') && cfg.reddit !== false)
      reddit(cfg.reddit);
