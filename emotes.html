@@ -189,6 +189,11 @@
     *
     *   use7TV    Toggles display of 7TV emotes.
     *
+    *   useZWE    Toggles display of Zero-Width (overlapping) emotes. If disabled, this will hide ZWEs entirely.
+    *             Note: ZWE display requires more objects on-screen, which can be process-intensive, and precise
+    *                   timing is required for accurate overlay.
+    *                   CHAOS MAY ENSUE.
+    *
     *  kappa      Settings related to emote-splosions and the !kappagen command.
     *
     *   count     The number of emotes to display per kappagen. This value should be less than the "emote max" value
@@ -625,7 +630,8 @@
      extended: {
       useFFZ: true,
       useBTTV: true,
-      use7TV: true
+      use7TV: true,
+      useZWE: true
      },
      kappa: {
       count: 150,
@@ -1281,7 +1287,7 @@
     ]
    };
 
-   // don't show these zero-width emote modifiers at all
+   // treat these BTTV emotes as zero-width (overlapping) emotes
    var bttvZWE = [
     'SoSnowy',  'IceCold',   'SantaHat', 'TopHat',
     'ReinDeer', 'CandyCane', 'cvMask',   'cvHazmat',
@@ -1340,7 +1346,7 @@
     position: relative;
     transform-style: preserve-3d;
    }
-   div.scene div.cube img.cubeFace
+   div.scene div.cube .cubeFace
    {
     position: absolute;
     background-color: rgba(255, 255, 255, 0.2);
@@ -2446,6 +2452,9 @@
    function loadBTTV_global()
    {
     eList.bttv = {};
+    if (!eList.hasOwnProperty('zwe'))
+     eList.zwe = {};
+    eList.zwe.bttv = {};
     let p = new Promise(
      (resolve, reject) =>
      {
@@ -2470,7 +2479,11 @@
         if (!j[i].hasOwnProperty('id'))
          continue;
         if (bttvZWE.includes(j[i].code))
+        {
+         if (cfg.display.extended.useZWE)
+          eList.zwe.bttv[j[i].code] = {url: 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x', scope: 'g'};
          continue;
+        }
         eList.bttv[j[i].code] = {url: 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x', scope: 'g'};
        }
        resolve(true);
@@ -2575,6 +2588,10 @@
    function load7TV_global()
    {
     eList['7tv'] = {};
+    if (!eList.hasOwnProperty('zwe'))
+     eList.zwe = {};
+    if (!eList.zwe.hasOwnProperty('7tv'))
+     eList.zwe['7tv'] = {};
     let p = new Promise(
      (resolve, reject) =>
      {
@@ -2632,7 +2649,11 @@
           t4 = j[i].urls[u][1];
         }
         if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
+        {
+         if (cfg.display.extended.useZWE)
+          eList.zwe['7tv'][j[i].name] = {url: t4, scope: 'g'};
          continue;
+        }
         eList['7tv'][j[i].name] = {url: t4, scope: 'g'};
        }
        resolve(true);
@@ -2645,6 +2666,10 @@
 
    function load7TV_channel(chID)
    {
+    if (!eList.hasOwnProperty('zwe'))
+     eList.zwe = {};
+    if (!eList.zwe.hasOwnProperty('7tv'))
+     eList.zwe['7tv'] = {};
     let p = new Promise(
      (resolve, reject) =>
      {
@@ -2702,7 +2727,11 @@
           t4 = j[i].urls[u][1];
         }
         if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
+        {
+         if (cfg.display.extended.useZWE)
+          eList.zwe['7tv'][j[i].name] = {url: t4, scope: 'c'};
          continue;
+        }
         cList.push({url: t4});
         eList['7tv'][j[i].name] = {url: t4, scope: 'c'};
        }
@@ -2765,12 +2794,8 @@
      tGC = window.setTimeout(doGC, 500);
    }
 
-   function showEmote_Rise(url, sW, sH, sS, canV = true)
+   function showEmote_Rise(url, zwe, sW, sH, sS, canV = true)
    {
-    let img = document.createElement('img');
-    img.setAttribute('class', 'emote');
-    img.setAttribute('src', url);
-    img.setAttribute('alt', '');
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
@@ -2875,19 +2900,26 @@
     s += ' animation-timing-function: ' + aTimings.join() + ';';
     s += ' animation-fill-mode: ' + aFills.join() + ';';
     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    img.setAttribute('style', s);
-    eActive++;
-    document.body.appendChild(img);
-    gcEmote(img, false);
+    f(url);
+    for (let i = 0; i < zwe.length; i++)
+    {
+     f(zwe[i].url);
+    }
+    function f(uri)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', uri);
+     img.setAttribute('alt', '');
+     img.setAttribute('style', s);
+     eActive++;
+     document.body.appendChild(img);
+     gcEmote(img, false);
+    }
    }
 
-   function showEmote_Bounce(url, sW, sH, sS, canV = true)
+   function showEmote_Bounce(url, zwe, sW, sH, sS, canV = true)
    {
-    let ms = 20;
-    let img = document.createElement('img');
-    img.setAttribute('class', 'emote');
-    img.setAttribute('src', url);
-    img.setAttribute('alt', '');
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
@@ -2901,6 +2933,10 @@
      sS = sS * 2;
     let h = rnd(sW) - (sS / 2);
     let v = Math.floor(rnd(0.2) * sH);
+    let velH = rnd(6) + 3;
+    let velV = rnd(3) + 4;
+    if (h + (sS / 2) > (sW / 2))
+     velH = -1 * velH;
     let s = 'height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
     let aNames = [];
@@ -2974,65 +3010,51 @@
      s += ' animation-iteration-count: ' + aIters.join() + ';';
     }
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-    let bX = h;
-    let bY = v;
-    let velX = rnd(6) + 3;
-    let velY = rnd(3) + 4;
-    if (bX + (sS / 2) > (sW / 2))
-     velX = -1 * velX;
-    let c = null;
+    let iArr = [];
+    iArr.push({img: f(url), bX: h, bY: v, velY: velV});
+    for (let i = 0; i < zwe.length; i++)
+    {
+     iArr.push({img: f(zwe[i].url), bX: h, bY: v, velY: velV});
+    }
+    let ms = 20;
     let tmr = window.setTimeout(
      function tLoop()
      {
       window.clearTimeout(tmr);
       tmr = null;
-      bX += velX;
-      bY += velY;
-      velY += 1;
-      if (bY + sS >= sH)
+      for (let i = 0; i < iArr.length; i++)
       {
-       bY = sH - sS;
-       velY *= -0.7;
-       velY = Math.floor(velY);
-      }
-      img.style.transform = 'translate(' + bX + 'px, ' + bY + 'px)';
-      if ((bX < 0 - sS) || (bX > sW))
-      {
-       if (c !== null)
+       iArr[i].bX += velH;
+       iArr[i].bY += iArr[i].velY;
+       iArr[i].velY += 1;
+       if (iArr[i].bY + sS >= sH)
        {
-        window.clearTimeout(c);
-        c = null;
-        document.body.removeChild(img);
-        eActive--;
+        iArr[i].bY = sH - sS;
+        iArr[i].velY *= -0.7;
+        iArr[i].velY = Math.floor(iArr[i].velY);
        }
-       return;
+       iArr[i].img.style.transform = 'translate(' + iArr[i].bX + 'px, ' + iArr[i].bY + 'px)';
       }
       tmr = window.setTimeout(tLoop, ms);
      },
      ms
     );
-    img.setAttribute('style', s);
-    eActive++;
-    document.body.appendChild(img);
-    c = window.setTimeout(
-     function()
-     {
-      c = null;
-      window.clearTimeout(tmr);
-      tmr = null;
-      document.body.removeChild(img);
-      eActive--;
-     },
-     cfg.emote.time * 1000
-    );
+    function f(uri)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', uri);
+     img.setAttribute('alt', '');
+     img.setAttribute('style', s);
+     eActive++;
+     document.body.appendChild(img);
+     gcEmote(img);
+     return img;
+    }
    }
 
-   function showEmote_Speed(url, sW, sH, sS, canV = true)
+   function showEmote_Speed(url, zwe, sW, sH, sS, canV = true)
    {
-    let img = document.createElement('img');
-    img.setAttribute('class', 'emote');
-    img.setAttribute('src', url);
-    img.setAttribute('alt', '');
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
@@ -3056,15 +3078,16 @@
     let aTimings = [];
     let aFills = [];
     let aIters = [];
-    let goLeft = (h + (sS / 2) > (sW / 2));
-    if (goLeft)
+    if (h + (sS / 2) > (sW / 2))
+    {
      s += ' transform-origin: center right;';
-    else
-     s += ' transform-origin: center left;';
-    if (goLeft)
      aNames.push('speedL');
+    }
     else
+    {
+     s += ' transform-origin: center left;';
      aNames.push('speedR');
+    }
     aDelays.push('0.5s');
     aDurs.push(cfg.emote.time + 's');
     aTimings.push('ease-in');
@@ -3131,18 +3154,26 @@
     s += ' animation-timing-function: ' + aTimings.join() + ';';
     s += ' animation-fill-mode: ' + aFills.join() + ';';
     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    img.setAttribute('style', s);
-    eActive++;
-    document.body.appendChild(img);
-    gcEmote(img);
+    f(url);
+    for (let i = 0; i < zwe.length; i++)
+    {
+     f(zwe[i].url);
+    }
+    function f(uri)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', uri);
+     img.setAttribute('alt', '');
+     img.setAttribute('style', s);
+     eActive++;
+     document.body.appendChild(img);
+     gcEmote(img);
+    }
    }
 
-   function showEmote_Drop(url, sW, sH, sS, canV = true)
+   function showEmote_Drop(url, zwe, sW, sH, sS, canV = true)
    {
-    let img = document.createElement('img');
-    img.setAttribute('class', 'emote');
-    img.setAttribute('src', url);
-    img.setAttribute('alt', '');
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
@@ -3164,15 +3195,16 @@
     let aTimings = [];
     let aFills = [];
     let aIters = [];
-    let goLeft = (rnd(2) === 1);
-    if (goLeft)
+    if (rnd(2) === 1)
+    {
      s += ' transform-origin: top left;';
-    else
-     s += ' transform-origin: top right;';
-    if (goLeft)
      aNames.push('dropL');
+    }
     else
+    {
+     s += ' transform-origin: top right;';
      aNames.push('dropR');
+    }
     aDelays.push('0s');
     aDurs.push(cfg.emote.time + 's');
     aTimings.push('ease-in');
@@ -3216,18 +3248,26 @@
     s += ' animation-timing-function: ' + aTimings.join() + ';';
     s += ' animation-fill-mode: ' + aFills.join() + ';';
     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    img.setAttribute('style', s);
-    eActive++;
-    document.body.appendChild(img);
-    gcEmote(img, false);
+    f(url);
+    for (let i = 0; i < zwe.length; i++)
+    {
+     f(zwe[i].url);
+    }
+    function f(uri)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', uri);
+     img.setAttribute('alt', '');
+     img.setAttribute('style', s);
+     eActive++;
+     document.body.appendChild(img);
+     gcEmote(img, false);
+    }
    }
 
-   function showEmote_Confetti(url, sW, sH, sS, canV = true)
+   function showEmote_Confetti(url, zwe, sW, sH, sS, canV = true)
    {
-    let img = document.createElement('img');
-    img.setAttribute('class', 'emote');
-    img.setAttribute('src', url);
-    img.setAttribute('alt', '');
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
@@ -3250,8 +3290,7 @@
     let aTimings = [];
     let aFills = [];
     let aIters = [];
-    let style = rnd(3);
-    switch (style)
+    switch (rnd(3))
     {
      case 0:
       aNames.push('confettiA');
@@ -3292,13 +3331,25 @@
     s += ' animation-timing-function: ' + aTimings.join() + ';';
     s += ' animation-fill-mode: ' + aFills.join() + ';';
     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    img.setAttribute('style', s);
-    eActive++;
-    document.body.appendChild(img);
-    gcEmote(img, false);
+    f(url);
+    for (let i = 0; i < zwe.length; i++)
+    {
+     f(zwe[i].url);
+    }
+    function f(uri)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', uri);
+     img.setAttribute('alt', '');
+     img.setAttribute('style', s);
+     eActive++;
+     document.body.appendChild(img);
+     gcEmote(img, false);
+    }
    }
 
-   function showEmote_Crazy(url, sW, sH, sS, canV = true)
+   function showEmote_Crazy(url, zwe, sW, sH, sS, canV = true)
    {
     /* LAYOUT SHIFTS
      * =============
@@ -3307,10 +3358,6 @@
      * due to transform-origin changes during squash
      */
     let squashT = 100;
-    let img = document.createElement('img');
-    img.setAttribute('class', 'emote');
-    img.setAttribute('src', url);
-    img.setAttribute('alt', '');
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
@@ -3441,10 +3488,12 @@
     s += ' animation-timing-function: ' + aTimings.join() + ';';
     s += ' animation-fill-mode: ' + aFills.join() + ';';
     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    img.setAttribute('style', s);
-    eActive++;
-    document.body.appendChild(img);
-    gcEmote(img, false);
+    let iArr = [];
+    iArr.push(f(url));
+    for (let i = 0; i < zwe.length; i++)
+    {
+     iArr.push(f(zwe[i].url));
+    }
     let d = 0;
     let tmr = window.setTimeout(
      function tLoop()
@@ -3452,46 +3501,55 @@
       if (d >= dests.length)
        return;
       window.clearTimeout(tmr);
-      img.style.transformOrigin = 'center center';
-      img.style.transform = 'scale(1, 1)';
-      img.style.top = dests[d].y + 'px';
-      img.style.left = dests[d].x + 'px';
-      img.style.transition = 'all ' + dests[d].t + 'ms linear';
+      for (let i = 0; i < iArr.length; i++)
+      {
+       iArr[i].style.transformOrigin = 'center center';
+       iArr[i].style.transform = 'scale(1, 1)';
+       iArr[i].style.top = dests[d].y + 'px';
+       iArr[i].style.left = dests[d].x + 'px';
+       iArr[i].style.transition = 'all ' + dests[d].t + 'ms linear';
+      }
       d++;
       tmr = window.setTimeout(
        function tSquash()
        {
         window.clearTimeout(tmr);
-        img.style.transition = 'transform ' + squashT + 'ms linear';
-        switch(dests[d-1].w)
+        for (let i = 0; i < iArr.length; i++)
         {
-         case 1:
-          //left
-          img.style.transformOrigin = 'left center';
-          img.style.transform = 'scale(0.7, 2)';
-          break;
-         case 2:
-          //top
-          img.style.transformOrigin = 'center top';
-          img.style.transform = 'scale(2, 0.7)';
-          break;
-         case 3:
-          //right
-          img.style.transformOrigin = 'right center';
-          img.style.transform = 'scale(0.7, 2)';
-          break;
-         case 4:
-          //bottom
-          img.style.transformOrigin = 'center bottom';
-          img.style.transform = 'scale(2, 0.7)';
-          break;
+         iArr[i].style.transition = 'transform ' + squashT + 'ms linear';
+         switch(dests[d-1].w)
+         {
+          case 1:
+           //left
+           iArr[i].style.transformOrigin = 'left center';
+           iArr[i].style.transform = 'scale(0.7, 2)';
+           break;
+          case 2:
+           //top
+           iArr[i].style.transformOrigin = 'center top';
+           iArr[i].style.transform = 'scale(2, 0.7)';
+           break;
+          case 3:
+           //right
+           iArr[i].style.transformOrigin = 'right center';
+           iArr[i].style.transform = 'scale(0.7, 2)';
+           break;
+          case 4:
+           //bottom
+           iArr[i].style.transformOrigin = 'center bottom';
+           iArr[i].style.transform = 'scale(2, 0.7)';
+           break;
+         }
         }
         tmr = window.setTimeout(
          function tUnsquash()
          {
           window.clearTimeout(tmr);
-          img.style.transition = 'transform ' + squashT + 'ms linear';
-          img.style.transform = 'scale(1, 1)';
+          for (let i = 0; i < iArr.length; i++)
+          {
+           iArr[i].style.transition = 'transform ' + squashT + 'ms linear';
+           iArr[i].style.transform = 'scale(1, 1)';
+          }
           tmr = window.setTimeout(tLoop, squashT);
          },
          squashT
@@ -3501,14 +3559,22 @@
      },
      tStart
     );
+    function f(uri)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', uri);
+     img.setAttribute('alt', '');
+     img.setAttribute('style', s);
+     eActive++;
+     document.body.appendChild(img);
+     gcEmote(img, false);
+     return img;
+    }
    }
 
-   function showEmote_StraightLine(url, sW, sH, sS, x = false, y = false, canV = true)
+   function showEmote_StraightLine(url, zwe, sW, sH, sS, x = false, y = false, canV = true)
    {
-    let img = document.createElement('img');
-    img.setAttribute('class', 'emote');
-    img.setAttribute('src', url);
-    img.setAttribute('alt', '');
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
@@ -3613,26 +3679,34 @@
     s += ' animation-timing-function: ' + aTimings.join() + ';';
     s += ' animation-fill-mode: ' + aFills.join() + ';';
     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    img.setAttribute('style', s);
-    eActive++;
-    document.body.appendChild(img);
-    gcEmote(img);
-    window.setTimeout(
-     function()
-     {
-      img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
-     },
-     tStart
-    );
+    f(url);
+    for (let i = 0; i < zwe.length; i++)
+    {
+     f(zwe[i].url);
+    }
+    function f(uri)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', uri);
+     img.setAttribute('alt', '');
+     img.setAttribute('style', s);
+     eActive++;
+     document.body.appendChild(img);
+     gcEmote(img);
+     window.setTimeout(
+      function()
+      {
+       img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+      },
+      tStart
+     );
+    }
    }
 
-   function showEmote_Fountain(url, sW, sH, sS, fX, fY, canV = true)
+   function showEmote_Fountain(url, zwe, sW, sH, sS, fX, fY, canV = true)
    {
     let aT = Math.floor((cfg.emote.time * 1000) / 2);
-    let img = document.createElement('img');
-    img.setAttribute('class', 'emote');
-    img.setAttribute('src', url);
-    img.setAttribute('alt', '');
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
@@ -3675,25 +3749,33 @@
     s += ' animation-timing-function: ' + aTimings.join() + ';';
     s += ' animation-fill-mode: ' + aFills.join() + ';';
     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    img.setAttribute('style', s);
-    eActive++;
-    document.body.appendChild(img);
-    gcEmote(img, true, true, aT);
-    window.setTimeout(
-     function()
-     {
-      img.style.transform = 'translateX(' + hD + 'px)';
-     },
-     tStart
-    );
+    f(url);
+    for (let i = 0; i < zwe.length; i++)
+    {
+     f(zwe[i].url);
+    }
+    function f(uri)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', uri);
+     img.setAttribute('alt', '');
+     img.setAttribute('style', s);
+     eActive++;
+     document.body.appendChild(img);
+     gcEmote(img, true, true, aT);
+     window.setTimeout(
+      function()
+      {
+       img.style.transform = 'translateX(' + hD + 'px)';
+      },
+      tStart
+     );
+    }
    }
 
-   function showEmote_Throw(url, sW, sH, sS, canV = true)
+   function showEmote_Throw(url, zwe, sW, sH, sS, canV = true)
    {
-    let img = document.createElement('img');
-    img.setAttribute('class', 'emote');
-    img.setAttribute('src', url);
-    img.setAttribute('alt', '');
     let variationSize = 1;
     if (canV && cfg.emote.size.variation !== false)
     {
@@ -3709,91 +3791,107 @@
     let v = rnd(sH + sS) - sS;
     let hD = Math.floor((rnd() * ((sW - sS) * 0.4)) + (sW - sS) * 0.3);
     let vD = Math.floor((rnd() * ((sH - sS) * 0.4)) + (sH - sS) * 0.3);
+    let dH = (rnd() * sS);
     let t1 = cfg.emote.time * 140;
     let t2 = cfg.emote.time * 200;
     let t3 = cfg.emote.time * 800;
-
     let s = 'height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
     s += ' transition: transform ' + t1 + 'ms cubic-bezier(0.32, 0, 0.67, 0);';
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-
-    img.setAttribute('style', s);
-    eActive++;
-    document.body.appendChild(img);
-    gcEmote(img, false);
+    let s2 = 'height: ' + sS + 'px;';
+    s2 += ' width: ' + sS + 'px;';
+    s2 += ' transition: transform ' + t3 + 'ms cubic-bezier(0.5, 0, 0.75, 0);';
+    let r = '360';
+    if (h > 0)
+     r = '-360';
+    s2 += ' transform: translate(' + hD + 'px, ' + (sH - dH) + 'px) rotate(' + r + 'deg);';
+    let aNames = [];
+    let aDelays = [];
+    let aDurs = [];
+    let aTimings = [];
+    let aFills = [];
+    let aIters = [];
+    if (cfg.emote.out.fade)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor(t3 - (t3 * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor(t3 * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push((t3 - 50) + 'ms');
+     aDurs.push('50ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (cfg.emote.out.zoom)
+    {
+     if (variationSize === 0)
+      aNames.push('zoomOutS');
+     else if (variationSize === 2)
+      aNames.push('zoomOutL');
+     else
+      aNames.push('zoomOut');
+     aDelays.push(Math.floor(t3 - (t3 * (tAnim.zoom.out / 100))) + 'ms');
+     aDurs.push(Math.floor(t3 * (tAnim.zoom.out / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    s2 += ' animation-name: ' + aNames.join() + ';';
+    s2 += ' animation-delay: ' + aDelays.join() + ';';
+    s2 += ' animation-duration: ' + aDurs.join() + ';';
+    s2 += ' animation-timing-function: ' + aTimings.join() + ';';
+    s2 += ' animation-fill-mode: ' + aFills.join() + ';';
+    s2 += ' animation-iteration-count: ' + aIters.join() + ';';
+    let iArr = [];
+    iArr.push(f(url));
+    for (let i = 0; i < zwe.length; i++)
+    {
+     iArr.push(f(zwe[i].url));
+    }
     window.setTimeout(
      function()
      {
-      img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+      for (let i = 0; i < iArr.length; i++)
+      {
+       iArr[i].style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+      }
      },
      tStart
     );
-
     window.setTimeout(
      function()
      {
-      let s2 = 'height: ' + sS + 'px;';
-      s2 += ' width: ' + sS + 'px;';
-      s2 += ' transition: transform ' + t3 + 'ms cubic-bezier(0.5, 0, 0.75, 0);';
-      let r = '360';
-      if (h > 0)
-       r = '-360';
-      s2 += ' transform: translate(' + hD + 'px, ' + (sH - (rnd() * sS)) + 'px) rotate(' + r + 'deg);';
-      let aNames = [];
-      let aDelays = [];
-      let aDurs = [];
-      let aTimings = [];
-      let aFills = [];
-      let aIters = [];
-      if (cfg.emote.out.fade)
+      for (let i = 0; i < iArr.length; i++)
       {
-       aNames.push('fadeOut');
-       aDelays.push(Math.floor(t3 - (t3 * (tAnim.fade.out / 100))) + 'ms');
-       aDurs.push(Math.floor(t3 * (tAnim.fade.out / 100)) + 'ms');
-       aTimings.push('ease-out');
-       aFills.push('forwards');
-       aIters.push('1');
+       iArr[i].setAttribute('style', s2);
       }
-      else
-      {
-       aNames.push('noFadeOut');
-       aDelays.push((t3 - 50) + 'ms');
-       aDurs.push('50ms');
-       aTimings.push('ease-out');
-       aFills.push('forwards');
-       aIters.push('1');
-      }
-      if (cfg.emote.out.zoom)
-      {
-       if (variationSize === 0)
-        aNames.push('zoomOutS');
-       else if (variationSize === 2)
-        aNames.push('zoomOutL');
-       else
-        aNames.push('zoomOut');
-       aDelays.push(Math.floor(t3 - (t3 * (tAnim.zoom.out / 100))) + 'ms');
-       aDurs.push(Math.floor(t3 * (tAnim.zoom.out / 100)) + 'ms');
-       aTimings.push('linear');
-       aFills.push('forwards');
-       aIters.push('1');
-      }
-      s2 += ' animation-name: ' + aNames.join() + ';';
-      s2 += ' animation-delay: ' + aDelays.join() + ';';
-      s2 += ' animation-duration: ' + aDurs.join() + ';';
-      s2 += ' animation-timing-function: ' + aTimings.join() + ';';
-      s2 += ' animation-fill-mode: ' + aFills.join() + ';';
-      s2 += ' animation-iteration-count: ' + aIters.join() + ';';
-      img.setAttribute('style', s2);
      },
      t2
     );
+    function f(uri)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', uri);
+     img.setAttribute('alt', '');
+     img.setAttribute('style', s);
+     eActive++;
+     document.body.appendChild(img);
+     gcEmote(img, false);
+     return img;
+    }
    }
 
-   function showEmote_Still(url, sW, sH, sS, canV = true)
+   function showEmote_Still(url, zwe, sW, sH, sS, canV = true)
    {
-    let img = document.createElement('img');
-    img.setAttribute('class', 'emote');
     let variationSize = 1;
     if (canV, cfg.emote.size.variation !== false)
     {
@@ -3807,8 +3905,6 @@
      sS = sS * 2;
     let h = rnd(sW) - (sS / 2);
     let v = rnd(sH) - (sS / 2);
-    img.setAttribute('src', url);
-    img.setAttribute('alt', '');
     let s = 'top: ' + v + 'px;';
     s += ' left: ' + h + 'px;';
     s += ' height: ' + sS + 'px;';
@@ -3883,13 +3979,25 @@
      s += ' animation-fill-mode: ' + aFills.join() + ';';
      s += ' animation-iteration-count: ' + aIters.join() + ';';
     }
-    img.setAttribute('style', s);
-    eActive++;
-    document.body.appendChild(img);
-    gcEmote(img, false);
+    f(url);
+    for (let i = 0; i < zwe.length; i++)
+    {
+     f(zwe[i].url);
+    }
+    function f(uri)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', uri);
+     img.setAttribute('alt', '');
+     img.setAttribute('style', s);
+     eActive++;
+     document.body.appendChild(img);
+     gcEmote(img, false);
+    }
    }
 
-   function showEmote_TheCube(url, sW, sH, sS, canV = true)
+   function showEmote_TheCube(url, zwe, sW, sH, sS, canV = true)
    {
     let scene = document.createElement('div');
     scene.setAttribute('class', 'scene');
@@ -3911,42 +4019,150 @@
     cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
     let f = 'height: ' + sS + 'px;';
     f += ' width: ' + sS + 'px;';
-    let cubeF = document.createElement('img');
-    cubeF.setAttribute('src', url);
-    cubeF.setAttribute('alt', '');
-    cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
-    cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
-    cube.appendChild(cubeF);
-    let cubeB = document.createElement('img');
-    cubeB.setAttribute('src', url);
-    cubeB.setAttribute('alt', '');
-    cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
-    cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
-    cube.appendChild(cubeB);
-    let cubeR = document.createElement('img');
-    cubeR.setAttribute('src', url);
-    cubeR.setAttribute('alt', '');
-    cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
-    cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
-    cube.appendChild(cubeR);
-    let cubeL = document.createElement('img');
-    cubeL.setAttribute('src', url);
-    cubeL.setAttribute('alt', '');
-    cubeL.setAttribute('class', 'cubeFace cubeFaceLeft');
-    cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
-    cube.appendChild(cubeL);
-    let cubeT = document.createElement('img');
-    cubeT.setAttribute('src', url);
-    cubeT.setAttribute('alt', '');
-    cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
-    cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
-    cube.appendChild(cubeT);
-    let cubeU = document.createElement('img');
-    cubeU.setAttribute('src', url);
-    cubeU.setAttribute('alt', '');
-    cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
-    cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
-    cube.appendChild(cubeU);
+    if (zwe.length === 0)
+    {
+     let cubeF = document.createElement('img');
+     cubeF.setAttribute('src', url);
+     cubeF.setAttribute('alt', '');
+     cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
+     cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+     cube.appendChild(cubeF);
+     let cubeB = document.createElement('img');
+     cubeB.setAttribute('src', url);
+     cubeB.setAttribute('alt', '');
+     cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
+     cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+     cube.appendChild(cubeB);
+     let cubeR = document.createElement('img');
+     cubeR.setAttribute('src', url);
+     cubeR.setAttribute('alt', '');
+     cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
+     cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+     cube.appendChild(cubeR);
+     let cubeL = document.createElement('img');
+     cubeL.setAttribute('src', url);
+     cubeL.setAttribute('alt', '');
+     cubeL.setAttribute('class', 'cubeFace cubeFaceLeft');
+     cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+     cube.appendChild(cubeL);
+     let cubeT = document.createElement('img');
+     cubeT.setAttribute('src', url);
+     cubeT.setAttribute('alt', '');
+     cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
+     cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+     cube.appendChild(cubeT);
+     let cubeU = document.createElement('img');
+     cubeU.setAttribute('src', url);
+     cubeU.setAttribute('alt', '');
+     cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
+     cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+     cube.appendChild(cubeU);
+    }
+    else
+    {
+     let cubeF = document.createElement('div');
+     cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
+     cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+     let pctF = document.createElement('img');
+     pctF.setAttribute('src', url);
+     pctF.setAttribute('alt', '');
+     pctF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+     cubeF.appendChild(pctF);
+     for (let i = 0; i < zwe.length; i++)
+     {
+      let pctZ = document.createElement('img');
+      pctZ.setAttribute('src', zwe[i].url);
+      pctZ.setAttribute('alt', '');
+      pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+      cubeF.appendChild(pctZ);
+     }
+     cube.appendChild(cubeF);
+     let cubeB = document.createElement('div');
+     cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
+     cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+     let pctB = document.createElement('img');
+     pctB.setAttribute('src', url);
+     pctB.setAttribute('alt', '');
+     pctB.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+     cubeB.appendChild(pctB);
+     for (let i = 0; i < zwe.length; i++)
+     {
+      let pctZ = document.createElement('img');
+      pctZ.setAttribute('src', zwe[i].url);
+      pctZ.setAttribute('alt', '');
+      pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+      cubeB.appendChild(pctZ);
+     }
+     cube.appendChild(cubeB);
+     let cubeR = document.createElement('div');
+     cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
+     cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+     let pctR = document.createElement('img');
+     pctR.setAttribute('src', url);
+     pctR.setAttribute('alt', '');
+     pctR.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+     cubeR.appendChild(pctR);
+     for (let i = 0; i < zwe.length; i++)
+     {
+      let pctZ = document.createElement('img');
+      pctZ.setAttribute('src', zwe[i].url);
+      pctZ.setAttribute('alt', '');
+      pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+      cubeR.appendChild(pctZ);
+     }
+     cube.appendChild(cubeR);
+     let cubeL = document.createElement('div');
+     cubeL.setAttribute('class', 'cubeFace cubeFaceLight');
+     cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+     let pctL = document.createElement('img');
+     pctL.setAttribute('src', url);
+     pctL.setAttribute('alt', '');
+     pctL.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+     cubeL.appendChild(pctL);
+     for (let i = 0; i < zwe.length; i++)
+     {
+      let pctZ = document.createElement('img');
+      pctZ.setAttribute('src', zwe[i].url);
+      pctZ.setAttribute('alt', '');
+      pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+      cubeL.appendChild(pctZ);
+     }
+     cube.appendChild(cubeL);
+     let cubeT = document.createElement('div');
+     cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
+     cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+     let pctT = document.createElement('img');
+     pctT.setAttribute('src', url);
+     pctT.setAttribute('alt', '');
+     pctT.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+     cubeT.appendChild(pctT);
+     for (let i = 0; i < zwe.length; i++)
+     {
+      let pctZ = document.createElement('img');
+      pctZ.setAttribute('src', zwe[i].url);
+      pctZ.setAttribute('alt', '');
+      pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+      cubeT.appendChild(pctZ);
+     }
+     cube.appendChild(cubeT);
+     let cubeU = document.createElement('div');
+     cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
+     cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+     let pctU = document.createElement('img');
+     pctU.setAttribute('src', url);
+     pctU.setAttribute('alt', '');
+     pctU.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+     cubeU.appendChild(pctU);
+     for (let i = 0; i < zwe.length; i++)
+     {
+      let pctZ = document.createElement('img');
+      pctZ.setAttribute('src', zwe[i].url);
+      pctZ.setAttribute('alt', '');
+      pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+      cubeU.appendChild(pctZ);
+     }
+     cube.appendChild(cubeU);
+    }
     scene.appendChild(cube);
     let h = rnd(sW) - (sS / 2);
     let v = rnd(sH) - (sS / 2);
@@ -4031,7 +4247,7 @@
     );
    }
 
-   function showKappa_TheCube(url, sW, sH, sS, bC, iR)
+   function showKappa_TheCube(url, zwe, sW, sH, sS, bC, iR)
    {
     let scene = document.createElement('div');
     scene.setAttribute('class', 'scene');
@@ -4042,42 +4258,150 @@
     cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
     let f = 'height: ' + sS + 'px;';
     f += ' width: ' + sS + 'px;';
-    let cubeF = document.createElement('img');
-    cubeF.setAttribute('src', url);
-    cubeF.setAttribute('alt', '');
-    cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
-    cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
-    cube.appendChild(cubeF);
-    let cubeB = document.createElement('img');
-    cubeB.setAttribute('src', url);
-    cubeB.setAttribute('alt', '');
-    cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
-    cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
-    cube.appendChild(cubeB);
-    let cubeR = document.createElement('img');
-    cubeR.setAttribute('src', url);
-    cubeR.setAttribute('alt', '');
-    cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
-    cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
-    cube.appendChild(cubeR);
-    let cubeL = document.createElement('img');
-    cubeL.setAttribute('src', url);
-    cubeL.setAttribute('alt', '');
-    cubeL.setAttribute('class', 'cubeFace cubeFaceLeft');
-    cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
-    cube.appendChild(cubeL);
-    let cubeT = document.createElement('img');
-    cubeT.setAttribute('src', url);
-    cubeT.setAttribute('alt', '');
-    cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
-    cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
-    cube.appendChild(cubeT);
-    let cubeU = document.createElement('img');
-    cubeU.setAttribute('src', url);
-    cubeU.setAttribute('alt', '');
-    cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
-    cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
-    cube.appendChild(cubeU);
+    if (zwe.length === 0)
+    {
+     let cubeF = document.createElement('img');
+     cubeF.setAttribute('src', url);
+     cubeF.setAttribute('alt', '');
+     cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
+     cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+     cube.appendChild(cubeF);
+     let cubeB = document.createElement('img');
+     cubeB.setAttribute('src', url);
+     cubeB.setAttribute('alt', '');
+     cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
+     cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+     cube.appendChild(cubeB);
+     let cubeR = document.createElement('img');
+     cubeR.setAttribute('src', url);
+     cubeR.setAttribute('alt', '');
+     cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
+     cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+     cube.appendChild(cubeR);
+     let cubeL = document.createElement('img');
+     cubeL.setAttribute('src', url);
+     cubeL.setAttribute('alt', '');
+     cubeL.setAttribute('class', 'cubeFace cubeFaceLeft');
+     cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+     cube.appendChild(cubeL);
+     let cubeT = document.createElement('img');
+     cubeT.setAttribute('src', url);
+     cubeT.setAttribute('alt', '');
+     cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
+     cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+     cube.appendChild(cubeT);
+     let cubeU = document.createElement('img');
+     cubeU.setAttribute('src', url);
+     cubeU.setAttribute('alt', '');
+     cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
+     cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+     cube.appendChild(cubeU);
+    }
+    else
+    {
+     let cubeF = document.createElement('div');
+     cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
+     cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+     let pctF = document.createElement('img');
+     pctF.setAttribute('src', url);
+     pctF.setAttribute('alt', '');
+     pctF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+     cubeF.appendChild(pctF);
+     for (let i = 0; i < zwe.length; i++)
+     {
+      let pctZ = document.createElement('img');
+      pctZ.setAttribute('src', zwe[i].url);
+      pctZ.setAttribute('alt', '');
+      pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+      cubeF.appendChild(pctZ);
+     }
+     cube.appendChild(cubeF);
+     let cubeB = document.createElement('div');
+     cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
+     cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+     let pctB = document.createElement('img');
+     pctB.setAttribute('src', url);
+     pctB.setAttribute('alt', '');
+     pctB.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+     cubeB.appendChild(pctB);
+     for (let i = 0; i < zwe.length; i++)
+     {
+      let pctZ = document.createElement('img');
+      pctZ.setAttribute('src', zwe[i].url);
+      pctZ.setAttribute('alt', '');
+      pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+      cubeB.appendChild(pctZ);
+     }
+     cube.appendChild(cubeB);
+     let cubeR = document.createElement('div');
+     cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
+     cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+     let pctR = document.createElement('img');
+     pctR.setAttribute('src', url);
+     pctR.setAttribute('alt', '');
+     pctR.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+     cubeR.appendChild(pctR);
+     for (let i = 0; i < zwe.length; i++)
+     {
+      let pctZ = document.createElement('img');
+      pctZ.setAttribute('src', zwe[i].url);
+      pctZ.setAttribute('alt', '');
+      pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+      cubeR.appendChild(pctZ);
+     }
+     cube.appendChild(cubeR);
+     let cubeL = document.createElement('div');
+     cubeL.setAttribute('class', 'cubeFace cubeFaceLight');
+     cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+     let pctL = document.createElement('img');
+     pctL.setAttribute('src', url);
+     pctL.setAttribute('alt', '');
+     pctL.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+     cubeL.appendChild(pctL);
+     for (let i = 0; i < zwe.length; i++)
+     {
+      let pctZ = document.createElement('img');
+      pctZ.setAttribute('src', zwe[i].url);
+      pctZ.setAttribute('alt', '');
+      pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+      cubeL.appendChild(pctZ);
+     }
+     cube.appendChild(cubeL);
+     let cubeT = document.createElement('div');
+     cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
+     cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+     let pctT = document.createElement('img');
+     pctT.setAttribute('src', url);
+     pctT.setAttribute('alt', '');
+     pctT.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+     cubeT.appendChild(pctT);
+     for (let i = 0; i < zwe.length; i++)
+     {
+      let pctZ = document.createElement('img');
+      pctZ.setAttribute('src', zwe[i].url);
+      pctZ.setAttribute('alt', '');
+      pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+      cubeT.appendChild(pctZ);
+     }
+     cube.appendChild(cubeT);
+     let cubeU = document.createElement('div');
+     cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
+     cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+     let pctU = document.createElement('img');
+     pctU.setAttribute('src', url);
+     pctU.setAttribute('alt', '');
+     pctU.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+     cubeU.appendChild(pctU);
+     for (let i = 0; i < zwe.length; i++)
+     {
+      let pctZ = document.createElement('img');
+      pctZ.setAttribute('src', zwe[i].url);
+      pctZ.setAttribute('alt', '');
+      pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+      cubeU.appendChild(pctZ);
+     }
+     cube.appendChild(cubeU);
+    }
     scene.appendChild(cube);
     let h = rnd(sW - sS);
     let v = rnd(sH - sS);
@@ -4169,19 +4493,19 @@
       break;
     }
     let cY = oY * 0.33;
-    function sparkler(url, r, d)
+    function sparkler(url, r, d, a)
     {
      let simg = document.createElement('img');
      simg.setAttribute('class', 'emote');
      simg.setAttribute('src', url);
      simg.setAttribute('alt', '');
-     let th = (rnd() * (Math.PI * 2));
+     let th = (a * (Math.PI * 2));
      let hD = Math.floor(cX + r * Math.cos(th));
      let vD = Math.floor(cY + r * Math.sin(th));
-     let s = 'height: ' + sS + 'px;';
-     s += ' width: ' + sS + 'px;';
-     s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
-     s += ' transform: translate(' + cX + 'px, ' + cY + 'px);';
+     let s2 = 'height: ' + sS + 'px;';
+     s2 += ' width: ' + sS + 'px;';
+     s2 += ' transition: transform ' + cfg.emote.time + 's ease-out;';
+     s2 += ' transform: translate(' + cX + 'px, ' + cY + 'px);';
      let aNames = [];
      let aDelays = [];
      let aDurs = [];
@@ -4200,13 +4524,13 @@
      aTimings.push('ease-out');
      aFills.push('forwards');
      aIters.push('1');
-     s += ' animation-name: ' + aNames.join() + ';';
-     s += ' animation-delay: ' + aDelays.join() + ';';
-     s += ' animation-duration: ' + aDurs.join() + ';';
-     s += ' animation-timing-function: ' + aTimings.join() + ';';
-     s += ' animation-fill-mode: ' + aFills.join() + ';';
-     s += ' animation-iteration-count: ' + aIters.join() + ';';
-     simg.setAttribute('style', s);
+     s2 += ' animation-name: ' + aNames.join() + ';';
+     s2 += ' animation-delay: ' + aDelays.join() + ';';
+     s2 += ' animation-duration: ' + aDurs.join() + ';';
+     s2 += ' animation-timing-function: ' + aTimings.join() + ';';
+     s2 += ' animation-fill-mode: ' + aFills.join() + ';';
+     s2 += ' animation-iteration-count: ' + aIters.join() + ';';
+     simg.setAttribute('style', s2);
      document.body.appendChild(simg);
      gcEmote(simg, true, true, (d + cfg.emote.time) * 1000);
      window.setTimeout(
@@ -4217,22 +4541,46 @@
       (d * 1000) + tStart
      );
     }
-    let oURL = kList[rnd(kList.length)].url;
-    let img = document.createElement('img');
-    img.setAttribute('class', 'emote');
-    img.setAttribute('src', oURL);
-    img.setAttribute('alt', '');
     let s = 'height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
     s += ' transition: transform ' + sendUp + 's linear;';
     s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
-    img.setAttribute('style', s);
-    document.body.appendChild(img);
+    let oK = kList[rnd(kList.length)];
+    let iArr = [];
+    iArr.push(f(oK.url));
+    if (oK.hasOwnProperty('zwe'))
+    {
+     for (let i = 0; i < oK.zwe.length; i++)
+     {
+      eActive++;
+      iArr.push(f(oK.zwe[i].url));
+     }
+    }
+    function f(uri)
+    {
+     let img = document.createElement('img');
+     img.setAttribute('class', 'emote');
+     img.setAttribute('src', uri);
+     img.setAttribute('alt', '');
+     img.setAttribute('style', s);
+     document.body.appendChild(img);
+     window.setTimeout(
+      function()
+      {
+       img.style.transform = 'translate(' + cX + 'px, ' + cY + 'px)';
+      },
+      tStart
+     );
+     return img;
+    }
     window.setTimeout(
      async function()
      {
-      document.body.removeChild(img);
-      eActive--;
+      for (let i = 0; i < iArr.length; i++)
+      {
+       document.body.removeChild(iArr[i]);
+       eActive--;
+      }
       let r = sW;
       if (sH < r)
        r = sH;
@@ -4243,14 +4591,32 @@
       let t = 0;
       for (let i = 0; i < inner; i++)
       {
-       sparkler(kList[rnd(kList.length)].url, r * 0.5, t);
+       let sK = kList[rnd(kList.length)];
+       let sA = rnd();
+       sparkler(sK.url, r * 0.5, t, sA);
+       if (sK.hasOwnProperty('zwe'))
+       {
+        for (let i = 0; i < sK.zwe.length; i++)
+        {
+         sparkler(sK.zwe[i].url, r * 0.5, t, sA);
+        }
+       }
        if (i % Math.floor(outer / 3) === 0)
         await sleep(1);
       }
       t += 0.5;
       for (let i = 0; i < core; i++)
       {
-       sparkler(kList[rnd(kList.length)].url, r, t);
+       let sK = kList[rnd(kList.length)];
+       let sA = rnd();
+       sparkler(sK.url, r, t, sA);
+       if (sK.hasOwnProperty('zwe'))
+       {
+        for (let i = 0; i < sK.zwe.length; i++)
+        {
+         sparkler(sK.zwe[i].url, r, t, sA);
+        }
+       }
        t += 0.005;
        if (i % Math.floor(outer / 9) === 0)
         await sleep(1);
@@ -4258,19 +4624,21 @@
       t += 0.25;
       for (let i = 0; i < outer; i++)
       {
-       sparkler(kList[rnd(kList.length)].url, r * 1.5, t);
+       let sK = kList[rnd(kList.length)];
+       let sA = rnd();
+       sparkler(sK.url, r * 1.5, t, sA);
+       if (sK.hasOwnProperty('zwe'))
+       {
+        for (let i = 0; i < sK.zwe.length; i++)
+        {
+         sparkler(sK.zwe[i].url, r * 1.5, t, sA);
+        }
+       }
        if (i % Math.floor(outer / 3) === 0)
         await sleep(1);
       }
      },
      sendUp * 1000
-    );
-    window.setTimeout(
-     function()
-     {
-      img.style.transform = 'translate(' + cX + 'px, ' + cY + 'px)';
-     },
-     tStart
     );
    }
 
@@ -4352,7 +4720,16 @@
         if (th >= Math.PI * 2)
          th+= Math.PI * 2;
        }
-       sparkler(kList[rnd(kList.length)].url, r, th);
+       let oK = kList[rnd(kList.length)];
+       sparkler(oK.url, r, th);
+       if (oK.hasOwnProperty('zwe'))
+       {
+        for (let i = 0; i < oK.zwe.length; i++)
+        {
+         eActive++;
+         sparkler(oK.zwe[i].url, r, th);
+        }
+       }
        await sleep(10);
       }
      },
@@ -4414,7 +4791,16 @@
      do
       x = rnd(pyramidDist.length);
      while(drawn[x] >= pyramidDist[x]);
-     block(kList[rnd(kList.length)].url, x, t);
+     let oK = kList[rnd(kList.length)];
+     block(oK.url, x, t);
+     if (oK.hasOwnProperty('zwe'))
+     {
+      for (let i = 0; i < oK.zwe.length; i++)
+      {
+       eActive++;
+       block(oK.zwe[i].url, x, t);
+      }
+     }
      drawn[x]++;
      t += tPerB;
     }
@@ -4479,7 +4865,16 @@
      do
       x = rnd(pyramidDist.length);
      while(drawn[x] >= pyramidDist[x]);
-     block(kList[rnd(kList.length)].url, oX, x, t);
+     let oK = kList[rnd(kList.length)];
+     block(oK.url, oX, x, t);
+     if (oK.hasOwnProperty('zwe'))
+     {
+      for (let i = 0; i < oK.zwe.length; i++)
+      {
+       eActive++;
+       block(oK.zwe[i].url, oX, x, t);
+      }
+     }
      drawn[x]++;
      t += tPerB;
     }
@@ -4491,14 +4886,14 @@
     let bandHeight = sS * 3;
     let d = (rnd(2) === 1);
     let bandTop = rnd(sH - (sS * 2.5));
-    function run(url)
+    function run(url, y)
     {
      let img = document.createElement('img');
      img.setAttribute('class', 'emote');
      img.setAttribute('src', url);
      img.setAttribute('alt', '');
      let h = -2 * sS;
-     let v = rnd(bandHeight) + bandTop;
+     let v = y + bandTop;
      let s = 'top: 0px;';
      s += ' left: 0px;';
      s += ' height: ' + sS + 'px;';
@@ -4535,7 +4930,16 @@
      let imgs = [];
      for (let i = 0; i < ct; i++)
      {
-      imgs.push(run(kList[rnd(kList.length)].url));
+      let oK = kList[rnd(kList.length)];
+      let y = rnd(bandHeight);
+      imgs.push(run(oK.url, y));
+      if (oK.hasOwnProperty('zwe'))
+      {
+       for (let j = 0; j < oK.zwe.length; j++)
+       {
+        run(oK.zwe[j].url, y);
+       }
+      }
       await sleep(rnd(90) + 10);
      }
      if (pause === false)
@@ -4604,10 +5008,21 @@
     }
     conga.push({row: v, done: false});
     let urls = [];
+    let zurls = [];
     let ct = Math.floor(sW / bS);
     for (let i = 0; i < ct; i++)
     {
-     urls.push(kList[rnd(kList.length)].url);
+     let oK = kList[rnd(kList.length)];
+     urls.push(oK.url);
+     let oZ = [];
+     if (oK.hasOwnProperty('zwe'))
+     {
+      for (let j = 0; j < oK.zwe.length; j++)
+      {
+       oZ.push(oK.zwe[j].url);
+      }
+     }
+     zurls.push(oZ);
     }
     let d = ((v / seg) % 2 === 1);
     let xtra = Math.floor((sW - (ct * bS)) / 2);
@@ -4677,9 +5092,16 @@
      );
     }
     let imgs = [];
+    let zimgs = [];
     for (let i = 0; i < ct; i++)
     {
      imgs.push(dance(urls[i], i));
+     let oZ = [];
+     for (let j = 0; j < zurls[i].length; j++)
+     {
+      oZ.push(dance(zurls[i][j], i));
+     }
+     zimgs.push(oZ);
     }
     await sleep(longWait * 1000);
     let full = false;
@@ -4720,6 +5142,10 @@
     for (let i = 0; i < imgs.length; i++)
     {
      endDance(imgs[i], i);
+     for (let j = 0; j < zimgs[i].length; j++)
+     {
+      endDance(zimgs[i][j], i);
+     }
     }
     await sleep(longWait * 1000);
     for (let i = 0; i < conga.length; i++)
@@ -4831,14 +5257,23 @@
      while(drawn[x] >= msgDist[x].length);
      if (msgDist[x][drawn[x]] !== 0)
      {
-      block(kList[rnd(kList.length)].url, oX, x, t);
+      let oK = kList[rnd(kList.length)];
+      block(oK.url, oX, x, t);
+      if (oK.hasOwnProperty('zwe'))
+      {
+       for (let j = 0; j < oK.zwe.length; j++)
+       {
+        eActive++;
+        block(oK.zwe[j].url, oX, x, t);
+       }
+      }
       t += tPerB;
      }
      drawn[x]++;
     }
    }
 
-   function showEmote(url)
+   function showEmote(url, zwe)
    {
     let sW = window.innerWidth;
     let sH = window.innerHeight;
@@ -4859,7 +5294,7 @@
     let style = cfg.display.styles[rnd(cfg.display.styles.length)];
     if (style === undefined)
      return;
-    window['showEmote_' + style](url, sW, sH, sS);
+    window['showEmote_' + style](url, zwe, sW, sH, sS);
    }
 
    function showEmotes()
@@ -4877,7 +5312,7 @@
     let e = null;
     while ((e =  toShow.shift()) !== undefined)
     {
-     showEmote(e.url);
+     showEmote(e.url, e.zwe ?? []);
      if (cfg.emote.max > 0 && eActive > cfg.emote.max)
      {
       if (cfg.emote.queue > 0 && toShow.length > cfg.emote.queue)
@@ -5139,7 +5574,7 @@
       let sCR = cfg.display.kappa.styles['TheCube'].rotations;
       if (kStyle.prefs.hasOwnProperty('rotations'))
        sCR = kStyle.prefs.rotations;
-      showKappa_TheCube(kList[r].url, sW, sH, Math.floor(cS * sCS), sCC, sCR);
+      showKappa_TheCube(kList[r].url, kList[r].zwe ?? [], sW, sH, Math.floor(cS * sCS), sCC, sCR);
       break;
      case 'Burst':
       let oH = Math.floor((rnd() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
@@ -5148,7 +5583,7 @@
       {
        let r = rnd(kList.length);
        eActive--;
-       showEmote_StraightLine(kList[r].url, sW, sH, sS, oH, oV, false);
+       showEmote_StraightLine(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, oH, oV, false);
        await sleep(50);
       }
       break;
@@ -5159,7 +5594,7 @@
       {
        let r = rnd(kList.length);
        eActive--;
-       showEmote_Fountain(kList[r].url, sW, sH, sS, fX, fY, false);
+       showEmote_Fountain(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, fX, fY, false);
        await sleep(50);
       }
       break;
@@ -5168,7 +5603,7 @@
       {
        let r = rnd(kList.length);
        eActive--;
-       showEmote_Confetti(kList[r].url, sW, sH, sSm, false);
+       showEmote_Confetti(kList[r].url, kList[r].zwe ?? [], sW, sH, sSm, false);
        await sleep(25);
       }
       break;
@@ -5180,9 +5615,9 @@
        let r = rnd(kList.length);
        eActive--;
        if (kStyle.style === 'StraightLine')
-        showEmote_StraightLine(kList[r].url, sW, sH, sS, false, false, false);
+        showEmote_StraightLine(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, false, false);
        else
-        window['showEmote_' + kStyle.style](kList[r].url, sW, sH, sS, false);
+        window['showEmote_' + kStyle.style](kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false);
        await sleep(100);
       }
     }
@@ -5343,7 +5778,7 @@
      else if (dup !== true && l > dup)
       l = dup;
      for (let c = 0; c < l; c++)
-      ret.push({svc: 't', url: u, str: sName});
+      ret.push({svc: 't', url: u, str: sName, pos: eStart});
     }
     return ret;
    }
@@ -5379,7 +5814,12 @@
        continue;
      }
      addList[m[i]]++;
-     ret.push({svc: 'f', url: eList.ffz[m[i]].url, str: m[i], scope: eList.ffz[m[i]].scope});
+     let p = 0;
+     for (let j = 0; j < i; j++)
+     {
+      p+= m[j].length + 1;
+     }
+     ret.push({svc: 'f', url: eList.ffz[m[i]].url, str: m[i], pos: p, scope: eList.ffz[m[i]].scope});
     }
     return ret;
    }
@@ -5409,9 +5849,71 @@
        continue;
      }
      addList[m[i]]++;
-     ret.push({svc: 'b', url: eList.bttv[m[i]].url, str: m[i], scope: eList.bttv[m[i]].scope});
+     let p = 0;
+     for (let j = 0; j < i; j++)
+     {
+      p+= m[j].length + 1;
+     }
+     ret.push({svc: 'b', url: eList.bttv[m[i]].url, str: m[i], pos: p, scope: eList.bttv[m[i]].scope});
     }
     return ret;
+   }
+
+   function parseBTTVZWE(l, cmd, dup = null)
+   {
+    if (!cfg.display.extended.useZWE)
+     return;
+    if (!eList.hasOwnProperty('zwe'))
+     return;
+    if (!eList.zwe.hasOwnProperty('bttv'))
+     return;
+    if (cmd.params.length < 2)
+     return;
+    l.sort(function(a, b){return a.pos - b.pos;});
+    let m = cmd.params[1].split(' ');
+    if (dup === null)
+     dup = cfg.display.duplicates;
+    let addList = {};
+    for (let i = 0; i < m.length; i++)
+    {
+     if (!eList.zwe.bttv.hasOwnProperty(m[i]))
+      continue;
+     if (!addList.hasOwnProperty(m[i]))
+      addList[m[i]] = 0;
+     else
+     {
+      if (dup === false)
+       continue;
+      if (dup !== true && addList[m[i]] >= dup)
+       continue;
+     }
+     addList[m[i]]++;
+     let p = 0;
+     for (let j = 0; j < i; j++)
+     {
+      p+= m[j].length + 1;
+     }
+     let f = -1;
+     let h = -1;
+     for (let j = 0; j < l.length; j++)
+     {
+      if (l[j].pos > h)
+       h = l[j].pos;
+      else
+       continue;
+      if (l[j].pos < p)
+       f = j;
+     }
+     if (f === -1)
+      l.push({svc: 'b', url: eList.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: eList.zwe.bttv[m[i]].scope});
+     else
+     {
+      if (!l[f].hasOwnProperty('zwe'))
+       l[f].zwe = [];
+      l[f].zwe.push({svc: 'b', url: eList.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: eList.zwe.bttv[m[i]].scope});
+      l[f].zwe.sort(function(a, b){return a.pos - b.pos;});
+     }
+    }
    }
 
    function parseBTTVU(cmd, dup = null)
@@ -5442,7 +5944,12 @@
        continue;
      }
      addList[m[i]]++;
-     ret.push({svc: 'b', url: eList.bttvU[u.host][m[i]].url, str: m[i], scope: eList.bttvU[u.host][m[i]].scope});
+     let p = 0;
+     for (let j = 0; j < i; j++)
+     {
+      p+= m[j].length + 1;
+     }
+     ret.push({svc: 'b', url: eList.bttvU[u.host][m[i]].url, str: m[i], pos: p, scope: eList.bttvU[u.host][m[i]].scope});
     }
     return ret;
    }
@@ -5472,9 +5979,71 @@
        continue;
      }
      addList[m[i]]++;
-     ret.push({svc: '7', url: eList['7tv'][m[i]].url, str: m[i], scope: eList['7tv'][m[i]].scope});
+     let p = 0;
+     for (let j = 0; j < i; j++)
+     {
+      p+= m[j].length + 1;
+     }
+     ret.push({svc: '7', url: eList['7tv'][m[i]].url, str: m[i], pos: p, scope: eList['7tv'][m[i]].scope});
     }
     return ret;
+   }
+
+   function parse7TVZWE(l, cmd, dup = null)
+   {
+    if (!cfg.display.extended.useZWE)
+     return;
+    if (!eList.hasOwnProperty('zwe'))
+     return;
+    if (!eList.zwe.hasOwnProperty('7tv'))
+     return;
+    if (cmd.params.length < 2)
+     return;
+    l.sort(function(a, b){return a.pos - b.pos;});
+    let m = cmd.params[1].split(' ');
+    if (dup === null)
+     dup = cfg.display.duplicates;
+    let addList = {};
+    for (let i = 0; i < m.length; i++)
+    {
+     if (!eList.zwe['7tv'].hasOwnProperty(m[i]))
+      continue;
+     if (!addList.hasOwnProperty(m[i]))
+      addList[m[i]] = 0;
+     else
+     {
+      if (dup === false)
+       continue;
+      if (dup !== true && addList[m[i]] >= dup)
+       continue;
+     }
+     addList[m[i]]++;
+     let p = 0;
+     for (let j = 0; j < i; j++)
+     {
+      p+= m[j].length + 1;
+     }
+     let f = -1;
+     let h = -1;
+     for (let j = 0; j < l.length; j++)
+     {
+      if (l[j].pos > h)
+       h = l[j].pos;
+      else
+       continue;
+      if (l[j].pos < p)
+       f = j;
+     }
+     if (f === -1)
+      l.push({svc: '7', url: eList.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: eList.zwe['7tv'][m[i]].scope});
+     else
+     {
+      if (!l[f].hasOwnProperty('zwe'))
+       l[f].zwe = [];
+      l[f].zwe.push({svc: '7', url: eList.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: eList.zwe['7tv'][m[i]].scope});
+      l[f].zwe.sort(function(a, b){return a.pos - b.pos;});
+     }
+    }
    }
 
    function streamlabsWS()
@@ -6066,6 +6635,10 @@
      }
      if (cfg.display.extended.use7TV)
       p = p.concat(parse7TV(cmd));
+     if (cfg.display.extended.useBTTV)
+      parseBTTVZWE(p, cmd);
+     if (cfg.display.extended.use7TV)
+      parse7TVZWE(p, cmd);
     }
     else
      await parseLine(cmd);
@@ -6163,6 +6736,10 @@
         }
         if (cfg.display.extended.use7TV)
          a = a.concat(parse7TV(cmd, true));
+        if (cfg.display.extended.useBTTV)
+         parseBTTVZWE(a, cmd, true);
+        if (cfg.display.extended.use7TV)
+         parse7TVZWE(a, cmd, true);
         a = handleDuplicates(a);
         kLast = kNow;
         showKappa(a, kC);
@@ -6209,6 +6786,10 @@
        }
        if (cfg.display.extended.use7TV)
         a = a.concat(parse7TV(cmd, true));
+       if (cfg.display.extended.useBTTV)
+        parseBTTVZWE(a, cmd, true);
+       if (cfg.display.extended.use7TV)
+        parse7TVZWE(a, cmd, true);
        a = handleDuplicates(a);
        kLast = kNow;
        showKappa(a);
@@ -6229,6 +6810,10 @@
     }
     if (cfg.display.extended.use7TV)
      p = p.concat(parse7TV(cmd));
+    if (cfg.display.extended.useBTTV)
+     parseBTTVZWE(p, cmd);
+    if (cfg.display.extended.use7TV)
+     parse7TVZWE(p, cmd);
     p = handleDuplicates(p);
     if (p.length === 0)
      return;
@@ -6307,6 +6892,10 @@
       }
       if (cfg.display.extended.use7TV)
        a = a.concat(parse7TV(cmd, true));
+      if (cfg.display.extended.useBTTV)
+       parseBTTVZWE(a, cmd, true);
+      if (cfg.display.extended.use7TV)
+       parse7TVZWE(a, cmd, true);
      }
      else
       await parseLine(cmd);
@@ -6440,6 +7029,10 @@
      }
      if (cfg.display.extended.use7TV)
       a = a.concat(parse7TV(cmd, true));
+     if (cfg.display.extended.useBTTV)
+      parseBTTVZWE(a, cmd, true);
+     if (cfg.display.extended.use7TV)
+      parse7TVZWE(a, cmd, true);
      a = handleDuplicates(a);
      kLast = kNow;
      showKappa(a, kC);
