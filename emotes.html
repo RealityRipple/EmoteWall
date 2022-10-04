@@ -5672,8 +5672,6 @@
     if (cmd.params.length < 2)
      return [];
     let msg = cmd.params[1];
-    // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
-    msg = msg.replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
     let emSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
     let emList = [...msg.matchAll(emSeg)];
     if (emList.length === 0)
@@ -7288,6 +7286,11 @@
         ws.send('PONG ' + cmd.params[0]);
         break;
        case 'PRIVMSG':
+        if (cmd.params.length > 1)
+        {
+         // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
+         cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
+        }
         if (!await parseCheer(cmd))
          parseLine(cmd);
         break;
@@ -7335,6 +7338,11 @@
          continue;
         if (!cmd.tags.hasOwnProperty('msg-id'))
          continue;
+        if (cmd.params.length > 1)
+        {
+         // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
+         cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
+        }
         switch (cmd.tags['msg-id'])
         {
          case 'raid':
