@@ -5673,7 +5673,12 @@
      return [];
     let msg = cmd.params[1];
     let emSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
-    let emList = [...msg.matchAll(emSeg)];
+    let emList = [];
+    let match = '';
+    while ((match = emSeg.exec(msg)) != null)
+    {
+     emList.push(match);
+    }
     if (emList.length === 0)
      return [];
     if (dup === null)
@@ -5683,7 +5688,7 @@
     let ret = [];
     let uri = 'https://cdn.frankerfacez.com/static/emoji/images/' + set + '/';
     let addList = {};
-    function showEmoji(c)
+    function showEmoji(c, p)
     {
      if (c.slice(-5) === '-fe0f' && !c.match(/-200d-264[0|2]-/) && !c.match(/-200d-26a7/) && !c.match(/-200d-2620/))
       c = c.slice(0, -5);
@@ -5697,7 +5702,7 @@
        return false;
      }
      addList[c]++;
-     ret.push({svc: 'e', url: uri + c + '.png', str: c});
+     ret.push({svc: 'e', url: uri + c + '.png', str: c, pos: p});
      return true;
     }
     for (let i = 0; i < emList.length; i++)
@@ -5759,7 +5764,7 @@
       found = await checkURL(tU);
       if (found)
       {
-       showEmoji(s);
+       showEmoji(s, emList[i].index);
        continue;
       }
       while (s.includes('-'))
@@ -5772,17 +5777,19 @@
        found = await checkURL(tU);
        if (found)
        {
-        showEmoji(s);
+        showEmoji(s, emList[i].index);
         break;
        }
       }
       continue;
      }
+     let p = emList[i].index;
      for (let j = 0; j < cpList.length; j++)
      {
+      p += cpList[j].replaceAll(/[^\-]/g, '').length + 1;
       found = await checkURL(uri + cpList[j] + '.png');
       if (found)
-       showEmoji(cpList[j]);
+       showEmoji(cpList[j], p);
      }
     }
     return ret;
