@@ -1898,6 +1898,7 @@
    var tStart = 48;    // time to wait for transition trigger (ms)
    var uLF = false;    // user id of the most recent follower
    var rFC = 2500;     // follower count interval (ms)
+   var rTE = 60000;    // third-party channel emote recheck interval (ms)
    var tAnim = {       // animation timing constants
     fade: {
      in: 8,            // percentage of animation spent on fading in (8% of 5 seconds)
@@ -1914,6 +1915,7 @@
    var tKappa = false; // kappagen queue timer
    var tGC = false;    // garbage collection
    var tFC = false;    // follower kludge
+   var tTE = false;    // third-party channel emote kludge
    var tL = false;     // logout button display
 
    function sleep(ms)
@@ -2374,6 +2376,21 @@
     return p;
    }
 
+   function load3rdParty(chID)
+   {
+    if (tTE === false)
+     return;
+    window.clearTimeout(tTE);
+    tTE = false;
+    if (cfg.display.extended.useFFZ)
+     loadFFZ_channel(channelID);
+    if (cfg.display.extended.useBTTV)
+     loadBTTV_channel(channelID);
+    if (cfg.display.extended.use7TV)
+     load7TV_channel(channelID);
+    tTE = window.setTimeout(load3rdParty, rTE, chID);
+   }
+
    function readFFZ_URL(entry)
    {
     if (!entry.hasOwnProperty('urls'))
@@ -2679,6 +2696,15 @@
         addEmote(eList.bttvU[d.data.name], 'u', d.data.emotes[i].code, d.data.emotes[i].id, 'https://cdn.betterttv.net/emote/' + d.data.emotes[i].id + '/3x');
        }
        break;
+      case 'emote_create':
+      case 'emote_delete':
+      case 'emote_update':
+       if (tTE !== false)
+       {
+        window.clearTimeout(tTE);
+        tTE = window.setTimeout(load3rdParty, 500, chID);
+       }
+       break;
      }
     };
    }
@@ -2841,6 +2867,74 @@
      }
     );
     return p;
+   }
+
+   function load7TV_channelID(chID)
+   {
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.7tv.app/v2/users/' + chID + '?nocache=' + rnd(0xFFFFFFFF));
+      x.onreadystatechange = function()
+      {
+       if (x.status !== 200)
+       {
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       if (j.hasOwnProperty('id'))
+        resolve(j.id);
+       else
+        resolve(false);
+      };
+      x.send();
+     }
+    );
+    return p;
+   }
+
+   async function load7TV_ws_channel(chID)
+   {
+    let accID = await load7TV_channelID(chID);
+    if (accID === false)
+     return;
+    const ws = new WebSocket('wss://events.7tv.io/v3');
+    ws.onopen = function(event)
+    {
+    };
+    ws.onclose = function()
+    {
+     window.setTimeout(function(){load7TV_ws_channel(chID);}, 5000);
+    };
+    ws.onmessage = function(event)
+    {
+     if (!event.isTrusted)
+      return;
+     let d = JSON.parse(event.data);
+     switch(d.op)
+     {
+      case 0:
+       if (tTE !== false)
+       {
+        window.clearTimeout(tTE);
+        tTE = window.setTimeout(load3rdParty, 500, chID);
+       }
+       break;
+      case 1:
+       ws.send(JSON.stringify({"op": 35, "d": {"type":"user.*", "condition": {"object_id": accID}}}));
+       ws.send(JSON.stringify({"op": 35, "d": {"type":"emote.*", "condition": {"object_id": accID}}}));
+       ws.send(JSON.stringify({"op": 35, "d": {"type":"emote_set.*", "condition": {"object_id": accID}}}));
+       break;
+      case 2:
+       break;
+     }
+    };
    }
 
    function doGC()
@@ -7390,7 +7484,12 @@
           loadBTTV_ws_channel(channelID);
          }
          if (cfg.display.extended.use7TV)
+         {
           load7TV_channel(channelID);
+          load7TV_ws_channel(channelID);
+         }
+         if (cfg.display.extended.useFFZ | cfg.display.extended.useBTTV | cfg.display.extended.use7TV)
+          tTE = window.setTimeout(load3rdParty, rTE, channelID);
          if (cfg.event.follow !== false)
           tFC = window.setTimeout(detectFollowers, tStart, channelID);
          pubSub();
