@@ -1888,7 +1888,7 @@
    var toGC = {};      // list of image elements to garbage collect
    var eList = {};     // pre-listed emotes, sub-grouped into: cheer, ffz, 7tv, bttv, and bttvU (user-specific BTTV)
    var cList = [];     // list of channel-specific emotes, used for kappagens
-   var fList = [];     // cache of users in chat and their follow status
+   var fList = {};     // cache of users in chat and their follow status
    var bList = [];     // list of giftbomb event origin ids (to prevent kappas for each gift in a bomb)
    var rList = {};     // list of triggered channel point redeems to match to PubSub events
    var uList = {};     // checkURL Cache
@@ -6167,6 +6167,7 @@
          resolve(s);
          return;
         }
+        fList[j.data[i].from_id] = {value: true, t: new Date().getTime()};
         s.push(j.data[i].from_name);
        }
        resolve([]);
@@ -6182,24 +6183,16 @@
     let p = new Promise(
      (resolve, reject) =>
      {
-      if (fList.length > 0)
+      let uID = cmd.tags['user-id'];
+      if (fList.hasOwnProperty(uID))
       {
-       for (let i = 0; i < fList.length; i++)
+       let tDif = new Date().getTime() - fList[uID].t;
+       if (tDif < rFH)
        {
-        if (fList[i].id === cmd.tags['user-id'])
-        {
-         let tDif = new Date().getTime() - fList[i].t;
-         if (tDif > rFH)
-         {
-          fList.splice(i, 1);
-          break;
-         }
-         resolve(fList[i].value);
-         return;
-        }
+        resolve(fList[uID].value);
+        return;
        }
       }
-      let uID = cmd.tags['user-id'];
       let chID = cmd.tags['room-id'];
       let x = new XMLHttpRequest();
       x.open('GET', 'https://api.twitch.tv/helix/users/follows?from_id=' + uID + '&to_id=' + chID + '&nocache=' + rnd(0xFFFFFFFF));
@@ -6219,11 +6212,11 @@
        let j = JSON.parse(x.responseText);
        if (j.total > 0)
        {
-        fList.push({id: uID, value: true, t: new Date().getTime()});
+        fList[uID] = {value: true, t: new Date().getTime()};
         resolve(true);
         return;
        }
-       fList.push({id: uID, value: false, t: new Date().getTime()});
+       fList[uID] = {value: false, t: new Date().getTime()};
        resolve(false);
       };
       x.send();
