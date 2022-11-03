@@ -2208,10 +2208,10 @@
     return true;
    }
 
-   function addEmote(list, scope, code, id, url, users = null)
+   function addEmote(list, scope, code, id, url, users = null, zwe = false)
    {
     list[code] = {scope: scope, url: url, id: id, users: users};
-    if (scope === 'c')
+    if (scope === 'c' && !zwe)
      cList.push({url: url});
    }
 
@@ -2594,7 +2594,7 @@
         if (bttvZWE.includes(j[i].code))
         {
          if (cfg.display.extended.useZWE)
-          addEmote(eList.zwe.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x');
+          addEmote(eList.zwe.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x', null, true);
          continue;
         }
         addEmote(eList.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x');
@@ -2776,7 +2776,7 @@
         if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
         {
          if (cfg.display.extended.useZWE)
-          addEmote(eList.zwe['7tv'], 'g', j[i].name, j[i].id, t4);
+          addEmote(eList.zwe['7tv'], 'g', j[i].name, j[i].id, t4, null, true);
          continue;
         }
         addEmote(eList['7tv'], 'g', j[i].name, j[i].id, t4);
@@ -2857,7 +2857,7 @@
         if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
         {
          if (cfg.display.extended.useZWE)
-          addEmote(eList.zwe['7tv'], 'c', j[i].name, j[i].id, t4);
+          addEmote(eList.zwe['7tv'], 'c', j[i].name, j[i].id, t4, null, true);
          continue;
         }
         addEmote(eList['7tv'], 'c', j[i].name, j[i].id, t4);
