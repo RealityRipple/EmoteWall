@@ -2989,6 +2989,81 @@
      tGC = window.setTimeout(doGC, 500);
    }
 
+   function styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters)
+   {
+    let s = '';
+    if (aNames.length > 0)
+    {
+     s += ' animation-name: ' + aNames.join() + ';';
+     s += ' animation-delay: ' + aDelays.join() + ';';
+     s += ' animation-duration: ' + aDurs.join() + ';';
+     s += ' animation-timing-function: ' + aTimings.join() + ';';
+     s += ' animation-fill-mode: ' + aFills.join() + ';';
+     s += ' animation-iteration-count: ' + aIters.join() + ';';
+    }
+    return s;
+   }
+
+   function styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, fadeIn = true, zoomIn = true, fadeOut = true, zoomOut = true, variationSize = 1)
+   {
+    if (fadeIn)
+    {
+     aNames.push('fadeIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('ease-in');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (zoomIn)
+    {
+     if (variationSize === 0)
+      aNames.push('zoomInS');
+     else if (variationSize === 2)
+      aNames.push('zoomInL');
+     else
+      aNames.push('zoomIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (fadeOut)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+     aDurs.push('50ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (zoomOut)
+    {
+     if (variationSize === 0)
+      aNames.push('zoomOutS');
+     else if (variationSize === 2)
+      aNames.push('zoomOutL');
+     else
+      aNames.push('zoomOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    return styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
+   }
+
    function showEmote_Rise(url, zwe, sW, sH, sS, canV = true)
    {
     let variationSize = 1;
@@ -3034,67 +3109,7 @@
     aTimings.push('linear');
     aFills.push('forwards');
     aIters.push('1');
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.in.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomInS');
-     else if (variationSize === 2)
-      aNames.push('zoomInL');
-     else
-      aNames.push('zoomIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -3134,76 +3149,7 @@
      velH = -1 * velH;
     let s = 'height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
-    let aNames = [];
-    let aDelays = [];
-    let aDurs = [];
-    let aTimings = [];
-    let aFills = [];
-    let aIters = [];
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.in.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomInS');
-     else if (variationSize === 2)
-      aNames.push('zoomInL');
-     else
-      aNames.push('zoomIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (aNames.length > 0)
-    {
-     s += ' animation-name: ' + aNames.join() + ';';
-     s += ' animation-delay: ' + aDelays.join() + ';';
-     s += ' animation-duration: ' + aDurs.join() + ';';
-     s += ' animation-timing-function: ' + aTimings.join() + ';';
-     s += ' animation-fill-mode: ' + aFills.join() + ';';
-     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    }
+    s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
     let iArr = [];
     iArr.push({img: f(url), bX: h, bY: v, velY: velV});
@@ -3288,67 +3234,7 @@
     aTimings.push('ease-in');
     aFills.push('forwards');
     aIters.push('1');
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.in.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomInS');
-     else if (variationSize === 2)
-      aNames.push('zoomInL');
-     else
-      aNames.push('zoomIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -3405,44 +3291,7 @@
     aTimings.push('ease-in');
     aFills.push('forwards');
     aIters.push('1');
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -3502,30 +3351,7 @@
     aTimings.push('linear');
     aFills.push('forwards');
     aIters.push('1');
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, false, variationSize);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -3616,73 +3442,7 @@
      }
     }
     dests.push({x: pos.x, y: pos.y, t: (pos.t - lastT), w: 0});
-    let aNames = [];
-    let aDelays = [];
-    let aDurs = [];
-    let aTimings = [];
-    let aFills = [];
-    let aIters = [];
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.in.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomInS');
-     else if (variationSize === 2)
-      aNames.push('zoomInL');
-     else
-      aNames.push('zoomIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     let iArr = [];
     iArr.push(f(url));
     for (let i = 0; i < zwe.length; i++)
@@ -3807,73 +3567,7 @@
     s += ' width: ' + sS + 'px;';
     s += ' transition: transform ' + cfg.emote.time + 's linear;';
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-    let aNames = [];
-    let aDelays = [];
-    let aDurs = [];
-    let aTimings = [];
-    let aFills = [];
-    let aIters = [];
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.in.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomInS');
-     else if (variationSize === 2)
-      aNames.push('zoomInL');
-     else
-      aNames.push('zoomIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -3938,12 +3632,7 @@
     aTimings.push('cubic-bezier(0, 0.9, 1, 0.15)');
     aFills.push('forwards');
     aIters.push('1');
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -4039,12 +3728,7 @@
      aFills.push('forwards');
      aIters.push('1');
     }
-    s2 += ' animation-name: ' + aNames.join() + ';';
-    s2 += ' animation-delay: ' + aDelays.join() + ';';
-    s2 += ' animation-duration: ' + aDurs.join() + ';';
-    s2 += ' animation-timing-function: ' + aTimings.join() + ';';
-    s2 += ' animation-fill-mode: ' + aFills.join() + ';';
-    s2 += ' animation-iteration-count: ' + aIters.join() + ';';
+    s2 += styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
     let iArr = [];
     iArr.push(f(url));
     for (let i = 0; i < zwe.length; i++)
@@ -4104,76 +3788,7 @@
     s += ' left: ' + h + 'px;';
     s += ' height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
-    let aNames = [];
-    let aDelays = [];
-    let aDurs = [];
-    let aTimings = [];
-    let aFills = [];
-    let aIters = [];
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.in.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomInS');
-     else if (variationSize === 2)
-      aNames.push('zoomInL');
-     else
-      aNames.push('zoomIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (aNames.length > 0)
-    {
-     s += ' animation-name: ' + aNames.join() + ';';
-     s += ' animation-delay: ' + aDelays.join() + ';';
-     s += ' animation-duration: ' + aDurs.join() + ';';
-     s += ' animation-timing-function: ' + aTimings.join() + ';';
-     s += ' animation-fill-mode: ' + aFills.join() + ';';
-     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    }
+    s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -4379,48 +3994,7 @@
     s += ' perspective: ' + (sS * 3)  + 'px;';
     s += ' transition: all ' + cfg.emote.time + 's linear;';
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-    let aNames = [];
-    let aDelays = [];
-    let aDurs = [];
-    let aTimings = [];
-    let aFills = [];
-    let aIters = [];
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (aNames.length > 0)
-    {
-     s += ' animation-name: ' + aNames.join() + ';';
-     s += ' animation-delay: ' + aDelays.join() + ';';
-     s += ' animation-duration: ' + aDurs.join() + ';';
-     s += ' animation-timing-function: ' + aTimings.join() + ';';
-     s += ' animation-fill-mode: ' + aFills.join() + ';';
-     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    }
+    s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, variationSize);
     scene.setAttribute('style', s);
     eActive++;
     document.body.appendChild(scene);
@@ -4610,48 +4184,7 @@
     s += ' perspective: ' + (sS * 3)  + 'px;';
     s += ' transition: all ' + cfg.emote.time + 's linear;';
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-    let aNames = [];
-    let aDelays = [];
-    let aDurs = [];
-    let aTimings = [];
-    let aFills = [];
-    let aIters = [];
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (aNames.length > 0)
-    {
-     s += ' animation-name: ' + aNames.join() + ';';
-     s += ' animation-delay: ' + aDelays.join() + ';';
-     s += ' animation-duration: ' + aDurs.join() + ';';
-     s += ' animation-timing-function: ' + aTimings.join() + ';';
-     s += ' animation-fill-mode: ' + aFills.join() + ';';
-     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    }
+    s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false);
     scene.setAttribute('style', s);
     eActive++;
     document.body.appendChild(scene);
@@ -4719,12 +4252,7 @@
      aTimings.push('ease-out');
      aFills.push('forwards');
      aIters.push('1');
-     s2 += ' animation-name: ' + aNames.join() + ';';
-     s2 += ' animation-delay: ' + aDelays.join() + ';';
-     s2 += ' animation-duration: ' + aDurs.join() + ';';
-     s2 += ' animation-timing-function: ' + aTimings.join() + ';';
-     s2 += ' animation-fill-mode: ' + aFills.join() + ';';
-     s2 += ' animation-iteration-count: ' + aIters.join() + ';';
+     s2 += styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
      simg.setAttribute('style', s2);
      document.body.appendChild(simg);
      gcEmote(simg, true, true, (d + cfg.emote.time) * 1000);
@@ -4853,30 +4381,7 @@
      s += ' width: ' + sS + 'px;';
      s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
      s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
-     let aNames = [];
-     let aDelays = [];
-     let aDurs = [];
-     let aTimings = [];
-     let aFills = [];
-     let aIters = [];
-     aNames.push('fadeIn');
-     aDelays.push('0ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-     s += ' animation-name: ' + aNames.join() + ';';
-     s += ' animation-delay: ' + aDelays.join() + ';';
-     s += ' animation-duration: ' + aDurs.join() + ';';
-     s += ' animation-timing-function: ' + aTimings.join() + ';';
-     s += ' animation-fill-mode: ' + aFills.join() + ';';
-     s += ' animation-iteration-count: ' + aIters.join() + ';';
+     s += styleEmote([], [], [], [], [], [], true, false, true, false);
      simg.setAttribute('style', s);
      document.body.appendChild(simg);
      gcEmote(simg, true, true);
