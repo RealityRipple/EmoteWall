@@ -1898,6 +1898,7 @@
    var tStart = 48;    // time to wait for transition trigger (ms)
    var uLF = false;    // user id of the most recent follower
    var rFC = 2500;     // follower count interval (ms)
+   var rFH = 3600000;  // follower state cache time (ms)
    var rTE = 60000;    // third-party channel emote recheck interval (ms)
    var tAnim = {       // animation timing constants
     fade: {
@@ -6682,8 +6683,8 @@
        {
         if (fList[i].id === cmd.tags['user-id'])
         {
-         let tDif = Math.floor((new Date().getTime() - fList[i].t) / 1000);
-         if (tDif > 3600)
+         let tDif = new Date().getTime() - fList[i].t;
+         if (tDif > rFH)
          {
           fList.splice(i, 1);
           break;
