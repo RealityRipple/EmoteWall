@@ -6,7 +6,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.6 BETA
+    * v0.6.1 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -1888,7 +1888,7 @@
    var toGC = {};      // list of image elements to garbage collect
    var eList = {};     // pre-listed emotes, sub-grouped into: cheer, ffz, 7tv, bttv, and bttvU (user-specific BTTV)
    var cList = [];     // list of channel-specific emotes, used for kappagens
-   var fList = [];     // cache of users in chat and their follow status
+   var fList = {};     // cache of users in chat and their follow status
    var bList = [];     // list of giftbomb event origin ids (to prevent kappas for each gift in a bomb)
    var rList = {};     // list of triggered channel point redeems to match to PubSub events
    var uList = {};     // checkURL Cache
@@ -1898,6 +1898,8 @@
    var tStart = 48;    // time to wait for transition trigger (ms)
    var uLF = false;    // user id of the most recent follower
    var rFC = 2500;     // follower count interval (ms)
+   var rFH = 3600000;  // follower state cache time (ms)
+   var rTE = 60000;    // third-party channel emote recheck interval (ms)
    var tAnim = {       // animation timing constants
     fade: {
      in: 8,            // percentage of animation spent on fading in (8% of 5 seconds)
@@ -1914,6 +1916,7 @@
    var tKappa = false; // kappagen queue timer
    var tGC = false;    // garbage collection
    var tFC = false;    // follower kludge
+   var tTE = false;    // third-party channel emote kludge
    var tL = false;     // logout button display
 
    function sleep(ms)
@@ -2117,7 +2120,7 @@
      (resolve, reject) =>
      {
       let x = new XMLHttpRequest();
-      x.open('GET', 'https://api.twitch.tv/helix/users?login=' + u);
+      x.open('GET', 'https://api.twitch.tv/helix/users?login=' + u + '&nocache=' + rnd(0xFFFFFFFF));
       x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
       x.setRequestHeader('Client-Id', cfg.login.client);
       x.onreadystatechange = function()
@@ -2159,7 +2162,7 @@
      (resolve, reject) =>
      {
       let x = new XMLHttpRequest();
-      x.open('GET', 'https://api.twitch.tv/helix/chat/emotes?broadcaster_id=' + chID);
+      x.open('GET', 'https://api.twitch.tv/helix/chat/emotes?broadcaster_id=' + chID + '&nocache=' + rnd(0xFFFFFFFF));
       x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
       x.setRequestHeader('Client-Id', cfg.login.client);
       x.onreadystatechange = function()
@@ -2205,6 +2208,57 @@
     return true;
    }
 
+   function addEmote(list, scope, code, id, url, users = null, zwe = false)
+   {
+    list[code] = {scope: scope, url: url, id: id, users: users};
+    if (scope === 'c' && !zwe)
+     cList.push({url: url});
+   }
+
+   function removeEmote(list, scope, code)
+   {
+    if (!list.hasOwnProperty(code))
+     return;
+    if (list[code].scope !== scope)
+     return;
+    if (scope === 'c')
+    {
+     for (let c = cList.length - 1; c >= 0; c--)
+     {
+      if (cList[c].url !== list[code].url)
+       continue;
+      cList.splice(c, 1);
+      break;
+     }
+    }
+    delete list[code];
+   }
+
+   function removeEmoteByID(list, scope, id)
+   {
+    for (let i = Object.keys(list).length - 1; i >= 0; i--)
+    {
+     let k = Object.keys(list)[i];
+     if (list[k].scope !== scope)
+      continue;
+     if (list[k].id !== id)
+      continue;
+     removeEmote(list, scope, k);
+     break;
+    }
+   }
+
+   function removeEmoteByScope(list, scope)
+   {
+    for (let i = Object.keys(list).length - 1; i >= 0; i--)
+    {
+     let k = Object.keys(list)[i];
+     if (list[k].scope !== scope)
+      continue;
+     removeEmote(list, scope, k);
+    }
+   }
+
    function loadCheer_channel(chID)
    {
     eList.cheer = {};
@@ -2212,7 +2266,7 @@
      (resolve, reject) =>
      {
       let x = new XMLHttpRequest();
-      x.open('GET', 'https://api.twitch.tv/helix/bits/cheermotes?broadcaster_id=' + chID);
+      x.open('GET', 'https://api.twitch.tv/helix/bits/cheermotes?broadcaster_id=' + chID + '&nocache=' + rnd(0xFFFFFFFF));
       x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
       x.setRequestHeader('Client-Id', cfg.login.client);
       x.onreadystatechange = function()
@@ -2323,6 +2377,21 @@
     return p;
    }
 
+   function load3rdParty(chID)
+   {
+    if (tTE === false)
+     return;
+    window.clearTimeout(tTE);
+    tTE = false;
+    if (cfg.display.extended.useFFZ)
+     loadFFZ_channel(channelID);
+    if (cfg.display.extended.useBTTV)
+     loadBTTV_channel(channelID);
+    if (cfg.display.extended.use7TV)
+     load7TV_channel(channelID);
+    tTE = window.setTimeout(load3rdParty, rTE, chID);
+   }
+
    function readFFZ_URL(entry)
    {
     if (!entry.hasOwnProperty('urls'))
@@ -2364,7 +2433,7 @@
      (resolve, reject) =>
      {
       let x = new XMLHttpRequest();
-      x.open('GET', 'https://api.frankerfacez.com/v1/set/global');
+      x.open('GET', 'https://api.frankerfacez.com/v1/set/global?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
        if (x.status !== 200)
@@ -2403,7 +2472,7 @@
          let u = readFFZ_URL(j.sets[set].emoticons[i]);
          if (u === false)
           continue;
-         eList.ffz[j.sets[set].emoticons[i].name] = {url: u, users: null, scope: 'g'};
+         addEmote(eList.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
         }
        }
        //user-specific, from here on everything resolve()s true
@@ -2434,7 +2503,7 @@
           let u = readFFZ_URL(j.sets[set].emoticons[i]);
           if (u === false)
            continue;
-          eList.ffz[j.sets[set].emoticons[i].name] = {url: u, users: aList, scope: 'g'};
+          addEmote(eList.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, aList);
          }
         }
        }
@@ -2452,7 +2521,7 @@
      (resolve, reject) =>
      {
       let x = new XMLHttpRequest();
-      x.open('GET', 'https://api.frankerfacez.com/v1/room/id/' + chID);
+      x.open('GET', 'https://api.frankerfacez.com/v1/room/id/' + chID + '?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
        if (x.status !== 200)
@@ -2470,6 +2539,7 @@
         resolve(false);
         return;
        }
+       removeEmoteByScope(eList.ffz, 'c');
        for (const set in j.sets)
        {
         if (!j.sets[set].hasOwnProperty('emoticons'))
@@ -2481,8 +2551,7 @@
          let u = readFFZ_URL(j.sets[set].emoticons[i]);
          if (u === false)
           continue;
-         cList.push({url: u});
-         eList.ffz[j.sets[set].emoticons[i].name] = {url: u, users: null, scope: 'c'};
+         addEmote(eList.ffz, 'c', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
         }
        }
        resolve(true);
@@ -2503,7 +2572,7 @@
      (resolve, reject) =>
      {
       let x = new XMLHttpRequest();
-      x.open('GET', 'https://api.betterttv.net/3/cached/emotes/global');
+      x.open('GET', 'https://api.betterttv.net/3/cached/emotes/global?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
        if (x.status !== 200)
@@ -2525,10 +2594,10 @@
         if (bttvZWE.includes(j[i].code))
         {
          if (cfg.display.extended.useZWE)
-          eList.zwe.bttv[j[i].code] = {url: 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x', scope: 'g'};
+          addEmote(eList.zwe.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x', null, true);
          continue;
         }
-        eList.bttv[j[i].code] = {url: 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x', scope: 'g'};
+        addEmote(eList.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x');
        }
        resolve(true);
       };
@@ -2544,7 +2613,7 @@
      (resolve, reject) =>
      {
       let x = new XMLHttpRequest();
-      x.open('GET', 'https://api.betterttv.net/3/cached/users/twitch/' + chID);
+      x.open('GET', 'https://api.betterttv.net/3/cached/users/twitch/' + chID + '?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
        if (x.status !== 200)
@@ -2556,6 +2625,7 @@
         return;
        if (x.responseText === '')
         return;
+       removeEmoteByScope(eList.bttv, 'c');
        let j = JSON.parse(x.responseText);
        if (j.hasOwnProperty('channelEmotes'))
        {
@@ -2565,8 +2635,7 @@
           continue;
          if (!j.channelEmotes[i].hasOwnProperty('id'))
           continue;
-         cList.push({url: 'https://cdn.betterttv.net/emote/' + j.channelEmotes[i].id + '/3x'});
-         eList.bttv[j.channelEmotes[i].code] = {url: 'https://cdn.betterttv.net/emote/' + j.channelEmotes[i].id + '/3x', scope: 'c'};
+         addEmote(eList.bttv, 'c', j.channelEmotes[i].code, j.channelEmotes[i].id, 'https://cdn.betterttv.net/emote/' + j.channelEmotes[i].id + '/3x');
         }
        }
        if (j.hasOwnProperty('sharedEmotes'))
@@ -2577,8 +2646,7 @@
           continue;
          if (!j.sharedEmotes[i].hasOwnProperty('id'))
           continue;
-         cList.push({url: 'https://cdn.betterttv.net/emote/' + j.sharedEmotes[i].id + '/3x'});
-         eList.bttv[j.sharedEmotes[i].code] = {url: 'https://cdn.betterttv.net/emote/' + j.sharedEmotes[i].id + '/3x', scope: 'c'};
+         addEmote(eList.bttv, 'c', j.sharedEmotes[i].code, j.sharedEmotes[i].id, 'https://cdn.betterttv.net/emote/' + j.sharedEmotes[i].id + '/3x');
         }
        }
        resolve(true);
@@ -2591,7 +2659,6 @@
 
    function loadBTTV_ws_channel(chID)
    {
-    eList.bttvU = {};
     const ws = new WebSocket('wss://sockets.betterttv.net/ws');
     ws.onopen = function(event)
     {
@@ -2611,20 +2678,34 @@
       return;
      if (!d.hasOwnProperty('data'))
       return;
-     if (d.name !== 'lookup_user')
-      return;
-     if (!d.data.hasOwnProperty('name'))
-      return;
-     if (!d.data.hasOwnProperty('emotes') || !Array.isArray(d.data.emotes) || d.data.emotes.length < 1)
-      return;
-     eList.bttvU[d.data.name] = {};
-     for (let i = 0; i < d.data.emotes.length; i++)
+     switch (d.name)
      {
-      if (!d.data.emotes[i].hasOwnProperty('code'))
-       continue;
-      if (!d.data.emotes[i].hasOwnProperty('id'))
-       continue;
-      eList.bttvU[d.data.name][d.data.emotes[i].code] = {url: 'https://cdn.betterttv.net/emote/' + d.data.emotes[i].id + '/3x', scope: 'u'};
+      case 'lookup_user':
+       if (!d.data.hasOwnProperty('name'))
+        return;
+       if (!d.data.hasOwnProperty('emotes') || !Array.isArray(d.data.emotes) || d.data.emotes.length < 1)
+        return;
+       if (!eList.hasOwnProperty('bttvU'))
+        eList.bttvU = {};
+       eList.bttvU[d.data.name] = {};
+       for (let i = 0; i < d.data.emotes.length; i++)
+       {
+        if (!d.data.emotes[i].hasOwnProperty('code'))
+         continue;
+        if (!d.data.emotes[i].hasOwnProperty('id'))
+         continue;
+        addEmote(eList.bttvU[d.data.name], 'u', d.data.emotes[i].code, d.data.emotes[i].id, 'https://cdn.betterttv.net/emote/' + d.data.emotes[i].id + '/3x');
+       }
+       break;
+      case 'emote_create':
+      case 'emote_delete':
+      case 'emote_update':
+       if (tTE !== false)
+       {
+        window.clearTimeout(tTE);
+        tTE = window.setTimeout(load3rdParty, 500, chID);
+       }
+       break;
      }
     };
    }
@@ -2640,7 +2721,7 @@
      (resolve, reject) =>
      {
       let x = new XMLHttpRequest();
-      x.open('GET', 'https://api.7tv.app/v2/emotes/global');
+      x.open('GET', 'https://api.7tv.app/v2/emotes/global?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
        if (x.status !== 200)
@@ -2695,10 +2776,10 @@
         if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
         {
          if (cfg.display.extended.useZWE)
-          eList.zwe['7tv'][j[i].name] = {url: t4, scope: 'g'};
+          addEmote(eList.zwe['7tv'], 'g', j[i].name, j[i].id, t4, null, true);
          continue;
         }
-        eList['7tv'][j[i].name] = {url: t4, scope: 'g'};
+        addEmote(eList['7tv'], 'g', j[i].name, j[i].id, t4);
        }
        resolve(true);
       };
@@ -2718,7 +2799,7 @@
      (resolve, reject) =>
      {
       let x = new XMLHttpRequest();
-      x.open('GET', 'https://api.7tv.app/v2/users/' + chID + '/emotes');
+      x.open('GET', 'https://api.7tv.app/v2/users/' + chID + '/emotes?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
        if (x.status !== 200)
@@ -2730,6 +2811,9 @@
         return;
        if (x.responseText === '')
         return;
+       if (cfg.display.extended.useZWE)
+        removeEmoteByScope(eList.zwe['7tv'], 'c');
+       removeEmoteByScope(eList['7tv'], 'c');
        let j = JSON.parse(x.responseText);
        for (let i = 0; i < j.length; i++)
        {
@@ -2773,11 +2857,10 @@
         if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
         {
          if (cfg.display.extended.useZWE)
-          eList.zwe['7tv'][j[i].name] = {url: t4, scope: 'c'};
+          addEmote(eList.zwe['7tv'], 'c', j[i].name, j[i].id, t4, null, true);
          continue;
         }
-        cList.push({url: t4});
-        eList['7tv'][j[i].name] = {url: t4, scope: 'c'};
+        addEmote(eList['7tv'], 'c', j[i].name, j[i].id, t4);
        }
        resolve(true);
       };
@@ -2785,6 +2868,74 @@
      }
     );
     return p;
+   }
+
+   function load7TV_channelID(chID)
+   {
+    let p = new Promise(
+     (resolve, reject) =>
+     {
+      let x = new XMLHttpRequest();
+      x.open('GET', 'https://api.7tv.app/v2/users/' + chID + '?nocache=' + rnd(0xFFFFFFFF));
+      x.onreadystatechange = function()
+      {
+       if (x.status !== 200)
+       {
+        resolve(false);
+        return;
+       }
+       if (x.readyState !== 4)
+        return;
+       if (x.responseText === '')
+        return;
+       let j = JSON.parse(x.responseText);
+       if (j.hasOwnProperty('id'))
+        resolve(j.id);
+       else
+        resolve(false);
+      };
+      x.send();
+     }
+    );
+    return p;
+   }
+
+   async function load7TV_ws_channel(chID)
+   {
+    let accID = await load7TV_channelID(chID);
+    if (accID === false)
+     return;
+    const ws = new WebSocket('wss://events.7tv.io/v3');
+    ws.onopen = function(event)
+    {
+    };
+    ws.onclose = function()
+    {
+     window.setTimeout(function(){load7TV_ws_channel(chID);}, 5000);
+    };
+    ws.onmessage = function(event)
+    {
+     if (!event.isTrusted)
+      return;
+     let d = JSON.parse(event.data);
+     switch(d.op)
+     {
+      case 0:
+       if (tTE !== false)
+       {
+        window.clearTimeout(tTE);
+        tTE = window.setTimeout(load3rdParty, 500, chID);
+       }
+       break;
+      case 1:
+       ws.send(JSON.stringify({"op": 35, "d": {"type":"user.*", "condition": {"object_id": accID}}}));
+       ws.send(JSON.stringify({"op": 35, "d": {"type":"emote.*", "condition": {"object_id": accID}}}));
+       ws.send(JSON.stringify({"op": 35, "d": {"type":"emote_set.*", "condition": {"object_id": accID}}}));
+       break;
+      case 2:
+       break;
+     }
+    };
    }
 
    function doGC()
@@ -2838,6 +2989,81 @@
      tGC = window.setTimeout(doGC, 500);
    }
 
+   function styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters)
+   {
+    let s = '';
+    if (aNames.length > 0)
+    {
+     s += ' animation-name: ' + aNames.join() + ';';
+     s += ' animation-delay: ' + aDelays.join() + ';';
+     s += ' animation-duration: ' + aDurs.join() + ';';
+     s += ' animation-timing-function: ' + aTimings.join() + ';';
+     s += ' animation-fill-mode: ' + aFills.join() + ';';
+     s += ' animation-iteration-count: ' + aIters.join() + ';';
+    }
+    return s;
+   }
+
+   function styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, fadeIn = true, zoomIn = true, fadeOut = true, zoomOut = true, variationSize = 1)
+   {
+    if (fadeIn)
+    {
+     aNames.push('fadeIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+     aTimings.push('ease-in');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (zoomIn)
+    {
+     if (variationSize === 0)
+      aNames.push('zoomInS');
+     else if (variationSize === 2)
+      aNames.push('zoomInL');
+     else
+      aNames.push('zoomIn');
+     aDelays.push('0s');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (fadeOut)
+    {
+     aNames.push('fadeOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    else
+    {
+     aNames.push('noFadeOut');
+     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+     aDurs.push('50ms');
+     aTimings.push('ease-out');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    if (zoomOut)
+    {
+     if (variationSize === 0)
+      aNames.push('zoomOutS');
+     else if (variationSize === 2)
+      aNames.push('zoomOutL');
+     else
+      aNames.push('zoomOut');
+     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
+     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
+     aTimings.push('linear');
+     aFills.push('forwards');
+     aIters.push('1');
+    }
+    return styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
+   }
+
    function showEmote_Rise(url, zwe, sW, sH, sS, canV = true)
    {
     let variationSize = 1;
@@ -2883,67 +3109,7 @@
     aTimings.push('linear');
     aFills.push('forwards');
     aIters.push('1');
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.in.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomInS');
-     else if (variationSize === 2)
-      aNames.push('zoomInL');
-     else
-      aNames.push('zoomIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -2983,76 +3149,7 @@
      velH = -1 * velH;
     let s = 'height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
-    let aNames = [];
-    let aDelays = [];
-    let aDurs = [];
-    let aTimings = [];
-    let aFills = [];
-    let aIters = [];
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.in.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomInS');
-     else if (variationSize === 2)
-      aNames.push('zoomInL');
-     else
-      aNames.push('zoomIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (aNames.length > 0)
-    {
-     s += ' animation-name: ' + aNames.join() + ';';
-     s += ' animation-delay: ' + aDelays.join() + ';';
-     s += ' animation-duration: ' + aDurs.join() + ';';
-     s += ' animation-timing-function: ' + aTimings.join() + ';';
-     s += ' animation-fill-mode: ' + aFills.join() + ';';
-     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    }
+    s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
     let iArr = [];
     iArr.push({img: f(url), bX: h, bY: v, velY: velV});
@@ -3137,67 +3234,7 @@
     aTimings.push('ease-in');
     aFills.push('forwards');
     aIters.push('1');
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.in.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomInS');
-     else if (variationSize === 2)
-      aNames.push('zoomInL');
-     else
-      aNames.push('zoomIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -3254,44 +3291,7 @@
     aTimings.push('ease-in');
     aFills.push('forwards');
     aIters.push('1');
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -3351,30 +3351,7 @@
     aTimings.push('linear');
     aFills.push('forwards');
     aIters.push('1');
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, false, variationSize);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -3465,73 +3442,7 @@
      }
     }
     dests.push({x: pos.x, y: pos.y, t: (pos.t - lastT), w: 0});
-    let aNames = [];
-    let aDelays = [];
-    let aDurs = [];
-    let aTimings = [];
-    let aFills = [];
-    let aIters = [];
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.in.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomInS');
-     else if (variationSize === 2)
-      aNames.push('zoomInL');
-     else
-      aNames.push('zoomIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     let iArr = [];
     iArr.push(f(url));
     for (let i = 0; i < zwe.length; i++)
@@ -3656,73 +3567,7 @@
     s += ' width: ' + sS + 'px;';
     s += ' transition: transform ' + cfg.emote.time + 's linear;';
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-    let aNames = [];
-    let aDelays = [];
-    let aDurs = [];
-    let aTimings = [];
-    let aFills = [];
-    let aIters = [];
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.in.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomInS');
-     else if (variationSize === 2)
-      aNames.push('zoomInL');
-     else
-      aNames.push('zoomIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -3787,12 +3632,7 @@
     aTimings.push('cubic-bezier(0, 0.9, 1, 0.15)');
     aFills.push('forwards');
     aIters.push('1');
-    s += ' animation-name: ' + aNames.join() + ';';
-    s += ' animation-delay: ' + aDelays.join() + ';';
-    s += ' animation-duration: ' + aDurs.join() + ';';
-    s += ' animation-timing-function: ' + aTimings.join() + ';';
-    s += ' animation-fill-mode: ' + aFills.join() + ';';
-    s += ' animation-iteration-count: ' + aIters.join() + ';';
+    s += styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -3888,12 +3728,7 @@
      aFills.push('forwards');
      aIters.push('1');
     }
-    s2 += ' animation-name: ' + aNames.join() + ';';
-    s2 += ' animation-delay: ' + aDelays.join() + ';';
-    s2 += ' animation-duration: ' + aDurs.join() + ';';
-    s2 += ' animation-timing-function: ' + aTimings.join() + ';';
-    s2 += ' animation-fill-mode: ' + aFills.join() + ';';
-    s2 += ' animation-iteration-count: ' + aIters.join() + ';';
+    s2 += styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
     let iArr = [];
     iArr.push(f(url));
     for (let i = 0; i < zwe.length; i++)
@@ -3953,76 +3788,7 @@
     s += ' left: ' + h + 'px;';
     s += ' height: ' + sS + 'px;';
     s += ' width: ' + sS + 'px;';
-    let aNames = [];
-    let aDelays = [];
-    let aDurs = [];
-    let aTimings = [];
-    let aFills = [];
-    let aIters = [];
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.in.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomInS');
-     else if (variationSize === 2)
-      aNames.push('zoomInL');
-     else
-      aNames.push('zoomIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.zoom)
-    {
-     if (variationSize === 0)
-      aNames.push('zoomOutS');
-     else if (variationSize === 2)
-      aNames.push('zoomOutL');
-     else
-      aNames.push('zoomOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (aNames.length > 0)
-    {
-     s += ' animation-name: ' + aNames.join() + ';';
-     s += ' animation-delay: ' + aDelays.join() + ';';
-     s += ' animation-duration: ' + aDurs.join() + ';';
-     s += ' animation-timing-function: ' + aTimings.join() + ';';
-     s += ' animation-fill-mode: ' + aFills.join() + ';';
-     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    }
+    s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     f(url);
     for (let i = 0; i < zwe.length; i++)
     {
@@ -4228,48 +3994,7 @@
     s += ' perspective: ' + (sS * 3)  + 'px;';
     s += ' transition: all ' + cfg.emote.time + 's linear;';
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-    let aNames = [];
-    let aDelays = [];
-    let aDurs = [];
-    let aTimings = [];
-    let aFills = [];
-    let aIters = [];
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (aNames.length > 0)
-    {
-     s += ' animation-name: ' + aNames.join() + ';';
-     s += ' animation-delay: ' + aDelays.join() + ';';
-     s += ' animation-duration: ' + aDurs.join() + ';';
-     s += ' animation-timing-function: ' + aTimings.join() + ';';
-     s += ' animation-fill-mode: ' + aFills.join() + ';';
-     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    }
+    s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, variationSize);
     scene.setAttribute('style', s);
     eActive++;
     document.body.appendChild(scene);
@@ -4459,48 +4184,7 @@
     s += ' perspective: ' + (sS * 3)  + 'px;';
     s += ' transition: all ' + cfg.emote.time + 's linear;';
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-    let aNames = [];
-    let aDelays = [];
-    let aDurs = [];
-    let aTimings = [];
-    let aFills = [];
-    let aIters = [];
-    if (cfg.emote.in.fade)
-    {
-     aNames.push('fadeIn');
-     aDelays.push('0s');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('ease-in');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (cfg.emote.out.fade)
-    {
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    else
-    {
-     aNames.push('noFadeOut');
-     aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
-     aDurs.push('50ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-    }
-    if (aNames.length > 0)
-    {
-     s += ' animation-name: ' + aNames.join() + ';';
-     s += ' animation-delay: ' + aDelays.join() + ';';
-     s += ' animation-duration: ' + aDurs.join() + ';';
-     s += ' animation-timing-function: ' + aTimings.join() + ';';
-     s += ' animation-fill-mode: ' + aFills.join() + ';';
-     s += ' animation-iteration-count: ' + aIters.join() + ';';
-    }
+    s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false);
     scene.setAttribute('style', s);
     eActive++;
     document.body.appendChild(scene);
@@ -4568,12 +4252,7 @@
      aTimings.push('ease-out');
      aFills.push('forwards');
      aIters.push('1');
-     s2 += ' animation-name: ' + aNames.join() + ';';
-     s2 += ' animation-delay: ' + aDelays.join() + ';';
-     s2 += ' animation-duration: ' + aDurs.join() + ';';
-     s2 += ' animation-timing-function: ' + aTimings.join() + ';';
-     s2 += ' animation-fill-mode: ' + aFills.join() + ';';
-     s2 += ' animation-iteration-count: ' + aIters.join() + ';';
+     s2 += styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
      simg.setAttribute('style', s2);
      document.body.appendChild(simg);
      gcEmote(simg, true, true, (d + cfg.emote.time) * 1000);
@@ -4702,30 +4381,7 @@
      s += ' width: ' + sS + 'px;';
      s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
      s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
-     let aNames = [];
-     let aDelays = [];
-     let aDurs = [];
-     let aTimings = [];
-     let aFills = [];
-     let aIters = [];
-     aNames.push('fadeIn');
-     aDelays.push('0ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
-     aTimings.push('linear');
-     aFills.push('forwards');
-     aIters.push('1');
-     aNames.push('fadeOut');
-     aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-     aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
-     aTimings.push('ease-out');
-     aFills.push('forwards');
-     aIters.push('1');
-     s += ' animation-name: ' + aNames.join() + ';';
-     s += ' animation-delay: ' + aDelays.join() + ';';
-     s += ' animation-duration: ' + aDurs.join() + ';';
-     s += ' animation-timing-function: ' + aTimings.join() + ';';
-     s += ' animation-fill-mode: ' + aFills.join() + ';';
-     s += ' animation-iteration-count: ' + aIters.join() + ';';
+     s += styleEmote([], [], [], [], [], [], true, false, true, false);
      simg.setAttribute('style', s);
      document.body.appendChild(simg);
      gcEmote(simg, true, true);
@@ -5672,10 +5328,13 @@
     if (cmd.params.length < 2)
      return [];
     let msg = cmd.params[1];
-    // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
-    msg = msg.replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
     let emSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
-    let emList = [...msg.matchAll(emSeg)];
+    let emList = [];
+    let match = '';
+    while ((match = emSeg.exec(msg)) != null)
+    {
+     emList.push(match);
+    }
     if (emList.length === 0)
      return [];
     if (dup === null)
@@ -5685,7 +5344,7 @@
     let ret = [];
     let uri = 'https://cdn.frankerfacez.com/static/emoji/images/' + set + '/';
     let addList = {};
-    function showEmoji(c)
+    function showEmoji(c, p)
     {
      if (c.slice(-5) === '-fe0f' && !c.match(/-200d-264[0|2]-/) && !c.match(/-200d-26a7/) && !c.match(/-200d-2620/))
       c = c.slice(0, -5);
@@ -5699,7 +5358,7 @@
        return false;
      }
      addList[c]++;
-     ret.push({svc: 'e', url: uri + c + '.png', str: c});
+     ret.push({svc: 'e', url: uri + c + '.png', str: c, pos: p});
      return true;
     }
     for (let i = 0; i < emList.length; i++)
@@ -5761,7 +5420,7 @@
       found = await checkURL(tU);
       if (found)
       {
-       showEmoji(s);
+       showEmoji(s, emList[i].index);
        continue;
       }
       while (s.includes('-'))
@@ -5774,17 +5433,19 @@
        found = await checkURL(tU);
        if (found)
        {
-        showEmoji(s);
+        showEmoji(s, emList[i].index);
         break;
        }
       }
       continue;
      }
-     for (let i = 0; i < cpList.length; i++)
+     let p = emList[i].index;
+     for (let j = 0; j < cpList.length; j++)
      {
-      found = await checkURL(uri + cpList[i] + '.png');
+      p += cpList[j].replaceAll(/[^\-]/g, '').length + 1;
+      found = await checkURL(uri + cpList[j] + '.png');
       if (found)
-       showEmoji(cpList[i]);
+       showEmoji(cpList[j], p);
      }
     }
     return ret;
@@ -6471,7 +6132,7 @@
      (resolve, reject) =>
      {
       let x = new XMLHttpRequest();
-      x.open('GET', 'https://api.twitch.tv/helix/users/follows?to_id=' + chID + '&first=100');
+      x.open('GET', 'https://api.twitch.tv/helix/users/follows?to_id=' + chID + '&first=100&nocache=' + rnd(0xFFFFFFFF));
       x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
       x.setRequestHeader('Client-Id', cfg.login.client);
       x.onreadystatechange = async function()
@@ -6506,6 +6167,7 @@
          resolve(s);
          return;
         }
+        fList[j.data[i].from_id] = {value: true, t: new Date().getTime()};
         s.push(j.data[i].from_name);
        }
        resolve([]);
@@ -6521,27 +6183,19 @@
     let p = new Promise(
      (resolve, reject) =>
      {
-      if (fList.length > 0)
+      let uID = cmd.tags['user-id'];
+      if (fList.hasOwnProperty(uID))
       {
-       for (let i = 0; i < fList.length; i++)
+       let tDif = new Date().getTime() - fList[uID].t;
+       if (tDif < rFH)
        {
-        if (fList[i].id === cmd.tags['user-id'])
-        {
-         let tDif = Math.floor((new Date().getTime() - fList[i].t) / 1000);
-         if (tDif > 3600)
-         {
-          fList.splice(i, 1);
-          break;
-         }
-         resolve(fList[i].value);
-         return;
-        }
+        resolve(fList[uID].value);
+        return;
        }
       }
-      let uID = cmd.tags['user-id'];
       let chID = cmd.tags['room-id'];
       let x = new XMLHttpRequest();
-      x.open('GET', 'https://api.twitch.tv/helix/users/follows?from_id=' + uID + '&to_id=' + chID);
+      x.open('GET', 'https://api.twitch.tv/helix/users/follows?from_id=' + uID + '&to_id=' + chID + '&nocache=' + rnd(0xFFFFFFFF));
       x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
       x.setRequestHeader('Client-Id', cfg.login.client);
       x.onreadystatechange = async function()
@@ -6558,11 +6212,11 @@
        let j = JSON.parse(x.responseText);
        if (j.total > 0)
        {
-        fList.push({id: uID, value: true, t: new Date().getTime()});
+        fList[uID] = {value: true, t: new Date().getTime()};
         resolve(true);
         return;
        }
-       fList.push({id: uID, value: false, t: new Date().getTime()});
+       fList[uID] = {value: false, t: new Date().getTime()};
        resolve(false);
       };
       x.send();
@@ -7288,6 +6942,11 @@
         ws.send('PONG ' + cmd.params[0]);
         break;
        case 'PRIVMSG':
+        if (cmd.params.length > 1)
+        {
+         // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
+         cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
+        }
         if (!await parseCheer(cmd))
          parseLine(cmd);
         break;
@@ -7324,7 +6983,12 @@
           loadBTTV_ws_channel(channelID);
          }
          if (cfg.display.extended.use7TV)
+         {
           load7TV_channel(channelID);
+          load7TV_ws_channel(channelID);
+         }
+         if (cfg.display.extended.useFFZ | cfg.display.extended.useBTTV | cfg.display.extended.use7TV)
+          tTE = window.setTimeout(load3rdParty, rTE, channelID);
          if (cfg.event.follow !== false)
           tFC = window.setTimeout(detectFollowers, tStart, channelID);
          pubSub();
@@ -7335,6 +6999,11 @@
          continue;
         if (!cmd.tags.hasOwnProperty('msg-id'))
          continue;
+        if (cmd.params.length > 1)
+        {
+         // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
+         cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
+        }
         switch (cmd.tags['msg-id'])
         {
          case 'raid':
@@ -7495,7 +7164,7 @@
    function reddit(rID)
    {
     let x = new XMLHttpRequest();
-    x.open('GET', 'https://strapi.reddit.com/videos/t3_' + rID);
+    x.open('GET', 'https://strapi.reddit.com/videos/t3_' + rID + '?nocache=' + rnd(0xFFFFFFFF));
     x.onreadystatechange = function()
     {
      if (x.status !== 200)
