@@ -1901,6 +1901,7 @@
    var rFH = 3600000;  // follower state cache time (ms)
    var rTE = 60000;    // third-party channel emote recheck interval (ms)
    var rBE = 600000;   // bttv post-event emote recheck (ms)
+   var wWS = 5;        // websocket retry backoff base (ms = base ^ (1.0 + (0.2 per retry, max 1.0)))
    var tAnim = {       // animation timing constants
     fade: {
      in: 8,            // percentage of animation spent on fading in (8% of 5 seconds)
@@ -2670,6 +2671,7 @@
 
    function loadBTTV_ws_channel(chID)
    {
+    let wsRetry = 0;
     const ws = new WebSocket('wss://sockets.betterttv.net/ws');
     ws.onopen = function(event)
     {
@@ -2678,12 +2680,21 @@
     };
     ws.onclose = function()
     {
-     window.setTimeout(function(){loadBTTV_ws_channel(chID);}, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){loadBTTV_ws_channel(chID);}, wsWait);
     };
     ws.onmessage = function(event)
     {
-     if (!event.isTrusted)
+     if (dead)
+     {
+      ws.close();
       return;
+     }
+     wsRetry = 0;
      let d = JSON.parse(event.data);
      if (!d.hasOwnProperty('name'))
       return;
@@ -2943,6 +2954,7 @@
 
    async function load7TV_ws_channel(chID)
    {
+    let wsRetry = 0;
     let accID = await load7TV_channelID(chID);
     if (accID === false)
      return;
@@ -2952,12 +2964,21 @@
     };
     ws.onclose = function()
     {
-     window.setTimeout(function(){load7TV_ws_channel(chID);}, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){load7TV_ws_channel(chID);}, wsWait);
     };
     ws.onmessage = function(event)
     {
-     if (!event.isTrusted)
+     if (dead)
+     {
+      ws.close();
       return;
+     }
+     wsRetry = 0;
      let d = JSON.parse(event.data);
      switch(d.op)
      {
@@ -5865,6 +5886,7 @@
 
    function streamlabsWS()
    {
+    let wsRetry = 0;
     let p = 0;
     const ws = new WebSocket('wss://sockets.streamlabs.com/socket.io/?token=' + cfg.streamlabs.token + '&transport=websocket');
     ws.onopen = function(event)
@@ -5882,8 +5904,12 @@
       window.clearInterval(p);
       p = 0;
      }
-     if (!dead)
-      window.setTimeout(function(){streamlabsWS();}, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){streamlabsWS();}, wsWait);
     };
     ws.onmessage = async function(event)
     {
@@ -5892,6 +5918,7 @@
       ws.close();
       return;
      }
+     wsRetry = 0;
      let d = event.data;
      if (d.length < 1)
       return;
@@ -6032,6 +6059,7 @@
 
    function streamelementsWS()
    {
+    let wsRetry = 0;
     let p = 0;
     const ws = new WebSocket('wss://realtime.streamelements.com/socket.io/?transport=websocket');
     ws.onopen = function(event)
@@ -6049,8 +6077,12 @@
       window.clearInterval(p);
       p = 0;
      }
-     if (!dead)
-      window.setTimeout(function(){streamelementsWS();}, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){streamelementsWS();}, wsWait);
     };
     ws.onmessage = async function(event)
     {
@@ -6059,6 +6091,7 @@
       ws.close();
       return;
      }
+     wsRetry = 0;
      let d = event.data;
      if (d.length < 1)
       return;
@@ -6910,6 +6943,7 @@
 
    function irc()
    {
+    let wsRetry = 0;
     let firstRoomstate = true;
     const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
     ws.onopen = function(event)
@@ -6941,11 +6975,21 @@
       clearTimeout(tIRC);
       tIRC = false;
      }
-     if (!dead)
-      window.setTimeout(irc, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){irc();}, wsWait);
     };
     ws.onmessage = async function(event)
     {
+     if (dead)
+     {
+      ws.close();
+      return;
+     }
+     wsRetry = 0;
      let data = event.data.split('\r\n');
      for (let i = 0; i < data.length; i++)
      {
@@ -7076,6 +7120,7 @@
 
    function pubSub()
    {
+    let wsRetry = 0;
     const ws = new WebSocket('wss://pubsub-edge.twitch.tv:443');
     let tmrPing = null;
     ws.onopen = function(event)
@@ -7097,8 +7142,12 @@
       window.clearInterval(tmrPing);
       tmrPing = null;
      }
-     if (!dead)
-      window.setTimeout(pubSub, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){pubSub();}, wsWait);
     };
     ws.onmessage = async function(event)
     {
@@ -7107,6 +7156,7 @@
       ws.close();
       return;
      }
+     wsRetry = 0;
      let r = JSON.parse(event.data);
      if (!r.hasOwnProperty('type'))
       return;
@@ -7175,16 +7225,28 @@
 
    function redditWS(wsURL)
    {
+    let wsRetry = 0;
     const ws = new WebSocket(wsURL);
     ws.onopen = function(event)
     {
     };
     ws.onclose = function()
     {
-     window.setTimeout(function(){redditWS(wsURL);}, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){redditWS(wsURL);}, wsWait);
     };
     ws.onmessage = async function(event)
     {
+     if (dead)
+     {
+      ws.close();
+      return;
+     }
+     wsRetry = 0;
      let d = JSON.parse(event.data);
      if (d.type !== 'new_comment')
      {
