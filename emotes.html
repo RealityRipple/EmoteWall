@@ -6,7 +6,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.6.1 BETA
+    * v0.6.2 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -2385,8 +2385,6 @@
     tTE = false;
     if (cfg.display.extended.useFFZ)
      loadFFZ_channel(channelID);
-    if (cfg.display.extended.useBTTV)
-     loadBTTV_channel(channelID);
     if (cfg.display.extended.use7TV)
      load7TV_channel(channelID);
     tTE = window.setTimeout(load3rdParty, rTE, chID);
@@ -2698,13 +2696,34 @@
        }
        break;
       case 'emote_create':
+       if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + chID)
+        return;
+       if (!d.data.hasOwnProperty('emote'))
+        return;
+       if (!d.data.emote.hasOwnProperty('id'))
+        return;
+       if (!d.data.emote.hasOwnProperty('code'))
+        return;
+       addEmote(eList.bttv, 'c', d.data.emote.code, d.data.emote.id, 'https://cdn.betterttv.net/emote/' + d.data.emote.id + '/3x');
+       break;
       case 'emote_delete':
+       if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + chID)
+        return;
+       if (!d.data.hasOwnProperty('emoteId'))
+        return;
+       removeEmoteByID(eList.bttv, 'c', d.data.emoteId);
+       break;
       case 'emote_update':
-       if (tTE !== false)
-       {
-        window.clearTimeout(tTE);
-        tTE = window.setTimeout(load3rdParty, 500, chID);
-       }
+       if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + chID)
+        return;
+       if (!d.data.hasOwnProperty('emote'))
+        return;
+       if (!d.data.emote.hasOwnProperty('id'))
+        return;
+       if (!d.data.emote.hasOwnProperty('code'))
+        return;
+       removeEmoteByID(eList.bttv, 'c', d.data.emote.id);
+       addEmote(eList.bttv, 'c', d.data.emote.code, d.data.emote.id, 'https://cdn.betterttv.net/emote/' + d.data.emote.id + '/3x');
        break;
      }
     };
@@ -2922,10 +2941,8 @@
      {
       case 0:
        if (tTE !== false)
-       {
         window.clearTimeout(tTE);
-        tTE = window.setTimeout(load3rdParty, 500, chID);
-       }
+       tTE = window.setTimeout(load3rdParty, 500, chID);
        break;
       case 1:
        ws.send(JSON.stringify({"op": 35, "d": {"type":"user.*", "condition": {"object_id": accID}}}));
@@ -6987,7 +7004,7 @@
           load7TV_channel(channelID);
           load7TV_ws_channel(channelID);
          }
-         if (cfg.display.extended.useFFZ | cfg.display.extended.useBTTV | cfg.display.extended.use7TV)
+         if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
           tTE = window.setTimeout(load3rdParty, rTE, channelID);
          if (cfg.event.follow !== false)
           tFC = window.setTimeout(detectFollowers, tStart, channelID);
