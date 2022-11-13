@@ -1900,6 +1900,7 @@
    var rFC = 2500;     // follower count interval (ms)
    var rFH = 3600000;  // follower state cache time (ms)
    var rTE = 60000;    // third-party channel emote recheck interval (ms)
+   var rBE = 600000;   // bttv post-event emote recheck (ms)
    var tAnim = {       // animation timing constants
     fade: {
      in: 8,            // percentage of animation spent on fading in (8% of 5 seconds)
@@ -1917,6 +1918,7 @@
    var tGC = false;    // garbage collection
    var tFC = false;    // follower kludge
    var tTE = false;    // third-party channel emote kludge
+   var tBE = false;    // third-party channel emote kludge
    var tL = false;     // logout button display
 
    function sleep(ms)
@@ -2390,6 +2392,17 @@
     tTE = window.setTimeout(load3rdParty, rTE, chID);
    }
 
+   function loadBTTV(chID)
+   {
+    if (tBE === false)
+     return;
+    window.clearTimeout(tBE);
+    tBE = false;
+    if (cfg.display.extended.useBTTV)
+     loadBTTV_channel(channelID);
+    tBE = window.setTimeout(loadBTTV, rTE, chID);
+   }
+
    function readFFZ_URL(entry)
    {
     if (!entry.hasOwnProperty('urls'))
@@ -2704,14 +2717,20 @@
         return;
        if (!d.data.emote.hasOwnProperty('code'))
         return;
+       if (tBE !== false)
+        window.clearTimeout(tBE);
        addEmote(eList.bttv, 'c', d.data.emote.code, d.data.emote.id, 'https://cdn.betterttv.net/emote/' + d.data.emote.id + '/3x');
+       tBE = window.setTimeout(loadBTTV, rBE, chID);
        break;
       case 'emote_delete':
        if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + chID)
         return;
        if (!d.data.hasOwnProperty('emoteId'))
         return;
+       if (tBE !== false)
+        window.clearTimeout(tBE);
        removeEmoteByID(eList.bttv, 'c', d.data.emoteId);
+       tBE = window.setTimeout(loadBTTV, rBE, chID);
        break;
       case 'emote_update':
        if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + chID)
@@ -2722,8 +2741,11 @@
         return;
        if (!d.data.emote.hasOwnProperty('code'))
         return;
+       if (tBE !== false)
+        window.clearTimeout(tBE);
        removeEmoteByID(eList.bttv, 'c', d.data.emote.id);
        addEmote(eList.bttv, 'c', d.data.emote.code, d.data.emote.id, 'https://cdn.betterttv.net/emote/' + d.data.emote.id + '/3x');
+       tBE = window.setTimeout(loadBTTV, rBE, chID);
        break;
      }
     };
@@ -7006,6 +7028,8 @@
          }
          if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
           tTE = window.setTimeout(load3rdParty, rTE, channelID);
+         if (cfg.display.extended.useBTTV)
+          tBE = window.setTimeout(loadBTTV, rTE, channelID);
          if (cfg.event.follow !== false)
           tFC = window.setTimeout(detectFollowers, tStart, channelID);
          pubSub();
