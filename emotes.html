@@ -7369,7 +7369,12 @@
     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.client');
     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.expires');
     let o = encodeURIComponent(btoa(window.location));
-    let u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8') + '&redirect_uri=' + encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php') + '&response_type=token&scope=' + encodeURIComponent('chat:read channel:read:redemptions') + '&state=redirto_' + o + '&force_verify=true';
+    let c = encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8');
+    let r = encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php');
+    let s = encodeURIComponent('chat:read channel:read:redemptions');
+    let u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + c + '&redirect_uri=' + r + '&response_type=token&scope=' + s + '&state=redirto_' + o + '&force_verify=true';
+    if (u.length > 1500)
+     u = 'https://realityripple.com/Tools/Twitch/tempRedir.php?c=' + c + '&r=' + r + '&s=' + s + '&u=' + encodeURIComponent(window.location);
     window.location = u;
    }
 
