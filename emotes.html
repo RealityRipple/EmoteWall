@@ -3205,7 +3205,7 @@
      sS = Math.ceil(sS * 0.5);
     else if (variationSize === 2)
      sS = sS * 2;
-    let h = rnd(sW) - (sS / 2);
+    let h = Math.floor(rnd(sW) - (sS / 2));
     let v = Math.floor(rnd(0.2) * sH);
     let velH = rnd(6) + 3;
     let velV = rnd(3) + 4;
@@ -3215,11 +3215,14 @@
     s += ' width: ' + sS + 'px;';
     s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+    let bX = h;
+    let bY = v;
+    let velY = velV;
     let iArr = [];
-    iArr.push({img: f(url), bX: h, bY: v, velY: velV});
+    iArr.push(f(url));
     for (let i = 0; i < zwe.length; i++)
     {
-     iArr.push({img: f(zwe[i].url), bX: h, bY: v, velY: velV});
+     iArr.push(f(zwe[i].url));
     }
     let ms = 20;
     let tmr = window.setTimeout(
@@ -3227,18 +3230,20 @@
      {
       window.clearTimeout(tmr);
       tmr = null;
+      if (iArr[0].parentElement === null)
+       return;
+      bX += velH;
+      bY += velY;
+      velY += 1;
+      if (bY + sS >= sH)
+      {
+       bY = sH - sS;
+       velY *= -0.7;
+       velY = Math.floor(velY);
+      }
       for (let i = 0; i < iArr.length; i++)
       {
-       iArr[i].bX += velH;
-       iArr[i].bY += iArr[i].velY;
-       iArr[i].velY += 1;
-       if (iArr[i].bY + sS >= sH)
-       {
-        iArr[i].bY = sH - sS;
-        iArr[i].velY *= -0.7;
-        iArr[i].velY = Math.floor(iArr[i].velY);
-       }
-       iArr[i].img.style.transform = 'translate(' + iArr[i].bX + 'px, ' + iArr[i].bY + 'px)';
+       iArr[i].style.transform = 'translate(' + bX + 'px, ' + bY + 'px)';
       }
       tmr = window.setTimeout(tLoop, ms);
      },
