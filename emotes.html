@@ -6,7 +6,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.6.2 BETA
+    * v0.6.3 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -621,7 +621,8 @@
       cooldown: 0,
       conga: {
        contagious: false,
-       time: 5
+       time: 5,
+       avoidMiddle: false
       }
      }
     },
@@ -1900,6 +1901,8 @@
    var rFC = 2500;     // follower count interval (ms)
    var rFH = 3600000;  // follower state cache time (ms)
    var rTE = 60000;    // third-party channel emote recheck interval (ms)
+   var rBE = 600000;   // bttv post-event emote recheck (ms)
+   var wWS = 5;        // websocket retry backoff base (ms = base ^ (1.0 + (0.2 per retry, max 1.0)))
    var tAnim = {       // animation timing constants
     fade: {
      in: 8,            // percentage of animation spent on fading in (8% of 5 seconds)
@@ -1917,6 +1920,7 @@
    var tGC = false;    // garbage collection
    var tFC = false;    // follower kludge
    var tTE = false;    // third-party channel emote kludge
+   var tBE = false;    // third-party channel emote kludge
    var tL = false;     // logout button display
 
    function sleep(ms)
@@ -2390,6 +2394,17 @@
     tTE = window.setTimeout(load3rdParty, rTE, chID);
    }
 
+   function loadBTTV(chID)
+   {
+    if (tBE === false)
+     return;
+    window.clearTimeout(tBE);
+    tBE = false;
+    if (cfg.display.extended.useBTTV)
+     loadBTTV_channel(channelID);
+    tBE = window.setTimeout(loadBTTV, rTE, chID);
+   }
+
    function readFFZ_URL(entry)
    {
     if (!entry.hasOwnProperty('urls'))
@@ -2657,6 +2672,7 @@
 
    function loadBTTV_ws_channel(chID)
    {
+    let wsRetry = 0;
     const ws = new WebSocket('wss://sockets.betterttv.net/ws');
     ws.onopen = function(event)
     {
@@ -2665,12 +2681,23 @@
     };
     ws.onclose = function()
     {
-     window.setTimeout(function(){loadBTTV_ws_channel(chID);}, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){loadBTTV_ws_channel(chID);}, wsWait);
     };
     ws.onmessage = function(event)
     {
-     if (!event.isTrusted)
+     if (dead)
+     {
+      ws.close();
       return;
+     }
+     if (document.visibilityState === 'hidden')
+      return;
+     wsRetry = 0;
      let d = JSON.parse(event.data);
      if (!d.hasOwnProperty('name'))
       return;
@@ -2704,14 +2731,20 @@
         return;
        if (!d.data.emote.hasOwnProperty('code'))
         return;
+       if (tBE !== false)
+        window.clearTimeout(tBE);
        addEmote(eList.bttv, 'c', d.data.emote.code, d.data.emote.id, 'https://cdn.betterttv.net/emote/' + d.data.emote.id + '/3x');
+       tBE = window.setTimeout(loadBTTV, rBE, chID);
        break;
       case 'emote_delete':
        if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + chID)
         return;
        if (!d.data.hasOwnProperty('emoteId'))
         return;
+       if (tBE !== false)
+        window.clearTimeout(tBE);
        removeEmoteByID(eList.bttv, 'c', d.data.emoteId);
+       tBE = window.setTimeout(loadBTTV, rBE, chID);
        break;
       case 'emote_update':
        if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + chID)
@@ -2722,8 +2755,11 @@
         return;
        if (!d.data.emote.hasOwnProperty('code'))
         return;
+       if (tBE !== false)
+        window.clearTimeout(tBE);
        removeEmoteByID(eList.bttv, 'c', d.data.emote.id);
        addEmote(eList.bttv, 'c', d.data.emote.code, d.data.emote.id, 'https://cdn.betterttv.net/emote/' + d.data.emote.id + '/3x');
+       tBE = window.setTimeout(loadBTTV, rBE, chID);
        break;
      }
     };
@@ -2921,6 +2957,7 @@
 
    async function load7TV_ws_channel(chID)
    {
+    let wsRetry = 0;
     let accID = await load7TV_channelID(chID);
     if (accID === false)
      return;
@@ -2930,12 +2967,23 @@
     };
     ws.onclose = function()
     {
-     window.setTimeout(function(){load7TV_ws_channel(chID);}, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){load7TV_ws_channel(chID);}, wsWait);
     };
     ws.onmessage = function(event)
     {
-     if (!event.isTrusted)
+     if (dead)
+     {
+      ws.close();
       return;
+     }
+     if (document.visibilityState === 'hidden')
+      return;
+     wsRetry = 0;
      let d = JSON.parse(event.data);
      switch(d.op)
      {
@@ -3158,7 +3206,7 @@
      sS = Math.ceil(sS * 0.5);
     else if (variationSize === 2)
      sS = sS * 2;
-    let h = rnd(sW) - (sS / 2);
+    let h = Math.floor(rnd(sW) - (sS / 2));
     let v = Math.floor(rnd(0.2) * sH);
     let velH = rnd(6) + 3;
     let velV = rnd(3) + 4;
@@ -3168,11 +3216,14 @@
     s += ' width: ' + sS + 'px;';
     s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
     s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+    let bX = h;
+    let bY = v;
+    let velY = velV;
     let iArr = [];
-    iArr.push({img: f(url), bX: h, bY: v, velY: velV});
+    iArr.push(f(url));
     for (let i = 0; i < zwe.length; i++)
     {
-     iArr.push({img: f(zwe[i].url), bX: h, bY: v, velY: velV});
+     iArr.push(f(zwe[i].url));
     }
     let ms = 20;
     let tmr = window.setTimeout(
@@ -3180,18 +3231,20 @@
      {
       window.clearTimeout(tmr);
       tmr = null;
+      if (iArr[0].parentElement === null)
+       return;
+      bX += velH;
+      bY += velY;
+      velY += 1;
+      if (bY + sS >= sH)
+      {
+       bY = sH - sS;
+       velY *= -0.7;
+       velY = Math.floor(velY);
+      }
       for (let i = 0; i < iArr.length; i++)
       {
-       iArr[i].bX += velH;
-       iArr[i].bY += iArr[i].velY;
-       iArr[i].velY += 1;
-       if (iArr[i].bY + sS >= sH)
-       {
-        iArr[i].bY = sH - sS;
-        iArr[i].velY *= -0.7;
-        iArr[i].velY = Math.floor(iArr[i].velY);
-       }
-       iArr[i].img.style.transform = 'translate(' + iArr[i].bX + 'px, ' + iArr[i].bY + 'px)';
+       iArr[i].style.transform = 'translate(' + bX + 'px, ' + bY + 'px)';
       }
       tmr = window.setTimeout(tLoop, ms);
      },
@@ -5843,6 +5896,7 @@
 
    function streamlabsWS()
    {
+    let wsRetry = 0;
     let p = 0;
     const ws = new WebSocket('wss://sockets.streamlabs.com/socket.io/?token=' + cfg.streamlabs.token + '&transport=websocket');
     ws.onopen = function(event)
@@ -5860,8 +5914,12 @@
       window.clearInterval(p);
       p = 0;
      }
-     if (!dead)
-      window.setTimeout(function(){streamlabsWS();}, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){streamlabsWS();}, wsWait);
     };
     ws.onmessage = async function(event)
     {
@@ -5870,6 +5928,9 @@
       ws.close();
       return;
      }
+     if (document.visibilityState === 'hidden')
+      return;
+     wsRetry = 0;
      let d = event.data;
      if (d.length < 1)
       return;
@@ -6010,6 +6071,7 @@
 
    function streamelementsWS()
    {
+    let wsRetry = 0;
     let p = 0;
     const ws = new WebSocket('wss://realtime.streamelements.com/socket.io/?transport=websocket');
     ws.onopen = function(event)
@@ -6027,8 +6089,12 @@
       window.clearInterval(p);
       p = 0;
      }
-     if (!dead)
-      window.setTimeout(function(){streamelementsWS();}, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){streamelementsWS();}, wsWait);
     };
     ws.onmessage = async function(event)
     {
@@ -6037,6 +6103,9 @@
       ws.close();
       return;
      }
+     if (document.visibilityState === 'hidden')
+      return;
+     wsRetry = 0;
      let d = event.data;
      if (d.length < 1)
       return;
@@ -6135,7 +6204,7 @@
     window.clearTimeout(tFC);
     tFC = false;
     let fRet = await getFollowerChange(chID);
-    if (fRet !== false && fRet.length > 0)
+    if (document.visibilityState !== 'hidden' && fRet !== false && fRet.length > 0)
     {
      for (let i = 0; i < fRet.length; i++)
       showKappa(false, cfg.event.follow, {'%USER%': fRet[i]});
@@ -6888,6 +6957,7 @@
 
    function irc()
    {
+    let wsRetry = 0;
     let firstRoomstate = true;
     const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
     ws.onopen = function(event)
@@ -6919,11 +6989,23 @@
       clearTimeout(tIRC);
       tIRC = false;
      }
-     if (!dead)
-      window.setTimeout(irc, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){irc();}, wsWait);
     };
     ws.onmessage = async function(event)
     {
+     if (dead)
+     {
+      ws.close();
+      return;
+     }
+     if (document.visibilityState === 'hidden')
+      return;
+     wsRetry = 0;
      let data = event.data.split('\r\n');
      for (let i = 0; i < data.length; i++)
      {
@@ -7006,6 +7088,8 @@
          }
          if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
           tTE = window.setTimeout(load3rdParty, rTE, channelID);
+         if (cfg.display.extended.useBTTV)
+          tBE = window.setTimeout(loadBTTV, rTE, channelID);
          if (cfg.event.follow !== false)
           tFC = window.setTimeout(detectFollowers, tStart, channelID);
          pubSub();
@@ -7052,6 +7136,7 @@
 
    function pubSub()
    {
+    let wsRetry = 0;
     const ws = new WebSocket('wss://pubsub-edge.twitch.tv:443');
     let tmrPing = null;
     ws.onopen = function(event)
@@ -7073,8 +7158,12 @@
       window.clearInterval(tmrPing);
       tmrPing = null;
      }
-     if (!dead)
-      window.setTimeout(pubSub, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){pubSub();}, wsWait);
     };
     ws.onmessage = async function(event)
     {
@@ -7083,6 +7172,9 @@
       ws.close();
       return;
      }
+     if (document.visibilityState === 'hidden')
+      return;
+     wsRetry = 0;
      let r = JSON.parse(event.data);
      if (!r.hasOwnProperty('type'))
       return;
@@ -7120,8 +7212,6 @@
         return;
        if (!d.data.hasOwnProperty('redemption'))
         return;
-       if (!d.data.redemption.hasOwnProperty('status') || d.data.redemption.status !== 'FULFILLED')
-        return;
        if (!d.data.redemption.hasOwnProperty('reward'))
         return;
        if (!d.data.redemption.reward.hasOwnProperty('title'))
@@ -7151,16 +7241,30 @@
 
    function redditWS(wsURL)
    {
+    let wsRetry = 0;
     const ws = new WebSocket(wsURL);
     ws.onopen = function(event)
     {
     };
     ws.onclose = function()
     {
-     window.setTimeout(function(){redditWS(wsURL);}, 5000);
+     if (dead)
+      return;
+     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+     if (wsRetry < 2)
+      wsRetry += 0.2;
+     window.setTimeout(function(){redditWS(wsURL);}, wsWait);
     };
     ws.onmessage = async function(event)
     {
+     if (dead)
+     {
+      ws.close();
+      return;
+     }
+     if (document.visibilityState === 'hidden')
+      return;
+     wsRetry = 0;
      let d = JSON.parse(event.data);
      if (d.type !== 'new_comment')
      {
@@ -7283,7 +7387,12 @@
     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.client');
     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.expires');
     let o = encodeURIComponent(btoa(window.location));
-    let u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8') + '&redirect_uri=' + encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php') + '&response_type=token&scope=' + encodeURIComponent('chat:read channel:read:redemptions') + '&state=redirto_' + o + '&force_verify=true';
+    let c = encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8');
+    let r = encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php');
+    let s = encodeURIComponent('chat:read channel:read:redemptions');
+    let u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + c + '&redirect_uri=' + r + '&response_type=token&scope=' + s + '&state=redirto_' + o + '&force_verify=true';
+    if (u.length > 1500)
+     u = 'https://realityripple.com/Tools/Twitch/tempRedir.php?c=' + c + '&r=' + r + '&s=' + s + '&u=' + encodeURIComponent(window.location);
     window.location = u;
    }
 
