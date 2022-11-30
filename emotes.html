@@ -2694,6 +2694,8 @@
       ws.close();
       return;
      }
+     if (document.visibilityState === 'hidden')
+      return;
      wsRetry = 0;
      let d = JSON.parse(event.data);
      if (!d.hasOwnProperty('name'))
@@ -2978,6 +2980,8 @@
       ws.close();
       return;
      }
+     if (document.visibilityState === 'hidden')
+      return;
      wsRetry = 0;
      let d = JSON.parse(event.data);
      switch(d.op)
@@ -5918,6 +5922,8 @@
       ws.close();
       return;
      }
+     if (document.visibilityState === 'hidden')
+      return;
      wsRetry = 0;
      let d = event.data;
      if (d.length < 1)
@@ -6091,6 +6097,8 @@
       ws.close();
       return;
      }
+     if (document.visibilityState === 'hidden')
+      return;
      wsRetry = 0;
      let d = event.data;
      if (d.length < 1)
@@ -6190,7 +6198,7 @@
     window.clearTimeout(tFC);
     tFC = false;
     let fRet = await getFollowerChange(chID);
-    if (fRet !== false && fRet.length > 0)
+    if (document.visibilityState !== 'hidden' && fRet !== false && fRet.length > 0)
     {
      for (let i = 0; i < fRet.length; i++)
       showKappa(false, cfg.event.follow, {'%USER%': fRet[i]});
@@ -6989,6 +6997,8 @@
       ws.close();
       return;
      }
+     if (document.visibilityState === 'hidden')
+      return;
      wsRetry = 0;
      let data = event.data.split('\r\n');
      for (let i = 0; i < data.length; i++)
@@ -7156,6 +7166,8 @@
       ws.close();
       return;
      }
+     if (document.visibilityState === 'hidden')
+      return;
      wsRetry = 0;
      let r = JSON.parse(event.data);
      if (!r.hasOwnProperty('type'))
@@ -7244,6 +7256,8 @@
       ws.close();
       return;
      }
+     if (document.visibilityState === 'hidden')
+      return;
      wsRetry = 0;
      let d = JSON.parse(event.data);
      if (d.type !== 'new_comment')
