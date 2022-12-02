@@ -1954,6 +1954,9 @@
       x.open('HEAD', url);
       x.onreadystatechange = function()
       {
+       if (x.readyState < 2)
+        return;
+       x.onreadystatechange = null;
        if (x.status === 200)
        {
         uList[url] = true;
@@ -2129,8 +2132,11 @@
       x.setRequestHeader('Client-Id', cfg.login.client);
       x.onreadystatechange = function()
       {
+       if (x.readyState < 2)
+        return;
        if (x.status !== 200)
        {
+        x.onreadystatechange = null;
         if (x.status === 401)
          blargIAmDead(3);
         resolve(false);
@@ -2140,6 +2146,12 @@
         return;
        if (x.responseText === '')
         return;
+       x.onreadystatechange = null;
+       if (x.responseText === null)
+       {
+        resolve(false);
+        return;
+       }
        let j = JSON.parse(x.responseText);
        if (!j.hasOwnProperty('data'))
        {
@@ -2171,8 +2183,11 @@
       x.setRequestHeader('Client-Id', cfg.login.client);
       x.onreadystatechange = function()
       {
+       if (x.readyState < 2)
+        return;
        if (x.status !== 200)
        {
+        x.onreadystatechange = null;
         if (x.status === 401)
          blargIAmDead(3);
         resolve(false);
@@ -2182,6 +2197,12 @@
         return;
        if (x.responseText === '')
         return;
+       x.onreadystatechange = null;
+       if (x.responseText === null)
+       {
+        resolve(false);
+        return;
+       }
        let j = JSON.parse(x.responseText);
        if (!j.hasOwnProperty('data'))
        {
@@ -2275,8 +2296,11 @@
       x.setRequestHeader('Client-Id', cfg.login.client);
       x.onreadystatechange = function()
       {
+       if (x.readyState < 2)
+        return;
        if (x.status !== 200)
        {
+        x.onreadystatechange = null;
         if (x.status === 401)
          blargIAmDead(3);
         resolve(false);
@@ -2286,6 +2310,12 @@
         return;
        if (x.responseText === '')
         return;
+       x.onreadystatechange = null;
+       if (x.responseText === null)
+       {
+        resolve(false);
+        return;
+       }
        let j = JSON.parse(x.responseText);
        if (!j.hasOwnProperty('data'))
        {
@@ -2449,8 +2479,11 @@
       x.open('GET', 'https://api.frankerfacez.com/v1/set/global?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
+       if (x.readyState < 2)
+        return;
        if (x.status !== 200)
        {
+        x.onreadystatechange = null;
         resolve(false);
         return;
        }
@@ -2458,6 +2491,12 @@
         return;
        if (x.responseText === '')
         return;
+       x.onreadystatechange = null;
+       if (x.responseText === null)
+       {
+        resolve(false);
+        return;
+       }
        let j = JSON.parse(x.responseText);
        if (!j.hasOwnProperty('sets'))
        {
@@ -2537,8 +2576,11 @@
       x.open('GET', 'https://api.frankerfacez.com/v1/room/id/' + chID + '?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
+       if (x.readyState < 2)
+        return;
        if (x.status !== 200)
        {
+        x.onreadystatechange = null;
         resolve(false);
         return;
        }
@@ -2546,6 +2588,12 @@
         return;
        if (x.responseText === '')
         return;
+       x.onreadystatechange = null;
+       if (x.responseText === null)
+       {
+        resolve(false);
+        return;
+       }
        let j = JSON.parse(x.responseText);
        if (!j.hasOwnProperty('sets'))
        {
@@ -2588,8 +2636,11 @@
       x.open('GET', 'https://api.betterttv.net/3/cached/emotes/global?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
+       if (x.readyState < 2)
+        return;
        if (x.status !== 200)
        {
+        x.onreadystatechange = null;
         resolve(false);
         return;
        }
@@ -2597,7 +2648,18 @@
         return;
        if (x.responseText === '')
         return;
+       x.onreadystatechange = null;
+       if (x.responseText === null)
+       {
+        resolve(false);
+        return;
+       }
        let j = JSON.parse(x.responseText);
+       if (!Array.isArray(j))
+       {
+        resolve(false);
+        return;
+       }
        for (let i = 0; i < j.length; i++)
        {
         if (!j[i].hasOwnProperty('code'))
@@ -2629,8 +2691,11 @@
       x.open('GET', 'https://api.betterttv.net/3/cached/users/twitch/' + chID + '?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
+       if (x.readyState < 2)
+        return;
        if (x.status !== 200)
        {
+        x.onreadystatechange = null;
         resolve(false);
         return;
        }
@@ -2638,6 +2703,12 @@
         return;
        if (x.responseText === '')
         return;
+       x.onreadystatechange = null;
+       if (x.responseText === null)
+       {
+        resolve(false);
+        return;
+       }
        removeEmoteByScope(eList.bttv, 'c');
        let j = JSON.parse(x.responseText);
        if (j.hasOwnProperty('channelEmotes'))
@@ -2676,11 +2747,15 @@
     const ws = new WebSocket('wss://sockets.betterttv.net/ws');
     ws.onopen = function(event)
     {
+     ws.onopen = null;
      ws.send('{"name":"join_channel","data":{"name":"twitch:' + chID + '"}}');
      ws.send('{"name":"broadcast_me","data":{"name":"' + cfg.channel + '","channel":"twitch:' + chID + '"}}');
     };
     ws.onclose = function()
     {
+     ws.onopen = null;
+     ws.onmessage = null;
+     ws.onclose = null;
      if (dead)
       return;
      let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
@@ -2779,8 +2854,11 @@
       x.open('GET', 'https://api.7tv.app/v2/emotes/global?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
+       if (x.readyState < 2)
+        return;
        if (x.status !== 200)
        {
+        x.onreadystatechange = null;
         resolve(false);
         return;
        }
@@ -2788,7 +2866,18 @@
         return;
        if (x.responseText === '')
         return;
+       x.onreadystatechange = null;
+       if (x.responseText === null)
+       {
+        resolve(false);
+        return;
+       }
        let j = JSON.parse(x.responseText);
+       if (!Array.isArray(j))
+       {
+        resolve(false);
+        return;
+       }
        for (let i = 0; i < j.length; i++)
        {
         if (!j[i].hasOwnProperty('name'))
@@ -2857,8 +2946,11 @@
       x.open('GET', 'https://api.7tv.app/v2/users/' + chID + '/emotes?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
+       if (x.readyState < 2)
+        return;
        if (x.status !== 200)
        {
+        x.onreadystatechange = null;
         resolve(false);
         return;
        }
@@ -2866,10 +2958,21 @@
         return;
        if (x.responseText === '')
         return;
+       x.onreadystatechange = null;
+       if (x.responseText === null)
+       {
+        resolve(false);
+        return;
+       }
        if (cfg.display.extended.useZWE)
         removeEmoteByScope(eList.zwe['7tv'], 'c');
        removeEmoteByScope(eList['7tv'], 'c');
        let j = JSON.parse(x.responseText);
+       if (!Array.isArray(j))
+       {
+        resolve(false);
+        return;
+       }
        for (let i = 0; i < j.length; i++)
        {
         if (!j[i].hasOwnProperty('name'))
@@ -2934,8 +3037,11 @@
       x.open('GET', 'https://api.7tv.app/v2/users/' + chID + '?nocache=' + rnd(0xFFFFFFFF));
       x.onreadystatechange = function()
       {
+       if (x.readyState < 2)
+        return;
        if (x.status !== 200)
        {
+        x.onreadystatechange = null;
         resolve(false);
         return;
        }
@@ -2943,6 +3049,12 @@
         return;
        if (x.responseText === '')
         return;
+       x.onreadystatechange = null;
+       if (x.responseText === null)
+       {
+        resolve(false);
+        return;
+       }
        let j = JSON.parse(x.responseText);
        if (j.hasOwnProperty('id'))
         resolve(j.id);
@@ -2962,11 +3074,10 @@
     if (accID === false)
      return;
     const ws = new WebSocket('wss://events.7tv.io/v3');
-    ws.onopen = function(event)
-    {
-    };
     ws.onclose = function()
     {
+     ws.onmessage = null;
+     ws.onclose = null;
      if (dead)
       return;
      let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
@@ -5899,14 +6010,6 @@
     let wsRetry = 0;
     let p = 0;
     const ws = new WebSocket('wss://sockets.streamlabs.com/socket.io/?token=' + cfg.streamlabs.token + '&transport=websocket');
-    ws.onopen = function(event)
-    {
-     if (p !== 0)
-     {
-      window.clearInterval(p);
-      p = 0;
-     }
-    };
     ws.onclose = function(event)
     {
      if (p !== 0)
@@ -5914,6 +6017,8 @@
       window.clearInterval(p);
       p = 0;
      }
+     ws.onmessage = null;
+     ws.onclose = null;
      if (dead)
       return;
      let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
@@ -6074,14 +6179,6 @@
     let wsRetry = 0;
     let p = 0;
     const ws = new WebSocket('wss://realtime.streamelements.com/socket.io/?transport=websocket');
-    ws.onopen = function(event)
-    {
-     if (p !== 0)
-     {
-      window.clearInterval(p);
-      p = 0;
-     }
-    };
     ws.onclose = function(event)
     {
      if (p !== 0)
@@ -6089,6 +6186,8 @@
       window.clearInterval(p);
       p = 0;
      }
+     ws.onmessage = null;
+     ws.onclose = null;
      if (dead)
       return;
      let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
@@ -6223,8 +6322,11 @@
       x.setRequestHeader('Client-Id', cfg.login.client);
       x.onreadystatechange = async function()
       {
+       if (x.readyState < 2)
+        return;
        if (x.status !== 200)
        {
+        x.onreadystatechange = null;
         resolve(false);
         return;
        }
@@ -6232,8 +6334,19 @@
         return;
        if (x.responseText === '')
         return;
+       x.onreadystatechange = null;
+       if (x.responseText === null)
+       {
+        resolve(false);
+        return;
+       }
        let j = JSON.parse(x.responseText);
-       if (j.total < 1 || !j.hasOwnProperty('data') || j.data.length < 1)
+       if (!j.hasOwnProperty('total') || j.total < 1)
+       {
+        resolve(false);
+        return;
+       }
+       if (!j.hasOwnProperty('data') || !Array.isArray(j.data) || j.data.length < 1)
        {
         resolve(false);
         return;
@@ -6286,8 +6399,11 @@
       x.setRequestHeader('Client-Id', cfg.login.client);
       x.onreadystatechange = async function()
       {
+       if (x.readyState < 2)
+        return;
        if (x.status !== 200)
        {
+        x.onreadystatechange = null;
         resolve(false);
         return;
        }
@@ -6295,8 +6411,14 @@
         return;
        if (x.responseText === '')
         return;
+       x.onreadystatechange = null;
+       if (x.responseText === null)
+       {
+        resolve(false);
+        return;
+       }
        let j = JSON.parse(x.responseText);
-       if (j.total > 0)
+       if (j.hasOwnProperty('total') && j.total > 0)
        {
         fList[uID] = {value: true, t: new Date().getTime()};
         resolve(true);
@@ -6962,6 +7084,7 @@
     const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
     ws.onopen = function(event)
     {
+     ws.onopen = null;
      tIRC = setTimeout(
       function()
       {
@@ -6989,6 +7112,9 @@
       clearTimeout(tIRC);
       tIRC = false;
      }
+     ws.onopen = null;
+     ws.onmessage = null;
+     ws.onclose = null;
      if (dead)
       return;
      let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
@@ -7141,6 +7267,7 @@
     let tmrPing = null;
     ws.onopen = function(event)
     {
+     ws.onopen = null;
      tmrPing = window.setInterval(function(){ws.send('{"type": "PING"}');}, 4 * 60 * 1000);
      let req = {};
      req.type = 'LISTEN';
@@ -7158,6 +7285,9 @@
       window.clearInterval(tmrPing);
       tmrPing = null;
      }
+     ws.onopen = null;
+     ws.onmessage = null;
+     ws.onclose = null;
      if (dead)
       return;
      let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
@@ -7243,11 +7373,10 @@
    {
     let wsRetry = 0;
     const ws = new WebSocket(wsURL);
-    ws.onopen = function(event)
-    {
-    };
     ws.onclose = function()
     {
+     ws.onmessage = null;
+     ws.onclose = null;
      if (dead)
       return;
      let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
@@ -7288,11 +7417,14 @@
     x.open('GET', 'https://strapi.reddit.com/videos/t3_' + rID + '?nocache=' + rnd(0xFFFFFFFF));
     x.onreadystatechange = function()
     {
-     if (x.status !== 200)
-      return;
      if (x.readyState !== 4)
       return;
+     x.onreadystatechange = null;
+     if (x.status !== 200)
+      return;
      if (x.responseText === '')
+      return;
+     if (x.responseText === null)
       return;
      let j = JSON.parse(x.responseText);
      if (!j.hasOwnProperty('data'))
