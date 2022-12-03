@@ -4869,8 +4869,7 @@
     let lns = sht;
     if (nM)
      lns = 6;
-    let lC = conga.length;
-    while (lC >= lns)
+    while (conga.length >= lns)
     {
      await sleep(250);
     }
@@ -4885,7 +4884,7 @@
       v *= seg;
      }
      let found = false;
-     for (let i = 0; i < lC; i++)
+     for (let i = 0, l = conga.length; i < l; i++)
      {
       if (conga[i].row === v)
       {
@@ -4995,12 +4994,13 @@
     }
     await sleep(longWait * 1000);
     let full = false;
-    if (lC === sht)
+    if (conga.length === sht)
      full = true;
     await sleep(cfg.display.kappa.conga.time * 1000);
     if (cfg.display.kappa.conga.contagious)
     {
      let ex = false;
+     let lC = conga.length;
      if (lC > 1)
       ex = true;
      for (let i = 0; i < lC; i++)
@@ -5013,6 +5013,7 @@
      let done = false;
      while (!done)
      {
+      lC = conga.length;
       if (!ex && lC > 1)
        ex = true;
       let notDone = false;
@@ -5038,7 +5039,7 @@
      }
     }
     await sleep(longWait * 1000);
-    for (let i = 0; i < lC; i++)
+    for (let i = 0, l = conga.length; i < l; i++)
     {
      if (conga[i].row !== v)
       continue;
@@ -5561,40 +5562,40 @@
      for (let c of emList[i][0])
      {
       let p = c.codePointAt(0).toString(16);
-      if (cpList.length > 0)
+      if (cpList.length === 0)
       {
-       let lL = cpList.length - 1;
-       if (p === 'fe0f') //emoji variation
-        cpList[lL] += '-' + p;
-       else if (p === '200d') //zwj
-        cpList[lL] += '-' + p;
-       else if (p.match(/1f3f[b-f]/)) //skin tone
-        cpList[lL] += '-' + p;
-       else if (p.match(/1f9b[0-3]/)) //hair
-       {
-        if (cpList[lL].slice(-5) === '-200d')
-         cpList[lL] += '-' + p;
-        else
-         cpList[lL] += '-200d-' + p;
-       }
-       else if (p.match(/264[0|2]/) || p.match(/26a7/)) //gender
-       {
-        if (cpList[lL].slice(-5) === '-200d')
-         cpList[lL] += '-' + p;
-        else
-         cpList[lL] += '-200d-' + p;
-       }
-       else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].length < 11) //country code (2 chars max)
-        cpList[lL] += '-' + p;
-       else if (p === '1f308' && cpList[lL] === '1f3f3-fe0f') //rainbow flag
-        cpList[lL] += '-200d-' + p;
-       else if (p === '2620' && cpList[lL] === '1f3f4') //pirate flag
-        cpList[lL] += '-200d-' + p;
-       else if (cpList[lL].slice(-5) === '-200d') //post-zwj
+       cpList.push(p);
+       continue;
+      }
+      let lL = cpList.length - 1;
+      if (p === 'fe0f') //emoji variation
+       cpList[lL] += '-' + p;
+      else if (p === '200d') //zwj
+       cpList[lL] += '-' + p;
+      else if (p.match(/1f3f[b-f]/)) //skin tone
+       cpList[lL] += '-' + p;
+      else if (p.match(/1f9b[0-3]/)) //hair
+      {
+       if (cpList[lL].slice(-5) === '-200d')
         cpList[lL] += '-' + p;
        else
-        cpList.push(p);
+        cpList[lL] += '-200d-' + p;
       }
+      else if (p.match(/264[0|2]/) || p.match(/26a7/)) //gender
+      {
+       if (cpList[lL].slice(-5) === '-200d')
+        cpList[lL] += '-' + p;
+       else
+        cpList[lL] += '-200d-' + p;
+      }
+      else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].length < 11) //country code (2 chars max)
+       cpList[lL] += '-' + p;
+      else if (p === '1f308' && cpList[lL] === '1f3f3-fe0f') //rainbow flag
+       cpList[lL] += '-200d-' + p;
+      else if (p === '2620' && cpList[lL] === '1f3f4') //pirate flag
+       cpList[lL] += '-200d-' + p;
+      else if (cpList[lL].slice(-5) === '-200d') //post-zwj
+       cpList[lL] += '-' + p;
       else
        cpList.push(p);
      }
@@ -5824,7 +5825,7 @@
       if (eList.zwe.hasOwnProperty('7tv'))
       {
        b = Object.keys(eList.zwe['7tv']);
-       for (let j = 0 o = b.length; j < o; j++)
+       for (let j = 0, o = b.length; j < o; j++)
        {
         t = t.replaceAll(b[j], '');
        }
