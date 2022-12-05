@@ -2765,8 +2765,6 @@
       ws.close();
       return;
      }
-     if (document.visibilityState === 'hidden')
-      return;
      wsRetry = 0;
      let d = JSON.parse(event.data);
      if (!d.hasOwnProperty('name'))
@@ -3087,8 +3085,6 @@
       ws.close();
       return;
      }
-     if (document.visibilityState === 'hidden')
-      return;
      wsRetry = 0;
      let d = JSON.parse(event.data);
      switch(d.op)
@@ -6044,8 +6040,6 @@
       ws.close();
       return;
      }
-     if (document.visibilityState === 'hidden')
-      return;
      wsRetry = 0;
      let d = event.data;
      if (d.length < 1)
@@ -6068,6 +6062,8 @@
        p = window.setInterval(function(){ws.send('2');}, t);
        break;
       case '4':
+       if (document.visibilityState === 'hidden')
+        return;
        if (d.slice(1, 2) !== '2')
         return;
        if (d.length < 2)
@@ -6213,8 +6209,6 @@
       ws.close();
       return;
      }
-     if (document.visibilityState === 'hidden')
-      return;
      wsRetry = 0;
      let d = event.data;
      if (d.length < 1)
@@ -6237,6 +6231,8 @@
        p = window.setInterval(function(){ws.send('2');}, t);
        break;
       case '4':
+       if (document.visibilityState === 'hidden')
+        return;
        if (d.slice(1, 2) === '0')
        {
         let a = '';
@@ -7141,8 +7137,6 @@
       ws.close();
       return;
      }
-     if (document.visibilityState === 'hidden')
-      return;
      wsRetry = 0;
      let data = event.data.split('\r\n');
      for (let i = 0, l = data.length; i < l; i++)
@@ -7179,6 +7173,8 @@
         ws.send('PONG ' + cmd.params[0]);
         break;
        case 'PRIVMSG':
+        if (document.visibilityState === 'hidden')
+         return;
         if (cmd.params.length > 1)
         {
          // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
@@ -7234,6 +7230,8 @@
         }
         break;
        case 'USERNOTICE':
+        if (document.visibilityState === 'hidden')
+         return;
         if (!cmd.hasOwnProperty('tags'))
          continue;
         if (!cmd.tags.hasOwnProperty('msg-id'))
@@ -7314,8 +7312,6 @@
       ws.close();
       return;
      }
-     if (document.visibilityState === 'hidden')
-      return;
      wsRetry = 0;
      let r = JSON.parse(event.data);
      if (!r.hasOwnProperty('type'))
@@ -7337,6 +7333,8 @@
        }
        break;
       case 'MESSAGE':
+       if (document.visibilityState === 'hidden')
+        return;
        if (!r.hasOwnProperty('data'))
         return;
        if (!r.data.hasOwnProperty('topic'))
