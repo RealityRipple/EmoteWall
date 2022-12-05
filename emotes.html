@@ -124,10 +124,6 @@
     *  dispSuf    This value should be added after any currency amount as a suffix, such as the word " dollars". Usually
     *             only the prefix or the suffix should be used, not both at the same time.
     *
-    * reddit      The unique ID of a Reddit RPAN session (usually 6 characters at the end of the URL).  If you don't
-    *             use Reddit to stream, please keep this set to FALSE. You must change this for every Reddit stream
-    *             at present, unfortunately.
-    *
     * display     Settings related to the animation of the emote wall.
     *
     *  styles     An array of animation styles which individual emotes randomly perform. You may turn on and off
@@ -565,7 +561,6 @@
      dispPre: '$',
      dispSuf: false
     },
-    reddit: false,
     display: {
      styles: [
     //'Still',        // No movement
@@ -7386,76 +7381,6 @@
     };
    }
 
-   function redditWS(wsURL)
-   {
-    let wsRetry = 0;
-    const ws = new WebSocket(wsURL);
-    ws.onclose = function()
-    {
-     ws.onmessage = null;
-     ws.onclose = null;
-     if (dead)
-      return;
-     let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
-     if (wsRetry < 2)
-      wsRetry += 0.2;
-     window.setTimeout(function(){redditWS(wsURL);}, wsWait);
-    };
-    ws.onmessage = async function(event)
-    {
-     if (dead)
-     {
-      ws.close();
-      return;
-     }
-     if (document.visibilityState === 'hidden')
-      return;
-     wsRetry = 0;
-     let d = JSON.parse(event.data);
-     if (d.type !== 'new_comment')
-     {
-      console.log('Unparsed Reddit Message: ', d);
-      return;
-     }
-     console.log('Reddit Comment: ', d.payload.author, d.payload.body);
-     let cmd = {params: [d.payload.author, d.payload.body]};
-     let p = [];
-     p = await parseEmoji(cmd, cfg.display.useEmoji);
-     if (p.length === 0)
-      return;
-     toShow = toShow.concat(p);
-     showEmotes();
-    };
-   }
-
-   function reddit(rID)
-   {
-    let x = new XMLHttpRequest();
-    x.open('GET', 'https://strapi.reddit.com/videos/t3_' + rID + '?nocache=' + rnd(0xFFFFFFFF));
-    x.onreadystatechange = function()
-    {
-     if (x.readyState !== 4)
-      return;
-     x.onreadystatechange = null;
-     if (x.status !== 200)
-      return;
-     if (x.responseText === '')
-      return;
-     if (x.responseText === null)
-      return;
-     let j = JSON.parse(x.responseText);
-     if (!j.hasOwnProperty('data'))
-      return;
-     if (!j.data.hasOwnProperty('post'))
-      return;
-     if (!j.data.post.hasOwnProperty('liveCommentsWebsocket'))
-      return;
-     let ws = j.data.post.liveCommentsWebsocket;
-     redditWS(ws);
-    };
-    x.send();
-   }
-
    function shouldUseLogin()
    {
     useL = false;
@@ -7729,8 +7654,6 @@
     if (cfg.display.extended.use7TV)
      await load7TV_global();
     irc();
-    if (cfg.hasOwnProperty('reddit') && cfg.reddit !== false)
-     reddit(cfg.reddit);
    }
 
    window.addEventListener('load', startup);
