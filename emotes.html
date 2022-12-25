@@ -5041,18 +5041,19 @@
       let ret = {};
       if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('display-name'))
        ret['display-name'] = cmd.tags['display-name'];
+      const gReg = new RegExp(twitch.parse.uReg, 'g');
       if (data.includes('!'))
       {
        ret.nick = data.slice(0, data.indexOf('!'));
        data = data.slice(data.indexOf('!') + 1);
-       if (!ret.hasOwnProperty('display-name') || (latinOnly && ret['display-name'] !== ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, '')))
+       if (!ret.hasOwnProperty('display-name') || (latinOnly && ret['display-name'] !== ret['display-name'].replaceAll(gReg, '')))
         ret['display-name'] = ret.nick;
       }
       if (data.includes('@'))
       {
        ret.host = data.slice(0, data.indexOf('@'));
        data = data.slice(data.indexOf('@') + 1);
-       if (!ret.hasOwnProperty('display-name') || (latinOnly && ret['display-name'] !== ret['display-name'].replaceAll(/[^A-Za-z0-9_]/g, '')))
+       if (!ret.hasOwnProperty('display-name') || (latinOnly && ret['display-name'] !== ret['display-name'].replaceAll(gReg, '')))
         ret['display-name'] = ret.host;
       }
       ret.user = data;
@@ -6424,7 +6425,8 @@
       message: parseMsg,
       content: content,
       line: parseLine,
-      event: event
+      event: event,
+      uReg: /[^A-Za-z0-9_]/
      };
     }();
 
@@ -6478,7 +6480,7 @@
       if (cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
-       if (!(/[^A-Za-z0-9_]/).test(n))
+       if (!twitch.parse.uReg.test(n))
         u = await twitch.net.userInfo(n);
        if (u !== false)
        {
@@ -6515,7 +6517,7 @@
       if (cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
-       if (!(/[^A-Za-z0-9_]/).test(n))
+       if (!twitch.parse.uReg.test(n))
         u = await twitch.net.userInfo(n);
        if (u !== false)
        {
@@ -6670,7 +6672,7 @@
      if (cfg.event.tip.useProfileImage && dName !== false)
      {
       let u = false;
-      if (!(/[^A-Za-z0-9_]/).test(dName))
+      if (!twitch.parse.uReg.test(dName))
        u = await twitch.net.userInfo(dName);
       if (u !== false)
       {
