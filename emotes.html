@@ -809,10 +809,10 @@
    /* potentially alterable arrays */
 
    // distribution of emojis for Pyramid and SmallPyramid kappagen
-   var pyramidDist = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
+   const pyramidDist = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
 
    // distribution of emojis for letters in message kappagens
-   var alnumDist = {
+   const alnumDist = {
     'A': [
      [0, 1, 1, 1, 1, 1, 0, 0, 0],
      [0, 0, 0, 0, 1, 0, 1, 0, 0],
@@ -1328,13 +1328,13 @@
    };
 
    // treat these BTTV emotes as zero-width (overlapping) emotes
-   var bttvZWE = [
+   const bttvZWE = [
     'SoSnowy',  'IceCold',   'SantaHat', 'TopHat',
     'ReinDeer', 'CandyCane', 'cvMask',   'cvHazmat'
    ];
 
    // list of default images to use if your channel has no emotes
-   var bareList = [
+   const bareList = [
     {url: 'https://cdn.frankerfacez.com/emoticon/675080/4'}
    ];
    //////////////////////////////////////////////////////////////////////////////
@@ -1876,14 +1876,14 @@
     throw new Error('Corrupted Configuration detected.');
    document.title = cfg.channel + ' Emote Wall';
    /* global variables */
-   var cList = [];     // list of channel-specific emotes, used for kappagens
-   var wWS = 5;        // websocket retry backoff base (ms = base ^ (1.0 + (0.2 per retry, max 1.0)))
+   let cList = [];     // list of channel-specific emotes, used for kappagens
+   const wWS = 5;      // websocket retry backoff base (ms = base ^ (1.0 + (0.2 per retry, max 1.0)))
 
-   let display = function()
+   const display = function()
    {
     let eActive = 0;    // active emote count (effective, not actual)
-    var tStart = 48;    // time to wait for transition trigger (ms)
-    let tAnim = {       // animation timing constants
+    const tStart = 48;  // time to wait for transition trigger (ms)
+    const tAnim = {     // animation timing constants
      fade: {
       in: 8,            // percentage of animation spent on fading in (8% of 5 seconds)
       out: 8            // percentage of animation spent on fading out
@@ -1894,13 +1894,13 @@
      }
     };
 
-    let emote = function()
+    const emote = function()
     {
      let toShow = [];    // emote queue
 
      let tEmote = false; // timer for emote queue
 
-     let list = function()
+     const list = function()
      {
       function Still(url, zwe, sW, sH, sS, canV = true)
       {
@@ -1915,8 +1915,8 @@
         sS = Math.ceil(sS * 0.5);
        else if (variationSize === 2)
         sS = sS * 2;
-       let h = shared.rnd(sW) - (sS / 2);
-       let v = shared.rnd(sH) - (sS / 2);
+       const h = shared.rnd(sW) - (sS / 2);
+       const v = shared.rnd(sH) - (sS / 2);
        let s = 'top: ' + v + 'px;';
        s += ' left: ' + h + 'px;';
        s += ' height: ' + sS + 'px;';
@@ -2018,8 +2018,8 @@
         sS = Math.ceil(sS * 0.5);
        else if (variationSize === 2)
         sS = sS * 2;
-       let h = shared.rnd(sW) - (sS / 2);
-       let v = Math.floor(shared.rnd(0.3) * sH) + Math.floor(0.8 * sH);
+       const h = shared.rnd(sW) - (sS / 2);
+       const v = Math.floor(shared.rnd(0.3) * sH) + Math.floor(0.8 * sH);
        let s = 'left: ' + h + 'px;';
        s += ' height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
@@ -2037,9 +2037,9 @@
         aNames.push('wiggleL');
        else
         aNames.push('wiggleR');
-       let d = shared.rnd(600);
+       const d = shared.rnd(600);
        aDelays.push(d + 'ms');
-       let w = shared.rnd(3) + 2;
+       const w = shared.rnd(3) + 2;
        aDurs.push(w + 's');
        aTimings.push('ease-in-out');
        aFills.push('both');
@@ -2082,10 +2082,10 @@
         sS = Math.ceil(sS * 0.5);
        else if (variationSize === 2)
         sS = sS * 2;
-       let h = Math.floor(shared.rnd(sW) - (sS / 2));
-       let v = Math.floor(shared.rnd(0.2) * sH);
+       const h = Math.floor(shared.rnd(sW) - (sS / 2));
+       const v = Math.floor(shared.rnd(0.2) * sH);
        let velH = shared.rnd(6) + 3;
-       let velV = shared.rnd(3) + 4;
+       const velV = shared.rnd(3) + 4;
        if (h + (sS / 2) > (sW / 2))
         velH = -1 * velH;
        let s = 'height: ' + sS + 'px;';
@@ -2101,7 +2101,7 @@
        {
         iArr.push(f(zwe[i].url));
        }
-       let ms = 20;
+       const ms = 20;
        let tmr = window.setTimeout(
         function tLoop()
         {
@@ -2153,8 +2153,8 @@
         sS = Math.ceil(sS * 0.5);
        else if (variationSize === 2)
         sS = sS * 2;
-       let h = shared.rnd(sW) - (sS / 2);
-       let v = Math.floor(shared.rnd(0.4) * sH) + Math.floor(0.3 * sH);
+       const h = shared.rnd(sW) - (sS / 2);
+       const v = Math.floor(shared.rnd(0.4) * sH) + Math.floor(0.3 * sH);
        let s = 'top: ' + v + 'px;';
        s += ' left: ' + h + 'px;';
        s += ' height: ' + sS + 'px;';
@@ -2212,7 +2212,7 @@
         sS = Math.ceil(sS * 0.5);
        else if (variationSize === 2)
         sS = sS * 2;
-       let h = shared.rnd(sW) - (sS / 2);
+       const h = shared.rnd(sW) - (sS / 2);
        let s = 'left: ' + h + 'px;';
        s += ' height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
@@ -2264,7 +2264,7 @@
         * offset-path requires support for offset-anchor/offset-position
         * due to transform-origin changes during squash
         */
-       let squashT = 100;
+       const squashT = 100;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
@@ -2276,8 +2276,8 @@
         sS = Math.ceil(sS * 0.5);
        else if (variationSize === 2)
         sS = sS * 2;
-       let h = shared.rnd(sW - sS - 5) + 10;
-       let v = shared.rnd(sH - sS - 5) + 10;
+       const h = shared.rnd(sW - sS - 5) + 10;
+       const v = shared.rnd(sH - sS - 5) + 10;
        let s = 'top: ' + v + 'px;';
        s += ' left: ' + h + 'px;';
        s += ' height: ' + sS + 'px;';
@@ -2336,8 +2336,8 @@
         iArr.push(f(zwe[i].url));
        }
        let d = 0;
-       let lA = iArr.length;
-       let lD = dests.length;
+       const lA = iArr.length;
+       const lD = dests.length;
        let tmr = window.setTimeout(
         function tLoop()
         {
@@ -2429,7 +2429,7 @@
         sS = Math.ceil(sS * 0.5);
        else if (variationSize === 2)
         sS = sS * 2;
-       let h = shared.rnd(sW) - (sS / 2);
+       const h = shared.rnd(sW) - (sS / 2);
        let s = 'left: ' + h + 'px;';
        s += ' height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
@@ -2489,14 +2489,14 @@
         sS = Math.ceil(sS * 0.5);
        else if (variationSize === 2)
         sS = sS * 2;
-       let h = (shared.rnd(2) === 1) ? (- 1 * sS) : sW;
-       let v = shared.rnd(sH + sS) - sS;
-       let hD = Math.floor((shared.rnd() * ((sW - sS) * 0.4)) + (sW - sS) * 0.3);
-       let vD = Math.floor((shared.rnd() * ((sH - sS) * 0.4)) + (sH - sS) * 0.3);
-       let dH = (shared.rnd() * sS);
-       let t1 = cfg.emote.time * 140;
-       let t2 = cfg.emote.time * 200;
-       let t3 = cfg.emote.time * 800;
+       const h = (shared.rnd(2) === 1) ? (- 1 * sS) : sW;
+       const v = shared.rnd(sH + sS) - sS;
+       const hD = Math.floor((shared.rnd() * ((sW - sS) * 0.4)) + (sW - sS) * 0.3);
+       const vD = Math.floor((shared.rnd() * ((sH - sS) * 0.4)) + (sH - sS) * 0.3);
+       const dH = (shared.rnd() * sS);
+       const t1 = cfg.emote.time * 140;
+       const t2 = cfg.emote.time * 200;
+       const t3 = cfg.emote.time * 800;
        let s = 'height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
        s += ' transition: transform ' + t1 + 'ms cubic-bezier(0.32, 0, 0.67, 0);';
@@ -2553,7 +2553,7 @@
        {
         iArr.push(f(zwe[i].url));
        }
-       let lA = iArr.length;
+       const lA = iArr.length;
        window.setTimeout(
         function()
         {
@@ -2610,7 +2610,7 @@
        cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
        let f = 'height: ' + sS + 'px;';
        f += ' width: ' + sS + 'px;';
-       let lZ = zwe.length;
+       const lZ = zwe.length;
        if (lZ === 0)
        {
         let cubeF = document.createElement('img');
@@ -2756,8 +2756,8 @@
         cube.appendChild(cubeU);
        }
        scene.appendChild(cube);
-       let h = shared.rnd(sW) - (sS / 2);
-       let v = shared.rnd(sH) - (sS / 2);
+       const h = shared.rnd(sW) - (sS / 2);
+       const v = shared.rnd(sH) - (sS / 2);
        let r = sW;
        if (sH < r)
         r = sH;
@@ -2800,7 +2800,7 @@
 
       function Fountain(url, zwe, sW, sH, sS, fX, fY, canV = true)
       {
-       let aT = Math.floor((cfg.emote.time * 1000) / 2);
+       const aT = Math.floor((cfg.emote.time * 1000) / 2);
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
@@ -2880,8 +2880,8 @@
 
      function queueEmote(url, zwe)
      {
-      let sW = window.innerWidth;
-      let sH = window.innerHeight;
+      const sW = window.innerWidth;
+      const sH = window.innerHeight;
       let sS = cfg.emote.size.max;
       if (sW < sH)
        sS = Math.floor(sW * cfg.emote.size.ratio.normal);
@@ -2940,20 +2940,20 @@
      };
     }();
 
-    let kappa = function()
+    const kappa = function()
     {
      let toKappa = [];   // kappagen queue
      let conga = [];     // CONGA TIME!
 
      let tKappa = false; // timer for kappagen queue
 
-     let list = function()
+     const list = function()
      {
       function Fireworks(kList, sW, sH, sS, iKC)
       {
-       let sendUp = 2;
-       let oX = (sW * 0.5) - (sS * 0.5);
-       let oY = sH;
+       const sendUp = 2;
+       const oX = (sW * 0.5) - (sS * 0.5);
+       const oY = sH;
        let cX = oX;
        switch(shared.rnd(3))
        {
@@ -2964,17 +2964,17 @@
          cX = Math.floor(cX * 1.5);
          break;
        }
-       let cY = oY * 0.33;
-       let lK = kList.length;
+       const cY = oY * 0.33;
+       const lK = kList.length;
        function sparkler(url, r, d, a)
        {
         let simg = document.createElement('img');
         simg.setAttribute('class', 'emote');
         simg.setAttribute('src', url);
         simg.setAttribute('alt', '');
-        let th = (a * (Math.PI * 2));
-        let hD = Math.floor(cX + r * Math.cos(th));
-        let vD = Math.floor(cY + r * Math.sin(th));
+        const th = (a * (Math.PI * 2));
+        const hD = Math.floor(cX + r * Math.cos(th));
+        const vD = Math.floor(cY + r * Math.sin(th));
         let s2 = 'height: ' + sS + 'px;';
         s2 += ' width: ' + sS + 'px;';
         s2 += ' transition: transform ' + cfg.emote.time + 's ease-out;';
@@ -3013,7 +3013,7 @@
        s += ' width: ' + sS + 'px;';
        s += ' transition: transform ' + sendUp + 's linear;';
        s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
-       let oK = kList[shared.rnd(lK)];
+       const oK = kList[shared.rnd(lK)];
        let iArr = [];
        iArr.push(f(oK.url));
        if (oK.hasOwnProperty('zwe'))
@@ -3053,14 +3053,14 @@
          if (sH < r)
           r = sH;
          r *= 0.66;
-         let inner = Math.floor(iKC / 8);
-         let outer = inner;
-         let core = iKC - (inner + outer);
+         const inner = Math.floor(iKC / 8);
+         const outer = inner;
+         const core = iKC - (inner + outer);
          let t = 0;
          for (let v = 0; v < inner; v++)
          {
-          let sK = kList[shared.rnd(lK)];
-          let sA = shared.rnd();
+          const sK = kList[shared.rnd(lK)];
+          const sA = shared.rnd();
           sparkler(sK.url, r * 0.5, t, sA);
           if (sK.hasOwnProperty('zwe'))
           {
@@ -3075,8 +3075,8 @@
          t += 0.5;
          for (let v = 0; v < core; v++)
          {
-          let sK = kList[shared.rnd(lK)];
-          let sA = shared.rnd();
+          const sK = kList[shared.rnd(lK)];
+          const sA = shared.rnd();
           sparkler(sK.url, r, t, sA);
           if (sK.hasOwnProperty('zwe'))
           {
@@ -3092,8 +3092,8 @@
          t += 0.25;
          for (let v = 0; v < outer; v++)
          {
-          let sK = kList[shared.rnd(lK)];
-          let sA = shared.rnd();
+          const sK = kList[shared.rnd(lK)];
+          const sA = shared.rnd();
           sparkler(sK.url, r * 1.5, t, sA);
           if (sK.hasOwnProperty('zwe'))
           {
@@ -3112,16 +3112,16 @@
 
       function Spiral(kList, sW, sH, sS, iKC)
       {
-       let oX = shared.rnd(sW - sS);
-       let oY = shared.rnd(sH - sS);
+       const oX = shared.rnd(sW - sS);
+       const oY = shared.rnd(sH - sS);
        function sparkler(url, r, th)
        {
         let simg = document.createElement('img');
         simg.setAttribute('class', 'emote');
         simg.setAttribute('src', url);
         simg.setAttribute('alt', '');
-        let hD = Math.floor(oX + r * Math.cos(th));
-        let vD = Math.floor(oY + r * Math.sin(th));
+        const hD = Math.floor(oX + r * Math.cos(th));
+        const vD = Math.floor(oY + r * Math.sin(th));
         let s = 'height: ' + sS + 'px;';
         s += ' width: ' + sS + 'px;';
         s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
@@ -3148,9 +3148,9 @@
          l = l + (shared.rnd() * 4 - 2);
          if (l < 0.1)
           l = 0.1;
-         let c = (Math.PI * l) / iKC;
+         const c = (Math.PI * l) / iKC;
          let th = (shared.rnd() * (Math.PI * 2));
-         let o = (shared.rnd(2) === 0);
+         const o = (shared.rnd(2) === 0);
          for (let i = 0; i < iKC; i++)
          {
           if (o)
@@ -3165,7 +3165,7 @@
            if (th >= Math.PI * 2)
             th+= Math.PI * 2;
           }
-          let oK = kList[shared.rnd(kList.length)];
+          const oK = kList[shared.rnd(kList.length)];
           sparkler(oK.url, r, th);
           if (oK.hasOwnProperty('zwe'))
           {
@@ -3184,10 +3184,10 @@
 
       function Pyramid(kList, sW, sH)
       {
-       let sS = sW / 19;
+       const sS = sW / 19;
        let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
        let ct = 0;
-       let lP = pyramidDist.length;
+       const lP = pyramidDist.length;
        for (let i = 0; i < lP; i++)
         ct += pyramidDist[i];
        let eT = (cfg.emote.time * 1000) * 0.8;
@@ -3195,16 +3195,16 @@
        if (tPerB < 50)
         tPerB = 50;
        eT = tPerB * ct;
-       let dT = (cfg.emote.time * 1000) * 0.2;
+       const dT = (cfg.emote.time * 1000) * 0.2;
        function block(url, x, t)
        {
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
         img.setAttribute('src', url);
         img.setAttribute('alt', '');
-        let h = sS * x;
-        let v = -1 * sS;
-        let vD = sH - (sS * (drawn[x] + 1));
+        const h = sS * x;
+        const v = -1 * sS;
+        const vD = sH - (sS * (drawn[x] + 1));
         let s = 'top: 0px;';
         s += ' left: 0px;';
         s += ' height: ' + sS + 'px;';
@@ -3237,7 +3237,7 @@
         do
          x = shared.rnd(lP);
         while(drawn[x] >= pyramidDist[x]);
-        let oK = kList[shared.rnd(kList.length)];
+        const oK = kList[shared.rnd(kList.length)];
         block(oK.url, x, t);
         if (oK.hasOwnProperty('zwe'))
         {
@@ -3261,7 +3261,7 @@
         sS = Math.floor(sH * cfg.emote.size.ratio.small);
        let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
        let ct = 0;
-       let lP = pyramidDist.length;
+       const lP = pyramidDist.length;
        for (let i = 0; i < lP; i++)
         ct += pyramidDist[i];
        let eT = (cfg.emote.time * 1000) * 0.8;
@@ -3269,16 +3269,16 @@
        if (tPerB < 75)
         tPerB = 75;
        eT = tPerB * ct;
-       let dT = (cfg.emote.time * 1000) * 0.2;
+       const dT = (cfg.emote.time * 1000) * 0.2;
        function block(url, oX, x, t)
        {
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
         img.setAttribute('src', url);
         img.setAttribute('alt', '');
-        let h = oX + sS * x;
-        let v = -1 * sS;
-        let vD = sH - (sS * (drawn[x] + 1));
+        const h = oX + sS * x;
+        const v = -1 * sS;
+        const vD = sH - (sS * (drawn[x] + 1));
         let s = 'top: 0px;';
         s += ' left: 0px;';
         s += ' height: ' + sS + 'px;';
@@ -3304,7 +3304,7 @@
          t
         );
        }
-       let oX = shared.rnd(sW - (sS * lP));
+       const oX = shared.rnd(sW - (sS * lP));
        let t = 0;
        for (let i = 0; i < ct; i++)
        {
@@ -3312,7 +3312,7 @@
         do
          x = shared.rnd(lP);
         while(drawn[x] >= pyramidDist[x]);
-        let oK = kList[shared.rnd(kList.length)];
+        const oK = kList[shared.rnd(kList.length)];
         block(oK.url, oX, x, t);
         if (oK.hasOwnProperty('zwe'))
         {
@@ -3329,18 +3329,18 @@
 
       async function Stampede(kList, sW, sH, sS, iKC)
       {
-       let speed = 2000;
-       let bandHeight = sS * 3;
-       let d = (shared.rnd(2) === 1);
-       let bandTop = shared.rnd(sH - (sS * 2.5));
+       const speed = 2000;
+       const bandHeight = sS * 3;
+       const d = (shared.rnd(2) === 1);
+       const bandTop = shared.rnd(sH - (sS * 2.5));
        function run(url, y)
        {
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
         img.setAttribute('src', url);
         img.setAttribute('alt', '');
-        let h = -2 * sS;
-        let v = y + bandTop;
+        const h = -2 * sS;
+        const v = y + bandTop;
         let s = 'top: 0px;';
         s += ' left: 0px;';
         s += ' height: ' + sS + 'px;';
@@ -3377,8 +3377,8 @@
         let imgs = [];
         for (let i = 0; i < ct; i++)
         {
-         let oK = kList[shared.rnd(kList.length)];
-         let y = shared.rnd(bandHeight);
+         const oK = kList[shared.rnd(kList.length)];
+         const y = shared.rnd(bandHeight);
          imgs.push(run(oK.url, y));
          if (oK.hasOwnProperty('zwe'))
          {
@@ -3406,9 +3406,9 @@
          }
         } while (imgs.length > 0);
        }
-       let b1 = shared.rnd(4) + 1;
-       let b2 = shared.rnd(8 - b1) + b1;
-       let b4 = shared.rnd(4);
+       const b1 = shared.rnd(4) + 1;
+       const b2 = shared.rnd(8 - b1) + b1;
+       const b4 = shared.rnd(4);
        await stampede(b1, speed * 0.8);
        await stampede(b2, speed * 0.4);
        await stampede(iKC, (b4 > 0));
@@ -3420,10 +3420,10 @@
       {
        let v = 0;
        let unique = false;
-       let bS = Math.ceil(sS * (5/3));
-       let seg = Math.floor(bS / 2);
-       let sht = Math.floor(sH / seg);
-       let longWait = cfg.emote.time * 2;
+       const bS = Math.ceil(sS * (5/3));
+       const seg = Math.floor(bS / 2);
+       const sht = Math.floor(sH / seg);
+       const longWait = cfg.emote.time * 2;
        let lns = sht;
        if (nM)
         lns = 6;
@@ -3456,10 +3456,10 @@
        conga.push({row: v, done: false});
        let urls = [];
        let zurls = [];
-       let ct = Math.floor(sW / bS);
+       const ct = Math.floor(sW / bS);
        for (let i = 0; i < ct; i++)
        {
-        let oK = kList[shared.rnd(kList.length)];
+        const oK = kList[shared.rnd(kList.length)];
         urls.push(oK.url);
         let oZ = [];
         if (oK.hasOwnProperty('zwe'))
@@ -3471,8 +3471,8 @@
         }
         zurls.push(oZ);
        }
-       let d = ((v / seg) % 2 === 1);
-       let xtra = Math.floor((sW - (ct * bS)) / 2);
+       const d = ((v / seg) % 2 === 1);
+       const xtra = Math.floor((sW - (ct * bS)) / 2);
        function dance(url, col)
        {
         let box = document.createElement('div');
@@ -3616,7 +3616,7 @@
        cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
        let f = 'height: ' + sS + 'px;';
        f += ' width: ' + sS + 'px;';
-       let lZ = zwe.length;
+       const lZ = zwe.length;
        if (lZ === 0)
        {
         let cubeF = document.createElement('img');
@@ -3815,10 +3815,10 @@
           o.push(spc);
           continue;
          }
-         let v = s[i];
+         const v = s[i];
          if (!alnumDist.hasOwnProperty(v))
           continue;
-         let c = alnumDist[v];
+         const c = alnumDist[v];
          for (let x = 0, m = c.length; x < m; x++)
          {
           o.push(c[x]);
@@ -3826,14 +3826,14 @@
         }
         return o;
        }
-       let msgDist = buildMsgArr(sMsg);
+       const msgDist = buildMsgArr(sMsg);
        let ct = 0;
        let ctT = 0;
        let drawn = [];
-       let lM = msgDist.length;
+       const lM = msgDist.length;
        for (let x = 0; x < lM; x++)
        {
-        let lX = msgDist[x].length;
+        const lX = msgDist[x].length;
         for (let y = 0; y < lX; y++)
         {
          if (msgDist[x][y] !== 0)
@@ -3852,17 +3852,17 @@
        if (tPerB < 24)
         tPerB = 24;
        eT = tPerB * ctT;
-       let lF = msgDist[0].length;
-       let vH = shared.rnd(sH - (sS * lF)) + (sS * lF);
+       const lF = msgDist[0].length;
+       const vH = shared.rnd(sH - (sS * lF)) + (sS * lF);
        function block(url, oX, x, t)
        {
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
         img.setAttribute('src', url);
         img.setAttribute('alt', '');
-        let h = oX + sS * x;
-        let v = -1 * sS;
-        let vD = vH - (sS * (drawn[x] + 1));
+        const h = oX + sS * x;
+        const v = -1 * sS;
+        const vD = vH - (sS * (drawn[x] + 1));
         let s = 'top: 0px;';
         s += ' left: 0px;';
         s += ' height: ' + sS + 'px;';
@@ -3888,7 +3888,7 @@
          t
         );
        }
-       let oX = shared.rnd(sW - (sS * lM));
+       const oX = shared.rnd(sW - (sS * lM));
        let t = 0;
        for (let i = 0; i < ct; i++)
        {
@@ -3898,7 +3898,7 @@
         while(drawn[x] >= msgDist[x].length);
         if (msgDist[x][drawn[x]] !== 0)
         {
-         let oK = kList[shared.rnd(kList.length)];
+         const oK = kList[shared.rnd(kList.length)];
          block(oK.url, oX, x, t);
          if (oK.hasOwnProperty('zwe'))
          {
@@ -3996,7 +3996,7 @@
        kS = cfg.display.kappa.styles;
       }
       let s, p;
-      let keys = Object.keys(kS);
+      const keys = Object.keys(kS);
       if (cfg.display.kappa.conga.contagious && conga.length > 0)
       {
        s = 'Conga';
@@ -4040,13 +4040,13 @@
          c += pyramidDist[i];
         return c;
        case 'Fireworks':
-        let inner = Math.floor(k.count / 8);
-        let outer = inner;
-        let core = k.count - (inner + outer);
+        const inner = Math.floor(k.count / 8);
+        const outer = inner;
+        const core = k.count - (inner + outer);
         return 1 + inner + core + outer;
        case 'Conga':
-        let sW = window.innerWidth;
-        let sH = window.innerHeight;
+        const sW = window.innerWidth;
+        const sH = window.innerHeight;
         let sS = cfg.emote.size.max;
         if (sW < sH)
          sS = Math.floor(sW * cfg.emote.size.ratio.normal);
@@ -4056,7 +4056,7 @@
          sS = cfg.emote.size.max;
         if (sS < cfg.emote.size.min)
          sS = cfg.emote.size.min;
-        let bS = Math.ceil(sS * (5/3));
+        const bS = Math.ceil(sS * (5/3));
         return Math.floor(sW / bS);
       }
       return k.count;
@@ -4064,7 +4064,7 @@
 
      async function showKappa(kList, kStyles = false, kParams = false)
      {
-      let kStyle = getNextKappaEx(kStyles, kParams);
+      const kStyle = getNextKappaEx(kStyles, kParams);
       if (kStyle === false)
        return;
       if (kStyle.style === undefined)
@@ -4073,8 +4073,8 @@
        kList = cList;
       if (!Array.isArray(kList) || kList.length < 1)
        kList = bareList;
-      let sW = window.innerWidth;
-      let sH = window.innerHeight;
+      const sW = window.innerWidth;
+      const sH = window.innerHeight;
       let sS = cfg.emote.size.max;
       let sSm = Math.floor(sS / 2);
       if (sW < sH)
@@ -4100,7 +4100,7 @@
       document.documentElement.style.setProperty('--emote-height', sS + 'px');
       document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
       document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
-      let waitFor = getKappaCountEstimate(kStyle);
+      const waitFor = getKappaCountEstimate(kStyle);
       if (!canShowKappa(kStyle))
       {
        toKappa.push({list: kList, style: kStyle.style, prefs: kStyle.prefs, params: kParams});
@@ -4113,7 +4113,7 @@
        return;
       }
       eActive += waitFor;
-      let lK = kList.length;
+      const lK = kList.length;
       switch(kStyle.style)
       {
        case 'Stampede':
@@ -4155,7 +4155,7 @@
          sTT = kStyle.prefs.time;
         if (kParams !== false)
         {
-         let pK = Object.keys(kParams);
+         const pK = Object.keys(kParams);
          for (let i = 0, l = pK.length; i < l; i++)
          {
           sTM = sTM.replaceAll(pK[i], kParams[pK[i]]);
@@ -4168,7 +4168,7 @@
         let cS = sW;
         if (sW > sH)
          cS = sH;
-        let rC = shared.rnd(lK);
+        const rC = shared.rnd(lK);
         let sCS = cfg.display.kappa.styles[kStyle.style].size;
         if (kStyle.prefs.hasOwnProperty('size'))
          sCS = kStyle.prefs.size;
@@ -4181,22 +4181,22 @@
         list.TheCube(kList[rC].url, kList[rC].zwe ?? [], sW, sH, Math.floor(cS * sCS), sCC, sCR);
         break;
        case 'Burst':
-        let oH = Math.floor((shared.rnd() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
-        let oV = Math.floor((shared.rnd() * ((sH - sS) * 0.33)) + (sH - sS) * 0.33);
+        const oH = Math.floor((shared.rnd() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
+        const oV = Math.floor((shared.rnd() * ((sH - sS) * 0.33)) + (sH - sS) * 0.33);
         for (let i = 0; i < kStyle.count; i++)
         {
-         let rB = shared.rnd(lK);
+         const rB = shared.rnd(lK);
          eActive--;
          emote.list.StraightLine(kList[rB].url, kList[rB].zwe ?? [], sW, sH, sS, oH, oV, false);
          await sleep(50);
         }
         break;
        case 'Fountain':
-        let fX = Math.floor((shared.rnd() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
-        let fY = shared.rnd(25) + 15;
+        const fX = Math.floor((shared.rnd() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
+        const fY = shared.rnd(25) + 15;
         for (let i = 0; i < kStyle.count; i++)
         {
-         let rF = shared.rnd(lK);
+         const rF = shared.rnd(lK);
          eActive--;
          emote.list.Fountain(kList[rF].url, kList[rF].zwe ?? [], sW, sH, sS, fX, fY, false);
          await sleep(50);
@@ -4205,7 +4205,7 @@
        case 'Confetti':
         for (let i = 0; i < kStyle.count; i++)
         {
-         let rN = shared.rnd(lK);
+         const rN = shared.rnd(lK);
          eActive--;
          emote.list.Confetti(kList[rN].url, kList[rN].zwe ?? [], sW, sH, sSm, false);
          await sleep(25);
@@ -4216,7 +4216,7 @@
          return false;
         for (let i = 0; i < kStyle.count; i++)
         {
-         let r = shared.rnd(lK);
+         const r = shared.rnd(lK);
          eActive--;
          if (kStyle.style === 'StraightLine')
           emote.list.StraightLine(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, false, false);
@@ -4232,7 +4232,7 @@
      };
     }();
 
-    let gc = function()
+    const gc = function()
     {
      let toGC = {};      // list of image elements to garbage collect
 
@@ -4250,12 +4250,12 @@
        if (!toGC.hasOwnProperty(idx))
         continue;
        done = false;
-       let i = toGC[idx].img;
-       let t = toGC[idx].end;
-       let d = toGC[idx].dec;
+       const i = toGC[idx].img;
+       const t = toGC[idx].end;
+       const d = toGC[idx].dec;
        if (toGC[idx].space)
        {
-        let r = i.getBoundingClientRect();
+        const r = i.getBoundingClientRect();
         if ((r.bottom > 0 && r.right > 0 && r.top < window.innerHeight && r.left < window.innerWidth) && t > new Date().getTime())
          continue;
        }
@@ -4378,18 +4378,18 @@
     };
    }();
 
-   let twitch = function()
+   const twitch = function()
    {
     let rList = {};     // list of triggered channel point redeems to match to PubSub events
 
-    let net = function()
+    const net = function()
     {
      let tIRC = false;   // timer for irc connection timeout
 
-     let follower = function()
+     const follower = function()
      {
       let uLF = false;    // user id of the most recent follower
-      let rFC = 2500;     // follower count interval (ms)
+      const rFC = 2500;   // follower count interval (ms)
 
       function getFollowerChange(chID)
       {
@@ -4420,7 +4420,7 @@
            resolve(false);
            return;
           }
-          let j = JSON.parse(x.responseText);
+          const j = JSON.parse(x.responseText);
           if (!j.hasOwnProperty('total') || j.total < 1)
           {
            resolve(false);
@@ -4431,7 +4431,7 @@
            resolve(false);
            return;
           }
-          let findU = uLF;
+          const findU = uLF;
           uLF = j.data[0].from_id;
           if (findU === false)
           {
@@ -4463,7 +4463,7 @@
         return;
        window.clearTimeout(follower.timer);
        follower.timer = false;
-       let fRet = await getFollowerChange(chID);
+       const fRet = await getFollowerChange(chID);
        if (document.visibilityState !== 'hidden' && fRet !== false && fRet.length > 0)
        {
         for (let i = 0, l = fRet.length; i < l; i++)
@@ -4511,7 +4511,7 @@
           resolve(false);
           return;
          }
-         let j = JSON.parse(x.responseText);
+         const j = JSON.parse(x.responseText);
          if (!j.hasOwnProperty('data'))
          {
           resolve(false);
@@ -4519,12 +4519,12 @@
          }
          for (let c = 0, l = j.data.length; c < l; c++)
          {
-          let set = j.data[c];
+          const set = j.data[c];
           if (!set.hasOwnProperty('prefix'))
            continue;
           if (!set.hasOwnProperty('tiers'))
            continue;
-          let prefix = set.prefix;
+          const prefix = set.prefix;
           let tierList = [];
           for (let i = set.tiers.length - 1; i >= 0; i--)
           {
@@ -4532,7 +4532,7 @@
             continue;
            if (!set.tiers[i].hasOwnProperty('images'))
             continue;
-           let amt = set.tiers[i].min_bits;
+           const amt = set.tiers[i].min_bits;
            let img = null;
            if (set.tiers[i].images.hasOwnProperty('dark'))
            {
@@ -4636,7 +4636,7 @@
        ws.onclose = null;
        if (twitch.net.dead)
         return;
-       let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+       const wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
        if (wsRetry < 2)
         wsRetry += 0.2;
        window.setTimeout(function(){pubSub();}, wsWait);
@@ -4649,7 +4649,7 @@
         return;
        }
        wsRetry = 0;
-       let r = JSON.parse(ev.data);
+       const r = JSON.parse(ev.data);
        if (!r.hasOwnProperty('type'))
         return;
        switch (r.type)
@@ -4679,7 +4679,7 @@
           return;
          if (!r.data.hasOwnProperty('message'))
           return;
-         let d = JSON.parse(r.data.message);
+         const d = JSON.parse(r.data.message);
          if (!d.hasOwnProperty('type'))
           return;
          if (d.type !== 'reward-redeemed')
@@ -4692,13 +4692,13 @@
           return;
          if (!d.data.redemption.reward.hasOwnProperty('title'))
           return;
-         let n = d.data.redemption.reward.title;
+         const n = d.data.redemption.reward.title;
          if (!d.data.redemption.hasOwnProperty('user_input'))
          {
           await parse.event.redeem(n, false);
           return;
          }
-         let lnID = d.data.redemption.reward.id;
+         const lnID = d.data.redemption.reward.id;
          if (!rList.hasOwnProperty(lnID))
          {
           rList[lnID] = {name: n, cmds: []};
@@ -4755,7 +4755,7 @@
        ws.onclose = null;
        if (twitch.net.dead)
         return;
-       let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+       const wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
        if (wsRetry < 2)
         wsRetry += 0.2;
        window.setTimeout(function(){irc();}, wsWait);
@@ -4768,7 +4768,7 @@
         return;
        }
        wsRetry = 0;
-       let data = ev.data.split('\r\n');
+       const data = ev.data.split('\r\n');
        for (let i = 0, l = data.length; i < l; i++)
        {
         if (data[i].length === 0)
@@ -4903,7 +4903,7 @@
      async function loadEmote_channel(chID)
      {
       cList = [];
-      let r = await findEmote_channel(chID);
+      const r = await findEmote_channel(chID);
       if (r === false)
        return false;
       cList = r;
@@ -4941,7 +4941,7 @@
           resolve(false);
           return;
          }
-         let j = JSON.parse(x.responseText);
+         const j = JSON.parse(x.responseText);
          if (!j.hasOwnProperty('data'))
          {
           resolve(false);
@@ -4970,7 +4970,7 @@
      };
     }();
 
-    let parse = function()
+    const parse = function()
     {
      let kLast = 0;      // last kappagen command event (for cooldown)
 
@@ -5007,12 +5007,12 @@
        if (!line.includes(' '))
         return false;
        cmd.tags = {};
-       let t = line.slice(0, line.indexOf(' '));
+       const t = line.slice(0, line.indexOf(' '));
        line = line.slice(line.indexOf(' ') + 1);
-       let a = t.split(';');
+       const a = t.split(';');
        for (let i = 0, l = a.length; i < l; i++)
        {
-        let k = a[i].slice(0, a[i].indexOf('='));
+        const k = a[i].slice(0, a[i].indexOf('='));
         let v = a[i].slice(a[i].indexOf('=') + 1);
         v = v.replace(/\\s/g, ' ');
         cmd.tags[k] = v;
@@ -5055,9 +5055,9 @@
       return cmd;
      }
 
-     let content = function()
+     const content = function()
      {
-      let emoji = function()
+      const emoji = function()
       {
        let uList = {};     // checkURL Cache
 
@@ -5099,8 +5099,8 @@
        {
         if (cmd.params.length < 2)
          return [];
-        let msg = cmd.params[1];
-        let emSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
+        const msg = cmd.params[1];
+        const emSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
         let emList = [];
         let match = '';
         while ((match = emSeg.exec(msg)) != null)
@@ -5114,7 +5114,7 @@
         if (set === true)
          set = 'twemoji';
         let ret = [];
-        let uri = 'https://cdn.frankerfacez.com/static/emoji/images/' + set + '/';
+        const uri = 'https://cdn.frankerfacez.com/static/emoji/images/' + set + '/';
         let addList = {};
         function showEmoji(c, p)
         {
@@ -5138,13 +5138,13 @@
          let cpList = [];
          for (const c of emList[i][0])
          {
-          let p = c.codePointAt(0).toString(16);
+          const p = c.codePointAt(0).toString(16);
           if (cpList.length === 0)
           {
            cpList.push(p);
            continue;
           }
-          let lL = cpList.length - 1;
+          const lL = cpList.length - 1;
           if (p === 'fe0f') //emoji variation
            cpList[lL] += '-' + p;
           else if (p === '200d') //zwj
@@ -5177,7 +5177,7 @@
            cpList.push(p);
          }
          let found = false;
-         let lP = cpList.length;
+         const lP = cpList.length;
          if (lP === 1)
          {
           let s = cpList[0];
@@ -5238,24 +5238,24 @@
         return [];
        if (cmd.tags.emotes === '')
         return [];
-       let f = 'default';
-       let t = 'dark';
-       let r = '3.0';
        if (cmd.params.length < 2)
         return [];
-       let m = cmd.params[1];
-       let e = cmd.tags.emotes.split('/');
+       const f = 'default';
+       const t = 'dark';
+       const r = '3.0';
+       const m = cmd.params[1];
+       const e = cmd.tags.emotes.split('/');
        if (dup === null)
         dup = cfg.display.duplicates;
        let ret = [];
        for (let i = 0, n = e.length; i < n; i++)
        {
-        let eID = e[i].slice(0, e[i].indexOf(':'));
-        let u = 'https://static-cdn.jtvnw.net/emoticons/v2/' + eID + '/' + f + '/' + t + '/' + r;
-        let eVals = e[i].slice(e[i].indexOf(':') + 1).split(',');
-        let eStart = parseInt(eVals[0].split('-')[0], 10);
-        let eEnd = parseInt(eVals[0].split('-')[1], 10);
-        let sName = m.slice(eStart, (eEnd + 1));
+        const eID = e[i].slice(0, e[i].indexOf(':'));
+        const u = 'https://static-cdn.jtvnw.net/emoticons/v2/' + eID + '/' + f + '/' + t + '/' + r;
+        const eVals = e[i].slice(e[i].indexOf(':') + 1).split(',');
+        const eStart = parseInt(eVals[0].split('-')[0], 10);
+        const eEnd = parseInt(eVals[0].split('-')[1], 10);
+        const sName = m.slice(eStart, (eEnd + 1));
         let l = eVals.length;
         if (dup === false)
          l = 1;
@@ -5263,14 +5263,14 @@
          l = dup;
         for (let c = 0; c < l; c++)
         {
-         let p = parseInt(eVals[c].split('-')[0], 10);
+         const p = parseInt(eVals[c].split('-')[0], 10);
          ret.push({svc: 't', url: u, str: sName, pos: p});
         }
        }
        return ret;
       }
 
-      let _3rdparty = function()
+      const _3rdparty = function()
       {
        function parseFFZ(cmd, dup = null)
        {
@@ -5278,7 +5278,7 @@
          return [];
         if (cmd.params.length < 2)
          return [];
-        let m = cmd.params[1].split(' ');
+        const m = cmd.params[1].split(' ');
         if (dup === null)
          dup = cfg.display.duplicates;
         let ret = [];
@@ -5289,7 +5289,7 @@
           continue;
          if (thirdparty.emotes.ffz[m[i]].users !== null)
          {
-          let u = parseUser(cmd);
+          const u = parseUser(cmd);
           if (!thirdparty.emotes.ffz[m[i]].users.includes(u.host))
            continue;
          }
@@ -5313,7 +5313,7 @@
         return ret;
        }
 
-       let bttv = function()
+       const bttv = function()
        {
         function parseBTTV(cmd, dup = null)
         {
@@ -5321,7 +5321,7 @@
           return [];
          if (cmd.params.length < 2)
           return [];
-         let m = cmd.params[1].split(' ');
+         const m = cmd.params[1].split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
          let ret = [];
@@ -5361,7 +5361,7 @@
          if (cmd.params.length < 2)
           return;
          l.sort(function(a, b){return a.pos - b.pos;});
-         let m = cmd.params[1].split(' ');
+         const m = cmd.params[1].split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
          let addList = {};
@@ -5448,10 +5448,10 @@
           return [];
          if (cmd.params.length < 2)
           return [];
-         let u = parseUser(cmd);
+         const u = parseUser(cmd);
          if (!thirdparty.emotes.bttvU.hasOwnProperty(u.host))
           return [];
-         let m = cmd.params[1].split(' ');
+         const m = cmd.params[1].split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
          let ret = [];
@@ -5487,7 +5487,7 @@
         };
        }();
 
-       let seventv = function()
+       const seventv = function()
        {
         function parse7TV(cmd, dup = null)
         {
@@ -5495,7 +5495,7 @@
           return [];
          if (cmd.params.length < 2)
           return [];
-         let m = cmd.params[1].split(' ');
+         const m = cmd.params[1].split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
          let ret = [];
@@ -5535,7 +5535,7 @@
          if (cmd.params.length < 2)
           return;
          l.sort(function(a, b){return a.pos - b.pos;});
-         let m = cmd.params[1].split(' ');
+         const m = cmd.params[1].split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
          let addList = {};
@@ -5639,10 +5639,10 @@
      async function parseLine(cmd)
      {
       let lv = -1;
-      let kNow = new Date().getTime();
+      const kNow = new Date().getTime();
       if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('custom-reward-id'))
       {
-       let lnID = cmd.tags['custom-reward-id'];
+       const lnID = cmd.tags['custom-reward-id'];
        if (!rList.hasOwnProperty(lnID))
        {
         rList[lnID] = {name: false, cmds: [cmd]};
@@ -5659,7 +5659,7 @@
       }
       if (cmd.params.length > 1 && (cfg.display.kappa.cooldown === 0 || (kNow - kLast) > (cfg.display.kappa.cooldown * 1000)))
       {
-       let m = cmd.params[1].toLowerCase();
+       const m = cmd.params[1].toLowerCase();
        for (const k in cfg.display.kappa.styles)
        {
         if (!cfg.display.kappa.styles.hasOwnProperty(k))
@@ -5813,7 +5813,7 @@
       display.emote.show();
      }
 
-     let event = function()
+     const event = function()
      {
       let bList = [];     // list of giftbomb event origin ids (to prevent kappas for each gift in a bomb)
 
@@ -5828,24 +5828,24 @@
        if (cmd.tags.bits < 1)
         return false;
        let p = [];
-       let msg = cmd.params[1].split(' ');
+       const msg = cmd.params[1].split(' ');
        for (let m = 0, l = msg.length; m < l; m++)
        {
         for (const prefix in thirdparty.emotes.cheer)
         {
          if (!thirdparty.emotes.cheer.hasOwnProperty(prefix))
           continue;
-         let firstChars = prefix.length;
+         const firstChars = prefix.length;
          if (msg[m].slice(0, firstChars).toLowerCase() !== prefix.toLowerCase())
           continue;
-         let amt = msg[m].slice(firstChars);
+         const amt = msg[m].slice(firstChars);
          if (isNaN(amt))
           continue;
          for (let i = 0, n = thirdparty.emotes.cheer[prefix].length; i < n; i++)
          {
           if (parseInt(amt, 10) < thirdparty.emotes.cheer[prefix][i].min)
            continue;
-          let sName = prefix + thirdparty.emotes.cheer[prefix][i].min;
+          const sName = prefix + thirdparty.emotes.cheer[prefix][i].min;
           p.push({svc: 'c', url: thirdparty.emotes.cheer[prefix][i].img, str: sName});
           break;
          }
@@ -5879,14 +5879,14 @@
        p = handleDuplicates(p);
        if (p.length === 0)
         return false;
-       let r = shared.findInMaybeRange(cfg.event.cheer.bits, cmd.tags.bits);
+       const r = shared.findInMaybeRange(cfg.event.cheer.bits, cmd.tags.bits);
        if (r === false)
        {
         display.emote.addToShowList(p);
         display.emote.show();
         return true;
        }
-       let u = parseUser(cmd, true);
+       const u = parseUser(cmd, true);
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -5898,11 +5898,11 @@
       {
        if (!cmd.tags.hasOwnProperty('msg-param-viewerCount'))
         return;
-       let c = cmd.tags['msg-param-viewerCount'];
-       let r = shared.findInMaybeRange(cfg.event.raid.raiders, c);
+       const c = cmd.tags['msg-param-viewerCount'];
+       const r = shared.findInMaybeRange(cfg.event.raid.raiders, c);
        if (r === false)
         return;
-       let u = parseUser(cmd, true);
+       const u = parseUser(cmd, true);
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -5911,8 +5911,8 @@
         display.kappa.show(false, r, {'%USER%': dn, '%AMOUNT%': c});
         return;
        }
-       let d = cmd.tags['user-id'];
-       let e = await findEmote_channel(d);
+       const d = cmd.tags['user-id'];
+       const e = await findEmote_channel(d);
        display.kappa.show(e, r, {'%USER%': dn, '%AMOUNT%': c});
       }
 
@@ -5922,7 +5922,7 @@
        {
         if (!c.tags.hasOwnProperty('msg-param-sub-plan'))
          return false;
-        let p = c.tags['msg-param-sub-plan'];
+        const p = c.tags['msg-param-sub-plan'];
         switch (p)
         {
          case '1000': return 't1';
@@ -5936,7 +5936,7 @@
        }
        if (!cmd.tags.hasOwnProperty('msg-id'))
         return;
-       let subPlan = parsePlan(cmd);
+       const subPlan = parsePlan(cmd);
        if (subPlan === false)
         return;
        let mpoi = false;
@@ -5982,7 +5982,7 @@
        let mpmgc = 1;
        if (cmd.tags.hasOwnProperty('msg-param-mass-gift-count'))
         mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
-       let u = parseUser(cmd, true);
+       const u = parseUser(cmd, true);
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -6005,7 +6005,7 @@
           return;
          if (!cfg.event.sub[subPlan].hasOwnProperty('resub'))
           return;
-         let rs = shared.findInMaybeRange(cfg.event.sub[subPlan].resub, mpcm);
+         const rs = shared.findInMaybeRange(cfg.event.sub[subPlan].resub, mpcm);
          if (rs === false)
           return;
          display.kappa.show(a, rs, {'%USER%': dn, '%AMOUNT%': mpcm});
@@ -6044,7 +6044,7 @@
          }
          if (!cfg.event.sub[subPlan].gift.hasOwnProperty('resub'))
           return;
-         let gpr = shared.findInMaybeRange(cfg.event.sub[subPlan].gift.resub, mpm);
+         const gpr = shared.findInMaybeRange(cfg.event.sub[subPlan].gift.resub, mpm);
          if (gpr === false)
           return;
          display.kappa.show(a, gpr, {'%SENDER%': dn, '%USER%': mprdn, '%AMOUNT%': mpm});
@@ -6060,7 +6060,7 @@
           return;
          if (mpoi !== false)
           bList.push(mpoi);
-         let gpb = shared.findInMaybeRange(cfg.event.sub[subPlan].gift.bomb, mpmgc);
+         const gpb = shared.findInMaybeRange(cfg.event.sub[subPlan].gift.bomb, mpmgc);
          if (gpb === false)
           return;
          display.kappa.show(a, gpb, {'%SENDER%': dn, '%AMOUNT%': mpmgc});
@@ -6074,8 +6074,8 @@
       {
        if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
         return;
-       let c = cmd.tags['msg-param-threshold'];
-       let u = parseUser(cmd, true);
+       const c = cmd.tags['msg-param-threshold'];
+       const u = parseUser(cmd, true);
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -6106,7 +6106,7 @@
 
       async function parseRedeem(title, cmd)
       {
-       let kNow = new Date().getTime();
+       const kNow = new Date().getTime();
        for (const k in cfg.display.kappa.styles)
        {
         if (!cfg.display.kappa.styles.hasOwnProperty(k))
@@ -6160,9 +6160,9 @@
       };
      }();
 
-     let level = function()
+     const level = function()
      {
-      let rFH = 3600000;  // follower state cache time (ms)
+      const rFH = 3600000;  // follower state cache time (ms)
 
       function jSplit(s, sep, limit)
       {
@@ -6191,17 +6191,17 @@
        let p = new Promise(
         (resolve) =>
         {
-         let uID = cmd.tags['user-id'];
+         const uID = cmd.tags['user-id'];
          if (twitch.net.fList.hasOwnProperty(uID))
          {
-          let tDif = new Date().getTime() - twitch.net.fList[uID].t;
+          const tDif = new Date().getTime() - twitch.net.fList[uID].t;
           if (tDif < rFH)
           {
            resolve(twitch.net.fList[uID].value);
            return;
           }
          }
-         let chID = cmd.tags['room-id'];
+         const chID = cmd.tags['room-id'];
          let x = new XMLHttpRequest();
          x.open('GET', 'https://api.twitch.tv/helix/users/follows?from_id=' + uID + '&to_id=' + chID + '&nocache=' + shared.rnd(0xFFFFFFFF));
          x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
@@ -6226,7 +6226,7 @@
            resolve(false);
            return;
           }
-          let j = JSON.parse(x.responseText);
+          const j = JSON.parse(x.responseText);
           if (j.hasOwnProperty('total') && j.total > 0)
           {
            twitch.net.fList[uID] = {value: true, t: new Date().getTime()};
@@ -6251,10 +6251,10 @@
         r |= 0x100;
        if (cmd.tags.hasOwnProperty('badges'))
        {
-        let badges = cmd.tags.badges.split(',');
+        const badges = cmd.tags.badges.split(',');
         for (let i = 0, l = badges.length; i < l; i++)
         {
-         let bData = jSplit(badges[i], '/', 2);
+         const bData = jSplit(badges[i], '/', 2);
          switch (bData[0])
          {
           case 'broadcaster':
@@ -6276,7 +6276,7 @@
            r |= 0x004;
            break;
           case 'subscriber':
-           let badge = parseInt(bData[1], 10);
+           const badge = parseInt(bData[1], 10);
            if (badge < 2000)
             r |= 0x010;
            else if (badge < 3000)
@@ -6312,7 +6312,7 @@
        }
        if (needF)
        {
-        let f = await checkFollower(cmd);
+        const f = await checkFollower(cmd);
         if (f)
          r |= 0x002;
        }
@@ -6326,7 +6326,7 @@
 
      function handleDuplicates(a)
      {
-      let lA = a.length;
+      const lA = a.length;
       if (lA < 1)
        return a;
       let r = [];
@@ -6421,16 +6421,16 @@
          resolve(false);
          return;
         }
-        let j = JSON.parse(x.responseText);
+        const j = JSON.parse(x.responseText);
         if (!j.hasOwnProperty('data'))
         {
          resolve(false);
          return;
         }
         let ret = [];
-        let f = 'default';
-        let t = 'dark';
-        let r = '3.0';
+        const f = 'default';
+        const t = 'dark';
+        const r = '3.0';
         for (let i = 0, l = j.data.length; i < l; i++)
          ret.push({url: 'https://static-cdn.jtvnw.net/emoticons/v2/' + j.data[i].id + '/' + f + '/' + t + '/' + r});
         resolve(ret);
@@ -6447,16 +6447,16 @@
     };
    }();
 
-   let streamlabs = function()
+   const streamlabs = function()
    {
     async function showStreamlabsDonations(dRet)
     {
      for (let i = 0, l = dRet.length; i < l; i++)
      {
-      let n = dRet[i].name;
-      let a = dRet[i].amt;
-      let v = Math.floor(a * cfg.streamlabs.curMul);
-      let r = shared.findInMaybeRange(cfg.event.tip.streamlabs.donation, v);
+      const n = dRet[i].name;
+      const a = dRet[i].amt;
+      const v = Math.floor(a * cfg.streamlabs.curMul);
+      const r = shared.findInMaybeRange(cfg.event.tip.streamlabs.donation, v);
       if (r === false)
        continue;
       let p = false;
@@ -6490,10 +6490,10 @@
     {
      for (let i = 0, l = pRet.length; i < l; i++)
      {
-      let n = pRet[i].name;
-      let a = pRet[i].amt;
-      let v = Math.floor(a * cfg.streamlabs.curMul);
-      let r = shared.findInMaybeRange(cfg.event.tip.streamlabs.pledge, v);
+      const n = pRet[i].name;
+      const a = pRet[i].amt;
+      const v = Math.floor(a * cfg.streamlabs.curMul);
+      const r = shared.findInMaybeRange(cfg.event.tip.streamlabs.pledge, v);
       if (r === false)
        continue;
       let p = false;
@@ -6539,7 +6539,7 @@
       ws.onclose = null;
       if (twitch.net.dead)
        return;
-      let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+      const wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
       if (wsRetry < 2)
        wsRetry += 0.2;
       window.setTimeout(function(){streamlabsWS();}, wsWait);
@@ -6552,7 +6552,7 @@
        return;
       }
       wsRetry = 0;
-      let d = ev.data;
+      const d = ev.data;
       if (d.length < 1)
        return;
       switch (d.slice(0, 1))
@@ -6561,7 +6561,7 @@
         let t = 20000;
         if (d.length > 1)
         {
-         let c = JSON.parse(d.slice(1));
+         const c = JSON.parse(d.slice(1));
          if (c.hasOwnProperty('pingInterval'))
           t = c.pingInterval;
         }
@@ -6579,7 +6579,7 @@
          return;
         if (d.length < 2)
          return;
-        let o = JSON.parse(d.slice(2));
+        const o = JSON.parse(d.slice(2));
         if (o.length < 2)
          return;
         if (o[0] !== 'event')
@@ -6623,14 +6623,14 @@
     };
    }();
 
-   let streamelements = function()
+   const streamelements = function()
    {
     async function showStreamElementsTip(dAmt, dName)
     {
-     let v = Math.floor(dAmt * cfg.streamelements.curMul);
+     const v = Math.floor(dAmt * cfg.streamelements.curMul);
      if (v < 1)
       return;
-     let r = shared.findInMaybeRange(cfg.event.tip.streamelements, v);
+     const r = shared.findInMaybeRange(cfg.event.tip.streamelements, v);
      if (r === false)
       return;
      let p = false;
@@ -6675,7 +6675,7 @@
       ws.onclose = null;
       if (twitch.net.dead)
        return;
-      let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+      const wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
       if (wsRetry < 2)
        wsRetry += 0.2;
       window.setTimeout(function(){streamelementsWS();}, wsWait);
@@ -6688,7 +6688,7 @@
        return;
       }
       wsRetry = 0;
-      let d = ev.data;
+      const d = ev.data;
       if (d.length < 1)
        return;
       switch (d.slice(0, 1))
@@ -6697,7 +6697,7 @@
         let t = 20000;
         if (d.length > 1)
         {
-         let c = JSON.parse(d.slice(1));
+         const c = JSON.parse(d.slice(1));
          if (c.hasOwnProperty('pingInterval'))
           t = c.pingInterval;
         }
@@ -6725,7 +6725,7 @@
          return;
         if (d.length < 2)
          return;
-        let o = JSON.parse(d.slice(2));
+        const o = JSON.parse(d.slice(2));
         if (o.length < 2)
          return;
         if (o[0] !== 'event:update')
@@ -6752,7 +6752,7 @@
     };
    }();
 
-   let thirdparty = function()
+   const thirdparty = function()
    {
     function addEmote(list, scope, code, id, url, users = null, zwe = false)
     {
@@ -6784,7 +6784,7 @@
     {
      for (let i = Object.keys(list).length - 1; i >= 0; i--)
      {
-      let k = Object.keys(list)[i];
+      const k = Object.keys(list)[i];
       if (list[k].scope !== scope)
        continue;
       if (list[k].id !== id)
@@ -6798,14 +6798,14 @@
     {
      for (let i = Object.keys(list).length - 1; i >= 0; i--)
      {
-      let k = Object.keys(list)[i];
+      const k = Object.keys(list)[i];
       if (list[k].scope !== scope)
        continue;
       removeEmote(list, scope, k);
      }
     }
 
-    let ffz = function()
+    const ffz = function()
     {
      function readFFZ_URL(entry)
      {
@@ -6869,7 +6869,7 @@
           resolve(false);
           return;
          }
-         let j = JSON.parse(x.responseText);
+         const j = JSON.parse(x.responseText);
          if (!j.hasOwnProperty('sets'))
          {
           resolve(false);
@@ -6893,7 +6893,7 @@
           {
            if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
             continue;
-           let u = readFFZ_URL(j.sets[set].emoticons[i]);
+           const u = readFFZ_URL(j.sets[set].emoticons[i]);
            if (u === false)
             continue;
            addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
@@ -6909,7 +6909,7 @@
          {
           if (!j.users.hasOwnProperty(setID))
            continue;
-          let aList = j.users[setID];
+          const aList = j.users[setID];
           if (!Array.isArray(aList))
            continue;
           for (const set in j.sets)
@@ -6924,7 +6924,7 @@
            {
             if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
              continue;
-            let u = readFFZ_URL(j.sets[set].emoticons[i]);
+            const u = readFFZ_URL(j.sets[set].emoticons[i]);
             if (u === false)
              continue;
             addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, aList);
@@ -6966,7 +6966,7 @@
           resolve(false);
           return;
          }
-         let j = JSON.parse(x.responseText);
+         const j = JSON.parse(x.responseText);
          if (!j.hasOwnProperty('sets'))
          {
           resolve(false);
@@ -6981,7 +6981,7 @@
           {
            if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
             continue;
-           let u = readFFZ_URL(j.sets[set].emoticons[i]);
+           const u = readFFZ_URL(j.sets[set].emoticons[i]);
            if (u === false)
             continue;
            addEmote(thirdparty.emotes.ffz, 'c', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
@@ -7001,9 +7001,9 @@
      };
     }();
 
-    let bttv = function()
+    const bttv = function()
     {
-     let rBE = 600000;   // bttv post-event emote recheck (ms)
+     const rBE = 600000;   // bttv post-event emote recheck (ms)
 
      function reloadBTTV(chID)
      {
@@ -7047,7 +7047,7 @@
           resolve(false);
           return;
          }
-         let j = JSON.parse(x.responseText);
+         const j = JSON.parse(x.responseText);
          if (!Array.isArray(j))
          {
           resolve(false);
@@ -7103,7 +7103,7 @@
           return;
          }
          removeEmoteByScope(thirdparty.emotes.bttv, 'c');
-         let j = JSON.parse(x.responseText);
+         const j = JSON.parse(x.responseText);
          if (j.hasOwnProperty('channelEmotes'))
          {
           for (let i = 0, l = j.channelEmotes.length; i < l; i++)
@@ -7151,7 +7151,7 @@
        ws.onclose = null;
        if (twitch.net.dead)
         return;
-       let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+       const wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
        if (wsRetry < 2)
         wsRetry += 0.2;
        window.setTimeout(function(){loadBTTV_ws_channel(chID);}, wsWait);
@@ -7164,7 +7164,7 @@
         return;
        }
        wsRetry = 0;
-       let d = JSON.parse(ev.data);
+       const d = JSON.parse(ev.data);
        if (!d.hasOwnProperty('name'))
         return;
        if (!d.hasOwnProperty('data'))
@@ -7240,7 +7240,7 @@
      };
     }();
 
-    let seventv = function()
+    const seventv = function()
     {
      function load7TV_global()
      {
@@ -7274,7 +7274,7 @@
           resolve(false);
           return;
          }
-         let j = JSON.parse(x.responseText);
+         const j = JSON.parse(x.responseText);
          if (!Array.isArray(j))
          {
           resolve(false);
@@ -7291,7 +7291,7 @@
           {
            if (j[i].urls[u][0] === '1')
            {
-            let t1 = j[i].urls[u][1];
+            const t1 = j[i].urls[u][1];
             if (t1.slice(-3) === '/1x')
             {
              if (t4 === null)
@@ -7300,7 +7300,7 @@
            }
            if (j[i].urls[u][0] === '2')
            {
-            let t2 = j[i].urls[u][1];
+            const t2 = j[i].urls[u][1];
             if (t2.slice(-3) === '/2x')
             {
              if (t4 === null)
@@ -7309,7 +7309,7 @@
            }
            if (j[i].urls[u][0] === '3')
            {
-            let t3 = j[i].urls[u][1];
+            const t3 = j[i].urls[u][1];
             if (t3.slice(-3) === '/3x')
             {
              if (t4 === null)
@@ -7369,7 +7369,7 @@
          if (cfg.display.extended.useZWE)
           removeEmoteByScope(thirdparty.emotes.zwe['7tv'], 'c');
          removeEmoteByScope(thirdparty.emotes['7tv'], 'c');
-         let j = JSON.parse(x.responseText);
+         const j = JSON.parse(x.responseText);
          if (!Array.isArray(j))
          {
           resolve(false);
@@ -7386,7 +7386,7 @@
           {
            if (j[i].urls[u][0] === '1')
            {
-            let t1 = j[i].urls[u][1];
+            const t1 = j[i].urls[u][1];
             if (t1.slice(-3) === '/1x')
             {
              if (t4 === null)
@@ -7395,7 +7395,7 @@
            }
            if (j[i].urls[u][0] === '2')
            {
-            let t2 = j[i].urls[u][1];
+            const t2 = j[i].urls[u][1];
             if (t2.slice(-3) === '/2x')
             {
              if (t4 === null)
@@ -7404,7 +7404,7 @@
            }
            if (j[i].urls[u][0] === '3')
            {
-            let t3 = j[i].urls[u][1];
+            const t3 = j[i].urls[u][1];
             if (t3.slice(-3) === '/3x')
             {
              if (t4 === null)
@@ -7457,7 +7457,7 @@
           resolve(false);
           return;
          }
-         let j = JSON.parse(x.responseText);
+         const j = JSON.parse(x.responseText);
          if (j.hasOwnProperty('id'))
           resolve(j.id);
          else
@@ -7472,7 +7472,7 @@
      async function load7TV_ws_channel(chID)
      {
       let wsRetry = 0;
-      let accID = await load7TV_channelID(chID);
+      const accID = await load7TV_channelID(chID);
       if (accID === false)
        return;
       const ws = new WebSocket('wss://events.7tv.io/v3');
@@ -7482,7 +7482,7 @@
        ws.onclose = null;
        if (twitch.net.dead)
         return;
-       let wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
+       const wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
        if (wsRetry < 2)
         wsRetry += 0.2;
        window.setTimeout(function(){load7TV_ws_channel(chID);}, wsWait);
@@ -7495,7 +7495,7 @@
         return;
        }
        wsRetry = 0;
-       let d = JSON.parse(ev.data);
+       const d = JSON.parse(ev.data);
        switch(d.op)
        {
         case 0:
@@ -7545,13 +7545,13 @@
     };
    }();
 
-   let shared = function()
+   const shared = function()
    {
     function rnd(m)
     {
      let r = new Uint32Array(1);
      window.crypto.getRandomValues(r);
-     let f = r[0] / 4294967295;
+     const f = r[0] / 4294967295;
      if (m === undefined)
       return f;
      if (m < 1)
@@ -7561,7 +7561,7 @@
 
     function findInMaybeRange(r, v)
     {
-     let t = typeof r;
+     const t = typeof r;
      switch (t)
      {
       case 'undefined':
@@ -7664,7 +7664,7 @@
     };
    }();
 
-   let login = function()
+   const login = function()
    {
     let tL = false;     // timer for logout button display
 
@@ -7700,7 +7700,7 @@
      let lsExpires = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.expires');
      if (lsChannel === null || lsOAuth === null)
      {
-      let h = getHashParams();
+      const h = getHashParams();
       if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('expires'))
       {
        showLoginButton();
@@ -7726,13 +7726,13 @@
 
     function getHashParams()
     {
-     let d = function(s) {
-      let a = /\+/g;
+     const d = function(s) {
+      const a = /\+/g;
       return decodeURIComponent(s.replace(a, " "));
      };
      let hashParams = {};
-     let r = /([^&;=]+)=?([^&;]*)/g;
-     let q = window.location.hash.substring(1);
+     const r = /([^&;=]+)=?([^&;]*)/g;
+     const q = window.location.hash.substring(1);
      let e;
      while ((e = r.exec(q)))
      {
@@ -7747,10 +7747,10 @@
      window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.oauth');
      window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.client');
      window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.expires');
-     let o = encodeURIComponent(btoa(window.location));
-     let c = encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8');
-     let r = encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php');
-     let s = encodeURIComponent('chat:read channel:read:redemptions');
+     const o = encodeURIComponent(btoa(window.location));
+     const c = encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8');
+     const r = encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php');
+     const s = encodeURIComponent('chat:read channel:read:redemptions');
      let u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + c + '&redirect_uri=' + r + '&response_type=token&scope=' + s + '&state=redirto_' + o + '&force_verify=true';
      if (u.length > 1500)
       u = 'https://realityripple.com/Tools/Twitch/tempRedir.php?c=' + c + '&r=' + r + '&s=' + s + '&u=' + encodeURIComponent(window.location);
@@ -7784,7 +7784,7 @@
 
     function showLogoutButton(v = false)
     {
-     let visTime = 5000;
+     const visTime = 5000;
      if (document.getElementById('cmdLogout'))
       document.body.removeChild(document.getElementById('cmdLogout'));
      let cmdLogout = document.createElement('button');
@@ -7875,10 +7875,10 @@
      return;
     if (cfg.login.hasOwnProperty('expires') && cfg.login.expires > 0)
     {
-     let expTime = cfg.login.expires - new Date().getTime();
+     const expTime = cfg.login.expires - new Date().getTime();
      if (expTime > 0)
      {
-      let expDays = Math.floor(expTime / 1000 / 60 / 60 / 24);
+      const expDays = Math.floor(expTime / 1000 / 60 / 60 / 24);
       if (expDays < 7)
       {
        shared.blargIAmDead(4);
