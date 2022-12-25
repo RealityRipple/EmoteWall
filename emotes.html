@@ -1925,21 +1925,10 @@
        s += ' height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
        s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
-       f(url);
+       addEmoteToDoc(url, s, false, {space: false});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        f(zwe[i].url);
-       }
-       function f(uri)
-       {
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        img.setAttribute('src', uri);
-        img.setAttribute('alt', '');
-        img.setAttribute('style', s);
-        eActive++;
-        document.body.appendChild(img);
-        gc.hook(img, false);
+        addEmoteToDoc(zwe[i].url, s, false, {space: false});
        }
       }
 
@@ -1983,28 +1972,10 @@
        s += ' transition: transform ' + cfg.emote.time + 's linear;';
        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
        s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
-       f(url);
+       addEmoteToDoc(url, s, false, {}, {x: hD, y: vD});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        f(zwe[i].url);
-       }
-       function f(uri)
-       {
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        img.setAttribute('src', uri);
-        img.setAttribute('alt', '');
-        img.setAttribute('style', s);
-        eActive++;
-        document.body.appendChild(img);
-        gc.hook(img);
-        window.setTimeout(
-         function()
-         {
-          img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
-         },
-         tStart
-        );
+        addEmoteToDoc(zwe[i].url, s, false, {}, {x: hD, y: vD});
        }
       }
 
@@ -2054,21 +2025,10 @@
        aFills.push('forwards');
        aIters.push('1');
        s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
-       f(url);
+       addEmoteToDoc(url, s, false, {space: false});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        f(zwe[i].url);
-       }
-       function f(uri)
-       {
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        img.setAttribute('src', uri);
-        img.setAttribute('alt', '');
-        img.setAttribute('style', s);
-        eActive++;
-        document.body.appendChild(img);
-        gc.hook(img, false);
+        addEmoteToDoc(zwe[i].url, s, false, {space: false});
        }
       }
 
@@ -2099,10 +2059,10 @@
        let bY = v;
        let velY = velV;
        let iArr = [];
-       iArr.push(f(url));
+       iArr.push(addEmoteToDoc(url, s, true));
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        iArr.push(f(zwe[i].url));
+        iArr.push(addEmoteToDoc(zwe[i].url, s, true));
        }
        const ms = 20;
        let tmr = window.setTimeout(
@@ -2129,18 +2089,6 @@
         },
         ms
        );
-       function f(uri)
-       {
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        img.setAttribute('src', uri);
-        img.setAttribute('alt', '');
-        img.setAttribute('style', s);
-        eActive++;
-        document.body.appendChild(img);
-        gc.hook(img);
-        return img;
-       }
       }
 
       function Speed(url, zwe, sW, sH, sS, canV = true)
@@ -2184,21 +2132,10 @@
        aFills.push('forwards');
        aIters.push('1');
        s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
-       f(url);
+       addEmoteToDoc(url, s);
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        f(zwe[i].url);
-       }
-       function f(uri)
-       {
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        img.setAttribute('src', uri);
-        img.setAttribute('alt', '');
-        img.setAttribute('style', s);
-        eActive++;
-        document.body.appendChild(img);
-        gc.hook(img);
+        addEmoteToDoc(zwe[i].url, s);
        }
       }
 
@@ -2241,21 +2178,10 @@
        aFills.push('forwards');
        aIters.push('1');
        s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
-       f(url);
+       addEmoteToDoc(url, s, false, {space: false});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        f(zwe[i].url);
-       }
-       function f(uri)
-       {
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        img.setAttribute('src', uri);
-        img.setAttribute('alt', '');
-        img.setAttribute('style', s);
-        eActive++;
-        document.body.appendChild(img);
-        gc.hook(img, false);
+        addEmoteToDoc(zwe[i].url, s, false, {space: false});
        }
       }
 
@@ -2333,10 +2259,10 @@
        dests.push({x: pos.x, y: pos.y, t: (pos.t - lastT), w: 0});
        s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
        let iArr = [];
-       iArr.push(f(url));
+       iArr.push(addEmoteToDoc(url, s, true, {space: false}));
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        iArr.push(f(zwe[i].url));
+        iArr.push(addEmoteToDoc(zwe[i].url, s, true, {space: false}));
        }
        let d = 0;
        const lA = iArr.length;
@@ -2405,18 +2331,6 @@
         },
         tStart
        );
-       function f(uri)
-       {
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        img.setAttribute('src', uri);
-        img.setAttribute('alt', '');
-        img.setAttribute('style', s);
-        eActive++;
-        document.body.appendChild(img);
-        gc.hook(img, false);
-        return img;
-       }
       }
 
       function Confetti(url, zwe, sW, sH, sS, canV = true)
@@ -2461,21 +2375,10 @@
        aFills.push('forwards');
        aIters.push('1');
        s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, false, variationSize);
-       f(url);
+       addEmoteToDoc(url, s, false, {space: false});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        f(zwe[i].url);
-       }
-       function f(uri)
-       {
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        img.setAttribute('src', uri);
-        img.setAttribute('alt', '');
-        img.setAttribute('style', s);
-        eActive++;
-        document.body.appendChild(img);
-        gc.hook(img, false);
+        addEmoteToDoc(zwe[i].url, s, false, {space: false});
        }
       }
 
@@ -2551,10 +2454,10 @@
        }
        s2 += styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
        let iArr = [];
-       iArr.push(f(url));
+       iArr.push(addEmoteToDoc(url, s, true, {space: false}));
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        iArr.push(f(zwe[i].url));
+        iArr.push(addEmoteToDoc(zwe[i].url, s, true, {space: false}));
        }
        const lA = iArr.length;
        window.setTimeout(
@@ -2577,18 +2480,6 @@
         },
         t2
        );
-       function f(uri)
-       {
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        img.setAttribute('src', uri);
-        img.setAttribute('alt', '');
-        img.setAttribute('style', s);
-        eActive++;
-        document.body.appendChild(img);
-        gc.hook(img, false);
-        return img;
-       }
       }
 
       function TheCube(url, zwe, sW, sH, sS, canV = true)
@@ -2841,28 +2732,10 @@
        aFills.push('forwards');
        aIters.push('1');
        s += styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
-       f(url);
+       addEmoteToDoc(url, s, false, {time: aT}, {x: hD});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        f(zwe[i].url);
-       }
-       function f(uri)
-       {
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        img.setAttribute('src', uri);
-        img.setAttribute('alt', '');
-        img.setAttribute('style', s);
-        eActive++;
-        document.body.appendChild(img);
-        gc.hook(img, true, true, aT);
-        window.setTimeout(
-         function()
-         {
-          img.style.transform = 'translateX(' + hD + 'px)';
-         },
-         tStart
-        );
+        addEmoteToDoc(zwe[i].url, s, false, {time: aT}, {x: hD});
        }
       }
 
@@ -2880,6 +2753,52 @@
        Fountain: Fountain
       };
      }();
+
+     function addEmoteToDoc(uri, s, r = false, oGC = {}, oT = false)
+     {
+      let img = document.createElement('img');
+      img.setAttribute('class', 'emote');
+      img.setAttribute('src', uri);
+      img.setAttribute('alt', '');
+      img.setAttribute('style', s);
+      eActive++;
+      document.body.appendChild(img);
+      let space = true;
+      let decActive = true;
+      let t = false;
+      if (oGC !== false)
+      {
+       if (oGC.hasOwnProperty('space'))
+        space = oGC.space;
+       if (oGC.hasOwnProperty('decrement'))
+        decActive = oGC.decrement;
+       if (oGC.hasOwnProperty('time'))
+        t = oGC.time;
+       gc.hook(img, space, decActive, t);
+      }
+      if (oT !== false)
+      {
+       let sTF = null;
+       if (oT.hasOwnProperty('x') && oT.hasOwnProperty('y'))
+        sTF = 'translate(' + oT.x + 'px, ' + oT.y + 'px)';
+       else if (oT.hasOwnProperty('x'))
+        sTF = 'translateX(' + oT.x + 'px)';
+       else if (oT.hasOwnProperty('y'))
+        sTF = 'translateX(' + oT.y + 'px)';
+       if (sTF !== null)
+       {
+        window.setTimeout(
+         function()
+         {
+          img.style.transform = sTF;
+         },
+         tStart
+        );
+       }
+      }
+      if (r)
+       return img;
+     }
 
      function queueEmote(url, zwe)
      {
@@ -2939,6 +2858,7 @@
      return {
       show: showEmotes,
       addToShowList: addToShowList,
+      addEmoteToDoc: addEmoteToDoc,
       list: list
      };
     }();
@@ -3018,31 +2938,14 @@
        s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
        const oK = kList[shared.rnd(lK)];
        let iArr = [];
-       iArr.push(f(oK.url));
+       iArr.push(display.emote.addEmoteToDoc(oK.url, s, true, false, {x: cX, y: cY}));
        if (oK.hasOwnProperty('zwe'))
        {
         for (let i = 0, l = oK.zwe.length; i < l; i++)
         {
          eActive++;
-         iArr.push(f(oK.zwe[i].url));
+         iArr.push(emote.addEmoteToDoc(oK.zwe[i].url, s, true, false, {x: cX, y: cY}));
         }
-       }
-       function f(uri)
-       {
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        img.setAttribute('src', uri);
-        img.setAttribute('alt', '');
-        img.setAttribute('style', s);
-        document.body.appendChild(img);
-        window.setTimeout(
-         function()
-         {
-          img.style.transform = 'translate(' + cX + 'px, ' + cY + 'px)';
-         },
-         tStart
-        );
-        return img;
        }
        window.setTimeout(
         async function()
