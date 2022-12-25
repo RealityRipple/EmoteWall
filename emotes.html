@@ -2937,6 +2937,7 @@
     {
      let _toKappa = [];   // kappagen queue
      let _conga = [];     // CONGA TIME!
+     const _dKappa = 500;
 
      let _tKappa = false; // timer for kappagen queue
 
@@ -4062,7 +4063,7 @@
        return;
       if (!_canShowKappa(nK))
       {
-       _tKappa = window.setTimeout(_showKappas, 500);
+       _tKappa = window.setTimeout(_showKappas, _dKappa);
        return;
       }
       let e = null;
@@ -4081,7 +4082,7 @@
        {
         if (cfg.emote.queue > 0 && _toKappa.length > cfg.emote.queue)
          _toKappa.splice(0, _toKappa.length - cfg.emote.queue);
-        _tKappa = window.setTimeout(_showKappas, 500);
+        _tKappa = window.setTimeout(_showKappas, _dKappa);
         return;
        }
       }
@@ -4216,7 +4217,7 @@
         window.clearTimeout(_tKappa);
         _tKappa = false;
        }
-       _tKappa = window.setTimeout(_showKappas, 500);
+       _tKappa = window.setTimeout(_showKappas, _dKappa);
        return;
       }
       _eActive += waitFor;
