@@ -5158,6 +5158,12 @@
         {
          emList.push(match);
         }
+        const kcSeg = /((?:[0-9#\*]\ufe0f\u20e3)+)+/gu; //keycap
+        match = '';
+        while ((match = kcSeg.exec(msg)) != null)
+        {
+         emList.push(match);
+        }
         if (emList.length === 0)
          return [];
         if (dup === null)
@@ -5189,7 +5195,7 @@
          let cpList = [];
          for (const c of emList[i][0])
          {
-          const p = c.codePointAt(0).toString(16);
+          const p = c.codePointAt(0).toString(16).padStart(4, '0');
           if (cpList.length === 0)
           {
            cpList.push(p);
@@ -5199,6 +5205,8 @@
           if (p === 'fe0f') //emoji variation
            cpList[lL] += '-' + p;
           else if (p === '200d') //zwj
+           cpList[lL] += '-' + p;
+          else if (p === '20e3') //keycap
            cpList[lL] += '-' + p;
           else if (p.match(/1f3f[b-f]/)) //skin tone
            cpList[lL] += '-' + p;
