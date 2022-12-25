@@ -1885,6 +1885,7 @@
    const display = function()
    {
     let _eActive = 0;    // active emote count (effective, not actual)
+    let _iTitanic = 0;
     const _tStart = 48;  // time to wait for transition trigger (ms)
     const _tAnim = {     // animation timing constants
      fade: {
@@ -1905,8 +1906,12 @@
 
      const list = function()
      {
-      function Still(url, zwe, sW, sH, sS, canV = true)
+      function Still(url, zwe, sW, sH, sS, canV = true, tInit = 0)
       {
+       if (tInit === 0)
+        tInit = new Date().getTime();
+       if (_iTitanic > tInit)
+        return;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
@@ -1925,15 +1930,19 @@
        s += ' height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
-       addEmoteToDoc(url, s, false, {space: false});
+       addEmoteToDoc(tInit, url, s, false, {space: false});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        addEmoteToDoc(zwe[i].url, s, false, {space: false});
+        addEmoteToDoc(tInit, zwe[i].url, s, false, {space: false});
        }
       }
 
-      function StraightLine(url, zwe, sW, sH, sS, x = false, y = false, canV = true)
+      function StraightLine(url, zwe, sW, sH, sS, x = false, y = false, canV = true, tInit = 0)
       {
+       if (tInit === 0)
+        tInit = new Date().getTime();
+       if (_iTitanic > tInit)
+        return;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
@@ -1972,15 +1981,19 @@
        s += ' transition: transform ' + cfg.emote.time + 's linear;';
        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
-       addEmoteToDoc(url, s, false, {}, {x: hD, y: vD});
+       addEmoteToDoc(tInit, url, s, false, {}, {x: hD, y: vD});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        addEmoteToDoc(zwe[i].url, s, false, {}, {x: hD, y: vD});
+        addEmoteToDoc(tInit, zwe[i].url, s, false, {}, {x: hD, y: vD});
        }
       }
 
-      function Rise(url, zwe, sW, sH, sS, canV = true)
+      function Rise(url, zwe, sW, sH, sS, canV = true, tInit = 0)
       {
+       if (tInit === 0)
+        tInit = new Date().getTime();
+       if (_iTitanic > tInit)
+        return;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
@@ -2025,10 +2038,10 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
-       addEmoteToDoc(url, s, false, {space: false});
+       addEmoteToDoc(tInit, url, s, false, {space: false});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        addEmoteToDoc(zwe[i].url, s, false, {space: false});
+        addEmoteToDoc(tInit, zwe[i].url, s, false, {space: false});
        }
       }
 
@@ -2036,8 +2049,12 @@
       {
        const _ms = 20;
 
-       function task(url, zwe, sW, sH, sS, canV = true)
+       function task(url, zwe, sW, sH, sS, canV = true, tInit = 0)
        {
+        if (tInit === 0)
+         tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
         {
@@ -2063,16 +2080,18 @@
         let bY = v;
         let velY = velV;
         let iArr = [];
-        iArr.push(addEmoteToDoc(url, s, true));
+        iArr.push(addEmoteToDoc(tInit, url, s, true));
         for (let i = 0, l = zwe.length; i < l; i++)
         {
-         iArr.push(addEmoteToDoc(zwe[i].url, s, true));
+         iArr.push(addEmoteToDoc(tInit, zwe[i].url, s, true));
         }
-        window.setTimeout(_tLoop, _ms, iArr, bX, bY, velH, velY, sH, sS);
+        window.setTimeout(_tLoop, _ms, tInit, iArr, bX, bY, velH, velY, sH, sS);
        }
 
-       function _tLoop(iArr, bX, bY, velH, velY, sH, sS)
+       function _tLoop(tInit, iArr, bX, bY, velH, velY, sH, sS)
        {
+        if (_iTitanic > tInit)
+         return;
         if (iArr[0].parentElement === null)
          return;
         bX += velH;
@@ -2088,14 +2107,18 @@
         {
          iArr[i].style.transform = 'translate(' + bX + 'px, ' + bY + 'px)';
         }
-        window.setTimeout(_tLoop, _ms, iArr, bX, bY, velH, velY, sH, sS);
+        window.setTimeout(_tLoop, _ms, tInit, iArr, bX, bY, velH, velY, sH, sS);
        }
 
        return task;
       }();
 
-      function Speed(url, zwe, sW, sH, sS, canV = true)
+      function Speed(url, zwe, sW, sH, sS, canV = true, tInit = 0)
       {
+       if (tInit === 0)
+        tInit = new Date().getTime();
+       if (_iTitanic > tInit)
+        return;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
@@ -2135,15 +2158,19 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
-       addEmoteToDoc(url, s);
+       addEmoteToDoc(tInit, url, s);
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        addEmoteToDoc(zwe[i].url, s);
+        addEmoteToDoc(tInit, zwe[i].url, s);
        }
       }
 
-      function Drop(url, zwe, sW, sH, sS, canV = true)
+      function Drop(url, zwe, sW, sH, sS, canV = true, tInit = 0)
       {
+       if (tInit === 0)
+        tInit = new Date().getTime();
+       if (_iTitanic > tInit)
+        return;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
@@ -2181,10 +2208,10 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
-       addEmoteToDoc(url, s, false, {space: false});
+       addEmoteToDoc(tInit, url, s, false, {space: false});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        addEmoteToDoc(zwe[i].url, s, false, {space: false});
+        addEmoteToDoc(tInit, zwe[i].url, s, false, {space: false});
        }
       }
 
@@ -2198,8 +2225,12 @@
         */
        const _squashT = 100;
 
-       function task(url, zwe, sW, sH, sS, canV = true)
+       function task(url, zwe, sW, sH, sS, canV = true, tInit = 0)
        {
+        if (tInit === 0)
+         tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
         {
@@ -2264,19 +2295,21 @@
         dests.push({x: pos.x, y: pos.y, t: (pos.t - lastT), w: 0});
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
         let iArr = [];
-        iArr.push(addEmoteToDoc(url, s, true, {space: false}));
+        iArr.push(addEmoteToDoc(tInit, url, s, true, {space: false}));
         for (let i = 0, l = zwe.length; i < l; i++)
         {
-         iArr.push(addEmoteToDoc(zwe[i].url, s, true, {space: false}));
+         iArr.push(addEmoteToDoc(tInit, zwe[i].url, s, true, {space: false}));
         }
         let d = 0;
         const lA = iArr.length;
         const lD = dests.length;
-        window.setTimeout(_tLoop, _tStart, lA, iArr, lD, dests, d);
+        window.setTimeout(_tLoop, _tStart, tInit, lA, iArr, lD, dests, d);
        }
 
-       function _tLoop(lA, iArr, lD, dests, d)
+       function _tLoop(tInit, lA, iArr, lD, dests, d)
        {
+        if (_iTitanic > tInit)
+         return;
         if (d >= lD)
          return;
         for (let i = 0; i < lA; i++)
@@ -2288,11 +2321,13 @@
          iArr[i].style.transition = 'all ' + dests[d].t + 'ms linear';
         }
         d++;
-        window.setTimeout(_tSquash, dests[d - 1].t, lA, iArr, lD, dests, d);
+        window.setTimeout(_tSquash, dests[d - 1].t, tInit, lA, iArr, lD, dests, d);
        }
 
-       function _tSquash(lA, iArr, lD, dests, d)
+       function _tSquash(tInit, lA, iArr, lD, dests, d)
        {
+        if (_iTitanic > tInit)
+         return;
         for (let i = 0; i < lA; i++)
         {
          iArr[i].style.transition = 'transform ' + _squashT + 'ms linear';
@@ -2320,24 +2355,30 @@
            break;
          }
         }
-        window.setTimeout(_tUnsquash, _squashT, lA, iArr, lD, dests, d);
+        window.setTimeout(_tUnsquash, _squashT, tInit, lA, iArr, lD, dests, d);
        }
 
-       function _tUnsquash(lA, iArr, lD, dests, d)
+       function _tUnsquash(tInit, lA, iArr, lD, dests, d)
        {
+        if (_iTitanic > tInit)
+         return;
         for (let i = 0; i < lA; i++)
         {
          iArr[i].style.transition = 'transform ' + _squashT + 'ms linear';
          iArr[i].style.transform = 'scale(1, 1)';
         }
-        window.setTimeout(_tLoop, _squashT, lA, iArr, lD, dests, d);
+        window.setTimeout(_tLoop, _squashT, tInit, lA, iArr, lD, dests, d);
        }
 
        return task;
       }();
 
-      function Confetti(url, zwe, sW, sH, sS, canV = true)
+      function Confetti(url, zwe, sW, sH, sS, canV = true, tInit = 0)
       {
+       if (tInit === 0)
+        tInit = new Date().getTime();
+       if (_iTitanic > tInit)
+        return;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
@@ -2378,17 +2419,21 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, false, variationSize);
-       addEmoteToDoc(url, s, false, {space: false});
+       addEmoteToDoc(tInit, url, s, false, {space: false});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        addEmoteToDoc(zwe[i].url, s, false, {space: false});
+        addEmoteToDoc(tInit, zwe[i].url, s, false, {space: false});
        }
       }
 
       const Throw = function()
       {
-       function task(url, zwe, sW, sH, sS, canV = true)
+       function task(url, zwe, sW, sH, sS, canV = true, tInit = 0)
        {
+        if (tInit === 0)
+         tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
         {
@@ -2459,28 +2504,30 @@
         }
         s2 += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
         let iArr = [];
-        iArr.push(addEmoteToDoc(url, s, true, {space: false}));
+        iArr.push(addEmoteToDoc(tInit, url, s, true, {space: false}));
         for (let i = 0, l = zwe.length; i < l; i++)
         {
-         iArr.push(addEmoteToDoc(zwe[i].url, s, true, {space: false}));
+         iArr.push(addEmoteToDoc(tInit, zwe[i].url, s, true, {space: false}));
         }
         const lA = iArr.length;
-        window.setTimeout(_tMove, _tStart, iArr, hD, vD
-        );
-        window.setTimeout(_tDrop, t2, iArr, s2
-        );
+        window.setTimeout(_tMove, _tStart, tInit, iArr, hD, vD);
+        window.setTimeout(_tDrop, t2, tInit, iArr, s2);
        }
 
-       function _tMove(iArr, hD, vD)
+       function _tMove(tInit, iArr, hD, vD)
        {
+        if (_iTitanic > tInit)
+         return;
         for (let i = 0; i < iArr.length; i++)
         {
          iArr[i].style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
         }
        }
 
-       function _tDrop(iArr, s2)
+       function _tDrop(tInit, iArr, s2)
        {
+        if (_iTitanic > tInit)
+         return;
         for (let i = 0; i < iArr.length; i++)
         {
          iArr[i].setAttribute('style', s2);
@@ -2492,8 +2539,12 @@
 
       const TheCube = function()
       {
-       function task(url, zwe, sW, sH, sS, canV = true)
+       function task(url, zwe, sW, sH, sS, canV = true, tInit = 0)
        {
+        if (tInit === 0)
+         tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
         let scene = document.createElement('div');
         scene.setAttribute('class', 'scene');
         let variationSize = 1;
@@ -2685,11 +2736,13 @@
         _eActive++;
         document.body.appendChild(scene);
         _gc.hook(scene);
-        window.setTimeout(_tInit, _tStart, cube, scene, hD, vD, sS);
+        window.setTimeout(_tMove, _tStart, tInit, cube, scene, hD, vD, sS);
        }
 
-       function _tInit(cube, scene, hD, vD, sS)
+       function _tMove(tInit, cube, scene, hD, vD, sS)
        {
+        if (_iTitanic > tInit)
+         return;
         let rX = 0;
         let rY = 0;
         while ((Math.abs(rX) + Math.abs(rY)) < 45)
@@ -2704,8 +2757,12 @@
        return task;
       }();
 
-      function Fountain(url, zwe, sW, sH, sS, fX, fY, canV = true)
+      function Fountain(url, zwe, sW, sH, sS, fX, fY, canV = true, tInit = 0)
       {
+       if (tInit === 0)
+        tInit = new Date().getTime();
+       if (_iTitanic > tInit)
+        return;
        const aT = Math.floor((cfg.emote.time * 1000) / 2);
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
@@ -2744,10 +2801,10 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
-       addEmoteToDoc(url, s, false, {time: aT}, {x: hD});
+       addEmoteToDoc(tInit, url, s, false, {time: aT}, {x: hD});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        addEmoteToDoc(zwe[i].url, s, false, {time: aT}, {x: hD});
+        addEmoteToDoc(tInit, zwe[i].url, s, false, {time: aT}, {x: hD});
        }
       }
 
@@ -2766,8 +2823,10 @@
       };
      }();
 
-     function addEmoteToDoc(uri, s, r = false, oGC = {}, oT = false)
+     function addEmoteToDoc(tInit, uri, s, r = false, oGC = {}, oT = false)
      {
+      if (_iTitanic > tInit)
+       return;
       let img = document.createElement('img');
       img.setAttribute('class', 'emote');
       img.setAttribute('src', uri);
@@ -2798,10 +2857,17 @@
        else if (oT.hasOwnProperty('y'))
         sTF = 'translateX(' + oT.y + 'px)';
        if (sTF !== null)
-        window.setTimeout(function(){img.style.transform = sTF;}, _tStart);
+        window.setTimeout(_tMoveOnDock, _tStart, tInit, img, sTF);
       }
       if (r)
        return img;
+     }
+
+     function _tMoveOnDock(tInit, img, sTF)
+     {
+      if (_iTitanic > tInit)
+       return;
+      img.style.transform = sTF;
      }
 
      function _queueEmote(url, zwe)
@@ -2880,6 +2946,9 @@
       {
        function task(kList, sW, sH, sS, iKC)
        {
+        const tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
         const sendUp = 2;
         const oX = (sW * 0.5) - (sS * 0.5);
         const oY = sH;
@@ -2900,20 +2969,22 @@
         s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
         const oK = kList[shared.rnd(kList.length)];
         let iArr = [];
-        iArr.push(display.emote.addEmoteToDoc(oK.url, s, true, false, {x: cX, y: cY}));
+        iArr.push(display.emote.addEmoteToDoc(tInit, oK.url, s, true, false, {x: cX, y: cY}));
         if (oK.hasOwnProperty('zwe'))
         {
          for (let i = 0, l = oK.zwe.length; i < l; i++)
          {
           _eActive++;
-          iArr.push(emote.addEmoteToDoc(oK.zwe[i].url, s, true, false, {x: cX, y: cY}));
+          iArr.push(emote.addEmoteToDoc(tInit, oK.zwe[i].url, s, true, false, {x: cX, y: cY}));
          }
         }
-        window.setTimeout(_explode, sendUp * 1000, kList, iArr, cX, cY, sS, sW, sH, iKC);
+        window.setTimeout(_explode, sendUp * 1000, tInit, kList, iArr, cX, cY, sS, sW, sH, iKC);
        }
 
-       async function _explode(kList, iArr, cX, cY, sS, sW, sH, iKC)
+       async function _explode(tInit, kList, iArr, cX, cY, sS, sW, sH, iKC)
        {
+        if (_iTitanic > tInit)
+         return;
         for (let i = 0, l = iArr.length; i < l; i++)
         {
          document.body.removeChild(iArr[i]);
@@ -2930,14 +3001,16 @@
         const lK = kList.length;
         for (let v = 0; v < inner; v++)
         {
+         if (_iTitanic > tInit)
+          return;
          const sK = kList[shared.rnd(lK)];
          const sA = shared.rnd();
-         _sparkler(sK.url, cX, cY, sS, r * 0.5, t, sA);
+         _sparkler(tInit, sK.url, cX, cY, sS, r * 0.5, t, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(sK.zwe[i].url, cX, cY, sS, r * 0.5, t, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, r * 0.5, t, sA);
           }
          }
          if (v % Math.floor(outer / 3) === 0)
@@ -2946,14 +3019,16 @@
         t += 0.5;
         for (let v = 0; v < core; v++)
         {
+         if (_iTitanic > tInit)
+          return;
          const sK = kList[shared.rnd(lK)];
          const sA = shared.rnd();
-         _sparkler(sK.url, cX, cY, sS, r, t, sA);
+         _sparkler(tInit, sK.url, cX, cY, sS, r, t, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(sK.zwe[i].url, cX, cY, sS, r, t, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, r, t, sA);
           }
          }
          t += 0.005;
@@ -2963,14 +3038,16 @@
         t += 0.25;
         for (let v = 0; v < outer; v++)
         {
+         if (_iTitanic > tInit)
+          return;
          const sK = kList[shared.rnd(lK)];
          const sA = shared.rnd();
-         _sparkler(sK.url, cX, cY, sS, r * 1.5, t, sA);
+         _sparkler(tInit, sK.url, cX, cY, sS, r * 1.5, t, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(sK.zwe[i].url, cX, cY, sS, r * 1.5, t, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, r * 1.5, t, sA);
           }
          }
          if (v % Math.floor(outer / 3) === 0)
@@ -2978,8 +3055,10 @@
         }
        }
 
-       function _sparkler(url, cX, cY, sS, r, d, a)
+       function _sparkler(tInit, url, cX, cY, sS, r, d, a)
        {
+        if (_iTitanic > tInit)
+         return;
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
         img.setAttribute('src', url);
@@ -3014,11 +3093,13 @@
         img.setAttribute('style', s);
         document.body.appendChild(img);
         _gc.hook(img, true, true, (d + cfg.emote.time) * 1000);
-        window.setTimeout(_tMove, (d * 1000) + _tStart, img, hD, vD);
+        window.setTimeout(_tMove, (d * 1000) + _tStart, tInit, img, hD, vD);
        }
 
-       function _tMove(img, hD, vD)
+       function _tMove(tInit, img, hD, vD)
        {
+        if (_iTitanic > tInit)
+         return;
         img.style.opacity = 1;
         img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
        }
@@ -3030,16 +3111,21 @@
       {
        function task(kList, sW, sH, sS, iKC)
        {
+        const tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
         const oX = shared.rnd(sW - sS);
         const oY = shared.rnd(sH - sS);
         let r = sW;
         if (sH < r)
          r = sH;
-        window.setTimeout(_init, _tStart, kList, oX, oY, sS, r, iKC);
+        window.setTimeout(_init, _tStart, tInit, kList, oX, oY, sS, r, iKC);
        }
 
-       async function _init(kList, oX, oY, sS, r, iKC)
+       async function _init(tInit, kList, oX, oY, sS, r, iKC)
        {
+        if (_iTitanic > tInit)
+         return;
         let l = iKC / 25 + 2;
         l = l + (shared.rnd() * 4 - 2);
         if (l < 0.1)
@@ -3049,6 +3135,8 @@
         const o = (shared.rnd(2) === 0);
         for (let i = 0; i < iKC; i++)
         {
+         if (_iTitanic > tInit)
+          return;
          if (o)
          {
           th-= c;
@@ -3062,21 +3150,23 @@
            th+= Math.PI * 2;
          }
          const oK = kList[shared.rnd(kList.length)];
-         _sparkler(oK.url, oX, oY, sS, r, th);
+         _sparkler(tInit, oK.url, oX, oY, sS, r, th);
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, m = oK.zwe.length; j < m; j++)
           {
            _eActive++;
-           _sparkler(oK.zwe[j].url, oX, oY, sS, r, th);
+           _sparkler(tInit, oK.zwe[j].url, oX, oY, sS, r, th);
           }
          }
          await _sleep(10);
         }
        }
 
-       function _sparkler(url, oX, oY, sS, r, th)
+       function _sparkler(tInit, url, oX, oY, sS, r, th)
        {
+        if (_iTitanic > tInit)
+         return;
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
         img.setAttribute('src', url);
@@ -3091,11 +3181,13 @@
         img.setAttribute('style', s);
         document.body.appendChild(img);
         _gc.hook(img, true, true);
-        window.setTimeout(_tMove, _tStart, img, hD, vD);
+        window.setTimeout(_tMove, _tStart, tInit, img, hD, vD);
        }
 
-       function _tMove(img, hD, vD)
+       function _tMove(tInit, img, hD, vD)
        {
+        if (_iTitanic > tInit)
+         return;
         img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
        }
 
@@ -3106,6 +3198,9 @@
       {
        function task(kList, sW, sH)
        {
+        const tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
         const sS = sW / 19;
         let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
         let ct = 0;
@@ -3121,18 +3216,20 @@
         let t = 0;
         for (let i = 0; i < ct; i++)
         {
+         if (_iTitanic > tInit)
+          return;
          let x;
          do
           x = shared.rnd(lP);
          while(drawn[x] >= pyramidDist[x]);
          const oK = kList[shared.rnd(kList.length)];
-         _block(oK.url, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
+         _block(tInit, oK.url, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, l = oK.zwe.length; j < l; j++)
           {
            _eActive++;
-           _block(oK.zwe[j].url, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
+           _block(tInit, oK.zwe[j].url, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
           }
          }
          drawn[x]++;
@@ -3140,8 +3237,10 @@
         }
        }
 
-       function _block(url, x, t, sS, sH, dX, tPerB, aT)
+       function _block(tInit, url, x, t, sS, sH, dX, tPerB, aT)
        {
+        if (_iTitanic > tInit)
+         return;
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
         img.setAttribute('src', url);
@@ -3157,17 +3256,21 @@
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(aT + (t / 10)), img, h, sH);
-        window.setTimeout(_tMove, t, img, h, vD);
+        window.setTimeout(_tDrop, Math.floor(aT + (t / 10)), tInit, img, h, sH);
+        window.setTimeout(_tMove, t, tInit, img, h, vD);
        }
 
-       function _tMove(img, h, vD)
+       function _tMove(tInit, img, h, vD)
        {
+        if (_iTitanic > tInit)
+         return;
         img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
        }
 
-       function _tDrop(img, h, sH)
+       function _tDrop(tInit, img, h, sH)
        {
+        if (_iTitanic > tInit)
+         return;
         img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
         img.style.transitionTime = '500ms';
         _gc.hook(img, false, true, 500);
@@ -3180,6 +3283,9 @@
       {
        function task(kList, sW, sH)
        {
+        const tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
         let sS = sW / 19;
         if (sS > Math.floor(sW * cfg.emote.size.ratio.small))
          sS = Math.floor(sW * cfg.emote.size.ratio.small);
@@ -3200,18 +3306,20 @@
         let t = 0;
         for (let i = 0; i < ct; i++)
         {
+         if (_iTitanic > tInit)
+          return;
          let x;
          do
           x = shared.rnd(lP);
          while(drawn[x] >= pyramidDist[x]);
          const oK = kList[shared.rnd(kList.length)];
-         _block(oK.url, oX, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
+         _block(tInit,  oK.url, oX, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, l = oK.zwe.length; j < l; j++)
           {
            _eActive++;
-           _block(oK.zwe[j].url, oX, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
+           _block(tInit, oK.zwe[j].url, oX, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
           }
          }
          drawn[x]++;
@@ -3219,8 +3327,10 @@
         }
        }
 
-       function _block(url, oX, x, t, sS, sH, dX, tPerB, aT)
+       function _block(tInit, url, oX, x, t, sS, sH, dX, tPerB, aT)
        {
+        if (_iTitanic > tInit)
+         return;
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
         img.setAttribute('src', url);
@@ -3236,17 +3346,21 @@
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(aT + (t / 10)), img, h, sH);
-        window.setTimeout(_tMove, t, img, h, vD);
+        window.setTimeout(_tDrop, Math.floor(aT + (t / 10)), tInit, img, h, sH);
+        window.setTimeout(_tMove, t, tInit, img, h, vD);
        }
 
-       function _tMove(img, h, vD)
+       function _tMove(tInit, img, h, vD)
        {
+        if (_iTitanic > tInit)
+         return;
         img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
        }
 
-       function _tDrop(img, h, sH)
+       function _tDrop(tInit, img, h, sH)
        {
+        if (_iTitanic > tInit)
+         return;
         img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
         img.style.transitionTime = '500ms';
         _gc.hook(img, false, true, 500);
@@ -3261,32 +3375,45 @@
 
        async function task(kList, sW, sH, sS, iKC)
        {
+        const tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
         const bandHeight = sS * 3;
         const d = (shared.rnd(2) === 1);
         const bandTop = shared.rnd(sH - (sS * 2.5));
         const b1 = shared.rnd(4) + 1;
         const b2 = shared.rnd(8 - b1) + b1;
         const b4 = shared.rnd(4);
-        await _stampede(kList, b1, _speed * 0.8, bandTop, bandHeight, d, sW, sS);
-        await _stampede(kList, b2, _speed * 0.4, bandTop, bandHeight, d, sW, sS);
-        await _stampede(kList, iKC, (b4 > 0), bandTop, bandHeight, d, sW, sS);
+        await _stampede(tInit, kList, b1, _speed * 0.8, bandTop, bandHeight, d, sW, sS);
+        if (_iTitanic > tInit)
+         return;
+        await _stampede(tInit, kList, b2, _speed * 0.4, bandTop, bandHeight, d, sW, sS);
+        if (_iTitanic > tInit)
+         return;
+        await _stampede(tInit, kList, iKC, (b4 > 0), bandTop, bandHeight, d, sW, sS);
+        if (_iTitanic > tInit)
+         return;
         if (b4 > 0)
-         await _stampede(kList, b4, false, bandTop, bandHeight, d, sW, sS);
+         await _stampede(tInit, kList, b4, false, bandTop, bandHeight, d, sW, sS);
        }
 
-       async function _stampede(kList, ct, pause, bandTop, bandHeight, d, sW, sS)
+       async function _stampede(tInit, kList, ct, pause, bandTop, bandHeight, d, sW, sS)
        {
+        if (_iTitanic > tInit)
+         return;
         let imgs = [];
         for (let i = 0; i < ct; i++)
         {
+         if (_iTitanic > tInit)
+          return;
          const oK = kList[shared.rnd(kList.length)];
          const y = bandTop + shared.rnd(bandHeight);
-         imgs.push(_run(oK.url, y, d, sW, sS));
+         imgs.push(_run(tInit, oK.url, y, d, sW, sS));
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, l = oK.zwe.length; j < l; j++)
           {
-           _run(oK.zwe[j].url, y, d, sW, sS);
+           _run(tInit, oK.zwe[j].url, y, d, sW, sS);
           }
          }
          await _sleep(shared.rnd(90) + 10);
@@ -3300,6 +3427,8 @@
         }
         do
         {
+         if (_iTitanic > tInit)
+          return;
          await _sleep(100);
          for (let i = imgs.length - 1; i >= 0; i--)
          {
@@ -3309,8 +3438,10 @@
         } while (imgs.length > 0);
        }
 
-       function _run(url, v, d, sW, sS)
+       function _run(tInit, url, v, d, sW, sS)
        {
+        if (_iTitanic > tInit)
+         return;
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
         img.setAttribute('src', url);
@@ -3327,21 +3458,25 @@
          s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tMark,_speed, img);
-        window.setTimeout(_tMove, _tStart, img, d, h, (sW + sS), v);
+        window.setTimeout(_tMark, _speed, tInit, img);
+        window.setTimeout(_tMove, _tStart, tInit, img, d, h, (sW + sS), v);
         return img;
        }
 
-       function _tMove(img, d, h1, h2, v)
+       function _tMove(tInit, img, d, h1, h2, v)
        {
+        if (_iTitanic > tInit)
+         return;
         let h = h2;
         if (d)
          h = h1;
         img.style.transform = 'translate(' + h + 'px, ' + v + 'px)';
        }
 
-       function _tMark(img)
+       function _tMark(tInit, img)
        {
+        if (_iTitanic > tInit)
+         return;
         document.body.removeChild(img);
         img.setAttribute('deleted', true);
        }
@@ -3355,6 +3490,9 @@
 
        async function task(kList, sW, sH, sS, nM)
        {
+        const tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
         let v = 0;
         let unique = false;
         const bS = Math.ceil(sS * (5/3));
@@ -3365,6 +3503,8 @@
          lns = 6;
         while (_conga.length >= lns)
         {
+         if (_iTitanic > tInit)
+          return;
          await _sleep(250);
         }
         while (!unique)
@@ -3413,11 +3553,11 @@
         let zimgs = [];
         for (let i = 0; i < ct; i++)
         {
-         imgs.push(_dance(urls[i], i, sW, v, sS, bS, ct, d, xtra));
+         imgs.push(_dance(tInit, urls[i], i, sW, v, sS, bS, ct, d, xtra));
          let oZ = [];
          for (let j = 0, l = zurls[i].length; j < l; j++)
          {
-          oZ.push(_dance(zurls[i][j], i, sW, v, sS, bS, ct, d, xtra));
+          oZ.push(_dance(tInit, zurls[i][j], i, sW, v, sS, bS, ct, d, xtra));
          }
          zimgs.push(oZ);
         }
@@ -3442,6 +3582,8 @@
          let done = false;
          while (!done)
          {
+          if (_iTitanic > tInit)
+           return;
           lC = _conga.length;
           if (!ex && lC > 1)
            ex = true;
@@ -3461,10 +3603,10 @@
         }
         for (let i = 0, l = imgs.length; i < l; i++)
         {
-         _endDance(imgs[i], i, sW, v, sS, bS, ct, d, xtra);
+         _endDance(tInit, imgs[i], i, sW, v, sS, bS, ct, d, xtra);
          for (let j = 0, m = zimgs[i].length; j < m; j++)
          {
-          _endDance(zimgs[i][j], i, sW, v, sS, bS, ct, d, xtra);
+          _endDance(tInit, zimgs[i][j], i, sW, v, sS, bS, ct, d, xtra);
          }
         }
         await _sleep(_longWait * 1000);
@@ -3477,8 +3619,10 @@
         }
        }
 
-       function _dance(url, col, sW, v, sS, bS, ct, d, xtra)
+       function _dance(tInit, url, col, sW, v, sS, bS, ct, d, xtra)
        {
+        if (_iTitanic > tInit)
+         return;
         let box = document.createElement('div');
         box.setAttribute('class', 'scene');
         let img = document.createElement('img');
@@ -3506,12 +3650,14 @@
         _eActive++;
         box.appendChild(img);
         document.body.appendChild(box);
-        window.setTimeout(_tMove, _tStart, box, sE, v);
+        window.setTimeout(_tMove, _tStart, tInit, box, sE, v);
         return box;
        }
 
-       function _endDance(box, col, sW, v, sS, bS, ct, d, xtra)
+       function _endDance(tInit, box, col, sW, v, sS, bS, ct, d, xtra)
        {
+        if (_iTitanic > tInit)
+         return;
         let sB = bS * col + xtra;
         let sE = sB + sW;
         if (d)
@@ -3528,11 +3674,13 @@
         s += ' transform: translate(' + sB + 'px, ' + v + 'px);';
         box.setAttribute('style', s);
         _gc.hook(box, true, true, _longWait * 1000 * 1.25);
-        window.setTimeout(_tMove, _tStart, box, sE, v);
+        window.setTimeout(_tMove, _tStart, tInit, box, sE, v);
        }
 
-       function _tMove(box, sE, v)
+       function _tMove(tInit, box, sE, v)
        {
+        if (_iTitanic > tInit)
+         return;
         box.style.transform = 'translate(' + sE + 'px, ' + v + 'px)';
        }
 
@@ -3543,6 +3691,9 @@
       {
        function task(url, zwe, sW, sH, sS, bC, iR)
        {
+        const tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
         let scene = document.createElement('div');
         scene.setAttribute('class', 'scene');
         scene.setAttribute('width', sS);
@@ -3715,11 +3866,13 @@
         _eActive++;
         document.body.appendChild(scene);
         _gc.hook(scene, false);
-        window.setTimeout(_tInit, _tStart, cube, iR, sS);
+        window.setTimeout(_tMove, _tStart, tInit, cube, iR, sS);
        }
 
-       function _tInit(cube, iR, sS)
+       function _tMove(tInit, cube, iR, sS)
        {
+        if (_iTitanic > tInit)
+         return;
         let rX = 0;
         let rY = 0;
         while ((Math.abs(rX) + Math.abs(rY)) < 45)
@@ -3737,6 +3890,9 @@
       {
        function task(kList, sW, sH, sMsg, iTime)
        {
+        const tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
         const msgDist = _buildMsgArr(sMsg);
         let ct = 0;
         let ctT = 0;
@@ -3769,6 +3925,8 @@
         let t = 0;
         for (let i = 0; i < ct; i++)
         {
+         if (_iTitanic > tInit)
+          return;
          let x;
          do
           x = shared.rnd(lM);
@@ -3776,13 +3934,13 @@
          if (msgDist[x][drawn[x]] !== 0)
          {
           const oK = kList[shared.rnd(kList.length)];
-          _block(oK.url, vH, oX, drawn[x] + 1, tPerB, eT, iTime, x, t, sH, sS);
+          _block(tInit, oK.url, vH, oX, drawn[x] + 1, tPerB, eT, iTime, x, t, sH, sS);
           if (oK.hasOwnProperty('zwe'))
           {
            for (let j = 0, l = oK.zwe.length; j < l; j++)
            {
             _eActive++;
-            _block(oK.zwe[j].url, vH, oX, drawn[x] + 1, tPerB, eT, iTime, x, t, sH, sS);
+            _block(tInit, oK.zwe[j].url, vH, oX, drawn[x] + 1, tPerB, eT, iTime, x, t, sH, sS);
            }
           }
           t += tPerB;
@@ -3821,8 +3979,10 @@
         return o;
        }
 
-       function _block(url, vH, oX, dX, tPerB, eT, iTime, x, t, sH, sS)
+       function _block(tInit, url, vH, oX, dX, tPerB, eT, iTime, x, t, sH, sS)
        {
+        if (_iTitanic > tInit)
+         return;
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
         img.setAttribute('src', url);
@@ -3838,17 +3998,21 @@
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(eT + (iTime * 1000) + (t / 10)), img, h, sH);
-        window.setTimeout(_tInit, t, img, h, vD);
+        window.setTimeout(_tDrop, Math.floor(eT + (iTime * 1000) + (t / 10)), tInit, img, h, sH);
+        window.setTimeout(_tMove, t, tInit, img, h, vD);
        }
 
-       function _tInit(img, h, vD)
+       function _tMove(tInit, img, h, vD)
        {
+        if (_iTitanic > tInit)
+         return;
         img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
        }
        
-       function _tDrop(img, h, sH)
+       function _tDrop(tInit, img, h, sH)
        {
+        if (_iTitanic > tInit)
+         return;
         img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
         img.style.transitionTime = '500ms';
         _gc.hook(img, false, true, 500);
@@ -4057,6 +4221,7 @@
       }
       _eActive += waitFor;
       const lK = kList.length;
+      const tInit = new Date().getTime();
       switch(kStyle.style)
       {
        case 'Stampede':
@@ -4134,9 +4299,11 @@
         const oV = Math.floor((shared.rnd() * ((sH - sS) * 0.33)) + (sH - sS) * 0.33);
         for (let i = 0; i < kStyle.count; i++)
         {
+         if (_iTitanic > tInit)
+          return;
          const rB = shared.rnd(lK);
          _eActive--;
-         emote.list.StraightLine(kList[rB].url, kList[rB].zwe ?? [], sW, sH, sS, oH, oV, false);
+         emote.list.StraightLine(kList[rB].url, kList[rB].zwe ?? [], sW, sH, sS, oH, oV, false, tInit);
          await _sleep(50);
         }
         break;
@@ -4145,18 +4312,22 @@
         const fY = shared.rnd(25) + 15;
         for (let i = 0; i < kStyle.count; i++)
         {
+         if (_iTitanic > tInit)
+          return;
          const rF = shared.rnd(lK);
          _eActive--;
-         emote.list.Fountain(kList[rF].url, kList[rF].zwe ?? [], sW, sH, sS, fX, fY, false);
+         emote.list.Fountain(kList[rF].url, kList[rF].zwe ?? [], sW, sH, sS, fX, fY, false, tInit);
          await _sleep(50);
         }
         break;
        case 'Confetti':
         for (let i = 0; i < kStyle.count; i++)
         {
+         if (_iTitanic > tInit)
+          return;
          const rN = shared.rnd(lK);
          _eActive--;
-         emote.list.Confetti(kList[rN].url, kList[rN].zwe ?? [], sW, sH, sSm, false);
+         emote.list.Confetti(kList[rN].url, kList[rN].zwe ?? [], sW, sH, sSm, false, tInit);
          await _sleep(25);
         }
         break;
@@ -4165,19 +4336,33 @@
          return false;
         for (let i = 0; i < kStyle.count; i++)
         {
+         if (_iTitanic > tInit)
+          return;
          const r = shared.rnd(lK);
          _eActive--;
          if (kStyle.style === 'StraightLine')
-          emote.list.StraightLine(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, false, false);
+          emote.list.StraightLine(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, false, false, tInit);
          else
-          emote.list[kStyle.style](kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false);
+          emote.list[kStyle.style](kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, tInit);
          await _sleep(100);
         }
       }
      }
 
+     function hideKappa()
+     {
+      if (_tKappa !== false)
+      {
+       window.clearTimeout(_tKappa);
+       _tKappa = false;
+      }
+      _toKappa.length = 0;
+      _conga.length = 0;
+     }
+
      return {
-      show: showKappa
+      show: showKappa,
+      hide: hideKappa
      };
     }();
 
@@ -4214,7 +4399,8 @@
          continue;
        }
        delete _toGC[idx];
-       document.body.removeChild(i);
+       if (i.parentNode !== null)
+        document.body.removeChild(i);
        if (d)
         _eActive--;
       }
@@ -4321,9 +4507,22 @@
      return _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
     }
 
+    function eraseAll()
+    {
+     _iTitanic = new Date().getTime();
+     kappa.hide();
+     let cubes = document.getElementsByClassName('scene');
+     while (cubes.length)
+      cubes[0].parentElement.removeChild(cubes[0]);
+     let imgs = document.getElementsByTagName('img');
+     while (imgs.length)
+      imgs[0].parentElement.removeChild(imgs[0]);
+    }
+
     return {
      emote: emote,
-     kappa: kappa
+     kappa: kappa,
+     eraseAll: eraseAll
     };
    }();
 
