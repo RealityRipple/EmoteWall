@@ -1922,11 +1922,12 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS * 0.5);
+        sS = Math.ceil(sS / 2);
        else if (variationSize === 2)
         sS = sS * 2;
-       const h = shared.rnd(sW) - (sS / 2);
-       const v = shared.rnd(sH) - (sS / 2);
+       const sSm = Math.ceil(sS / 2);
+       const h = shared.rnd(sW) - sSm;
+       const v = shared.rnd(sH) - sSm;
        let s = 'top: ' + v + 'px;';
        s += ' left: ' + h + 'px;';
        s += ' height: ' + sS + 'px;';
@@ -1953,27 +1954,31 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS * 0.5);
+        sS = Math.ceil(sS / 2);
        else if (variationSize === 2)
         sS = sS * 2;
+       const sSm = Math.ceil(sS / 2);
        let h = x;
        if (h === false)
-        h = shared.rnd(sW) - (sS / 2);
+        h = shared.rnd(sW) - sSm;
        let v = y;
        if (v === false)
-        v = shared.rnd(sH) - (sS / 2);
+        v = shared.rnd(sH) - sSm;
        let r = sW;
        if (sH < r)
         r = sH;
        r = r * (shared.rnd() + 1);
-       let th = (shared.rnd() * (Math.PI * 2));
+       const cRadius = Math.PI * 2;
+       let th = shared.rnd() * cRadius;
        let hD = Math.floor(h + r * Math.cos(th));
        let vD = Math.floor(v + r * Math.sin(th));
        if (!x && !y)
        {
-        while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > (sW - sS) && hD > (sW - sS)) || (v > (sH - sS) && vD > (sH - sS)))
+        const sR = sW - sS;
+        const sB = sH - sS;
+        while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > sR && hD > sR) || (v > sB && vD > sB))
         {
-         th = (shared.rnd() * (Math.PI * 2));
+         th = shared.rnd() * cRadius;
          hD = Math.floor(h + r * Math.cos(th));
          vD = Math.floor(v + r * Math.sin(th));
         }
@@ -2004,10 +2009,11 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS * 0.5);
+        sS = Math.ceil(sS / 2);
        else if (variationSize === 2)
         sS = sS * 2;
-       const h = shared.rnd(sW) - (sS / 2);
+       const sSm = Math.ceil(sS / 2);
+       const h = shared.rnd(sW) - sSm;
        const v = Math.floor(shared.rnd(0.3) * sH) + Math.floor(0.8 * sH);
        let s = 'left: ' + h + 'px;';
        s += ' height: ' + sS + 'px;';
@@ -2065,14 +2071,16 @@
           variationSize = 1;
         }
         if (variationSize === 0)
-         sS = Math.ceil(sS * 0.5);
+         sS = Math.ceil(sS / 2);
         else if (variationSize === 2)
          sS = sS * 2;
-        const h = Math.floor(shared.rnd(sW) - (sS / 2));
+        const sSm = Math.ceil(sS / 2);
+        const sWm = Math.ceil(sW / 2);
+        const h = Math.floor(shared.rnd(sW) - sSm);
         const v = Math.floor(shared.rnd(0.2) * sH);
         let velH = shared.rnd(6) + 3;
         const velV = shared.rnd(3) + 4;
-        if (h + (sS / 2) > (sW / 2))
+        if (h + sSm > sWm)
          velH = -1 * velH;
         let s = 'height: ' + sS + 'px;';
         s += ' width: ' + sS + 'px;';
@@ -2099,9 +2107,10 @@
         bX += velH;
         bY += velY;
         velY += 1;
-        if (bY + sS >= sH)
+        const sB = sH - sS;
+        if (bY >= sB)
         {
-         bY = sH - sS;
+         bY = sB;
          velY *= -0.7;
          velY = Math.floor(velY);
         }
@@ -2129,10 +2138,12 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS * 0.5);
+        sS = Math.ceil(sS / 2);
        else if (variationSize === 2)
         sS = sS * 2;
-       const h = shared.rnd(sW) - (sS / 2);
+       const sSm = Math.ceil(sS / 2);
+       const sWm = Math.ceil(sW / 2);
+       const h = shared.rnd(sW) - sSm;
        const v = Math.floor(shared.rnd(0.4) * sH) + Math.floor(0.3 * sH);
        let s = 'top: ' + v + 'px;';
        s += ' left: ' + h + 'px;';
@@ -2144,7 +2155,7 @@
        let aTimings = [];
        let aFills = [];
        let aIters = [];
-       if (h + (sS / 2) > (sW / 2))
+       if (h + sSm > sWm)
        {
         s += ' transform-origin: center right;';
         aNames.push('speedL');
@@ -2181,10 +2192,11 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS * 0.5);
+        sS = Math.ceil(sS / 2);
        else if (variationSize === 2)
         sS = sS * 2;
-       const h = shared.rnd(sW) - (sS / 2);
+       const sSm = Math.ceil(sS / 2);
+       const h = shared.rnd(sW) - sSm;
        let s = 'left: ' + h + 'px;';
        s += ' height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
@@ -2241,11 +2253,13 @@
           variationSize = 1;
         }
         if (variationSize === 0)
-         sS = Math.ceil(sS * 0.5);
+         sS = Math.ceil(sS / 2);
         else if (variationSize === 2)
          sS = sS * 2;
-        const h = shared.rnd(sW - sS - 5) + 10;
-        const v = shared.rnd(sH - sS - 5) + 10;
+        const sR = sW - sS;
+        const sB = sH - sS;
+        const h = shared.rnd(sR - 5) + 10;
+        const v = shared.rnd(sB - 5) + 10;
         let s = 'top: ' + v + 'px;';
         s += ' left: ' + h + 'px;';
         s += ' height: ' + sS + 'px;';
@@ -2257,7 +2271,9 @@
         let pos = {x: h, y: v, t: 0};
         let lastT = 0;
         let bCt = 0;
-        while(pos.t + (bCt * (_squashT * 2)) < (cfg.emote.time * 1000))
+        const eTime = cfg.emote.time * 1000;
+        const sqTime = _squashT * 2;
+        while(bCt * sqTime + pos.t < eTime)
         {
          pos.x += traj.x;
          pos.y += traj.y;
@@ -2269,9 +2285,9 @@
           traj.x *= -1;
           wall = 1;
          }
-         else if (pos.x > (sW - sS))
+         else if (pos.x > sR)
          {
-          pos.x = sW - sS;
+          pos.x = sR;
           traj.x *= -1;
           wall = 3;
          }
@@ -2281,20 +2297,20 @@
           traj.y *= -1;
           wall = 2;
          }
-         else if (pos.y > (sH - sS))
+         else if (pos.y > sB)
          {
-          pos.y = sH - sS;
+          pos.y = sB;
           traj.y *= -1;
           wall = 4;
          }
          if (wall !== false)
          {
           bCt++;
-          dests.push({x: Math.floor(pos.x), y: Math.floor(pos.y), t: (pos.t - lastT), w: wall});
+          dests.push({x: Math.floor(pos.x), y: Math.floor(pos.y), t: pos.t - lastT, w: wall});
           lastT = pos.t;
          }
         }
-        dests.push({x: pos.x, y: pos.y, t: (pos.t - lastT), w: 0});
+        dests.push({x: pos.x, y: pos.y, t: pos.t - lastT, w: 0});
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
         let iArr = [];
         iArr.push(addEmoteToDoc(tInit, url, s, true, {space: false}));
@@ -2389,10 +2405,11 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS * 0.5);
+        sS = Math.ceil(sS / 2);
        else if (variationSize === 2)
         sS = sS * 2;
-       const h = shared.rnd(sW) - (sS / 2);
+       const sSm = Math.ceil(sS / 2);
+       const h = shared.rnd(sW) - sSm;
        let s = 'left: ' + h + 'px;';
        s += ' height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
@@ -2444,14 +2461,16 @@
           variationSize = 1;
         }
         if (variationSize === 0)
-         sS = Math.ceil(sS * 0.5);
+         sS = Math.ceil(sS / 2);
         else if (variationSize === 2)
          sS = sS * 2;
-        const h = (shared.rnd(2) === 0) ? (- 1 * sS) : sW;
+        const sR = sW - sS;
+        const sB = sH - sS;
+        const h = shared.rnd(2) === 0 ? sS * -1 : sW;
         const v = shared.rnd(sH + sS) - sS;
-        const hD = Math.floor((shared.rnd() * ((sW - sS) * 0.4)) + (sW - sS) * 0.3);
-        const vD = Math.floor((shared.rnd() * ((sH - sS) * 0.4)) + (sH - sS) * 0.3);
-        const dH = (shared.rnd() * sS);
+        const hD = Math.floor(shared.rnd() * (sR * 0.4) + sR * 0.3);
+        const vD = Math.floor(shared.rnd() * (sB * 0.4) + sB * 0.3);
+        const dH = shared.rnd() * sS;
         const t1 = cfg.emote.time * 140;
         const t2 = cfg.emote.time * 200;
         const t3 = cfg.emote.time * 800;
@@ -2474,9 +2493,11 @@
         let aIters = [];
         if (cfg.emote.out.fade)
         {
+         const fOut = _tAnim.fade.out / 100;
+         const t3F = t3 * fOut;
          aNames.push('fadeOut');
-         aDelays.push(Math.floor(t3 - (t3 * (_tAnim.fade.out / 100))) + 'ms');
-         aDurs.push(Math.floor(t3 * (_tAnim.fade.out / 100)) + 'ms');
+         aDelays.push(Math.floor(t3 - t3F) + 'ms');
+         aDurs.push(Math.floor(t3F) + 'ms');
          aTimings.push('ease-out');
          aFills.push('forwards');
          aIters.push('1');
@@ -2484,7 +2505,7 @@
         else
         {
          aNames.push('noFadeOut');
-         aDelays.push((t3 - 50) + 'ms');
+         aDelays.push(t3 - 50 + 'ms');
          aDurs.push('50ms');
          aTimings.push('ease-out');
          aFills.push('forwards');
@@ -2492,14 +2513,16 @@
         }
         if (cfg.emote.out.zoom)
         {
+         const zOut = _tAnim.zoom.out / 100;
+         const t3Z = t3 * zOut;
          if (variationSize === 0)
           aNames.push('zoomOutS');
          else if (variationSize === 2)
           aNames.push('zoomOutL');
          else
           aNames.push('zoomOut');
-         aDelays.push(Math.floor(t3 - (t3 * (_tAnim.zoom.out / 100))) + 'ms');
-         aDurs.push(Math.floor(t3 * (_tAnim.zoom.out / 100)) + 'ms');
+         aDelays.push(Math.floor(t3 - t3Z) + 'ms');
+         aDurs.push(Math.floor(t3Z) + 'ms');
          aTimings.push('linear');
          aFills.push('forwards');
          aIters.push('1');
@@ -2511,7 +2534,6 @@
         {
          iArr.push(addEmoteToDoc(tInit, zwe[i].url, s, true, {space: false}));
         }
-        const lA = iArr.length;
         window.setTimeout(_tMove, _tStart, tInit, iArr, hD, vD);
         window.setTimeout(_tDrop, t2, tInit, iArr, s2);
        }
@@ -2557,14 +2579,16 @@
           variationSize = 1;
         }
         if (variationSize === 0)
-         sS = Math.ceil(sS * 0.5);
+         sS = Math.ceil(sS / 2);
         else if (variationSize === 2)
          sS = sS * 2;
+        const sSm = Math.ceil(sS / 2);
+        const nSm = sSm * -1;
         scene.setAttribute('width', sS);
         scene.setAttribute('height', sS);
         let cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
-        cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
+        cube.setAttribute('style', 'transform: translateZ(' + nSm + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
         let f = 'height: ' + sS + 'px;';
         f += ' width: ' + sS + 'px;';
         const lZ = zwe.length;
@@ -2574,163 +2598,166 @@
          cubeF.setAttribute('src', url);
          cubeF.setAttribute('alt', '');
          cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
-         cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+         cubeF.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px);');
          cube.appendChild(cubeF);
          let cubeB = document.createElement('img');
          cubeB.setAttribute('src', url);
          cubeB.setAttribute('alt', '');
          cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
-         cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + sSm + 'px);');
          cube.appendChild(cubeB);
          let cubeR = document.createElement('img');
          cubeR.setAttribute('src', url);
          cubeR.setAttribute('alt', '');
          cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
-         cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + sSm + 'px);');
          cube.appendChild(cubeR);
          let cubeL = document.createElement('img');
          cubeL.setAttribute('src', url);
          cubeL.setAttribute('alt', '');
          cubeL.setAttribute('class', 'cubeFace cubeFaceLeft');
-         cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + sSm + 'px);');
          cube.appendChild(cubeL);
          let cubeT = document.createElement('img');
          cubeT.setAttribute('src', url);
          cubeT.setAttribute('alt', '');
          cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
-         cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + sSm + 'px);');
          cube.appendChild(cubeT);
          let cubeU = document.createElement('img');
          cubeU.setAttribute('src', url);
          cubeU.setAttribute('alt', '');
          cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
-         cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + sSm + 'px);');
          cube.appendChild(cubeU);
         }
         else
         {
          let cubeF = document.createElement('div');
          cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
-         cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+         cubeF.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px);');
          let pctF = document.createElement('img');
          pctF.setAttribute('src', url);
          pctF.setAttribute('alt', '');
-         pctF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         pctF.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
          cubeF.appendChild(pctF);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           pctZ.setAttribute('src', zwe[i].url);
           pctZ.setAttribute('alt', '');
-          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
           cubeF.appendChild(pctZ);
          }
          cube.appendChild(cubeF);
          let cubeB = document.createElement('div');
          cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
-         cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + sSm + 'px);');
          let pctB = document.createElement('img');
          pctB.setAttribute('src', url);
          pctB.setAttribute('alt', '');
-         pctB.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         pctB.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
          cubeB.appendChild(pctB);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           pctZ.setAttribute('src', zwe[i].url);
           pctZ.setAttribute('alt', '');
-          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
           cubeB.appendChild(pctZ);
          }
          cube.appendChild(cubeB);
          let cubeR = document.createElement('div');
          cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
-         cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + sSm + 'px);');
          let pctR = document.createElement('img');
          pctR.setAttribute('src', url);
          pctR.setAttribute('alt', '');
-         pctR.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         pctR.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
          cubeR.appendChild(pctR);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           pctZ.setAttribute('src', zwe[i].url);
           pctZ.setAttribute('alt', '');
-          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
           cubeR.appendChild(pctZ);
          }
          cube.appendChild(cubeR);
          let cubeL = document.createElement('div');
          cubeL.setAttribute('class', 'cubeFace cubeFaceLight');
-         cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + sSm + 'px);');
          let pctL = document.createElement('img');
          pctL.setAttribute('src', url);
          pctL.setAttribute('alt', '');
-         pctL.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         pctL.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
          cubeL.appendChild(pctL);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           pctZ.setAttribute('src', zwe[i].url);
           pctZ.setAttribute('alt', '');
-          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
           cubeL.appendChild(pctZ);
          }
          cube.appendChild(cubeL);
          let cubeT = document.createElement('div');
          cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
-         cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + sSm + 'px);');
          let pctT = document.createElement('img');
          pctT.setAttribute('src', url);
          pctT.setAttribute('alt', '');
-         pctT.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         pctT.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
          cubeT.appendChild(pctT);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           pctZ.setAttribute('src', zwe[i].url);
           pctZ.setAttribute('alt', '');
-          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
           cubeT.appendChild(pctZ);
          }
          cube.appendChild(cubeT);
          let cubeU = document.createElement('div');
          cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
-         cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + sSm + 'px);');
          let pctU = document.createElement('img');
          pctU.setAttribute('src', url);
          pctU.setAttribute('alt', '');
-         pctU.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         pctU.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
          cubeU.appendChild(pctU);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           pctZ.setAttribute('src', zwe[i].url);
           pctZ.setAttribute('alt', '');
-          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
           cubeU.appendChild(pctZ);
          }
          cube.appendChild(cubeU);
         }
         scene.appendChild(cube);
-        const h = shared.rnd(sW) - (sS / 2);
-        const v = shared.rnd(sH) - (sS / 2);
+        const h = shared.rnd(sW) - sSm;
+        const v = shared.rnd(sH) - sSm;
         let r = sW;
         if (sH < r)
          r = sH;
         r = r * (shared.rnd() + 1);
-        let th = (shared.rnd() * (Math.PI * 2));
+        const cRadius = Math.PI * 2;
+        let th = shared.rnd() * cRadius;
         let hD = Math.floor(h + r * Math.cos(th));
         let vD = Math.floor(v + r * Math.sin(th));
-        while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > (sW - sS) && hD > (sW - sS)) || (v > (sH - sS) && vD > (sH - sS)))
+        const sR = sW - sS;
+        const sB = sH - sS;
+        while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > sR && hD > sR) || (v > sB && vD > sB))
         {
-         th = (shared.rnd() * (Math.PI * 2));
+         th = shared.rnd() * cRadius;
          hD = Math.floor(h + r * Math.cos(th));
          vD = Math.floor(v + r * Math.sin(th));
         }
         let s = 'width: ' + sS + 'px;';
         s += ' height: ' + sS + 'px;';
-        s += ' perspective: ' + (sS * 3)  + 'px;';
+        s += ' perspective: ' + sS * 3  + 'px;';
         s += ' transition: all ' + cfg.emote.time + 's linear;';
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, variationSize);
@@ -2745,14 +2772,15 @@
        {
         if (_iTitanic > tInit)
          return;
+        const nSm = Math.ceil(sS / 2) * -1;
         let rX = 0;
         let rY = 0;
-        while ((Math.abs(rX) + Math.abs(rY)) < 45)
+        while (Math.abs(rX) + Math.abs(rY) < 45)
         {
-         rX = (360 - (shared.rnd() * 720)) * cfg.emote.cube.rotations;
-         rY = (360 - (shared.rnd() * 720)) * cfg.emote.cube.rotations;
+         rX = (360 - shared.rnd() * 720) * cfg.emote.cube.rotations;
+         rY = (360 - shared.rnd() * 720) * cfg.emote.cube.rotations;
         }
-        cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
+        cube.style.transform = 'translateZ(' + nSm + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
         scene.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
        }
 
@@ -2765,7 +2793,7 @@
         tInit = new Date().getTime();
        if (_iTitanic > tInit)
         return;
-       const aT = Math.floor((cfg.emote.time * 1000) / 2);
+       const aT = Math.floor(cfg.emote.time * 1000 / 2);
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
@@ -2774,22 +2802,24 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS * 0.5);
+        sS = Math.ceil(sS / 2);
        else if (variationSize === 2)
         sS = sS * 2;
+       const sR = sW - sS;
+       const sB = sH - sS;
        let h = fX;
        if (h === false)
-        h = Math.floor((shared.rnd() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
+        h = Math.floor(shared.rnd() * (sR * 0.33) + sR * 0.33);
        let hD;
        if (shared.rnd(2) === 0)
-        hD = h - shared.rnd((sW - sS) * 0.2);
+        hD = h - shared.rnd(sR * 0.2);
        else
-        hD = h + shared.rnd((sW - sS) * 0.2);
+        hD = h + shared.rnd(sR * 0.2);
        let s = 'height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
        s += ' transition: transform ' + aT + 'ms cubic-bezier(0, 0, 0.58, 1);';
        s += ' transform: translateX(' + h + 'px);';
-       s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY / 100 * sH + shared.rnd((sH - sS) * 0.5)) + ' L 0 ' + (sH + sS) + '");';
+       s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY / 100 * sH + shared.rnd(sB / 2)) + ' L 0 ' + (sH + sS) + '");';
        let aNames = [];
        let aDelays = [];
        let aDurs = [];
@@ -2885,11 +2915,13 @@
        sS = cfg.emote.size.max;
       if (sS < cfg.emote.size.min)
        sS = cfg.emote.size.min;
+      const ehs = Math.ceil(sS / 2);
+      const ehl = sS * 2;
       document.documentElement.style.setProperty('--height', sH + 'px');
       document.documentElement.style.setProperty('--width', sW + 'px');
       document.documentElement.style.setProperty('--emote-height', sS + 'px');
-      document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
-      document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
+      document.documentElement.style.setProperty('--emote-height-s', ehs + 'px');
+      document.documentElement.style.setProperty('--emote-height-l', ehl + 'px');
       let style = cfg.display.styles[shared.rnd(cfg.display.styles.length)];
       if (style === undefined)
        return;
@@ -2947,22 +2979,27 @@
      {
       const Fireworks = function()
       {
+       const _smallBurst = 0.5;
+       const _largeBurst = 1.5;
+
        function task(kList, sW, sH, sS, iKC)
        {
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
+        const sSm = Math.ceil(sS / 2);
+        const sWm = Math.ceil(sW / 2);
         const sendUp = 2;
-        const oX = (sW * 0.5) - (sS * 0.5);
+        const oX = sWm - sSm;
         const oY = sH;
         let cX = oX;
         switch(shared.rnd(3))
         {
          case 0:
-          cX = Math.floor(cX * 0.5);
+          cX = Math.floor(cX * _smallBurst);
           break;
          case 2:
-          cX = Math.floor(cX * 1.5);
+          cX = Math.floor(cX * _largeBurst);
           break;
         }
         const cY = oY * 0.33;
@@ -3008,12 +3045,12 @@
           return;
          const sK = kList[shared.rnd(lK)];
          const sA = shared.rnd();
-         _sparkler(tInit, sK.url, cX, cY, sS, r * 0.5, t, sA);
+         _sparkler(tInit, sK.url, cX, cY, sS, r * _smallBurst, t, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, r * 0.5, t, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, r * _smallBurst, t, sA);
           }
          }
          if (v % Math.floor(outer / 3) === 0)
@@ -3045,12 +3082,12 @@
           return;
          const sK = kList[shared.rnd(lK)];
          const sA = shared.rnd();
-         _sparkler(tInit, sK.url, cX, cY, sS, r * 1.5, t, sA);
+         _sparkler(tInit, sK.url, cX, cY, sS, r * _largeBurst, t, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, r * 1.5, t, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, r * _largeBurst, t, sA);
           }
          }
          if (v % Math.floor(outer / 3) === 0)
@@ -3066,7 +3103,8 @@
         img.setAttribute('class', 'emote');
         img.setAttribute('src', url);
         img.setAttribute('alt', '');
-        const th = (a * (Math.PI * 2));
+        const cRadius = Math.PI * 2;
+        const th = a * cRadius;
         const hD = Math.floor(cX + r * Math.cos(th));
         const vD = Math.floor(cY + r * Math.sin(th));
         let s = 'height: ' + sS + 'px;';
@@ -3074,6 +3112,10 @@
         s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
         s += ' transform: translate(' + cX + 'px, ' + cY + 'px);';
         s += ' opacity: 0;';
+        const dMS = d * 1000;
+        const tMS = cfg.emote.time * 1000;
+        const tFI = _tAnim.fade.in / 100;
+        const tFO = _tAnim.fade.out / 100;
         let aNames = [];
         let aDelays = [];
         let aDurs = [];
@@ -3081,22 +3123,22 @@
         let aFills = [];
         let aIters = [];
         aNames.push('fadeIn');
-        aDelays.push((d * 1000) + 'ms');
-        aDurs.push(Math.floor((cfg.emote.time * 1000) * (_tAnim.fade.in / 100)) + 'ms');
+        aDelays.push(dMS + 'ms');
+        aDurs.push(Math.floor(tMS * tFI) + 'ms');
         aTimings.push('linear');
         aFills.push('forwards');
         aIters.push('1');
         aNames.push('fadeOut');
-        aDelays.push((d * 1000) + Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (_tAnim.fade.out / 100))) + 'ms');
-        aDurs.push(Math.floor((cfg.emote.time * 1000) * (_tAnim.fade.out / 100)) + 'ms');
+        aDelays.push(dMS + Math.floor(tMS - tMS * tFO) + 'ms');
+        aDurs.push(Math.floor(tMS * tFO) + 'ms');
         aTimings.push('ease-out');
         aFills.push('forwards');
         aIters.push('1');
         s += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        _gc.hook(img, true, true, (d + cfg.emote.time) * 1000);
-        window.setTimeout(_tMove, (d * 1000) + _tStart, tInit, img, hD, vD);
+        _gc.hook(img, true, true, dMS + tMS);
+        window.setTimeout(_tMove, dMS + _tStart, tInit, img, hD, vD);
        }
 
        function _tMove(tInit, img, hD, vD)
@@ -3133,9 +3175,10 @@
         l = l + (shared.rnd() * 4 - 2);
         if (l < 0.1)
          l = 0.1;
-        const c = (Math.PI * l) / iKC;
-        let th = (shared.rnd() * (Math.PI * 2));
-        const o = (shared.rnd(2) === 0);
+        const cRadius = Math.PI * 2;
+        const c = Math.PI * l / iKC;
+        let th = shared.rnd() * cRadius;
+        const o = shared.rnd(2) === 0;
         for (let i = 0; i < iKC; i++)
         {
          if (_iTitanic > tInit)
@@ -3144,13 +3187,13 @@
          {
           th-= c;
           if (th <= 0)
-           th+= Math.PI * 2;
+           th+= cRadius;
          }
          else
          {
           th+= c;
-          if (th >= Math.PI * 2)
-           th+= Math.PI * 2;
+          if (th >= cRadius)
+           th+= cRadius;
          }
          const oK = kList[shared.rnd(kList.length)];
          _sparkler(tInit, oK.url, oX, oY, sS, r, th);
@@ -3210,12 +3253,13 @@
         const lP = pyramidDist.length;
         for (let i = 0; i < lP; i++)
          ct += pyramidDist[i];
-        let eT = (cfg.emote.time * 1000) * 0.8;
+        const eMS = cfg.emote.time * 1000;
+        let eT = eMS * 0.8;
         let tPerB = Math.floor(eT / ct);
         if (tPerB < 50)
          tPerB = 50;
         eT = tPerB * ct;
-        const dT = (cfg.emote.time * 1000) * 0.2;
+        const dT = eMS * 0.2;
         let t = 0;
         for (let i = 0; i < ct; i++)
         {
@@ -3250,7 +3294,7 @@
         img.setAttribute('alt', '');
         const h = sS * x;
         const v = -1 * sS;
-        const vD = sH - (sS * dX);
+        const vD = sH - sS * dX;
         let s = 'top: 0px;';
         s += ' left: 0px;';
         s += ' height: ' + sS + 'px;';
@@ -3259,7 +3303,7 @@
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(aT + (t / 10)), tInit, img, h, sH);
+        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, h, sH);
         window.setTimeout(_tMove, t, tInit, img, h, vD);
        }
 
@@ -3299,13 +3343,14 @@
         const lP = pyramidDist.length;
         for (let i = 0; i < lP; i++)
          ct += pyramidDist[i];
-        let eT = (cfg.emote.time * 1000) * 0.8;
+        const eMS = cfg.emote.time * 1000;
+        let eT = eMS * 0.8;
         let tPerB = Math.floor(eT / ct);
         if (tPerB < 75)
          tPerB = 75;
         eT = tPerB * ct;
-        const dT = (cfg.emote.time * 1000) * 0.2;
-        const oX = shared.rnd(sW - (sS * lP));
+        const dT = eMS * 0.2;
+        const oX = shared.rnd(sW - sS * lP);
         let t = 0;
         for (let i = 0; i < ct; i++)
         {
@@ -3340,7 +3385,7 @@
         img.setAttribute('alt', '');
         const h = oX + sS * x;
         const v = -1 * sS;
-        const vD = sH - (sS * dX);
+        const vD = sH - sS * dX;
         let s = 'top: 0px;';
         s += ' left: 0px;';
         s += ' height: ' + sS + 'px;';
@@ -3349,7 +3394,7 @@
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(aT + (t / 10)), tInit, img, h, sH);
+        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, h, sH);
         window.setTimeout(_tMove, t, tInit, img, h, vD);
        }
 
@@ -3382,21 +3427,22 @@
         if (_iTitanic > tInit)
          return;
         const bandHeight = sS * 3;
-        const d = (shared.rnd(2) === 0);
-        const bandTop = shared.rnd(sH - (sS * 2.5));
+        const d = shared.rnd(2) === 0;
+        const bandTop = shared.rnd(sH - sS * 2.5);
         const b1 = shared.rnd(4) + 1;
         const b2 = shared.rnd(8 - b1) + b1;
         const b4 = shared.rnd(4);
+        const hasB4 = b4 > 0;
         await _stampede(tInit, kList, b1, _speed * 0.8, bandTop, bandHeight, d, sW, sS);
         if (_iTitanic > tInit)
          return;
         await _stampede(tInit, kList, b2, _speed * 0.4, bandTop, bandHeight, d, sW, sS);
         if (_iTitanic > tInit)
          return;
-        await _stampede(tInit, kList, iKC, (b4 > 0), bandTop, bandHeight, d, sW, sS);
+        await _stampede(tInit, kList, iKC, hasB4, bandTop, bandHeight, d, sW, sS);
         if (_iTitanic > tInit)
          return;
-        if (b4 > 0)
+        if (hasB4)
          await _stampede(tInit, kList, b4, false, bandTop, bandHeight, d, sW, sS);
        }
 
@@ -3454,7 +3500,7 @@
         s += ' left: 0px;';
         s += ' height: ' + sS + 'px;';
         s += ' width: ' + sS + 'px;';
-        s += ' transition: all ' + (_speed / 1000) + 's linear;';
+        s += ' transition: all ' + _speed + 'ms linear;';
         if (d)
          s += ' transform: translate(' + sW + 'px, ' + v + 'px);';
         else
@@ -3462,7 +3508,7 @@
         img.setAttribute('style', s);
         document.body.appendChild(img);
         window.setTimeout(_tMark, _speed, tInit, img);
-        window.setTimeout(_tMove, _tStart, tInit, img, d, h, (sW + sS), v);
+        window.setTimeout(_tMove, _tStart, tInit, img, d, h, sW + sS, v);
         return img;
        }
 
@@ -3517,7 +3563,7 @@
          {
           v = shared.rnd(6);
           if (v > 2)
-           v = (sht - 1) - (v - 3);
+           v = sht - 1 - (v - 3);
           v *= seg;
          }
          let found = false;
@@ -3550,8 +3596,8 @@
          }
          zurls.push(oZ);
         }
-        const d = ((v / seg) % 2 === 0);
-        const xtra = Math.floor((sW - (ct * bS)) / 2);
+        const d = v / seg % 2 === 0;
+        const xtra = Math.floor((sW - ct * bS) / 2);
         let imgs = [];
         let zimgs = [];
         for (let i = 0; i < ct; i++)
@@ -3639,7 +3685,7 @@
         let sB = sE - sW;
         if (d)
         {
-         sE = bS * ((ct - 1) - col) + xtra;
+         sE = bS * (ct - 1 - col) + xtra;
          sB = sE + sW;
         }
         s = 'top: 0px;';
@@ -3665,7 +3711,7 @@
         let sE = sB + sW;
         if (d)
         {
-         sB = bS * ((ct - 1) - col) + xtra;
+         sB = bS * (ct - 1 - col) + xtra;
          sE = sB - sW;
         }
         let s = 'top: 0px;';
@@ -3697,13 +3743,17 @@
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
+        const sSm = Math.ceil(sS / 2);
+        const nSm = sSm * -1;
+        const sWm = Math.ceil(sW / 2);
+        const sHm = Math.ceil(sH / 2);
         let scene = document.createElement('div');
         scene.setAttribute('class', 'scene');
         scene.setAttribute('width', sS);
         scene.setAttribute('height', sS);
         let cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
-        cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
+        cube.setAttribute('style', 'transform: translateZ(' + nSm + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
         let f = 'height: ' + sS + 'px;';
         f += ' width: ' + sS + 'px;';
         const lZ = zwe.length;
@@ -3713,140 +3763,140 @@
          cubeF.setAttribute('src', url);
          cubeF.setAttribute('alt', '');
          cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
-         cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+         cubeF.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px);');
          cube.appendChild(cubeF);
          let cubeB = document.createElement('img');
          cubeB.setAttribute('src', url);
          cubeB.setAttribute('alt', '');
          cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
-         cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + sSm + 'px);');
          cube.appendChild(cubeB);
          let cubeR = document.createElement('img');
          cubeR.setAttribute('src', url);
          cubeR.setAttribute('alt', '');
          cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
-         cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + sSm + 'px);');
          cube.appendChild(cubeR);
          let cubeL = document.createElement('img');
          cubeL.setAttribute('src', url);
          cubeL.setAttribute('alt', '');
          cubeL.setAttribute('class', 'cubeFace cubeFaceLeft');
-         cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + sSm + 'px);');
          cube.appendChild(cubeL);
          let cubeT = document.createElement('img');
          cubeT.setAttribute('src', url);
          cubeT.setAttribute('alt', '');
          cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
-         cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + sSm + 'px);');
          cube.appendChild(cubeT);
          let cubeU = document.createElement('img');
          cubeU.setAttribute('src', url);
          cubeU.setAttribute('alt', '');
          cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
-         cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + sSm + 'px);');
          cube.appendChild(cubeU);
         }
         else
         {
          let cubeF = document.createElement('div');
          cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
-         cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+         cubeF.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px);');
          let pctF = document.createElement('img');
          pctF.setAttribute('src', url);
          pctF.setAttribute('alt', '');
-         pctF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         pctF.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
          cubeF.appendChild(pctF);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           pctZ.setAttribute('src', zwe[i].url);
           pctZ.setAttribute('alt', '');
-          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
           cubeF.appendChild(pctZ);
          }
          cube.appendChild(cubeF);
          let cubeB = document.createElement('div');
          cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
-         cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + sSm + 'px);');
          let pctB = document.createElement('img');
          pctB.setAttribute('src', url);
          pctB.setAttribute('alt', '');
-         pctB.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         pctB.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
          cubeB.appendChild(pctB);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           pctZ.setAttribute('src', zwe[i].url);
           pctZ.setAttribute('alt', '');
-          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
           cubeB.appendChild(pctZ);
          }
          cube.appendChild(cubeB);
          let cubeR = document.createElement('div');
          cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
-         cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + sSm + 'px);');
          let pctR = document.createElement('img');
          pctR.setAttribute('src', url);
          pctR.setAttribute('alt', '');
-         pctR.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         pctR.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
          cubeR.appendChild(pctR);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           pctZ.setAttribute('src', zwe[i].url);
           pctZ.setAttribute('alt', '');
-          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
           cubeR.appendChild(pctZ);
          }
          cube.appendChild(cubeR);
          let cubeL = document.createElement('div');
          cubeL.setAttribute('class', 'cubeFace cubeFaceLight');
-         cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + sSm + 'px);');
          let pctL = document.createElement('img');
          pctL.setAttribute('src', url);
          pctL.setAttribute('alt', '');
-         pctL.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         pctL.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
          cubeL.appendChild(pctL);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           pctZ.setAttribute('src', zwe[i].url);
           pctZ.setAttribute('alt', '');
-          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
           cubeL.appendChild(pctZ);
          }
          cube.appendChild(cubeL);
          let cubeT = document.createElement('div');
          cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
-         cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + sSm + 'px);');
          let pctT = document.createElement('img');
          pctT.setAttribute('src', url);
          pctT.setAttribute('alt', '');
-         pctT.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         pctT.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
          cubeT.appendChild(pctT);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           pctZ.setAttribute('src', zwe[i].url);
           pctZ.setAttribute('alt', '');
-          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
           cubeT.appendChild(pctZ);
          }
          cube.appendChild(cubeT);
          let cubeU = document.createElement('div');
          cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
-         cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + sSm + 'px);');
          let pctU = document.createElement('img');
          pctU.setAttribute('src', url);
          pctU.setAttribute('alt', '');
-         pctU.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         pctU.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
          cubeU.appendChild(pctU);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           pctZ.setAttribute('src', zwe[i].url);
           pctZ.setAttribute('alt', '');
-          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + sSm + 'px); position: absolute;');
           cubeU.appendChild(pctZ);
          }
          cube.appendChild(cubeU);
@@ -3856,12 +3906,12 @@
         let v = shared.rnd(sH - sS);
         if (bC)
         {
-         h = Math.floor((sW / 2) - (sS / 2));
-         v = Math.floor((sH / 2) - (sS / 2));
+         h = Math.floor(sWm - sSm);
+         v = Math.floor(sHm - sSm);
         }
         let s = 'width: ' + sS + 'px;';
         s += ' height: ' + sS + 'px;';
-        s += ' perspective: ' + (sS * 3)  + 'px;';
+        s += ' perspective: ' + sS * 3 + 'px;';
         s += ' transition: all ' + cfg.emote.time + 's linear;';
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false);
@@ -3876,14 +3926,15 @@
        {
         if (_iTitanic > tInit)
          return;
+        const nSm = Math.ceil(sS / 2) * -1;
         let rX = 0;
         let rY = 0;
-        while ((Math.abs(rX) + Math.abs(rY)) < 45)
+        while (Math.abs(rX) + Math.abs(rY) < 45)
         {
-         rX = (360 - (shared.rnd() * 720)) * iR;
-         rY = (360 - (shared.rnd() * 720)) * iR;
+         rX = (360 - shared.rnd() * 720) * iR;
+         rY = (360 - shared.rnd() * 720) * iR;
         }
-        cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
+        cube.style.transform = 'translateZ(' + nSm + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
        }
 
        return task;
@@ -3923,8 +3974,9 @@
          tPerB = 24;
         eT = tPerB * ctT;
         const lF = msgDist[0].length;
-        const vH = shared.rnd(sH - (sS * lF)) + (sS * lF);
-        const oX = shared.rnd(sW - (sS * lM));
+        const lFS = sS * lF;
+        const vH = shared.rnd(sH - lFS) + lFS;
+        const oX = shared.rnd(sW - sS * lM);
         let t = 0;
         for (let i = 0; i < ct; i++)
         {
@@ -3992,7 +4044,7 @@
         img.setAttribute('alt', '');
         const h = oX + sS * x;
         const v = -1 * sS;
-        const vD = vH - (sS * dX);
+        const vD = vH - sS * dX;
         let s = 'top: 0px;';
         s += ' left: 0px;';
         s += ' height: ' + sS + 'px;';
@@ -4001,7 +4053,8 @@
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(eT + (iTime * 1000) + (t / 10)), tInit, img, h, sH);
+        const tMS = iTime * 1000;
+        window.setTimeout(_tDrop, Math.floor(eT + tMS + t / 10), tInit, img, h, sH);
         window.setTimeout(_tMove, t, tInit, img, h, vD);
        }
 
@@ -4048,7 +4101,7 @@
       let cM = cfg.emote.max;
       if (tC > cM)
        cM = tC;
-      return (_eActive + tC < cM);
+      return _eActive + tC < cM;
      }
 
      function _showKappas()
@@ -4134,7 +4187,7 @@
        if (tKC > 0)
         iKC = tKC;
       }
-      if ((cfg.emote.max > 0) && (iKC > cfg.emote.max))
+      if (cfg.emote.max > 0 && iKC > cfg.emote.max)
        iKC = cfg.emote.max;
       return {style: s, prefs: p, count: iKC};
      }
@@ -4205,11 +4258,16 @@
        sSm = cfg.emote.size.max;
       if (sSm < cfg.emote.size.min)
        sSm = cfg.emote.size.min;
+      const sR = sW - sS;
+      const sB = sH - sS;
+      const ehs = Math.ceil(sS / 2);
+      const ehl = sS * 2;
+      const fR = sR * 0.33;
       document.documentElement.style.setProperty('--height', sH + 'px');
       document.documentElement.style.setProperty('--width', sW + 'px');
       document.documentElement.style.setProperty('--emote-height', sS + 'px');
-      document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
-      document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
+      document.documentElement.style.setProperty('--emote-height-s', ehs + 'px');
+      document.documentElement.style.setProperty('--emote-height-l', ehl + 'px');
       const waitFor = _getKappaCountEstimate(kStyle);
       if (!_canShowKappa(kStyle))
       {
@@ -4298,8 +4356,9 @@
         _list.TheCube(kList[rC].url, kList[rC].zwe ?? [], sW, sH, Math.floor(cS * sCS), sCC, sCR);
         break;
        case 'Burst':
-        const oH = Math.floor((shared.rnd() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
-        const oV = Math.floor((shared.rnd() * ((sH - sS) * 0.33)) + (sH - sS) * 0.33);
+        const fB = sB * 0.33;
+        const oH = Math.floor(shared.rnd() * fR + fR);
+        const oV = Math.floor(shared.rnd() * fB + fB);
         for (let i = 0; i < kStyle.count; i++)
         {
          if (_iTitanic > tInit)
@@ -4311,7 +4370,7 @@
         }
         break;
        case 'Fountain':
-        const fX = Math.floor((shared.rnd() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
+        const fX = Math.floor(shared.rnd() * fR + fR);
         const fY = shared.rnd(25) + 15;
         for (let i = 0; i < kStyle.count; i++)
         {
@@ -4382,6 +4441,7 @@
       window.clearTimeout(_tGC);
       _tGC = false;
       let done = true;
+      const tNow = new Date().getTime();
       for (const idx in _toGC)
       {
        if (!_toGC.hasOwnProperty(idx))
@@ -4393,12 +4453,12 @@
        if (_toGC[idx].space)
        {
         const r = i.getBoundingClientRect();
-        if ((r.bottom > 0 && r.right > 0 && r.top < window.innerHeight && r.left < window.innerWidth) && t > new Date().getTime())
+        if (t > tNow && r.bottom > 0 && r.right > 0 && r.top < window.innerHeight && r.left < window.innerWidth)
          continue;
        }
        else
        {
-        if (t > new Date().getTime())
+        if (t > tNow)
          continue;
        }
        delete _toGC[idx];
@@ -4452,11 +4512,16 @@
 
     function _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, fadeIn = true, zoomIn = true, fadeOut = true, zoomOut = true, variationSize = 1)
     {
+     const tMS = cfg.emote.time * 1000;
+     const tFI = _tAnim.fade.in / 100;
+     const tFO = _tAnim.fade.out / 100;
+     const tZI = _tAnim.zoom.in / 100;
+     const tZO = _tAnim.zoom.out / 100;
      if (fadeIn)
      {
       aNames.push('fadeIn');
       aDelays.push('0s');
-      aDurs.push(Math.floor((cfg.emote.time * 1000) * (_tAnim.fade.in / 100)) + 'ms');
+      aDurs.push(Math.floor(tMS * tFI) + 'ms');
       aTimings.push('ease-in');
       aFills.push('forwards');
       aIters.push('1');
@@ -4470,7 +4535,7 @@
       else
        aNames.push('zoomIn');
       aDelays.push('0s');
-      aDurs.push(Math.floor((cfg.emote.time * 1000) * (_tAnim.zoom.in / 100)) + 'ms');
+      aDurs.push(Math.floor(tMS * tZI) + 'ms');
       aTimings.push('linear');
       aFills.push('forwards');
       aIters.push('1');
@@ -4478,8 +4543,8 @@
      if (fadeOut)
      {
       aNames.push('fadeOut');
-      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (_tAnim.fade.out / 100))) + 'ms');
-      aDurs.push(Math.floor((cfg.emote.time * 1000) * (_tAnim.fade.out / 100)) + 'ms');
+      aDelays.push(Math.floor(tMS - tMS * tFO) + 'ms');
+      aDurs.push(Math.floor(tMS * tFO) + 'ms');
       aTimings.push('ease-out');
       aFills.push('forwards');
       aIters.push('1');
@@ -4487,7 +4552,7 @@
      else
      {
       aNames.push('noFadeOut');
-      aDelays.push(((cfg.emote.time * 1000) - 50) + 'ms');
+      aDelays.push(tMS - 50 + 'ms');
       aDurs.push('50ms');
       aTimings.push('ease-out');
       aFills.push('forwards');
@@ -4501,8 +4566,8 @@
        aNames.push('zoomOutL');
       else
        aNames.push('zoomOut');
-      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (_tAnim.zoom.out / 100))) + 'ms');
-      aDurs.push(Math.floor((cfg.emote.time * 1000) * (_tAnim.zoom.out / 100)) + 'ms');
+      aDelays.push(Math.floor(tMS - tMS * tZO) + 'ms');
+      aDurs.push(Math.floor(tMS * tZO) + 'ms');
       aTimings.push('linear');
       aFills.push('forwards');
       aIters.push('1');
@@ -4730,7 +4795,7 @@
        _ws.onclose = null;
        if (twitch.net.dead)
         return;
-       const wsWait = Math.floor((wWS ** (1 + _wsRetry)) * 1000);
+       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
        window.setTimeout(task, wsWait);
@@ -4855,7 +4920,7 @@
        _ws.onclose = null;
        if (twitch.net.dead)
         return;
-       const wsWait = Math.floor((wWS ** (1 + _wsRetry)) * 1000);
+       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
        window.setTimeout(task, wsWait);
@@ -5278,7 +5343,7 @@
            if (x.readyState < 2)
             return;
            x.onreadystatechange = null;
-           const r = (x.status === 200);
+           const r = x.status === 200;
            _uList[url] = r;
            resolve(r);
           };
@@ -5316,7 +5381,7 @@
         const eVals = e[i].slice(e[i].indexOf(':') + 1).split(',');
         const eStart = parseInt(eVals[0].split('-')[0], 10);
         const eEnd = parseInt(eVals[0].split('-')[1], 10);
-        const sName = m.slice(eStart, (eEnd + 1));
+        const sName = m.slice(eStart, eEnd + 1);
         let l = eVals.length;
         if (dup === false)
          l = 1;
@@ -5728,7 +5793,7 @@
        }
        return;
       }
-      if (cmd.params.length > 1 && (cfg.display.kappa.cooldown === 0 || (kNow - _kLast) > (cfg.display.kappa.cooldown * 1000)))
+      if (cmd.params.length > 1 && (cfg.display.kappa.cooldown === 0 || kNow - _kLast > cfg.display.kappa.cooldown * 1000))
       {
        const m = cmd.params[1].toLowerCase();
        for (const k in cfg.display.kappa.styles)
@@ -6381,7 +6446,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if ((a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7') && (a[i].scope === 'c'))
+       if (a[i].scope === 'c' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
        {
         let f = false;
         for (let j = 0, l = r.length; j < l; j++)
@@ -6400,7 +6465,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if ((a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7') && (a[i].scope !== 'c'))
+       if (a[i].scope !== 'c' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
        {
         let f = false;
         for (let j = 0, l = r.length; j < l; j++)
@@ -6566,7 +6631,7 @@
       _ws.onclose = null;
       if (twitch.net.dead)
        return;
-      const wsWait = Math.floor((wWS ** (1 + _wsRetry)) * 1000);
+      const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
        _wsRetry += 0.2;
       window.setTimeout(task, wsWait);
@@ -6720,7 +6785,7 @@
       _ws.onclose = null;
       if (twitch.net.dead)
        return;
-      const wsWait = Math.floor((wWS ** (1 + _wsRetry)) * 1000);
+      const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
        _wsRetry += 0.2;
       window.setTimeout(task, wsWait);
@@ -7165,7 +7230,7 @@
        _ws.onclose = null;
        if (twitch.net.dead)
         return;
-       const wsWait = Math.floor((wWS ** (1 + _wsRetry)) * 1000);
+       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
        window.setTimeout(task, wsWait, _ch);
@@ -7390,7 +7455,7 @@
        _ws.onclose = null;
        if (twitch.net.dead)
         return;
-       const wsWait = Math.floor((wWS ** (1 + _wsRetry)) * 1000);
+       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
        window.setTimeout(task, wsWait, _ch);
@@ -7533,7 +7598,7 @@
       case 'undefined':
        return false;
       case 'boolean':
-       return (r === true);
+       return r === true;
       case 'number':
        if (r > 0 && v >= r)
         return true;
