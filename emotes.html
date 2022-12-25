@@ -1884,9 +1884,9 @@
 
    const display = function()
    {
-    let eActive = 0;    // active emote count (effective, not actual)
-    const tStart = 48;  // time to wait for transition trigger (ms)
-    const tAnim = {     // animation timing constants
+    let _eActive = 0;    // active emote count (effective, not actual)
+    const _tStart = 48;  // time to wait for transition trigger (ms)
+    const _tAnim = {     // animation timing constants
      fade: {
       in: 8,            // percentage of animation spent on fading in (8% of 5 seconds)
       out: 8            // percentage of animation spent on fading out
@@ -1899,9 +1899,9 @@
 
     const emote = function()
     {
-     let toShow = [];    // emote queue
+     let _toShow = [];    // emote queue
 
-     let tEmote = false; // timer for emote queue
+     let _tEmote = false; // timer for emote queue
 
      const list = function()
      {
@@ -1924,7 +1924,7 @@
        s += ' left: ' + h + 'px;';
        s += ' height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
-       s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
+       s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
        addEmoteToDoc(url, s, false, {space: false});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
@@ -1971,7 +1971,7 @@
        s += ' width: ' + sS + 'px;';
        s += ' transition: transform ' + cfg.emote.time + 's linear;';
        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-       s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
+       s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
        addEmoteToDoc(url, s, false, {}, {x: hD, y: vD});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
@@ -2024,7 +2024,7 @@
        aTimings.push('linear');
        aFills.push('forwards');
        aIters.push('1');
-       s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
+       s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
        addEmoteToDoc(url, s, false, {space: false});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
@@ -2032,64 +2032,67 @@
        }
       }
 
-      function Bounce(url, zwe, sW, sH, sS, canV = true)
+      const Bounce = function()
       {
-       let variationSize = 1;
-       if (canV && cfg.emote.size.variation !== false)
+       const _ms = 20;
+
+       function task(url, zwe, sW, sH, sS, canV = true)
        {
-        variationSize = shared.rnd(cfg.emote.size.variation + 2);
-        if (variationSize !== 0 && variationSize !== 2)
-         variationSize = 1;
-       }
-       if (variationSize === 0)
-        sS = Math.ceil(sS * 0.5);
-       else if (variationSize === 2)
-        sS = sS * 2;
-       const h = Math.floor(shared.rnd(sW) - (sS / 2));
-       const v = Math.floor(shared.rnd(0.2) * sH);
-       let velH = shared.rnd(6) + 3;
-       const velV = shared.rnd(3) + 4;
-       if (h + (sS / 2) > (sW / 2))
-        velH = -1 * velH;
-       let s = 'height: ' + sS + 'px;';
-       s += ' width: ' + sS + 'px;';
-       s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
-       s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-       let bX = h;
-       let bY = v;
-       let velY = velV;
-       let iArr = [];
-       iArr.push(addEmoteToDoc(url, s, true));
-       for (let i = 0, l = zwe.length; i < l; i++)
-       {
-        iArr.push(addEmoteToDoc(zwe[i].url, s, true));
-       }
-       const ms = 20;
-       let tmr = window.setTimeout(
-        function tLoop()
+        let variationSize = 1;
+        if (canV && cfg.emote.size.variation !== false)
         {
-         window.clearTimeout(tmr);
-         tmr = null;
-         if (iArr[0].parentElement === null)
-          return;
-         bX += velH;
-         bY += velY;
-         velY += 1;
-         if (bY + sS >= sH)
-         {
-          bY = sH - sS;
-          velY *= -0.7;
-          velY = Math.floor(velY);
-         }
-         for (let i = 0, l = iArr.length; i < l; i++)
-         {
-          iArr[i].style.transform = 'translate(' + bX + 'px, ' + bY + 'px)';
-         }
-         tmr = window.setTimeout(tLoop, ms);
-        },
-        ms
-       );
-      }
+         variationSize = shared.rnd(cfg.emote.size.variation + 2);
+         if (variationSize !== 0 && variationSize !== 2)
+          variationSize = 1;
+        }
+        if (variationSize === 0)
+         sS = Math.ceil(sS * 0.5);
+        else if (variationSize === 2)
+         sS = sS * 2;
+        const h = Math.floor(shared.rnd(sW) - (sS / 2));
+        const v = Math.floor(shared.rnd(0.2) * sH);
+        let velH = shared.rnd(6) + 3;
+        const velV = shared.rnd(3) + 4;
+        if (h + (sS / 2) > (sW / 2))
+         velH = -1 * velH;
+        let s = 'height: ' + sS + 'px;';
+        s += ' width: ' + sS + 'px;';
+        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
+        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+        let bX = h;
+        let bY = v;
+        let velY = velV;
+        let iArr = [];
+        iArr.push(addEmoteToDoc(url, s, true));
+        for (let i = 0, l = zwe.length; i < l; i++)
+        {
+         iArr.push(addEmoteToDoc(zwe[i].url, s, true));
+        }
+        window.setTimeout(_tLoop, _ms, iArr, bX, bY, velH, velY, sH, sS);
+       }
+
+       function _tLoop(iArr, bX, bY, velH, velY, sH, sS)
+       {
+        if (iArr[0].parentElement === null)
+         return;
+        bX += velH;
+        bY += velY;
+        velY += 1;
+        if (bY + sS >= sH)
+        {
+         bY = sH - sS;
+         velY *= -0.7;
+         velY = Math.floor(velY);
+        }
+        for (let i = 0, l = iArr.length; i < l; i++)
+        {
+         iArr[i].style.transform = 'translate(' + bX + 'px, ' + bY + 'px)';
+        }
+        window.setTimeout(_tLoop, _ms, iArr, bX, bY, velH, velY, sH, sS);
+       }
+
+       return task;
+      }();
 
       function Speed(url, zwe, sW, sH, sS, canV = true)
       {
@@ -2131,7 +2134,7 @@
        aTimings.push('ease-in');
        aFills.push('forwards');
        aIters.push('1');
-       s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
+       s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
        addEmoteToDoc(url, s);
        for (let i = 0, l = zwe.length; i < l; i++)
        {
@@ -2177,7 +2180,7 @@
        aTimings.push('ease-in');
        aFills.push('forwards');
        aIters.push('1');
-       s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
+       s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
        addEmoteToDoc(url, s, false, {space: false});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
@@ -2185,7 +2188,7 @@
        }
       }
 
-      function Crazy(url, zwe, sW, sH, sS, canV = true)
+      const Crazy = function()
       {
        /* LAYOUT SHIFTS
         * =============
@@ -2193,145 +2196,145 @@
         * offset-path requires support for offset-anchor/offset-position
         * due to transform-origin changes during squash
         */
-       const squashT = 100;
-       let variationSize = 1;
-       if (canV && cfg.emote.size.variation !== false)
+       const _squashT = 100;
+
+       function task(url, zwe, sW, sH, sS, canV = true)
        {
-        variationSize = shared.rnd(cfg.emote.size.variation + 2);
-        if (variationSize !== 0 && variationSize !== 2)
-         variationSize = 1;
-       }
-       if (variationSize === 0)
-        sS = Math.ceil(sS * 0.5);
-       else if (variationSize === 2)
-        sS = sS * 2;
-       const h = shared.rnd(sW - sS - 5) + 10;
-       const v = shared.rnd(sH - sS - 5) + 10;
-       let s = 'top: ' + v + 'px;';
-       s += ' left: ' + h + 'px;';
-       s += ' height: ' + sS + 'px;';
-       s += ' width: ' + sS + 'px;';
-       //s += ' transition: all 0.9s linear;';
-       let dests = [];
-       let traj = {x: 0, y: 0};
-       traj.x = shared.rnd() * 11 - 5;
-       traj.y = shared.rnd() * 11 - 5;
-       let pos = {x: h, y: v, t: 0};
-       let lastT = 0;
-       let bCt = 0;
-       while(pos.t + (bCt * (squashT * 2)) < (cfg.emote.time * 1000))
-       {
-        pos.x += traj.x;
-        pos.y += traj.y;
-        pos.t += 5;
-        let wall = false;
-        if (pos.x < 0)
+        let variationSize = 1;
+        if (canV && cfg.emote.size.variation !== false)
         {
-         pos.x = 0;
-         traj.x *= -1;
-         wall = 1;
+         variationSize = shared.rnd(cfg.emote.size.variation + 2);
+         if (variationSize !== 0 && variationSize !== 2)
+          variationSize = 1;
         }
-        else if (pos.x > (sW - sS))
+        if (variationSize === 0)
+         sS = Math.ceil(sS * 0.5);
+        else if (variationSize === 2)
+         sS = sS * 2;
+        const h = shared.rnd(sW - sS - 5) + 10;
+        const v = shared.rnd(sH - sS - 5) + 10;
+        let s = 'top: ' + v + 'px;';
+        s += ' left: ' + h + 'px;';
+        s += ' height: ' + sS + 'px;';
+        s += ' width: ' + sS + 'px;';
+        let dests = [];
+        let traj = {x: 0, y: 0};
+        traj.x = shared.rnd() * 11 - 5;
+        traj.y = shared.rnd() * 11 - 5;
+        let pos = {x: h, y: v, t: 0};
+        let lastT = 0;
+        let bCt = 0;
+        while(pos.t + (bCt * (_squashT * 2)) < (cfg.emote.time * 1000))
         {
-         pos.x = sW - sS;
-         traj.x *= -1;
-         wall = 3;
-        }
-        if (pos.y < 0)
-        {
-         pos.y = 0;
-         traj.y *= -1;
-         wall = 2;
-        }
-        else if (pos.y > (sH - sS))
-        {
-         pos.y = sH - sS;
-         traj.y *= -1;
-         wall = 4;
-        }
-        if (wall !== false)
-        {
-         bCt++;
-         dests.push({x: Math.floor(pos.x), y: Math.floor(pos.y), t: (pos.t - lastT), w: wall});
-         lastT = pos.t;
-        }
-       }
-       dests.push({x: pos.x, y: pos.y, t: (pos.t - lastT), w: 0});
-       s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
-       let iArr = [];
-       iArr.push(addEmoteToDoc(url, s, true, {space: false}));
-       for (let i = 0, l = zwe.length; i < l; i++)
-       {
-        iArr.push(addEmoteToDoc(zwe[i].url, s, true, {space: false}));
-       }
-       let d = 0;
-       const lA = iArr.length;
-       const lD = dests.length;
-       let tmr = window.setTimeout(
-        function tLoop()
-        {
-         if (d >= lD)
-          return;
-         window.clearTimeout(tmr);
-         for (let i = 0; i < lA; i++)
+         pos.x += traj.x;
+         pos.y += traj.y;
+         pos.t += 5;
+         let wall = false;
+         if (pos.x < 0)
          {
-          iArr[i].style.transformOrigin = 'center center';
-          iArr[i].style.transform = 'scale(1, 1)';
-          iArr[i].style.top = dests[d].y + 'px';
-          iArr[i].style.left = dests[d].x + 'px';
-          iArr[i].style.transition = 'all ' + dests[d].t + 'ms linear';
+          pos.x = 0;
+          traj.x *= -1;
+          wall = 1;
          }
-         d++;
-         tmr = window.setTimeout(
-          function tSquash()
-          {
-           window.clearTimeout(tmr);
-           for (let i = 0; i < lA; i++)
-           {
-            iArr[i].style.transition = 'transform ' + squashT + 'ms linear';
-            switch(dests[d-1].w)
-            {
-             case 1:
-              //left
-              iArr[i].style.transformOrigin = 'left center';
-              iArr[i].style.transform = 'scale(0.7, 2)';
-              break;
-             case 2:
-              //top
-              iArr[i].style.transformOrigin = 'center top';
-              iArr[i].style.transform = 'scale(2, 0.7)';
-              break;
-             case 3:
-              //right
-              iArr[i].style.transformOrigin = 'right center';
-              iArr[i].style.transform = 'scale(0.7, 2)';
-              break;
-             case 4:
-              //bottom
-              iArr[i].style.transformOrigin = 'center bottom';
-              iArr[i].style.transform = 'scale(2, 0.7)';
-              break;
-            }
-           }
-           tmr = window.setTimeout(
-            function tUnsquash()
-            {
-             window.clearTimeout(tmr);
-             for (let i = 0; i < lA; i++)
-             {
-              iArr[i].style.transition = 'transform ' + squashT + 'ms linear';
-              iArr[i].style.transform = 'scale(1, 1)';
-             }
-             tmr = window.setTimeout(tLoop, squashT);
-            },
-            squashT
-           );
-          }, dests[d - 1].t
-         );
-        },
-        tStart
-       );
-      }
+         else if (pos.x > (sW - sS))
+         {
+          pos.x = sW - sS;
+          traj.x *= -1;
+          wall = 3;
+         }
+         if (pos.y < 0)
+         {
+          pos.y = 0;
+          traj.y *= -1;
+          wall = 2;
+         }
+         else if (pos.y > (sH - sS))
+         {
+          pos.y = sH - sS;
+          traj.y *= -1;
+          wall = 4;
+         }
+         if (wall !== false)
+         {
+          bCt++;
+          dests.push({x: Math.floor(pos.x), y: Math.floor(pos.y), t: (pos.t - lastT), w: wall});
+          lastT = pos.t;
+         }
+        }
+        dests.push({x: pos.x, y: pos.y, t: (pos.t - lastT), w: 0});
+        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize);
+        let iArr = [];
+        iArr.push(addEmoteToDoc(url, s, true, {space: false}));
+        for (let i = 0, l = zwe.length; i < l; i++)
+        {
+         iArr.push(addEmoteToDoc(zwe[i].url, s, true, {space: false}));
+        }
+        let d = 0;
+        const lA = iArr.length;
+        const lD = dests.length;
+        window.setTimeout(_tLoop, _tStart, lA, iArr, lD, dests, d);
+       }
+
+       function _tLoop(lA, iArr, lD, dests, d)
+       {
+        if (d >= lD)
+         return;
+        for (let i = 0; i < lA; i++)
+        {
+         iArr[i].style.transformOrigin = 'center center';
+         iArr[i].style.transform = 'scale(1, 1)';
+         iArr[i].style.top = dests[d].y + 'px';
+         iArr[i].style.left = dests[d].x + 'px';
+         iArr[i].style.transition = 'all ' + dests[d].t + 'ms linear';
+        }
+        d++;
+        window.setTimeout(_tSquash, dests[d - 1].t, lA, iArr, lD, dests, d);
+       }
+
+       function _tSquash(lA, iArr, lD, dests, d)
+       {
+        for (let i = 0; i < lA; i++)
+        {
+         iArr[i].style.transition = 'transform ' + _squashT + 'ms linear';
+         switch(dests[d - 1].w)
+         {
+          case 1:
+           //left
+           iArr[i].style.transformOrigin = 'left center';
+           iArr[i].style.transform = 'scale(0.7, 2)';
+           break;
+          case 2:
+           //top
+           iArr[i].style.transformOrigin = 'center top';
+           iArr[i].style.transform = 'scale(2, 0.7)';
+           break;
+          case 3:
+           //right
+           iArr[i].style.transformOrigin = 'right center';
+           iArr[i].style.transform = 'scale(0.7, 2)';
+           break;
+          case 4:
+           //bottom
+           iArr[i].style.transformOrigin = 'center bottom';
+           iArr[i].style.transform = 'scale(2, 0.7)';
+           break;
+         }
+        }
+        window.setTimeout(_tUnsquash, _squashT, lA, iArr, lD, dests, d);
+       }
+
+       function _tUnsquash(lA, iArr, lD, dests, d)
+       {
+        for (let i = 0; i < lA; i++)
+        {
+         iArr[i].style.transition = 'transform ' + _squashT + 'ms linear';
+         iArr[i].style.transform = 'scale(1, 1)';
+        }
+        window.setTimeout(_tLoop, _squashT, lA, iArr, lD, dests, d);
+       }
+
+       return task;
+      }();
 
       function Confetti(url, zwe, sW, sH, sS, canV = true)
       {
@@ -2374,7 +2377,7 @@
        aTimings.push('linear');
        aFills.push('forwards');
        aIters.push('1');
-       s += styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, false, variationSize);
+       s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, false, variationSize);
        addEmoteToDoc(url, s, false, {space: false});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
@@ -2382,315 +2385,324 @@
        }
       }
 
-      function Throw(url, zwe, sW, sH, sS, canV = true)
+      const Throw = function()
       {
-       let variationSize = 1;
-       if (canV && cfg.emote.size.variation !== false)
+       function task(url, zwe, sW, sH, sS, canV = true)
        {
-        variationSize = shared.rnd(cfg.emote.size.variation + 2);
-        if (variationSize !== 0 && variationSize !== 2)
-         variationSize = 1;
-       }
-       if (variationSize === 0)
-        sS = Math.ceil(sS * 0.5);
-       else if (variationSize === 2)
-        sS = sS * 2;
-       const h = (shared.rnd(2) === 1) ? (- 1 * sS) : sW;
-       const v = shared.rnd(sH + sS) - sS;
-       const hD = Math.floor((shared.rnd() * ((sW - sS) * 0.4)) + (sW - sS) * 0.3);
-       const vD = Math.floor((shared.rnd() * ((sH - sS) * 0.4)) + (sH - sS) * 0.3);
-       const dH = (shared.rnd() * sS);
-       const t1 = cfg.emote.time * 140;
-       const t2 = cfg.emote.time * 200;
-       const t3 = cfg.emote.time * 800;
-       let s = 'height: ' + sS + 'px;';
-       s += ' width: ' + sS + 'px;';
-       s += ' transition: transform ' + t1 + 'ms cubic-bezier(0.32, 0, 0.67, 0);';
-       s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-       let s2 = 'height: ' + sS + 'px;';
-       s2 += ' width: ' + sS + 'px;';
-       s2 += ' transition: transform ' + t3 + 'ms cubic-bezier(0.5, 0, 0.75, 0);';
-       let r = '360';
-       if (h > 0)
-        r = '-360';
-       s2 += ' transform: translate(' + hD + 'px, ' + (sH - dH) + 'px) rotate(' + r + 'deg);';
-       let aNames = [];
-       let aDelays = [];
-       let aDurs = [];
-       let aTimings = [];
-       let aFills = [];
-       let aIters = [];
-       if (cfg.emote.out.fade)
-       {
-        aNames.push('fadeOut');
-        aDelays.push(Math.floor(t3 - (t3 * (tAnim.fade.out / 100))) + 'ms');
-        aDurs.push(Math.floor(t3 * (tAnim.fade.out / 100)) + 'ms');
-        aTimings.push('ease-out');
-        aFills.push('forwards');
-        aIters.push('1');
-       }
-       else
-       {
-        aNames.push('noFadeOut');
-        aDelays.push((t3 - 50) + 'ms');
-        aDurs.push('50ms');
-        aTimings.push('ease-out');
-        aFills.push('forwards');
-        aIters.push('1');
-       }
-       if (cfg.emote.out.zoom)
-       {
+        let variationSize = 1;
+        if (canV && cfg.emote.size.variation !== false)
+        {
+         variationSize = shared.rnd(cfg.emote.size.variation + 2);
+         if (variationSize !== 0 && variationSize !== 2)
+          variationSize = 1;
+        }
         if (variationSize === 0)
-         aNames.push('zoomOutS');
+         sS = Math.ceil(sS * 0.5);
         else if (variationSize === 2)
-         aNames.push('zoomOutL');
+         sS = sS * 2;
+        const h = (shared.rnd(2) === 1) ? (- 1 * sS) : sW;
+        const v = shared.rnd(sH + sS) - sS;
+        const hD = Math.floor((shared.rnd() * ((sW - sS) * 0.4)) + (sW - sS) * 0.3);
+        const vD = Math.floor((shared.rnd() * ((sH - sS) * 0.4)) + (sH - sS) * 0.3);
+        const dH = (shared.rnd() * sS);
+        const t1 = cfg.emote.time * 140;
+        const t2 = cfg.emote.time * 200;
+        const t3 = cfg.emote.time * 800;
+        let s = 'height: ' + sS + 'px;';
+        s += ' width: ' + sS + 'px;';
+        s += ' transition: transform ' + t1 + 'ms cubic-bezier(0.32, 0, 0.67, 0);';
+        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+        let s2 = 'height: ' + sS + 'px;';
+        s2 += ' width: ' + sS + 'px;';
+        s2 += ' transition: transform ' + t3 + 'ms cubic-bezier(0.5, 0, 0.75, 0);';
+        let r = '360';
+        if (h > 0)
+         r = '-360';
+        s2 += ' transform: translate(' + hD + 'px, ' + (sH - dH) + 'px) rotate(' + r + 'deg);';
+        let aNames = [];
+        let aDelays = [];
+        let aDurs = [];
+        let aTimings = [];
+        let aFills = [];
+        let aIters = [];
+        if (cfg.emote.out.fade)
+        {
+         aNames.push('fadeOut');
+         aDelays.push(Math.floor(t3 - (t3 * (_tAnim.fade.out / 100))) + 'ms');
+         aDurs.push(Math.floor(t3 * (_tAnim.fade.out / 100)) + 'ms');
+         aTimings.push('ease-out');
+         aFills.push('forwards');
+         aIters.push('1');
+        }
         else
-         aNames.push('zoomOut');
-        aDelays.push(Math.floor(t3 - (t3 * (tAnim.zoom.out / 100))) + 'ms');
-        aDurs.push(Math.floor(t3 * (tAnim.zoom.out / 100)) + 'ms');
-        aTimings.push('linear');
-        aFills.push('forwards');
-        aIters.push('1');
-       }
-       s2 += styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
-       let iArr = [];
-       iArr.push(addEmoteToDoc(url, s, true, {space: false}));
-       for (let i = 0, l = zwe.length; i < l; i++)
-       {
-        iArr.push(addEmoteToDoc(zwe[i].url, s, true, {space: false}));
-       }
-       const lA = iArr.length;
-       window.setTimeout(
-        function()
         {
-         for (let i = 0; i < lA; i++)
-         {
-          iArr[i].style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
-         }
-        },
-        tStart
-       );
-       window.setTimeout(
-        function()
+         aNames.push('noFadeOut');
+         aDelays.push((t3 - 50) + 'ms');
+         aDurs.push('50ms');
+         aTimings.push('ease-out');
+         aFills.push('forwards');
+         aIters.push('1');
+        }
+        if (cfg.emote.out.zoom)
         {
-         for (let i = 0; i < lA; i++)
-         {
-          iArr[i].setAttribute('style', s2);
-         }
-        },
-        t2
-       );
-      }
+         if (variationSize === 0)
+          aNames.push('zoomOutS');
+         else if (variationSize === 2)
+          aNames.push('zoomOutL');
+         else
+          aNames.push('zoomOut');
+         aDelays.push(Math.floor(t3 - (t3 * (_tAnim.zoom.out / 100))) + 'ms');
+         aDurs.push(Math.floor(t3 * (_tAnim.zoom.out / 100)) + 'ms');
+         aTimings.push('linear');
+         aFills.push('forwards');
+         aIters.push('1');
+        }
+        s2 += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
+        let iArr = [];
+        iArr.push(addEmoteToDoc(url, s, true, {space: false}));
+        for (let i = 0, l = zwe.length; i < l; i++)
+        {
+         iArr.push(addEmoteToDoc(zwe[i].url, s, true, {space: false}));
+        }
+        const lA = iArr.length;
+        window.setTimeout(_tMove, _tStart, iArr, hD, vD
+        );
+        window.setTimeout(_tDrop, t2, iArr, s2
+        );
+       }
 
-      function TheCube(url, zwe, sW, sH, sS, canV = true)
+       function _tMove(iArr, hD, vD)
+       {
+        for (let i = 0; i < iArr.length; i++)
+        {
+         iArr[i].style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+        }
+       }
+
+       function _tDrop(iArr, s2)
+       {
+        for (let i = 0; i < iArr.length; i++)
+        {
+         iArr[i].setAttribute('style', s2);
+        }
+       }
+
+       return task;
+      }();
+
+      const TheCube = function()
       {
-       let scene = document.createElement('div');
-       scene.setAttribute('class', 'scene');
-       let variationSize = 1;
-       if (canV && cfg.emote.size.variation !== false)
+       function task(url, zwe, sW, sH, sS, canV = true)
        {
-        variationSize = shared.rnd(cfg.emote.size.variation + 2);
-        if (variationSize !== 0 && variationSize !== 2)
-         variationSize = 1;
-       }
-       if (variationSize === 0)
-        sS = Math.ceil(sS * 0.5);
-       else if (variationSize === 2)
-        sS = sS * 2;
-       scene.setAttribute('width', sS);
-       scene.setAttribute('height', sS);
-       let cube = document.createElement('div');
-       cube.setAttribute('class', 'cube');
-       cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
-       let f = 'height: ' + sS + 'px;';
-       f += ' width: ' + sS + 'px;';
-       const lZ = zwe.length;
-       if (lZ === 0)
-       {
-        let cubeF = document.createElement('img');
-        cubeF.setAttribute('src', url);
-        cubeF.setAttribute('alt', '');
-        cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
-        cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
-        cube.appendChild(cubeF);
-        let cubeB = document.createElement('img');
-        cubeB.setAttribute('src', url);
-        cubeB.setAttribute('alt', '');
-        cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
-        cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
-        cube.appendChild(cubeB);
-        let cubeR = document.createElement('img');
-        cubeR.setAttribute('src', url);
-        cubeR.setAttribute('alt', '');
-        cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
-        cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
-        cube.appendChild(cubeR);
-        let cubeL = document.createElement('img');
-        cubeL.setAttribute('src', url);
-        cubeL.setAttribute('alt', '');
-        cubeL.setAttribute('class', 'cubeFace cubeFaceLeft');
-        cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
-        cube.appendChild(cubeL);
-        let cubeT = document.createElement('img');
-        cubeT.setAttribute('src', url);
-        cubeT.setAttribute('alt', '');
-        cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
-        cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
-        cube.appendChild(cubeT);
-        let cubeU = document.createElement('img');
-        cubeU.setAttribute('src', url);
-        cubeU.setAttribute('alt', '');
-        cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
-        cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
-        cube.appendChild(cubeU);
-       }
-       else
-       {
-        let cubeF = document.createElement('div');
-        cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
-        cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
-        let pctF = document.createElement('img');
-        pctF.setAttribute('src', url);
-        pctF.setAttribute('alt', '');
-        pctF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-        cubeF.appendChild(pctF);
-        for (let i = 0; i < lZ; i++)
+        let scene = document.createElement('div');
+        scene.setAttribute('class', 'scene');
+        let variationSize = 1;
+        if (canV && cfg.emote.size.variation !== false)
         {
-         let pctZ = document.createElement('img');
-         pctZ.setAttribute('src', zwe[i].url);
-         pctZ.setAttribute('alt', '');
-         pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-         cubeF.appendChild(pctZ);
+         variationSize = shared.rnd(cfg.emote.size.variation + 2);
+         if (variationSize !== 0 && variationSize !== 2)
+          variationSize = 1;
         }
-        cube.appendChild(cubeF);
-        let cubeB = document.createElement('div');
-        cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
-        cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
-        let pctB = document.createElement('img');
-        pctB.setAttribute('src', url);
-        pctB.setAttribute('alt', '');
-        pctB.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-        cubeB.appendChild(pctB);
-        for (let i = 0; i < lZ; i++)
+        if (variationSize === 0)
+         sS = Math.ceil(sS * 0.5);
+        else if (variationSize === 2)
+         sS = sS * 2;
+        scene.setAttribute('width', sS);
+        scene.setAttribute('height', sS);
+        let cube = document.createElement('div');
+        cube.setAttribute('class', 'cube');
+        cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
+        let f = 'height: ' + sS + 'px;';
+        f += ' width: ' + sS + 'px;';
+        const lZ = zwe.length;
+        if (lZ === 0)
         {
-         let pctZ = document.createElement('img');
-         pctZ.setAttribute('src', zwe[i].url);
-         pctZ.setAttribute('alt', '');
-         pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-         cubeB.appendChild(pctZ);
+         let cubeF = document.createElement('img');
+         cubeF.setAttribute('src', url);
+         cubeF.setAttribute('alt', '');
+         cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
+         cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+         cube.appendChild(cubeF);
+         let cubeB = document.createElement('img');
+         cubeB.setAttribute('src', url);
+         cubeB.setAttribute('alt', '');
+         cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
+         cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cube.appendChild(cubeB);
+         let cubeR = document.createElement('img');
+         cubeR.setAttribute('src', url);
+         cubeR.setAttribute('alt', '');
+         cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
+         cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+         cube.appendChild(cubeR);
+         let cubeL = document.createElement('img');
+         cubeL.setAttribute('src', url);
+         cubeL.setAttribute('alt', '');
+         cubeL.setAttribute('class', 'cubeFace cubeFaceLeft');
+         cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cube.appendChild(cubeL);
+         let cubeT = document.createElement('img');
+         cubeT.setAttribute('src', url);
+         cubeT.setAttribute('alt', '');
+         cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
+         cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cube.appendChild(cubeT);
+         let cubeU = document.createElement('img');
+         cubeU.setAttribute('src', url);
+         cubeU.setAttribute('alt', '');
+         cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
+         cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cube.appendChild(cubeU);
         }
-        cube.appendChild(cubeB);
-        let cubeR = document.createElement('div');
-        cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
-        cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
-        let pctR = document.createElement('img');
-        pctR.setAttribute('src', url);
-        pctR.setAttribute('alt', '');
-        pctR.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-        cubeR.appendChild(pctR);
-        for (let i = 0; i < lZ; i++)
+        else
         {
-         let pctZ = document.createElement('img');
-         pctZ.setAttribute('src', zwe[i].url);
-         pctZ.setAttribute('alt', '');
-         pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-         cubeR.appendChild(pctZ);
-        }
-        cube.appendChild(cubeR);
-        let cubeL = document.createElement('div');
-        cubeL.setAttribute('class', 'cubeFace cubeFaceLight');
-        cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
-        let pctL = document.createElement('img');
-        pctL.setAttribute('src', url);
-        pctL.setAttribute('alt', '');
-        pctL.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-        cubeL.appendChild(pctL);
-        for (let i = 0; i < lZ; i++)
-        {
-         let pctZ = document.createElement('img');
-         pctZ.setAttribute('src', zwe[i].url);
-         pctZ.setAttribute('alt', '');
-         pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-         cubeL.appendChild(pctZ);
-        }
-        cube.appendChild(cubeL);
-        let cubeT = document.createElement('div');
-        cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
-        cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
-        let pctT = document.createElement('img');
-        pctT.setAttribute('src', url);
-        pctT.setAttribute('alt', '');
-        pctT.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-        cubeT.appendChild(pctT);
-        for (let i = 0; i < lZ; i++)
-        {
-         let pctZ = document.createElement('img');
-         pctZ.setAttribute('src', zwe[i].url);
-         pctZ.setAttribute('alt', '');
-         pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-         cubeT.appendChild(pctZ);
-        }
-        cube.appendChild(cubeT);
-        let cubeU = document.createElement('div');
-        cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
-        cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
-        let pctU = document.createElement('img');
-        pctU.setAttribute('src', url);
-        pctU.setAttribute('alt', '');
-        pctU.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-        cubeU.appendChild(pctU);
-        for (let i = 0; i < lZ; i++)
-        {
-         let pctZ = document.createElement('img');
-         pctZ.setAttribute('src', zwe[i].url);
-         pctZ.setAttribute('alt', '');
-         pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-         cubeU.appendChild(pctZ);
-        }
-        cube.appendChild(cubeU);
-       }
-       scene.appendChild(cube);
-       const h = shared.rnd(sW) - (sS / 2);
-       const v = shared.rnd(sH) - (sS / 2);
-       let r = sW;
-       if (sH < r)
-        r = sH;
-       r = r * (shared.rnd() + 1);
-       let th = (shared.rnd() * (Math.PI * 2));
-       let hD = Math.floor(h + r * Math.cos(th));
-       let vD = Math.floor(v + r * Math.sin(th));
-       while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > (sW - sS) && hD > (sW - sS)) || (v > (sH - sS) && vD > (sH - sS)))
-       {
-        th = (shared.rnd() * (Math.PI * 2));
-        hD = Math.floor(h + r * Math.cos(th));
-        vD = Math.floor(v + r * Math.sin(th));
-       }
-       let s = 'width: ' + sS + 'px;';
-       s += ' height: ' + sS + 'px;';
-       s += ' perspective: ' + (sS * 3)  + 'px;';
-       s += ' transition: all ' + cfg.emote.time + 's linear;';
-       s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-       s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, variationSize);
-       scene.setAttribute('style', s);
-       eActive++;
-       document.body.appendChild(scene);
-       gc.hook(scene);
-       window.setTimeout(
-        function()
-        {
-         let rX = 0;
-         let rY = 0;
-         while ((Math.abs(rX) + Math.abs(rY)) < 45)
+         let cubeF = document.createElement('div');
+         cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
+         cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+         let pctF = document.createElement('img');
+         pctF.setAttribute('src', url);
+         pctF.setAttribute('alt', '');
+         pctF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         cubeF.appendChild(pctF);
+         for (let i = 0; i < lZ; i++)
          {
-          rX = (360 - (shared.rnd() * 720)) * cfg.emote.cube.rotations;
-          rY = (360 - (shared.rnd() * 720)) * cfg.emote.cube.rotations;
+          let pctZ = document.createElement('img');
+          pctZ.setAttribute('src', zwe[i].url);
+          pctZ.setAttribute('alt', '');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          cubeF.appendChild(pctZ);
          }
-         cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
-         scene.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
-        },
-        tStart
-       );
-      }
+         cube.appendChild(cubeF);
+         let cubeB = document.createElement('div');
+         cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
+         cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         let pctB = document.createElement('img');
+         pctB.setAttribute('src', url);
+         pctB.setAttribute('alt', '');
+         pctB.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         cubeB.appendChild(pctB);
+         for (let i = 0; i < lZ; i++)
+         {
+          let pctZ = document.createElement('img');
+          pctZ.setAttribute('src', zwe[i].url);
+          pctZ.setAttribute('alt', '');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          cubeB.appendChild(pctZ);
+         }
+         cube.appendChild(cubeB);
+         let cubeR = document.createElement('div');
+         cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
+         cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+         let pctR = document.createElement('img');
+         pctR.setAttribute('src', url);
+         pctR.setAttribute('alt', '');
+         pctR.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         cubeR.appendChild(pctR);
+         for (let i = 0; i < lZ; i++)
+         {
+          let pctZ = document.createElement('img');
+          pctZ.setAttribute('src', zwe[i].url);
+          pctZ.setAttribute('alt', '');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          cubeR.appendChild(pctZ);
+         }
+         cube.appendChild(cubeR);
+         let cubeL = document.createElement('div');
+         cubeL.setAttribute('class', 'cubeFace cubeFaceLight');
+         cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         let pctL = document.createElement('img');
+         pctL.setAttribute('src', url);
+         pctL.setAttribute('alt', '');
+         pctL.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         cubeL.appendChild(pctL);
+         for (let i = 0; i < lZ; i++)
+         {
+          let pctZ = document.createElement('img');
+          pctZ.setAttribute('src', zwe[i].url);
+          pctZ.setAttribute('alt', '');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          cubeL.appendChild(pctZ);
+         }
+         cube.appendChild(cubeL);
+         let cubeT = document.createElement('div');
+         cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
+         cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         let pctT = document.createElement('img');
+         pctT.setAttribute('src', url);
+         pctT.setAttribute('alt', '');
+         pctT.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         cubeT.appendChild(pctT);
+         for (let i = 0; i < lZ; i++)
+         {
+          let pctZ = document.createElement('img');
+          pctZ.setAttribute('src', zwe[i].url);
+          pctZ.setAttribute('alt', '');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          cubeT.appendChild(pctZ);
+         }
+         cube.appendChild(cubeT);
+         let cubeU = document.createElement('div');
+         cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
+         cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         let pctU = document.createElement('img');
+         pctU.setAttribute('src', url);
+         pctU.setAttribute('alt', '');
+         pctU.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         cubeU.appendChild(pctU);
+         for (let i = 0; i < lZ; i++)
+         {
+          let pctZ = document.createElement('img');
+          pctZ.setAttribute('src', zwe[i].url);
+          pctZ.setAttribute('alt', '');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          cubeU.appendChild(pctZ);
+         }
+         cube.appendChild(cubeU);
+        }
+        scene.appendChild(cube);
+        const h = shared.rnd(sW) - (sS / 2);
+        const v = shared.rnd(sH) - (sS / 2);
+        let r = sW;
+        if (sH < r)
+         r = sH;
+        r = r * (shared.rnd() + 1);
+        let th = (shared.rnd() * (Math.PI * 2));
+        let hD = Math.floor(h + r * Math.cos(th));
+        let vD = Math.floor(v + r * Math.sin(th));
+        while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > (sW - sS) && hD > (sW - sS)) || (v > (sH - sS) && vD > (sH - sS)))
+        {
+         th = (shared.rnd() * (Math.PI * 2));
+         hD = Math.floor(h + r * Math.cos(th));
+         vD = Math.floor(v + r * Math.sin(th));
+        }
+        let s = 'width: ' + sS + 'px;';
+        s += ' height: ' + sS + 'px;';
+        s += ' perspective: ' + (sS * 3)  + 'px;';
+        s += ' transition: all ' + cfg.emote.time + 's linear;';
+        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, variationSize);
+        scene.setAttribute('style', s);
+        _eActive++;
+        document.body.appendChild(scene);
+        _gc.hook(scene);
+        window.setTimeout(_tInit, _tStart, cube, scene, hD, vD, sS);
+       }
+
+       function _tInit(cube, scene, hD, vD, sS)
+       {
+        let rX = 0;
+        let rY = 0;
+        while ((Math.abs(rX) + Math.abs(rY)) < 45)
+        {
+         rX = (360 - (shared.rnd() * 720)) * cfg.emote.cube.rotations;
+         rY = (360 - (shared.rnd() * 720)) * cfg.emote.cube.rotations;
+        }
+        cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
+        scene.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+       }
+
+       return task;
+      }();
 
       function Fountain(url, zwe, sW, sH, sS, fX, fY, canV = true)
       {
@@ -2731,7 +2743,7 @@
        aTimings.push('cubic-bezier(0, 0.9, 1, 0.15)');
        aFills.push('forwards');
        aIters.push('1');
-       s += styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
+       s += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
        addEmoteToDoc(url, s, false, {time: aT}, {x: hD});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
@@ -2761,7 +2773,7 @@
       img.setAttribute('src', uri);
       img.setAttribute('alt', '');
       img.setAttribute('style', s);
-      eActive++;
+      _eActive++;
       document.body.appendChild(img);
       let space = true;
       let decActive = true;
@@ -2774,7 +2786,7 @@
         decActive = oGC.decrement;
        if (oGC.hasOwnProperty('time'))
         t = oGC.time;
-       gc.hook(img, space, decActive, t);
+       _gc.hook(img, space, decActive, t);
       }
       if (oT !== false)
       {
@@ -2786,21 +2798,13 @@
        else if (oT.hasOwnProperty('y'))
         sTF = 'translateX(' + oT.y + 'px)';
        if (sTF !== null)
-       {
-        window.setTimeout(
-         function()
-         {
-          img.style.transform = sTF;
-         },
-         tStart
-        );
-       }
+        window.setTimeout(function(){img.style.transform = sTF;}, _tStart);
       }
       if (r)
        return img;
      }
 
-     function queueEmote(url, zwe)
+     function _queueEmote(url, zwe)
      {
       const sW = window.innerWidth;
       const sH = window.innerHeight;
@@ -2826,25 +2830,25 @@
 
      function showEmotes()
      {
-      if (tEmote !== false)
+      if (_tEmote !== false)
       {
-       window.clearTimeout(tEmote);
-       tEmote = false;
+       window.clearTimeout(_tEmote);
+       _tEmote = false;
       }
-      if (cfg.emote.max > 0 && eActive >= cfg.emote.max)
+      if (cfg.emote.max > 0 && _eActive >= cfg.emote.max)
       {
-       tEmote = window.setTimeout(showEmotes, 500);
+       _tEmote = window.setTimeout(showEmotes, 500);
        return;
       }
       let e = null;
-      while ((e = toShow.shift()) !== undefined)
+      while ((e = _toShow.shift()) !== undefined)
       {
-       queueEmote(e.url, e.zwe ?? []);
-       if (cfg.emote.max > 0 && eActive > cfg.emote.max)
+       _queueEmote(e.url, e.zwe ?? []);
+       if (cfg.emote.max > 0 && _eActive > cfg.emote.max)
        {
-        if (cfg.emote.queue > 0 && toShow.length > cfg.emote.queue)
-         toShow.splice(0, toShow.length - cfg.emote.queue);
-        tEmote = window.setTimeout(showEmotes, 500);
+        if (cfg.emote.queue > 0 && _toShow.length > cfg.emote.queue)
+         _toShow.splice(0, _toShow.length - cfg.emote.queue);
+        _tEmote = window.setTimeout(showEmotes, 500);
         return;
        }
       }
@@ -2852,11 +2856,11 @@
 
      function addToShowList(p)
      {
-      toShow = toShow.concat(p);
+      _toShow = _toShow.concat(p);
      }
 
      return {
-      show: showEmotes,
+      showEmotes: showEmotes,
       addToShowList: addToShowList,
       addEmoteToDoc: addEmoteToDoc,
       list: list
@@ -2865,43 +2869,129 @@
 
     const kappa = function()
     {
-     let toKappa = [];   // kappagen queue
-     let conga = [];     // CONGA TIME!
+     let _toKappa = [];   // kappagen queue
+     let _conga = [];     // CONGA TIME!
 
-     let tKappa = false; // timer for kappagen queue
+     let _tKappa = false; // timer for kappagen queue
 
-     const list = function()
+     const _list = function()
      {
-      function Fireworks(kList, sW, sH, sS, iKC)
+      const Fireworks = function()
       {
-       const sendUp = 2;
-       const oX = (sW * 0.5) - (sS * 0.5);
-       const oY = sH;
-       let cX = oX;
-       switch(shared.rnd(3))
+       function task(kList, sW, sH, sS, iKC)
        {
-        case 0:
-         cX = Math.floor(cX * 0.5);
-         break;
-        case 2:
-         cX = Math.floor(cX * 1.5);
-         break;
+        const sendUp = 2;
+        const oX = (sW * 0.5) - (sS * 0.5);
+        const oY = sH;
+        let cX = oX;
+        switch(shared.rnd(3))
+        {
+         case 0:
+          cX = Math.floor(cX * 0.5);
+          break;
+         case 2:
+          cX = Math.floor(cX * 1.5);
+          break;
+        }
+        const cY = oY * 0.33;
+        let s = 'height: ' + sS + 'px;';
+        s += ' width: ' + sS + 'px;';
+        s += ' transition: transform ' + sendUp + 's linear;';
+        s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
+        const oK = kList[shared.rnd(kList.length)];
+        let iArr = [];
+        iArr.push(display.emote.addEmoteToDoc(oK.url, s, true, false, {x: cX, y: cY}));
+        if (oK.hasOwnProperty('zwe'))
+        {
+         for (let i = 0, l = oK.zwe.length; i < l; i++)
+         {
+          _eActive++;
+          iArr.push(emote.addEmoteToDoc(oK.zwe[i].url, s, true, false, {x: cX, y: cY}));
+         }
+        }
+        window.setTimeout(_explode, sendUp * 1000, kList, iArr, cX, cY, sS, sW, sH, iKC);
        }
-       const cY = oY * 0.33;
-       const lK = kList.length;
-       function sparkler(url, r, d, a)
+
+       async function _explode(kList, iArr, cX, cY, sS, sW, sH, iKC)
        {
-        let simg = document.createElement('img');
-        simg.setAttribute('class', 'emote');
-        simg.setAttribute('src', url);
-        simg.setAttribute('alt', '');
+        for (let i = 0, l = iArr.length; i < l; i++)
+        {
+         document.body.removeChild(iArr[i]);
+         _eActive--;
+        }
+        let r = sW;
+        if (sH < r)
+         r = sH;
+        r *= 0.66;
+        const inner = Math.floor(iKC / 8);
+        const outer = inner;
+        const core = iKC - (inner + outer);
+        let t = 0;
+        const lK = kList.length;
+        for (let v = 0; v < inner; v++)
+        {
+         const sK = kList[shared.rnd(lK)];
+         const sA = shared.rnd();
+         _sparkler(sK.url, cX, cY, sS, r * 0.5, t, sA);
+         if (sK.hasOwnProperty('zwe'))
+         {
+          for (let i = 0, l = sK.zwe.length; i < l; i++)
+          {
+           _sparkler(sK.zwe[i].url, cX, cY, sS, r * 0.5, t, sA);
+          }
+         }
+         if (v % Math.floor(outer / 3) === 0)
+          await _sleep(1);
+        }
+        t += 0.5;
+        for (let v = 0; v < core; v++)
+        {
+         const sK = kList[shared.rnd(lK)];
+         const sA = shared.rnd();
+         _sparkler(sK.url, cX, cY, sS, r, t, sA);
+         if (sK.hasOwnProperty('zwe'))
+         {
+          for (let i = 0, l = sK.zwe.length; i < l; i++)
+          {
+           _sparkler(sK.zwe[i].url, cX, cY, sS, r, t, sA);
+          }
+         }
+         t += 0.005;
+         if (v % Math.floor(outer / 9) === 0)
+          await _sleep(1);
+        }
+        t += 0.25;
+        for (let v = 0; v < outer; v++)
+        {
+         const sK = kList[shared.rnd(lK)];
+         const sA = shared.rnd();
+         _sparkler(sK.url, cX, cY, sS, r * 1.5, t, sA);
+         if (sK.hasOwnProperty('zwe'))
+         {
+          for (let i = 0, l = sK.zwe.length; i < l; i++)
+          {
+           _sparkler(sK.zwe[i].url, cX, cY, sS, r * 1.5, t, sA);
+          }
+         }
+         if (v % Math.floor(outer / 3) === 0)
+          await _sleep(1);
+        }
+       }
+
+       function _sparkler(url, cX, cY, sS, r, d, a)
+       {
+        let img = document.createElement('img');
+        img.setAttribute('class', 'emote');
+        img.setAttribute('src', url);
+        img.setAttribute('alt', '');
         const th = (a * (Math.PI * 2));
         const hD = Math.floor(cX + r * Math.cos(th));
         const vD = Math.floor(cY + r * Math.sin(th));
-        let s2 = 'height: ' + sS + 'px;';
-        s2 += ' width: ' + sS + 'px;';
-        s2 += ' transition: transform ' + cfg.emote.time + 's ease-out;';
-        s2 += ' transform: translate(' + cX + 'px, ' + cY + 'px);';
+        let s = 'height: ' + sS + 'px;';
+        s += ' width: ' + sS + 'px;';
+        s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
+        s += ' transform: translate(' + cX + 'px, ' + cY + 'px);';
+        s += ' opacity: 0;';
         let aNames = [];
         let aDelays = [];
         let aDurs = [];
@@ -2910,199 +3000,147 @@
         let aIters = [];
         aNames.push('fadeIn');
         aDelays.push((d * 1000) + 'ms');
-        aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+        aDurs.push(Math.floor((cfg.emote.time * 1000) * (_tAnim.fade.in / 100)) + 'ms');
         aTimings.push('linear');
         aFills.push('forwards');
         aIters.push('1');
         aNames.push('fadeOut');
-        aDelays.push((d * 1000) + Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-        aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+        aDelays.push((d * 1000) + Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (_tAnim.fade.out / 100))) + 'ms');
+        aDurs.push(Math.floor((cfg.emote.time * 1000) * (_tAnim.fade.out / 100)) + 'ms');
         aTimings.push('ease-out');
         aFills.push('forwards');
         aIters.push('1');
-        s2 += styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
-        simg.setAttribute('style', s2);
-        document.body.appendChild(simg);
-        gc.hook(simg, true, true, (d + cfg.emote.time) * 1000);
-        window.setTimeout(
-         function()
-         {
-          simg.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
-         },
-         (d * 1000) + tStart
-        );
+        s += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
+        img.setAttribute('style', s);
+        document.body.appendChild(img);
+        _gc.hook(img, true, true, (d + cfg.emote.time) * 1000);
+        window.setTimeout(_tMove, (d * 1000) + _tStart, img, hD, vD);
        }
-       let s = 'height: ' + sS + 'px;';
-       s += ' width: ' + sS + 'px;';
-       s += ' transition: transform ' + sendUp + 's linear;';
-       s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
-       const oK = kList[shared.rnd(lK)];
-       let iArr = [];
-       iArr.push(display.emote.addEmoteToDoc(oK.url, s, true, false, {x: cX, y: cY}));
-       if (oK.hasOwnProperty('zwe'))
+
+       function _tMove(img, hD, vD)
        {
-        for (let i = 0, l = oK.zwe.length; i < l; i++)
+        img.style.opacity = 1;
+        img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+       }
+
+       return task;
+      }();
+
+      const Spiral = function()
+      {
+       function task(kList, sW, sH, sS, iKC)
+       {
+        const oX = shared.rnd(sW - sS);
+        const oY = shared.rnd(sH - sS);
+        let r = sW;
+        if (sH < r)
+         r = sH;
+        window.setTimeout(_init, _tStart, kList, oX, oY, sS, r, iKC);
+       }
+
+       async function _init(kList, oX, oY, sS, r, iKC)
+       {
+        let l = iKC / 25 + 2;
+        l = l + (shared.rnd() * 4 - 2);
+        if (l < 0.1)
+         l = 0.1;
+        const c = (Math.PI * l) / iKC;
+        let th = (shared.rnd() * (Math.PI * 2));
+        const o = (shared.rnd(2) === 0);
+        for (let i = 0; i < iKC; i++)
         {
-         eActive++;
-         iArr.push(emote.addEmoteToDoc(oK.zwe[i].url, s, true, false, {x: cX, y: cY}));
+         if (o)
+         {
+          th-= c;
+          if (th <= 0)
+           th+= Math.PI * 2;
+         }
+         else
+         {
+          th+= c;
+          if (th >= Math.PI * 2)
+           th+= Math.PI * 2;
+         }
+         const oK = kList[shared.rnd(kList.length)];
+         _sparkler(oK.url, oX, oY, sS, r, th);
+         if (oK.hasOwnProperty('zwe'))
+         {
+          for (let j = 0, m = oK.zwe.length; j < m; j++)
+          {
+           _eActive++;
+           _sparkler(oK.zwe[j].url, oX, oY, sS, r, th);
+          }
+         }
+         await _sleep(10);
         }
        }
-       window.setTimeout(
-        async function()
-        {
-         for (let i = 0, l = iArr.length; i < l; i++)
-         {
-          document.body.removeChild(iArr[i]);
-          eActive--;
-         }
-         let r = sW;
-         if (sH < r)
-          r = sH;
-         r *= 0.66;
-         const inner = Math.floor(iKC / 8);
-         const outer = inner;
-         const core = iKC - (inner + outer);
-         let t = 0;
-         for (let v = 0; v < inner; v++)
-         {
-          const sK = kList[shared.rnd(lK)];
-          const sA = shared.rnd();
-          sparkler(sK.url, r * 0.5, t, sA);
-          if (sK.hasOwnProperty('zwe'))
-          {
-           for (let i = 0, l = sK.zwe.length; i < l; i++)
-           {
-            sparkler(sK.zwe[i].url, r * 0.5, t, sA);
-           }
-          }
-          if (v % Math.floor(outer / 3) === 0)
-           await sleep(1);
-         }
-         t += 0.5;
-         for (let v = 0; v < core; v++)
-         {
-          const sK = kList[shared.rnd(lK)];
-          const sA = shared.rnd();
-          sparkler(sK.url, r, t, sA);
-          if (sK.hasOwnProperty('zwe'))
-          {
-           for (let i = 0, l = sK.zwe.length; i < l; i++)
-           {
-            sparkler(sK.zwe[i].url, r, t, sA);
-           }
-          }
-          t += 0.005;
-          if (v % Math.floor(outer / 9) === 0)
-           await sleep(1);
-         }
-         t += 0.25;
-         for (let v = 0; v < outer; v++)
-         {
-          const sK = kList[shared.rnd(lK)];
-          const sA = shared.rnd();
-          sparkler(sK.url, r * 1.5, t, sA);
-          if (sK.hasOwnProperty('zwe'))
-          {
-           for (let i = 0, l = sK.zwe.length; i < l; i++)
-           {
-            sparkler(sK.zwe[i].url, r * 1.5, t, sA);
-           }
-          }
-          if (v % Math.floor(outer / 3) === 0)
-           await sleep(1);
-         }
-        },
-        sendUp * 1000
-       );
-      }
 
-      function Spiral(kList, sW, sH, sS, iKC)
-      {
-       const oX = shared.rnd(sW - sS);
-       const oY = shared.rnd(sH - sS);
-       function sparkler(url, r, th)
+       function _sparkler(url, oX, oY, sS, r, th)
        {
-        let simg = document.createElement('img');
-        simg.setAttribute('class', 'emote');
-        simg.setAttribute('src', url);
-        simg.setAttribute('alt', '');
+        let img = document.createElement('img');
+        img.setAttribute('class', 'emote');
+        img.setAttribute('src', url);
+        img.setAttribute('alt', '');
         const hD = Math.floor(oX + r * Math.cos(th));
         const vD = Math.floor(oY + r * Math.sin(th));
         let s = 'height: ' + sS + 'px;';
         s += ' width: ' + sS + 'px;';
         s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
         s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
-        s += styleEmote([], [], [], [], [], [], true, false, true, false);
-        simg.setAttribute('style', s);
-        document.body.appendChild(simg);
-        gc.hook(simg, true, true);
-        window.setTimeout(
-         function()
-         {
-          simg.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
-         },
-         tStart
-        );
+        s += _styleEmote([], [], [], [], [], [], true, false, true, false);
+        img.setAttribute('style', s);
+        document.body.appendChild(img);
+        _gc.hook(img, true, true);
+        window.setTimeout(_tMove, _tStart, img, hD, vD);
        }
-       window.setTimeout(
-        async function()
-        {
-         let r = sW;
-         if (sH < r)
-          r = sH;
-         let l = iKC / 25 + 2;
-         l = l + (shared.rnd() * 4 - 2);
-         if (l < 0.1)
-          l = 0.1;
-         const c = (Math.PI * l) / iKC;
-         let th = (shared.rnd() * (Math.PI * 2));
-         const o = (shared.rnd(2) === 0);
-         for (let i = 0; i < iKC; i++)
-         {
-          if (o)
-          {
-           th-= c;
-           if (th <= 0)
-            th+= Math.PI * 2;
-          }
-          else
-          {
-           th+= c;
-           if (th >= Math.PI * 2)
-            th+= Math.PI * 2;
-          }
-          const oK = kList[shared.rnd(kList.length)];
-          sparkler(oK.url, r, th);
-          if (oK.hasOwnProperty('zwe'))
-          {
-           for (let j = 0, m = oK.zwe.length; j < m; j++)
-           {
-            eActive++;
-            sparkler(oK.zwe[j].url, r, th);
-           }
-          }
-          await sleep(10);
-         }
-        },
-        tStart
-       );
-      }
 
-      function Pyramid(kList, sW, sH)
+       function _tMove(img, hD, vD)
+       {
+        img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+       }
+
+       return task;
+      }();
+
+      const Pyramid = function()
       {
-       const sS = sW / 19;
-       let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-       let ct = 0;
-       const lP = pyramidDist.length;
-       for (let i = 0; i < lP; i++)
-        ct += pyramidDist[i];
-       let eT = (cfg.emote.time * 1000) * 0.8;
-       let tPerB = Math.floor(eT / ct);
-       if (tPerB < 50)
-        tPerB = 50;
-       eT = tPerB * ct;
-       const dT = (cfg.emote.time * 1000) * 0.2;
-       function block(url, x, t)
+       function task(kList, sW, sH)
+       {
+        const sS = sW / 19;
+        let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+        let ct = 0;
+        const lP = pyramidDist.length;
+        for (let i = 0; i < lP; i++)
+         ct += pyramidDist[i];
+        let eT = (cfg.emote.time * 1000) * 0.8;
+        let tPerB = Math.floor(eT / ct);
+        if (tPerB < 50)
+         tPerB = 50;
+        eT = tPerB * ct;
+        const dT = (cfg.emote.time * 1000) * 0.2;
+        let t = 0;
+        for (let i = 0; i < ct; i++)
+        {
+         let x;
+         do
+          x = shared.rnd(lP);
+         while(drawn[x] >= pyramidDist[x]);
+         const oK = kList[shared.rnd(kList.length)];
+         _block(oK.url, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
+         if (oK.hasOwnProperty('zwe'))
+         {
+          for (let j = 0, l = oK.zwe.length; j < l; j++)
+          {
+           _eActive++;
+           _block(oK.zwe[j].url, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
+          }
+         }
+         drawn[x]++;
+         t += tPerB;
+        }
+       }
+
+       function _block(url, x, t, sS, sH, dX, tPerB, aT)
        {
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
@@ -3110,7 +3148,7 @@
         img.setAttribute('alt', '');
         const h = sS * x;
         const v = -1 * sS;
-        const vD = sH - (sS * (drawn[x] + 1));
+        const vD = sH - (sS * dX);
         let s = 'top: 0px;';
         s += ' left: 0px;';
         s += ' height: ' + sS + 'px;';
@@ -3119,64 +3157,69 @@
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(
-         function()
-         {
-          img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
-          img.style.transitionTime = '500ms';
-          gc.hook(img, false, true, 500);
-         },
-         Math.floor(eT + dT + (t / 10))
-        );
-        window.setTimeout(
-         function()
-         {
-          img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
-         },
-         t
-        );
+        window.setTimeout(_tDrop, Math.floor(aT + (t / 10)), img, h, sH);
+        window.setTimeout(_tMove, t, img, h, vD);
        }
-       let t = 0;
-       for (let i = 0; i < ct; i++)
-       {
-        let x;
-        do
-         x = shared.rnd(lP);
-        while(drawn[x] >= pyramidDist[x]);
-        const oK = kList[shared.rnd(kList.length)];
-        block(oK.url, x, t);
-        if (oK.hasOwnProperty('zwe'))
-        {
-         for (let j = 0, l = oK.zwe.length; j < l; j++)
-         {
-          eActive++;
-          block(oK.zwe[j].url, x, t);
-         }
-        }
-        drawn[x]++;
-        t += tPerB;
-       }
-      }
 
-      function SmallPyramid(kList, sW, sH)
+       function _tMove(img, h, vD)
+       {
+        img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
+       }
+
+       function _tDrop(img, h, sH)
+       {
+        img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
+        img.style.transitionTime = '500ms';
+        _gc.hook(img, false, true, 500);
+       }
+
+       return task;
+      }();
+
+      const SmallPyramid = function()
       {
-       let sS = sW / 19;
-       if (sS > Math.floor(sW * cfg.emote.size.ratio.small))
-        sS = Math.floor(sW * cfg.emote.size.ratio.small);
-       if (sS > Math.floor(sH * cfg.emote.size.ratio.small))
-        sS = Math.floor(sH * cfg.emote.size.ratio.small);
-       let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-       let ct = 0;
-       const lP = pyramidDist.length;
-       for (let i = 0; i < lP; i++)
-        ct += pyramidDist[i];
-       let eT = (cfg.emote.time * 1000) * 0.8;
-       let tPerB = Math.floor(eT / ct);
-       if (tPerB < 75)
-        tPerB = 75;
-       eT = tPerB * ct;
-       const dT = (cfg.emote.time * 1000) * 0.2;
-       function block(url, oX, x, t)
+       function task(kList, sW, sH)
+       {
+        let sS = sW / 19;
+        if (sS > Math.floor(sW * cfg.emote.size.ratio.small))
+         sS = Math.floor(sW * cfg.emote.size.ratio.small);
+        if (sS > Math.floor(sH * cfg.emote.size.ratio.small))
+         sS = Math.floor(sH * cfg.emote.size.ratio.small);
+        let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+        let ct = 0;
+        const lP = pyramidDist.length;
+        for (let i = 0; i < lP; i++)
+         ct += pyramidDist[i];
+        let eT = (cfg.emote.time * 1000) * 0.8;
+        let tPerB = Math.floor(eT / ct);
+        if (tPerB < 75)
+         tPerB = 75;
+        eT = tPerB * ct;
+        const dT = (cfg.emote.time * 1000) * 0.2;
+        const oX = shared.rnd(sW - (sS * lP));
+        let t = 0;
+        for (let i = 0; i < ct; i++)
+        {
+         let x;
+         do
+          x = shared.rnd(lP);
+         while(drawn[x] >= pyramidDist[x]);
+         const oK = kList[shared.rnd(kList.length)];
+         _block(oK.url, oX, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
+         if (oK.hasOwnProperty('zwe'))
+         {
+          for (let j = 0, l = oK.zwe.length; j < l; j++)
+          {
+           _eActive++;
+           _block(oK.zwe[j].url, oX, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
+          }
+         }
+         drawn[x]++;
+         t += tPerB;
+        }
+       }
+
+       function _block(url, oX, x, t, sS, sH, dX, tPerB, aT)
        {
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
@@ -3184,7 +3227,7 @@
         img.setAttribute('alt', '');
         const h = oX + sS * x;
         const v = -1 * sS;
-        const vD = sH - (sS * (drawn[x] + 1));
+        const vD = sH - (sS * dX);
         let s = 'top: 0px;';
         s += ' left: 0px;';
         s += ' height: ' + sS + 'px;';
@@ -3193,118 +3236,71 @@
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(
-         function()
-         {
-          img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
-          img.style.transitionTime = '500ms';
-          gc.hook(img, false, true, 500);
-         },
-         Math.floor(eT + dT + (t / 10))
-        );
-        window.setTimeout(
-         function()
-         {
-          img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
-         },
-         t
-        );
+        window.setTimeout(_tDrop, Math.floor(aT + (t / 10)), img, h, sH);
+        window.setTimeout(_tMove, t, img, h, vD);
        }
-       const oX = shared.rnd(sW - (sS * lP));
-       let t = 0;
-       for (let i = 0; i < ct; i++)
-       {
-        let x;
-        do
-         x = shared.rnd(lP);
-        while(drawn[x] >= pyramidDist[x]);
-        const oK = kList[shared.rnd(kList.length)];
-        block(oK.url, oX, x, t);
-        if (oK.hasOwnProperty('zwe'))
-        {
-         for (let j = 0, l = oK.zwe.length; j < l; j++)
-         {
-          eActive++;
-          block(oK.zwe[j].url, oX, x, t);
-         }
-        }
-        drawn[x]++;
-        t += tPerB;
-       }
-      }
 
-      async function Stampede(kList, sW, sH, sS, iKC)
-      {
-       const speed = 2000;
-       const bandHeight = sS * 3;
-       const d = (shared.rnd(2) === 1);
-       const bandTop = shared.rnd(sH - (sS * 2.5));
-       function run(url, y)
+       function _tMove(img, h, vD)
        {
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        img.setAttribute('src', url);
-        img.setAttribute('alt', '');
-        const h = -2 * sS;
-        const v = y + bandTop;
-        let s = 'top: 0px;';
-        s += ' left: 0px;';
-        s += ' height: ' + sS + 'px;';
-        s += ' width: ' + sS + 'px;';
-        s += ' transition: all ' + (speed / 1000) + 's linear;';
-        if (d)
-         s += ' transform: translate(' + sW + 'px, ' + v + 'px);';
-        else
-         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-        img.setAttribute('style', s);
-        document.body.appendChild(img);
-        window.setTimeout(
-         function()
-         {
-          document.body.removeChild(img);
-          img.setAttribute('deleted', true);
-         },
-         speed
-        );
-        window.setTimeout(
-         function()
-         {
-          if (d)
-           img.style.transform = 'translate(' + h + 'px, ' + v + 'px)';
-          else
-           img.style.transform = 'translate(' + (sW + sS) + 'px, ' + v + 'px)';
-         },
-         tStart
-        );
-        return img;
+        img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
        }
-       async function stampede(ct, pause)
+
+       function _tDrop(img, h, sH)
+       {
+        img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
+        img.style.transitionTime = '500ms';
+        _gc.hook(img, false, true, 500);
+       }
+
+       return task;
+      }();
+
+      const Stampede = function()
+      {
+       const _speed = 2000;
+
+       async function task(kList, sW, sH, sS, iKC)
+       {
+        const bandHeight = sS * 3;
+        const d = (shared.rnd(2) === 1);
+        const bandTop = shared.rnd(sH - (sS * 2.5));
+        const b1 = shared.rnd(4) + 1;
+        const b2 = shared.rnd(8 - b1) + b1;
+        const b4 = shared.rnd(4);
+        await _stampede(kList, b1, _speed * 0.8, bandTop, bandHeight, d, sW, sS);
+        await _stampede(kList, b2, _speed * 0.4, bandTop, bandHeight, d, sW, sS);
+        await _stampede(kList, iKC, (b4 > 0), bandTop, bandHeight, d, sW, sS);
+        if (b4 > 0)
+         await _stampede(kList, b4, false, bandTop, bandHeight, d, sW, sS);
+       }
+
+       async function _stampede(kList, ct, pause, bandTop, bandHeight, d, sW, sS)
        {
         let imgs = [];
         for (let i = 0; i < ct; i++)
         {
          const oK = kList[shared.rnd(kList.length)];
-         const y = shared.rnd(bandHeight);
-         imgs.push(run(oK.url, y));
+         const y = bandTop + shared.rnd(bandHeight);
+         imgs.push(_run(oK.url, y, d, sW, sS));
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, l = oK.zwe.length; j < l; j++)
           {
-           run(oK.zwe[j].url, y);
+           _run(oK.zwe[j].url, y, d, sW, sS);
           }
          }
-         await sleep(shared.rnd(90) + 10);
+         await _sleep(shared.rnd(90) + 10);
         }
         if (pause === false)
          return;
         if (pause !== true)
         {
-         await sleep(pause);
+         await _sleep(pause);
          return;
         }
         do
         {
-         await sleep(100);
+         await _sleep(100);
          for (let i = imgs.length - 1; i >= 0; i--)
          {
           if (imgs[i] === null || imgs[i].hasAttribute('deleted'))
@@ -3312,74 +3308,176 @@
          }
         } while (imgs.length > 0);
        }
-       const b1 = shared.rnd(4) + 1;
-       const b2 = shared.rnd(8 - b1) + b1;
-       const b4 = shared.rnd(4);
-       await stampede(b1, speed * 0.8);
-       await stampede(b2, speed * 0.4);
-       await stampede(iKC, (b4 > 0));
-       if (b4 > 0)
-        await stampede(b4, false);
-      }
 
-      async function Conga(kList, sW, sH, sS, nM)
-      {
-       let v = 0;
-       let unique = false;
-       const bS = Math.ceil(sS * (5/3));
-       const seg = Math.floor(bS / 2);
-       const sht = Math.floor(sH / seg);
-       const longWait = cfg.emote.time * 2;
-       let lns = sht;
-       if (nM)
-        lns = 6;
-       while (conga.length >= lns)
+       function _run(url, v, d, sW, sS)
        {
-        await sleep(250);
+        let img = document.createElement('img');
+        img.setAttribute('class', 'emote');
+        img.setAttribute('src', url);
+        img.setAttribute('alt', '');
+        const h = -2 * sS;
+        let s = 'top: 0px;';
+        s += ' left: 0px;';
+        s += ' height: ' + sS + 'px;';
+        s += ' width: ' + sS + 'px;';
+        s += ' transition: all ' + (_speed / 1000) + 's linear;';
+        if (d)
+         s += ' transform: translate(' + sW + 'px, ' + v + 'px);';
+        else
+         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+        img.setAttribute('style', s);
+        document.body.appendChild(img);
+        window.setTimeout(_tMark,_speed, img);
+        window.setTimeout(_tMove, _tStart, img, d, h, (sW + sS), v);
+        return img;
        }
-       while (!unique)
+
+       function _tMove(img, d, h1, h2, v)
        {
-        v = shared.rnd(sht) * seg;
+        let h = h2;
+        if (d)
+         h = h1;
+        img.style.transform = 'translate(' + h + 'px, ' + v + 'px)';
+       }
+
+       function _tMark(img)
+       {
+        document.body.removeChild(img);
+        img.setAttribute('deleted', true);
+       }
+
+       return task;
+      }();
+
+      const Conga = function()
+      {
+       const _longWait = cfg.emote.time * 2;
+
+       async function task(kList, sW, sH, sS, nM)
+       {
+        let v = 0;
+        let unique = false;
+        const bS = Math.ceil(sS * (5/3));
+        const seg = Math.floor(bS / 2);
+        const sht = Math.floor(sH / seg);
+        let lns = sht;
         if (nM)
+         lns = 6;
+        while (_conga.length >= lns)
         {
-         v = shared.rnd(6);
-         if (v > 2)
-          v = (sht - 1) - (v - 3);
-         v *= seg;
+         await _sleep(250);
         }
-        let found = false;
-        for (let i = 0, l = conga.length; i < l; i++)
+        while (!unique)
         {
-         if (conga[i].row === v)
+         v = shared.rnd(sht) * seg;
+         if (nM)
          {
-          found = true;
+          v = shared.rnd(6);
+          if (v > 2)
+           v = (sht - 1) - (v - 3);
+          v *= seg;
+         }
+         let found = false;
+         for (let i = 0, l = _conga.length; i < l; i++)
+         {
+          if (_conga[i].row === v)
+          {
+           found = true;
+           break;
+          }
+         }
+         if (!found)
+          unique = true;
+        }
+        _conga.push({row: v, done: false});
+        let urls = [];
+        let zurls = [];
+        const ct = Math.floor(sW / bS);
+        for (let i = 0; i < ct; i++)
+        {
+         const oK = kList[shared.rnd(kList.length)];
+         urls.push(oK.url);
+         let oZ = [];
+         if (oK.hasOwnProperty('zwe'))
+         {
+          for (let j = 0, l = oK.zwe.length; j < l; j++)
+          {
+           oZ.push(oK.zwe[j].url);
+          }
+         }
+         zurls.push(oZ);
+        }
+        const d = ((v / seg) % 2 === 1);
+        const xtra = Math.floor((sW - (ct * bS)) / 2);
+        let imgs = [];
+        let zimgs = [];
+        for (let i = 0; i < ct; i++)
+        {
+         imgs.push(_dance(urls[i], i, sW, v, sS, bS, ct, d, xtra));
+         let oZ = [];
+         for (let j = 0, l = zurls[i].length; j < l; j++)
+         {
+          oZ.push(_dance(zurls[i][j], i, sW, v, sS, bS, ct, d, xtra));
+         }
+         zimgs.push(oZ);
+        }
+        await _sleep(_longWait * 1000);
+        let full = false;
+        if (_conga.length === sht)
+         full = true;
+        await _sleep(cfg.display.kappa.conga.time * 1000);
+        if (cfg.display.kappa.conga.contagious)
+        {
+         let ex = false;
+         let lC = _conga.length;
+         if (lC > 1)
+          ex = true;
+         for (let i = 0; i < lC; i++)
+         {
+          if (_conga[i].row !== v)
+           continue;
+          _conga[i].done = true;
           break;
          }
-        }
-        if (!found)
-         unique = true;
-       }
-       conga.push({row: v, done: false});
-       let urls = [];
-       let zurls = [];
-       const ct = Math.floor(sW / bS);
-       for (let i = 0; i < ct; i++)
-       {
-        const oK = kList[shared.rnd(kList.length)];
-        urls.push(oK.url);
-        let oZ = [];
-        if (oK.hasOwnProperty('zwe'))
-        {
-         for (let j = 0, l = oK.zwe.length; j < l; j++)
+         let done = false;
+         while (!done)
          {
-          oZ.push(oK.zwe[j].url);
+          lC = _conga.length;
+          if (!ex && lC > 1)
+           ex = true;
+          let notDone = false;
+          for (let i = 0; i < lC; i++)
+          {
+           if (_conga[i].done === false)
+           {
+            notDone = true;
+            break;
+           }
+          }
+          if (notDone === false)
+           done = true;
+          await _sleep(100);
          }
         }
-        zurls.push(oZ);
+        for (let i = 0, l = imgs.length; i < l; i++)
+        {
+         _endDance(imgs[i], i, sW, v, sS, bS, ct, d, xtra);
+         for (let j = 0, m = zimgs[i].length; j < m; j++)
+         {
+          _endDance(zimgs[i][j], i, sW, v, sS, bS, ct, d, xtra);
+         }
+        }
+        await _sleep(_longWait * 1000);
+        for (let i = 0, l = _conga.length; i < l; i++)
+        {
+         if (_conga[i].row !== v)
+          continue;
+         _conga.splice(i, 1);
+         break;
+        }
        }
-       const d = ((v / seg) % 2 === 1);
-       const xtra = Math.floor((sW - (ct * bS)) / 2);
-       function dance(url, col)
+
+       function _dance(url, col, sW, v, sS, bS, ct, d, xtra)
        {
         let box = document.createElement('div');
         box.setAttribute('class', 'scene');
@@ -3402,22 +3500,17 @@
         s += ' width: ' + bS + 'px;';
         s += ' height: ' + bS + 'px;';
         s += ' z-index: ' + v + ';';
-        s += ' transition: all ' + longWait + 's linear;';
+        s += ' transition: all ' + _longWait + 's linear;';
         s += ' transform: translate(' + sB + 'px, ' + v + 'px);';
         box.setAttribute('style', s);
-        eActive++;
+        _eActive++;
         box.appendChild(img);
         document.body.appendChild(box);
-        window.setTimeout(
-         function()
-         {
-          box.style.transform = 'translate(' + sE + 'px, ' + v + 'px)';
-         },
-         tStart
-        );
+        window.setTimeout(_tMove, _tStart, box, sE, v);
         return box;
        }
-       function endDance(box, col)
+
+       function _endDance(box, col, sW, v, sS, bS, ct, d, xtra)
        {
         let sB = bS * col + xtra;
         let sE = sB + sW;
@@ -3431,279 +3524,274 @@
         s += ' width: ' + bS + 'px;';
         s += ' height: ' + bS + 'px;';
         s += ' z-index: ' + v + ';';
-        s += ' transition: all ' + longWait + 's ease-in;';
+        s += ' transition: all ' + _longWait + 's ease-in;';
         s += ' transform: translate(' + sB + 'px, ' + v + 'px);';
         box.setAttribute('style', s);
-        gc.hook(box, true, true, longWait * 1000 * 1.25);
-        window.setTimeout(
-         function()
-         {
-          box.style.transform = 'translate(' + sE + 'px, ' + v + 'px)';
-         },
-         tStart
-        );
+        _gc.hook(box, true, true, _longWait * 1000 * 1.25);
+        window.setTimeout(_tMove, _tStart, box, sE, v);
        }
-       let imgs = [];
-       let zimgs = [];
-       for (let i = 0; i < ct; i++)
+
+       function _tMove(box, sE, v)
        {
-        imgs.push(dance(urls[i], i));
-        let oZ = [];
-        for (let j = 0, l = zurls[i].length; j < l; j++)
-        {
-         oZ.push(dance(zurls[i][j], i));
-        }
-        zimgs.push(oZ);
+        box.style.transform = 'translate(' + sE + 'px, ' + v + 'px)';
        }
-       await sleep(longWait * 1000);
-       let full = false;
-       if (conga.length === sht)
-        full = true;
-       await sleep(cfg.display.kappa.conga.time * 1000);
-       if (cfg.display.kappa.conga.contagious)
+
+       return task;
+      }();
+
+      const TheCube = function()
+      {
+       function task(url, zwe, sW, sH, sS, bC, iR)
        {
-        let ex = false;
-        let lC = conga.length;
-        if (lC > 1)
-         ex = true;
-        for (let i = 0; i < lC; i++)
+        let scene = document.createElement('div');
+        scene.setAttribute('class', 'scene');
+        scene.setAttribute('width', sS);
+        scene.setAttribute('height', sS);
+        let cube = document.createElement('div');
+        cube.setAttribute('class', 'cube');
+        cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
+        let f = 'height: ' + sS + 'px;';
+        f += ' width: ' + sS + 'px;';
+        const lZ = zwe.length;
+        if (lZ === 0)
         {
-         if (conga[i].row !== v)
-          continue;
-         conga[i].done = true;
-         break;
+         let cubeF = document.createElement('img');
+         cubeF.setAttribute('src', url);
+         cubeF.setAttribute('alt', '');
+         cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
+         cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+         cube.appendChild(cubeF);
+         let cubeB = document.createElement('img');
+         cubeB.setAttribute('src', url);
+         cubeB.setAttribute('alt', '');
+         cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
+         cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cube.appendChild(cubeB);
+         let cubeR = document.createElement('img');
+         cubeR.setAttribute('src', url);
+         cubeR.setAttribute('alt', '');
+         cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
+         cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+         cube.appendChild(cubeR);
+         let cubeL = document.createElement('img');
+         cubeL.setAttribute('src', url);
+         cubeL.setAttribute('alt', '');
+         cubeL.setAttribute('class', 'cubeFace cubeFaceLeft');
+         cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cube.appendChild(cubeL);
+         let cubeT = document.createElement('img');
+         cubeT.setAttribute('src', url);
+         cubeT.setAttribute('alt', '');
+         cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
+         cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cube.appendChild(cubeT);
+         let cubeU = document.createElement('img');
+         cubeU.setAttribute('src', url);
+         cubeU.setAttribute('alt', '');
+         cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
+         cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         cube.appendChild(cubeU);
         }
-        let done = false;
-        while (!done)
+        else
         {
-         lC = conga.length;
-         if (!ex && lC > 1)
-          ex = true;
-         let notDone = false;
-         for (let i = 0; i < lC; i++)
+         let cubeF = document.createElement('div');
+         cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
+         cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
+         let pctF = document.createElement('img');
+         pctF.setAttribute('src', url);
+         pctF.setAttribute('alt', '');
+         pctF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         cubeF.appendChild(pctF);
+         for (let i = 0; i < lZ; i++)
          {
-          if (conga[i].done === false)
+          let pctZ = document.createElement('img');
+          pctZ.setAttribute('src', zwe[i].url);
+          pctZ.setAttribute('alt', '');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          cubeF.appendChild(pctZ);
+         }
+         cube.appendChild(cubeF);
+         let cubeB = document.createElement('div');
+         cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
+         cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         let pctB = document.createElement('img');
+         pctB.setAttribute('src', url);
+         pctB.setAttribute('alt', '');
+         pctB.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         cubeB.appendChild(pctB);
+         for (let i = 0; i < lZ; i++)
+         {
+          let pctZ = document.createElement('img');
+          pctZ.setAttribute('src', zwe[i].url);
+          pctZ.setAttribute('alt', '');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          cubeB.appendChild(pctZ);
+         }
+         cube.appendChild(cubeB);
+         let cubeR = document.createElement('div');
+         cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
+         cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
+         let pctR = document.createElement('img');
+         pctR.setAttribute('src', url);
+         pctR.setAttribute('alt', '');
+         pctR.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         cubeR.appendChild(pctR);
+         for (let i = 0; i < lZ; i++)
+         {
+          let pctZ = document.createElement('img');
+          pctZ.setAttribute('src', zwe[i].url);
+          pctZ.setAttribute('alt', '');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          cubeR.appendChild(pctZ);
+         }
+         cube.appendChild(cubeR);
+         let cubeL = document.createElement('div');
+         cubeL.setAttribute('class', 'cubeFace cubeFaceLight');
+         cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         let pctL = document.createElement('img');
+         pctL.setAttribute('src', url);
+         pctL.setAttribute('alt', '');
+         pctL.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         cubeL.appendChild(pctL);
+         for (let i = 0; i < lZ; i++)
+         {
+          let pctZ = document.createElement('img');
+          pctZ.setAttribute('src', zwe[i].url);
+          pctZ.setAttribute('alt', '');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          cubeL.appendChild(pctZ);
+         }
+         cube.appendChild(cubeL);
+         let cubeT = document.createElement('div');
+         cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
+         cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
+         let pctT = document.createElement('img');
+         pctT.setAttribute('src', url);
+         pctT.setAttribute('alt', '');
+         pctT.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         cubeT.appendChild(pctT);
+         for (let i = 0; i < lZ; i++)
+         {
+          let pctZ = document.createElement('img');
+          pctZ.setAttribute('src', zwe[i].url);
+          pctZ.setAttribute('alt', '');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          cubeT.appendChild(pctZ);
+         }
+         cube.appendChild(cubeT);
+         let cubeU = document.createElement('div');
+         cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
+         cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
+         let pctU = document.createElement('img');
+         pctU.setAttribute('src', url);
+         pctU.setAttribute('alt', '');
+         pctU.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+         cubeU.appendChild(pctU);
+         for (let i = 0; i < lZ; i++)
+         {
+          let pctZ = document.createElement('img');
+          pctZ.setAttribute('src', zwe[i].url);
+          pctZ.setAttribute('alt', '');
+          pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
+          cubeU.appendChild(pctZ);
+         }
+         cube.appendChild(cubeU);
+        }
+        scene.appendChild(cube);
+        let h = shared.rnd(sW - sS);
+        let v = shared.rnd(sH - sS);
+        if (bC)
+        {
+         h = Math.floor((sW / 2) - (sS / 2));
+         v = Math.floor((sH / 2) - (sS / 2));
+        }
+        let s = 'width: ' + sS + 'px;';
+        s += ' height: ' + sS + 'px;';
+        s += ' perspective: ' + (sS * 3)  + 'px;';
+        s += ' transition: all ' + cfg.emote.time + 's linear;';
+        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false);
+        scene.setAttribute('style', s);
+        _eActive++;
+        document.body.appendChild(scene);
+        _gc.hook(scene, false);
+        window.setTimeout(_tInit, _tStart, cube, iR, sS);
+       }
+
+       function _tInit(cube, iR, sS)
+       {
+        let rX = 0;
+        let rY = 0;
+        while ((Math.abs(rX) + Math.abs(rY)) < 45)
+        {
+         rX = (360 - (shared.rnd() * 720)) * iR;
+         rY = (360 - (shared.rnd() * 720)) * iR;
+        }
+        cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
+       }
+
+       return task;
+      }();
+
+      const Text = function()
+      {
+       function task(kList, sW, sH, sMsg, iTime)
+       {
+        const msgDist = _buildMsgArr(sMsg);
+        let ct = 0;
+        let ctT = 0;
+        let drawn = [];
+        const lM = msgDist.length;
+        for (let x = 0; x < lM; x++)
+        {
+         const lX = msgDist[x].length;
+         for (let y = 0; y < lX; y++)
+         {
+          if (msgDist[x][y] !== 0)
+           ctT += 1;
+         }
+         ct += lX;
+         drawn.push(0);
+        }
+        let sS = Math.floor(sW / (lM + 2));
+        if (sS > Math.floor(sW * cfg.emote.size.ratio.small))
+         sS = Math.floor(sW * cfg.emote.size.ratio.small);
+        if (sS > Math.floor(sH * cfg.emote.size.ratio.small))
+         sS = Math.floor(sH * cfg.emote.size.ratio.small);
+        let eT = cfg.emote.time * 1000;
+        let tPerB = Math.floor(eT / ctT);
+        if (tPerB < 24)
+         tPerB = 24;
+        eT = tPerB * ctT;
+        const lF = msgDist[0].length;
+        const vH = shared.rnd(sH - (sS * lF)) + (sS * lF);
+        const oX = shared.rnd(sW - (sS * lM));
+        let t = 0;
+        for (let i = 0; i < ct; i++)
+        {
+         let x;
+         do
+          x = shared.rnd(lM);
+         while(drawn[x] >= msgDist[x].length);
+         if (msgDist[x][drawn[x]] !== 0)
+         {
+          const oK = kList[shared.rnd(kList.length)];
+          _block(oK.url, vH, oX, drawn[x] + 1, tPerB, eT, iTime, x, t, sH, sS);
+          if (oK.hasOwnProperty('zwe'))
           {
-           notDone = true;
-           break;
+           for (let j = 0, l = oK.zwe.length; j < l; j++)
+           {
+            _eActive++;
+            _block(oK.zwe[j].url, vH, oX, drawn[x] + 1, tPerB, eT, iTime, x, t, sH, sS);
+           }
           }
+          t += tPerB;
          }
-         if (notDone === false)
-          done = true;
-         await sleep(100);
+         drawn[x]++;
         }
        }
-       for (let i = 0, l = imgs.length; i < l; i++)
-       {
-        endDance(imgs[i], i);
-        for (let j = 0, m = zimgs[i].length; j < m; j++)
-        {
-         endDance(zimgs[i][j], i);
-        }
-       }
-       await sleep(longWait * 1000);
-       for (let i = 0, l = conga.length; i < l; i++)
-       {
-        if (conga[i].row !== v)
-         continue;
-        conga.splice(i, 1);
-        break;
-       }
-      }
 
-      function TheCube(url, zwe, sW, sH, sS, bC, iR)
-      {
-       let scene = document.createElement('div');
-       scene.setAttribute('class', 'scene');
-       scene.setAttribute('width', sS);
-       scene.setAttribute('height', sS);
-       let cube = document.createElement('div');
-       cube.setAttribute('class', 'cube');
-       cube.setAttribute('style', 'transform: translateZ(' + (sS * -0.5) + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
-       let f = 'height: ' + sS + 'px;';
-       f += ' width: ' + sS + 'px;';
-       const lZ = zwe.length;
-       if (lZ === 0)
-       {
-        let cubeF = document.createElement('img');
-        cubeF.setAttribute('src', url);
-        cubeF.setAttribute('alt', '');
-        cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
-        cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
-        cube.appendChild(cubeF);
-        let cubeB = document.createElement('img');
-        cubeB.setAttribute('src', url);
-        cubeB.setAttribute('alt', '');
-        cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
-        cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
-        cube.appendChild(cubeB);
-        let cubeR = document.createElement('img');
-        cubeR.setAttribute('src', url);
-        cubeR.setAttribute('alt', '');
-        cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
-        cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
-        cube.appendChild(cubeR);
-        let cubeL = document.createElement('img');
-        cubeL.setAttribute('src', url);
-        cubeL.setAttribute('alt', '');
-        cubeL.setAttribute('class', 'cubeFace cubeFaceLeft');
-        cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
-        cube.appendChild(cubeL);
-        let cubeT = document.createElement('img');
-        cubeT.setAttribute('src', url);
-        cubeT.setAttribute('alt', '');
-        cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
-        cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
-        cube.appendChild(cubeT);
-        let cubeU = document.createElement('img');
-        cubeU.setAttribute('src', url);
-        cubeU.setAttribute('alt', '');
-        cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
-        cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
-        cube.appendChild(cubeU);
-       }
-       else
-       {
-        let cubeF = document.createElement('div');
-        cubeF.setAttribute('class', 'cubeFace cubeFaceFront');
-        cubeF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px);');
-        let pctF = document.createElement('img');
-        pctF.setAttribute('src', url);
-        pctF.setAttribute('alt', '');
-        pctF.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-        cubeF.appendChild(pctF);
-        for (let i = 0; i < lZ; i++)
-        {
-         let pctZ = document.createElement('img');
-         pctZ.setAttribute('src', zwe[i].url);
-         pctZ.setAttribute('alt', '');
-         pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-         cubeF.appendChild(pctZ);
-        }
-        cube.appendChild(cubeF);
-        let cubeB = document.createElement('div');
-        cubeB.setAttribute('class', 'cubeFace cubeFaceBack');
-        cubeB.setAttribute('style', f + ' transform: rotateY(90deg) translateZ(' + (sS * 0.5) + 'px);');
-        let pctB = document.createElement('img');
-        pctB.setAttribute('src', url);
-        pctB.setAttribute('alt', '');
-        pctB.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-        cubeB.appendChild(pctB);
-        for (let i = 0; i < lZ; i++)
-        {
-         let pctZ = document.createElement('img');
-         pctZ.setAttribute('src', zwe[i].url);
-         pctZ.setAttribute('alt', '');
-         pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-         cubeB.appendChild(pctZ);
-        }
-        cube.appendChild(cubeB);
-        let cubeR = document.createElement('div');
-        cubeR.setAttribute('class', 'cubeFace cubeFaceRight');
-        cubeR.setAttribute('style', f + ' transform: rotateY(180deg) translateZ(' + (sS * 0.5) + 'px);');
-        let pctR = document.createElement('img');
-        pctR.setAttribute('src', url);
-        pctR.setAttribute('alt', '');
-        pctR.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-        cubeR.appendChild(pctR);
-        for (let i = 0; i < lZ; i++)
-        {
-         let pctZ = document.createElement('img');
-         pctZ.setAttribute('src', zwe[i].url);
-         pctZ.setAttribute('alt', '');
-         pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-         cubeR.appendChild(pctZ);
-        }
-        cube.appendChild(cubeR);
-        let cubeL = document.createElement('div');
-        cubeL.setAttribute('class', 'cubeFace cubeFaceLight');
-        cubeL.setAttribute('style', f + ' transform: rotateY(-90deg) translateZ(' + (sS * 0.5) + 'px);');
-        let pctL = document.createElement('img');
-        pctL.setAttribute('src', url);
-        pctL.setAttribute('alt', '');
-        pctL.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-        cubeL.appendChild(pctL);
-        for (let i = 0; i < lZ; i++)
-        {
-         let pctZ = document.createElement('img');
-         pctZ.setAttribute('src', zwe[i].url);
-         pctZ.setAttribute('alt', '');
-         pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-         cubeL.appendChild(pctZ);
-        }
-        cube.appendChild(cubeL);
-        let cubeT = document.createElement('div');
-        cubeT.setAttribute('class', 'cubeFace cubeFaceTop');
-        cubeT.setAttribute('style', f + ' transform: rotateX(90deg) translateZ(' + (sS * 0.5) + 'px);');
-        let pctT = document.createElement('img');
-        pctT.setAttribute('src', url);
-        pctT.setAttribute('alt', '');
-        pctT.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-        cubeT.appendChild(pctT);
-        for (let i = 0; i < lZ; i++)
-        {
-         let pctZ = document.createElement('img');
-         pctZ.setAttribute('src', zwe[i].url);
-         pctZ.setAttribute('alt', '');
-         pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-         cubeT.appendChild(pctZ);
-        }
-        cube.appendChild(cubeT);
-        let cubeU = document.createElement('div');
-        cubeU.setAttribute('class', 'cubeFace cubeFaceBottom');
-        cubeU.setAttribute('style', f + ' transform: rotateX(-90deg) translateZ(' + (sS * 0.5) + 'px);');
-        let pctU = document.createElement('img');
-        pctU.setAttribute('src', url);
-        pctU.setAttribute('alt', '');
-        pctU.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-        cubeU.appendChild(pctU);
-        for (let i = 0; i < lZ; i++)
-        {
-         let pctZ = document.createElement('img');
-         pctZ.setAttribute('src', zwe[i].url);
-         pctZ.setAttribute('alt', '');
-         pctZ.setAttribute('style', f + ' transform: translateZ(' + (sS * 0.5) + 'px); position: absolute;');
-         cubeU.appendChild(pctZ);
-        }
-        cube.appendChild(cubeU);
-       }
-       scene.appendChild(cube);
-       let h = shared.rnd(sW - sS);
-       let v = shared.rnd(sH - sS);
-       if (bC)
-       {
-        h = Math.floor((sW / 2) - (sS / 2));
-        v = Math.floor((sH / 2) - (sS / 2));
-       }
-       let s = 'width: ' + sS + 'px;';
-       s += ' height: ' + sS + 'px;';
-       s += ' perspective: ' + (sS * 3)  + 'px;';
-       s += ' transition: all ' + cfg.emote.time + 's linear;';
-       s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-       s += styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false);
-       scene.setAttribute('style', s);
-       eActive++;
-       document.body.appendChild(scene);
-       gc.hook(scene, false);
-       window.setTimeout(
-        function()
-        {
-         let rX = 0;
-         let rY = 0;
-         while ((Math.abs(rX) + Math.abs(rY)) < 45)
-         {
-          rX = (360 - (shared.rnd() * 720)) * iR;
-          rY = (360 - (shared.rnd() * 720)) * iR;
-         }
-         cube.style.transform = 'translateZ(' + (sS * -0.5) + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
-        },
-        tStart
-       );
-      }
-
-      function Text(kList, sW, sH, sMsg, iTime)
-      {
-       function buildMsgArr(s)
+       function _buildMsgArr(s)
        {
         let o = [];
         let spc = [];
@@ -3732,35 +3820,8 @@
         }
         return o;
        }
-       const msgDist = buildMsgArr(sMsg);
-       let ct = 0;
-       let ctT = 0;
-       let drawn = [];
-       const lM = msgDist.length;
-       for (let x = 0; x < lM; x++)
-       {
-        const lX = msgDist[x].length;
-        for (let y = 0; y < lX; y++)
-        {
-         if (msgDist[x][y] !== 0)
-          ctT += 1;
-        }
-        ct += lX;
-        drawn.push(0);
-       }
-       let sS = Math.floor(sW / (lM + 2));
-       if (sS > Math.floor(sW * cfg.emote.size.ratio.small))
-        sS = Math.floor(sW * cfg.emote.size.ratio.small);
-       if (sS > Math.floor(sH * cfg.emote.size.ratio.small))
-        sS = Math.floor(sH * cfg.emote.size.ratio.small);
-       let eT = cfg.emote.time * 1000;
-       let tPerB = Math.floor(eT / ctT);
-       if (tPerB < 24)
-        tPerB = 24;
-       eT = tPerB * ctT;
-       const lF = msgDist[0].length;
-       const vH = shared.rnd(sH - (sS * lF)) + (sS * lF);
-       function block(url, oX, x, t)
+
+       function _block(url, vH, oX, dX, tPerB, eT, iTime, x, t, sH, sS)
        {
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
@@ -3768,7 +3829,7 @@
         img.setAttribute('alt', '');
         const h = oX + sS * x;
         const v = -1 * sS;
-        const vD = vH - (sS * (drawn[x] + 1));
+        const vD = vH - (sS * dX);
         let s = 'top: 0px;';
         s += ' left: 0px;';
         s += ' height: ' + sS + 'px;';
@@ -3777,48 +3838,24 @@
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(
-         function()
-         {
-          img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
-          img.style.transitionTime = '500ms';
-          gc.hook(img, false, true, 500);
-         },
-         Math.floor(eT + (iTime * 1000) + (t / 10))
-        );
-        window.setTimeout(
-         function()
-         {
-          img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
-         },
-         t
-        );
+        window.setTimeout(_tDrop, Math.floor(eT + (iTime * 1000) + (t / 10)), img, h, sH);
+        window.setTimeout(_tInit, t, img, h, vD);
        }
-       const oX = shared.rnd(sW - (sS * lM));
-       let t = 0;
-       for (let i = 0; i < ct; i++)
+
+       function _tInit(img, h, vD)
        {
-        let x;
-        do
-         x = shared.rnd(lM);
-        while(drawn[x] >= msgDist[x].length);
-        if (msgDist[x][drawn[x]] !== 0)
-        {
-         const oK = kList[shared.rnd(kList.length)];
-         block(oK.url, oX, x, t);
-         if (oK.hasOwnProperty('zwe'))
-         {
-          for (let j = 0, l = oK.zwe.length; j < l; j++)
-          {
-           eActive++;
-           block(oK.zwe[j].url, oX, x, t);
-          }
-         }
-         t += tPerB;
-        }
-        drawn[x]++;
+        img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
        }
-      }
+       
+       function _tDrop(img, h, sH)
+       {
+        img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
+        img.style.transitionTime = '500ms';
+        _gc.hook(img, false, true, 500);
+       }
+
+       return task;
+      }();
 
       return {
        Fireworks: Fireworks,
@@ -3832,68 +3869,68 @@
       };
      }();
 
-     function canShowKappa(k)
+     function _canShowKappa(k)
      {
       if (cfg.emote.max < 1)
        return true;
-      if (eActive < 1)
+      if (_eActive < 1)
        return true;
       let tC = cfg.display.kappa.count;
       if (k !== false)
-       tC = getKappaCountEstimate(k);
+       tC = _getKappaCountEstimate(k);
       let cM = cfg.emote.max;
       if (tC > cM)
        cM = tC;
-      return (eActive + tC < cM);
+      return (_eActive + tC < cM);
      }
 
-     function showKappas()
+     function _showKappas()
      {
-      if (tKappa !== false)
+      if (_tKappa !== false)
       {
-       window.clearTimeout(tKappa);
-       tKappa = false;
+       window.clearTimeout(_tKappa);
+       _tKappa = false;
       }
-      if (toKappa.length < 1)
+      if (_toKappa.length < 1)
        return;
-      let nK = getNextKappa(toKappa[0]);
+      let nK = _getNextKappa(_toKappa[0]);
       if (nK === false)
        return;
-      if (!canShowKappa(nK))
+      if (!_canShowKappa(nK))
       {
-       tKappa = window.setTimeout(showKappas, 500);
+       _tKappa = window.setTimeout(_showKappas, 500);
        return;
       }
       let e = null;
-      while ((e = toKappa.shift()) !== undefined)
+      while ((e = _toKappa.shift()) !== undefined)
       {
        nK = false;
        let a = {};
        a[e.style] = e.prefs;
        showKappa(e.list, a, e.params);
-       if (toKappa.length < 1)
+       if (_toKappa.length < 1)
         return;
-       nK = getNextKappa(toKappa[0]);
+       nK = _getNextKappa(_toKappa[0]);
        if (nK === false)
         return;
-       if (!canShowKappa(nK))
+       if (!_canShowKappa(nK))
        {
-        if (cfg.emote.queue > 0 && toKappa.length > cfg.emote.queue)
-         toKappa.splice(0, toKappa.length - cfg.emote.queue);
-        tKappa = window.setTimeout(showKappas, 500);
+        if (cfg.emote.queue > 0 && _toKappa.length > cfg.emote.queue)
+         _toKappa.splice(0, _toKappa.length - cfg.emote.queue);
+        _tKappa = window.setTimeout(_showKappas, 500);
         return;
        }
       }
      }
 
-     function getNextKappa(k)
+     function _getNextKappa(k)
      {
       let a = [];
       a[k.style] = k.prefs;
-      return getNextKappaEx(a, k.params);
+      return _getNextKappaEx(a, k.params);
      }
 
-     function getNextKappaEx(kS = false, kP = false)
+     function _getNextKappaEx(kS = false, kP = false)
      {
       if (typeof kS !== 'object')
       {
@@ -3903,7 +3940,7 @@
       }
       let s, p;
       const keys = Object.keys(kS);
-      if (cfg.display.kappa.conga.contagious && conga.length > 0)
+      if (cfg.display.kappa.conga.contagious && _conga.length > 0)
       {
        s = 'Conga';
        p = {};
@@ -3935,7 +3972,7 @@
       return {style: s, prefs: p, count: iKC};
      }
 
-     function getKappaCountEstimate(k)
+     function _getKappaCountEstimate(k)
      {
       switch (k.style)
       {
@@ -3970,7 +4007,7 @@
 
      async function showKappa(kList, kStyles = false, kParams = false)
      {
-      const kStyle = getNextKappaEx(kStyles, kParams);
+      const kStyle = _getNextKappaEx(kStyles, kParams);
       if (kStyle === false)
        return;
       if (kStyle.style === undefined)
@@ -4006,49 +4043,49 @@
       document.documentElement.style.setProperty('--emote-height', sS + 'px');
       document.documentElement.style.setProperty('--emote-height-s', Math.ceil(sS * 0.5) + 'px');
       document.documentElement.style.setProperty('--emote-height-l', (sS * 2) + 'px');
-      const waitFor = getKappaCountEstimate(kStyle);
-      if (!canShowKappa(kStyle))
+      const waitFor = _getKappaCountEstimate(kStyle);
+      if (!_canShowKappa(kStyle))
       {
-       toKappa.push({list: kList, style: kStyle.style, prefs: kStyle.prefs, params: kParams});
-       if (tKappa !== false)
+       _toKappa.push({list: kList, style: kStyle.style, prefs: kStyle.prefs, params: kParams});
+       if (_tKappa !== false)
        {
-        window.clearTimeout(tKappa);
-        tKappa = false;
+        window.clearTimeout(_tKappa);
+        _tKappa = false;
        }
-       tKappa = window.setTimeout(showKappas, 500);
+       _tKappa = window.setTimeout(_showKappas, 500);
        return;
       }
-      eActive += waitFor;
+      _eActive += waitFor;
       const lK = kList.length;
       switch(kStyle.style)
       {
        case 'Stampede':
-        await list.Stampede(kList, sW, sH, sS, kStyle.count);
-        eActive -= kStyle.count;
+        await _list.Stampede(kList, sW, sH, sS, kStyle.count);
+        _eActive -= kStyle.count;
         break;
        case 'Fireworks':
-        list.Fireworks(kList, sW, sH, sSm, kStyle.count);
+        _list.Fireworks(kList, sW, sH, sSm, kStyle.count);
         break;
        case 'Spiral':
-        list.Spiral(kList, sW, sH, sSm, kStyle.count);
+        _list.Spiral(kList, sW, sH, sSm, kStyle.count);
         break;
        case 'Pyramid':
-        list.Pyramid(kList, sW, sH);
+        _list.Pyramid(kList, sW, sH);
         break;
        case 'SmallPyramid':
-        list.SmallPyramid(kList, sW, sH);
+        _list.SmallPyramid(kList, sW, sH);
         break;
        case 'Conga':
-        eActive -= waitFor;
+        _eActive -= waitFor;
         let avoidMiddle = false;
         if (cfg.display.kappa.conga.hasOwnProperty('avoidMiddle') && cfg.display.kappa.conga.avoidMiddle === true)
          avoidMiddle = true;
         if (kStyle.prefs.hasOwnProperty('avoidMiddle') && kStyle.prefs.avoidMiddle === true)
          avoidMiddle = true;
-        list.Conga(kList, sW, sH, sS, avoidMiddle);
+        _list.Conga(kList, sW, sH, sS, avoidMiddle);
         break;
        case 'Text':
-        eActive -= waitFor;
+        _eActive -= waitFor;
         let sTM = 'HYPE!';
         if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('message'))
          sTM = cfg.display.kappa.styles[kStyle.style].message[shared.rnd(cfg.display.kappa.styles[kStyle.style].message.length)];
@@ -4067,10 +4104,10 @@
           sTM = sTM.replaceAll(pK[i], kParams[pK[i]]);
          }
         }
-        list.Text(kList, sW, sH, sTM, sTT);
+        _list.Text(kList, sW, sH, sTM, sTT);
         break;
        case 'TheCube':
-        eActive -= waitFor;
+        _eActive -= waitFor;
         let cS = sW;
         if (sW > sH)
          cS = sH;
@@ -4090,7 +4127,7 @@
          sCR = cfg.display.kappa.styles[kStyle.style].rotations;
         if (kStyle.prefs.hasOwnProperty('rotations'))
          sCR = kStyle.prefs.rotations;
-        list.TheCube(kList[rC].url, kList[rC].zwe ?? [], sW, sH, Math.floor(cS * sCS), sCC, sCR);
+        _list.TheCube(kList[rC].url, kList[rC].zwe ?? [], sW, sH, Math.floor(cS * sCS), sCC, sCR);
         break;
        case 'Burst':
         const oH = Math.floor((shared.rnd() * ((sW - sS) * 0.33)) + (sW - sS) * 0.33);
@@ -4098,9 +4135,9 @@
         for (let i = 0; i < kStyle.count; i++)
         {
          const rB = shared.rnd(lK);
-         eActive--;
+         _eActive--;
          emote.list.StraightLine(kList[rB].url, kList[rB].zwe ?? [], sW, sH, sS, oH, oV, false);
-         await sleep(50);
+         await _sleep(50);
         }
         break;
        case 'Fountain':
@@ -4109,18 +4146,18 @@
         for (let i = 0; i < kStyle.count; i++)
         {
          const rF = shared.rnd(lK);
-         eActive--;
+         _eActive--;
          emote.list.Fountain(kList[rF].url, kList[rF].zwe ?? [], sW, sH, sS, fX, fY, false);
-         await sleep(50);
+         await _sleep(50);
         }
         break;
        case 'Confetti':
         for (let i = 0; i < kStyle.count; i++)
         {
          const rN = shared.rnd(lK);
-         eActive--;
+         _eActive--;
          emote.list.Confetti(kList[rN].url, kList[rN].zwe ?? [], sW, sH, sSm, false);
-         await sleep(25);
+         await _sleep(25);
         }
         break;
        default:
@@ -4129,12 +4166,12 @@
         for (let i = 0; i < kStyle.count; i++)
         {
          const r = shared.rnd(lK);
-         eActive--;
+         _eActive--;
          if (kStyle.style === 'StraightLine')
           emote.list.StraightLine(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, false, false);
          else
           emote.list[kStyle.style](kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false);
-         await sleep(100);
+         await _sleep(100);
         }
       }
      }
@@ -4144,28 +4181,28 @@
      };
     }();
 
-    const gc = function()
+    const _gc = function()
     {
-     let toGC = {};      // list of image elements to garbage collect
+     let _toGC = {};      // list of image elements to garbage collect
 
-     let tGC = false;    // timer for garbage collection
+     let _tGC = false;    // timer for garbage collection
 
-     function doGC()
+     function _doGC()
      {
-      if (tGC === false)
+      if (_tGC === false)
        return;
-      window.clearTimeout(tGC);
-      tGC = false;
+      window.clearTimeout(_tGC);
+      _tGC = false;
       let done = true;
-      for (const idx in toGC)
+      for (const idx in _toGC)
       {
-       if (!toGC.hasOwnProperty(idx))
+       if (!_toGC.hasOwnProperty(idx))
         continue;
        done = false;
-       const i = toGC[idx].img;
-       const t = toGC[idx].end;
-       const d = toGC[idx].dec;
-       if (toGC[idx].space)
+       const i = _toGC[idx].img;
+       const t = _toGC[idx].end;
+       const d = _toGC[idx].dec;
+       if (_toGC[idx].space)
        {
         const r = i.getBoundingClientRect();
         if ((r.bottom > 0 && r.right > 0 && r.top < window.innerHeight && r.left < window.innerWidth) && t > new Date().getTime())
@@ -4176,13 +4213,13 @@
         if (t > new Date().getTime())
          continue;
        }
-       delete toGC[idx];
+       delete _toGC[idx];
        document.body.removeChild(i);
        if (d)
-        eActive--;
+        _eActive--;
       }
       if (!done)
-       tGC = window.setTimeout(doGC, 500);
+       _tGC = window.setTimeout(_doGC, 500);
      }
 
      function gcEmote(img, space = true, decActive = true, t = false)
@@ -4193,10 +4230,10 @@
       do
       {
        x++;
-      } while(toGC.hasOwnProperty(x));
-      toGC[x] = {img: img, space: space, dec: decActive, end: new Date().getTime() + t};
-      if (tGC === false)
-       tGC = window.setTimeout(doGC, 500);
+      } while(_toGC.hasOwnProperty(x));
+      _toGC[x] = {img: img, space: space, dec: decActive, end: new Date().getTime() + t};
+      if (_tGC === false)
+       _tGC = window.setTimeout(_doGC, 500);
      }
 
      return {
@@ -4204,12 +4241,12 @@
      };
     }();
 
-    function sleep(ms)
+    function _sleep(ms)
     {
      return new Promise(function(resolve){setTimeout(resolve, ms);});
     }
 
-    function styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters)
+    function _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters)
     {
      let s = '';
      if (aNames.length > 0)
@@ -4224,13 +4261,13 @@
      return s;
     }
 
-    function styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, fadeIn = true, zoomIn = true, fadeOut = true, zoomOut = true, variationSize = 1)
+    function _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, fadeIn = true, zoomIn = true, fadeOut = true, zoomOut = true, variationSize = 1)
     {
      if (fadeIn)
      {
       aNames.push('fadeIn');
       aDelays.push('0s');
-      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.in / 100)) + 'ms');
+      aDurs.push(Math.floor((cfg.emote.time * 1000) * (_tAnim.fade.in / 100)) + 'ms');
       aTimings.push('ease-in');
       aFills.push('forwards');
       aIters.push('1');
@@ -4244,7 +4281,7 @@
       else
        aNames.push('zoomIn');
       aDelays.push('0s');
-      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.in / 100)) + 'ms');
+      aDurs.push(Math.floor((cfg.emote.time * 1000) * (_tAnim.zoom.in / 100)) + 'ms');
       aTimings.push('linear');
       aFills.push('forwards');
       aIters.push('1');
@@ -4252,8 +4289,8 @@
      if (fadeOut)
      {
       aNames.push('fadeOut');
-      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.fade.out / 100))) + 'ms');
-      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.fade.out / 100)) + 'ms');
+      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (_tAnim.fade.out / 100))) + 'ms');
+      aDurs.push(Math.floor((cfg.emote.time * 1000) * (_tAnim.fade.out / 100)) + 'ms');
       aTimings.push('ease-out');
       aFills.push('forwards');
       aIters.push('1');
@@ -4275,13 +4312,13 @@
        aNames.push('zoomOutL');
       else
        aNames.push('zoomOut');
-      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (tAnim.zoom.out / 100))) + 'ms');
-      aDurs.push(Math.floor((cfg.emote.time * 1000) * (tAnim.zoom.out / 100)) + 'ms');
+      aDelays.push(Math.floor((cfg.emote.time * 1000) - ((cfg.emote.time * 1000) * (_tAnim.zoom.out / 100))) + 'ms');
+      aDurs.push(Math.floor((cfg.emote.time * 1000) * (_tAnim.zoom.out / 100)) + 'ms');
       aTimings.push('linear');
       aFills.push('forwards');
       aIters.push('1');
      }
-     return styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
+     return _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
     }
 
     return {
@@ -4292,16 +4329,14 @@
 
    const twitch = function()
    {
-    let rList = {};     // list of triggered channel point redeems to match to PubSub events
+    let _rList = {};     // list of triggered channel point redeems to match to PubSub events
 
     const net = function()
     {
-     let tIRC = false;   // timer for irc connection timeout
-
      const follower = function()
      {
-      let uLF = false;    // user id of the most recent follower
-      const rFC = 2500;   // follower count interval (ms)
+      let _uLF = false;    // user id of the most recent follower
+      const _rFC = 2500;   // follower count interval (ms)
 
       async function getFollowerChange(chID)
       {
@@ -4318,8 +4353,8 @@
         return false;
        if (!j.hasOwnProperty('data') || !Array.isArray(j.data) || j.data.length < 1)
         return false;
-       const findU = uLF;
-       uLF = j.data[0].from_id;
+       const findU = _uLF;
+       _uLF = j.data[0].from_id;
        if (findU === false)
         return false;
        let s = [];
@@ -4345,7 +4380,7 @@
         for (let i = 0, l = fRet.length; i < l; i++)
          display.kappa.show(false, cfg.event.follow, {'%USER%': fRet[i]});
        }
-       follower.timer = window.setTimeout(detectFollowers, rFC, chID);
+       follower.timer = window.setTimeout(detectFollowers, _rFC, chID);
       }
 
       return {
@@ -4453,15 +4488,24 @@
       return true;
      }
 
-     function pubSub()
+     const pubSub = function()
      {
-      let wsRetry = 0;
-      const ws = new WebSocket('wss://pubsub-edge.twitch.tv:443');
-      let tmrPing = null;
-      ws.onopen = function()
+      let _wsRetry = null;
+      let _ws = null;
+      let _tPing = null;
+
+      function task()
       {
-       ws.onopen = null;
-       tmrPing = window.setInterval(function(){ws.send('{"type": "PING"}');}, 4 * 60 * 1000);
+       _ws = new WebSocket('wss://pubsub-edge.twitch.tv:443');
+       _ws.onopen = _wsOpen;
+       _ws.onclose = _wsClose;
+       _ws.onmessage = _wsMessage;
+      }
+
+      function _wsOpen()
+      {
+       _ws.onopen = null;
+       _tPing = window.setInterval(_wsPing, 4 * 60 * 1000);
        let req = {};
        req.type = 'LISTEN';
        req.nonce = 'init';
@@ -4469,33 +4513,35 @@
        req.data.topics = [];
        req.data.topics.push('channel-points-channel-v1.' + twitch.net.channelID);
        req.data.auth_token = cfg.login.oauth;
-       ws.send(JSON.stringify(req));
-      };
-      ws.onclose = function()
+       _ws.send(JSON.stringify(req));
+      }
+
+      function _wsClose()
       {
-       if (tmrPing !== null)
+       if (_tPing !== null)
        {
-        window.clearInterval(tmrPing);
-        tmrPing = null;
+        window.clearInterval(_tPing);
+        _tPing = null;
        }
-       ws.onopen = null;
-       ws.onmessage = null;
-       ws.onclose = null;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
        if (twitch.net.dead)
         return;
-       const wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
-       if (wsRetry < 2)
-        wsRetry += 0.2;
-       window.setTimeout(function(){pubSub();}, wsWait);
-      };
-      ws.onmessage = async function(ev)
+       const wsWait = Math.floor((wWS ** (1 + _wsRetry)) * 1000);
+       if (_wsRetry < 2)
+        _wsRetry += 0.2;
+       window.setTimeout(task, wsWait);
+      }
+
+      async function _wsMessage(ev)
       {
        if (twitch.net.dead)
        {
-        ws.close();
+        _ws.close();
         return;
        }
-       wsRetry = 0;
+       _wsRetry = 0;
        const r = JSON.parse(ev.data);
        if (!r.hasOwnProperty('type'))
         return;
@@ -4504,7 +4550,7 @@
         case 'RESPONSE':
          if (r.hasOwnProperty('error') && r.error !== '')
          {
-          ws.close();
+          _ws.close();
           if (r.error === 'ERR_BADAUTH')
           {
            twitch.net.dead = true;
@@ -4546,75 +4592,81 @@
           return;
          }
          const lnID = d.data.redemption.reward.id;
-         if (!rList.hasOwnProperty(lnID))
+         if (!_rList.hasOwnProperty(lnID))
          {
-          rList[lnID] = {name: n, cmds: []};
+          _rList[lnID] = {name: n, cmds: []};
           return;
          }
-         if (rList[lnID].name === false)
-          rList[lnID].name = n;
-         while (rList[lnID].cmds.length > 0)
+         if (_rList[lnID].name === false)
+          _rList[lnID].name = n;
+         while (_rList[lnID].cmds.length > 0)
          {
-          await parse.event.redeem(n, rList[lnID].cmds.shift());
+          await parse.event.redeem(n, _rList[lnID].cmds.shift());
          }
          break;
        }
-      };
-     }
+      }
 
-     function irc()
+      function _wsPing()
+      {
+       _ws.send('{"type": "PING"}');
+      }
+
+      return task;
+     }();
+
+     const irc = function()
      {
-      let wsRetry = 0;
-      let firstRoomstate = true;
-      const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
-      ws.onopen = function()
+      let _wsRetry = 0;
+      let _firstRS = true;
+      let _ws = null;
+      let _tTimeout = false;   // timer for irc connection timeout
+
+      function task()
       {
-       ws.onopen = null;
-       tIRC = setTimeout(
-        function()
-        {
-         if (twitch.net.dead === true)
-          return;
-         twitch.net.dead = true;
-         if (tIRC !== false)
-         {
-          clearTimeout(tIRC);
-          tIRC = false;
-         }
-         ws.close();
-         shared.blargIAmDead(5);
-        },
-        5000);
-       ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
-       ws.send('PASS oauth:' + cfg.login.oauth);
-       ws.send('NICK ' + cfg.channel);
-       ws.send('JOIN #' + cfg.channel);
-      };
-      ws.onclose = function()
+       _firstRS = true;
+       _ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+       _ws.onopen = _wsOpen;
+       _ws.onclose = _wsClose;
+       _ws.onmessage = _wsMessage;
+      }
+
+      function _wsOpen()
       {
-       if (tIRC !== false)
+       _ws.onopen = null;
+       _tTimeout = setTimeout(_wsTimeout, 5000);
+       _ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
+       _ws.send('PASS oauth:' + cfg.login.oauth);
+       _ws.send('NICK ' + cfg.channel);
+       _ws.send('JOIN #' + cfg.channel);
+      }
+
+      function _wsClose()
+      {
+       if (_tTimeout !== false)
        {
-        clearTimeout(tIRC);
-        tIRC = false;
+        clearTimeout(_tTimeout);
+        _tTimeout = false;
        }
-       ws.onopen = null;
-       ws.onmessage = null;
-       ws.onclose = null;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
        if (twitch.net.dead)
         return;
-       const wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
-       if (wsRetry < 2)
-        wsRetry += 0.2;
-       window.setTimeout(function(){irc();}, wsWait);
-      };
-      ws.onmessage = async function(ev)
+       const wsWait = Math.floor((wWS ** (1 + _wsRetry)) * 1000);
+       if (_wsRetry < 2)
+        _wsRetry += 0.2;
+       window.setTimeout(task, wsWait);
+      }
+
+      async function _wsMessage(ev)
       {
        if (twitch.net.dead)
        {
-        ws.close();
+        _ws.close();
         return;
        }
-       wsRetry = 0;
+       _wsRetry = 0;
        const data = ev.data.split('\r\n');
        for (let i = 0, l = data.length; i < l; i++)
        {
@@ -4647,7 +4699,7 @@
          case 'GLOBALUSERSTATE':
           break;
          case 'PING':
-          ws.send('PONG ' + cmd.params[0]);
+          _ws.send('PONG ' + cmd.params[0]);
           break;
          case 'PRIVMSG':
           if (document.visibilityState === 'hidden')
@@ -4675,14 +4727,14 @@
           if (!cmd.tags.hasOwnProperty('room-id'))
            continue;
           twitch.net.channelID = cmd.tags['room-id'];
-          if (firstRoomstate)
+          if (_firstRS)
           {
-           if (tIRC !== false)
+           if (_tTimeout !== false)
            {
-            clearTimeout(tIRC);
-            tIRC = false;
+            clearTimeout(_tTimeout);
+            _tTimeout = false;
            }
-           firstRoomstate = false;
+           _firstRS = false;
            await loadEmote_channel(twitch.net.channelID);
            await loadCheer_channel(twitch.net.channelID);
            if (cfg.display.extended.useFFZ)
@@ -4744,13 +4796,29 @@
           console.log('Unhandled IRC Command: ', cmd.command, cmd);
         }
        }
-      };
-     }
+      }
+
+      function _wsTimeout()
+      {
+       if (twitch.net.dead === true)
+        return;
+       twitch.net.dead = true;
+       if (_tTimeout !== false)
+       {
+        clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       _ws.close();
+       shared.blargIAmDead(5);
+      }
+
+      return task;
+     }();
 
      async function loadEmote_channel(chID)
      {
       cList = [];
-      const r = await findEmote_channel(chID);
+      const r = await _findEmote_channel(chID);
       if (r === false)
        return false;
       cList = r;
@@ -4789,7 +4857,7 @@
 
     const parse = function()
     {
-     let kLast = 0;      // last kappagen command event (for cooldown)
+     let _kLast = 0;      // last kappagen command event (for cooldown)
 
      function parseUser(cmd, latinOnly = false)
      {
@@ -4876,36 +4944,9 @@
      {
       const emoji = function()
       {
-       let uList = {};     // checkURL Cache
+       let _uList = {};     // checkURL Cache
 
-       function checkURL(url)
-       {
-        const p = new Promise(
-         function(resolve)
-         {
-          if (uList.hasOwnProperty(url))
-          {
-           resolve(uList[url]);
-           return;
-          }
-          const x = new XMLHttpRequest();
-          x.open('HEAD', url);
-          x.onreadystatechange = function()
-          {
-           if (x.readyState < 2)
-            return;
-           x.onreadystatechange = null;
-           const r = (x.status === 200);
-           uList[url] = r;
-           resolve(r);
-          };
-          x.send();
-         }
-        );
-        return p;
-       }
-
-       async function parseEmoji(cmd, set, dup = null)
+       async function task(cmd, set, dup = null)
        {
         if (cmd.params.length < 2)
          return [];
@@ -5001,7 +5042,7 @@
           }
           else
            tU = uri + s + '.png';
-          found = await checkURL(tU);
+          found = await _checkURL(tU);
           if (found)
           {
            showEmoji(s, emList[i].index);
@@ -5014,7 +5055,7 @@
             tU = uri + s.slice(0, -5) + '.png';
            else
             tU = uri + s + '.png';
-           found = await checkURL(tU);
+           found = await _checkURL(tU);
            if (found)
            {
             showEmoji(s, emList[i].index);
@@ -5027,7 +5068,7 @@
          for (let j = 0; j < lP; j++)
          {
           p += cpList[j].replaceAll(/[^\-]/g, '').length + 1;
-          found = await checkURL(uri + cpList[j] + '.png');
+          found = await _checkURL(uri + cpList[j] + '.png');
           if (found)
            showEmoji(cpList[j], p);
          }
@@ -5035,9 +5076,34 @@
         return ret;
        }
 
-       return {
-        doFunc: parseEmoji
-       };
+       function _checkURL(url)
+       {
+        const p = new Promise(
+         function(resolve)
+         {
+          if (_uList.hasOwnProperty(url))
+          {
+           resolve(_uList[url]);
+           return;
+          }
+          const x = new XMLHttpRequest();
+          x.open('HEAD', url);
+          x.onreadystatechange = function()
+          {
+           if (x.readyState < 2)
+            return;
+           x.onreadystatechange = null;
+           const r = (x.status === 200);
+           _uList[url] = r;
+           resolve(r);
+          };
+          x.send();
+         }
+        );
+        return p;
+       }
+
+       return task;
       }();
 
       function parseT(cmd, dup = null)
@@ -5170,7 +5236,7 @@
           return;
          if (cmd.params.length < 2)
           return;
-         l.sort(function(a, b){return a.pos - b.pos;});
+         l.sort(_posSort);
          const m = cmd.params[1].split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
@@ -5237,7 +5303,7 @@
             if (!l[f].hasOwnProperty('zwe'))
              l[f].zwe = [];
             l[f].zwe.push({svc: 'b', url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope});
-            l[f].zwe.sort(function(a, b){return a.pos - b.pos;});
+            l[f].zwe.sort(_posSort);
             for (let j = 0, o = l.length; j < o; j++)
             {
              if (l[j].svc !== 'b')
@@ -5290,6 +5356,11 @@
          return ret;
         }
 
+        function _posSort(a, b)
+        {
+         return a.pos - b.pos;
+        }
+
         return {
          general: parseBTTV,
          zwe: parseBTTVZWE,
@@ -5297,7 +5368,7 @@
         };
        }();
 
-       const seventv = function()
+       const _7tv = function()
        {
         function parse7TV(cmd, dup = null)
         {
@@ -5344,7 +5415,7 @@
           return;
          if (cmd.params.length < 2)
           return;
-         l.sort(function(a, b){return a.pos - b.pos;});
+         l.sort(_posSort);
          const m = cmd.params[1].split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
@@ -5411,7 +5482,7 @@
             if (!l[f].hasOwnProperty('zwe'))
              l[f].zwe = [];
             l[f].zwe.push({svc: '7', url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope});
-            l[f].zwe.sort(function(a, b){return a.pos - b.pos;});
+            l[f].zwe.sort(_posSort);
             for (let j = 0, o = l.length; j < o; j++)
             {
              if (l[j].svc !== '7')
@@ -5426,6 +5497,11 @@
          }
         }
 
+        function _posSort(a, b)
+        {
+         return a.pos - b.pos;
+        }
+
         return {
          general: parse7TV,
          zwe: parse7TVZWE
@@ -5435,12 +5511,12 @@
        return {
         ffz: parseFFZ,
         bttv: bttv,
-        '7tv': seventv
+        '7tv': _7tv
        };
       }();
 
       return {
-       emoji: emoji.doFunc,
+       emoji: emoji,
        twitch: parseT,
        '3rdparty': _3rdparty
       };
@@ -5453,21 +5529,21 @@
       if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('custom-reward-id'))
       {
        const lnID = cmd.tags['custom-reward-id'];
-       if (!rList.hasOwnProperty(lnID))
+       if (!_rList.hasOwnProperty(lnID))
        {
-        rList[lnID] = {name: false, cmds: [cmd]};
+        _rList[lnID] = {name: false, cmds: [cmd]};
         return;
        }
-       rList[lnID].cmds.push(cmd);
-       if (rList[lnID].name === false)
+       _rList[lnID].cmds.push(cmd);
+       if (_rList[lnID].name === false)
         return;
-       while (rList[lnID].cmds.length > 0)
+       while (_rList[lnID].cmds.length > 0)
        {
-        await event.redeem(rList[lnID].name, rList[lnID].cmds.shift());
+        await event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift());
        }
        return;
       }
-      if (cmd.params.length > 1 && (cfg.display.kappa.cooldown === 0 || (kNow - kLast) > (cfg.display.kappa.cooldown * 1000)))
+      if (cmd.params.length > 1 && (cfg.display.kappa.cooldown === 0 || (kNow - _kLast) > (cfg.display.kappa.cooldown * 1000)))
       {
        const m = cmd.params[1].toLowerCase();
        for (const k in cfg.display.kappa.styles)
@@ -5486,10 +5562,10 @@
         if (cfg.display.kappa.styles[k].command.aliases.includes(m))
         {
          if (lv === -1)
-          lv = await level.get(cmd);
+          lv = await _level.get(cmd);
          if ((lv & kAccess) !== 0)
          {
-          kLast = kNow;
+          _kLast = kNow;
           display.kappa.show(false, kC);
           return;
          }
@@ -5506,7 +5582,7 @@
         if (foundKCmd)
         {
          if (lv === -1)
-          lv = await level.get(cmd);
+          lv = await _level.get(cmd);
          if ((lv & kAccess) !== 0)
          {
           let a = [];
@@ -5530,8 +5606,8 @@
            parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
           if (cfg.display.extended.use7TV)
            parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
-          a = handleDuplicates(a);
-          kLast = kNow;
+          a = _handleDuplicates(a);
+          _kLast = kNow;
           display.kappa.show(a, kC);
           return;
          }
@@ -5540,10 +5616,10 @@
        if (cfg.display.kappa.aliases.includes(m))
        {
         if (lv === -1)
-         lv = await level.get(cmd);
+         lv = await _level.get(cmd);
         if ((lv & cfg.display.kappa.access) !== 0)
         {
-         kLast = kNow;
+         _kLast = kNow;
          display.kappa.show(false);
          return;
         }
@@ -5560,7 +5636,7 @@
        if (foundCmd)
        {
         if (lv === -1)
-         lv = await level.get(cmd);
+         lv = await _level.get(cmd);
         if ((lv & cfg.display.kappa.access) !== 0)
         {
          let a = [];
@@ -5584,8 +5660,8 @@
           parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
          if (cfg.display.extended.use7TV)
           parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
-         a = handleDuplicates(a);
-         kLast = kNow;
+         a = _handleDuplicates(a);
+         _kLast = kNow;
          display.kappa.show(a);
          return;
         }
@@ -5612,15 +5688,15 @@
        parse.content['3rdparty'].bttv.zwe(p, cmd, 2);
       if (cfg.display.extended.use7TV)
        parse.content['3rdparty']['7tv'].zwe(p, cmd, 2);
-      p = handleDuplicates(p);
+      p = _handleDuplicates(p);
       if (p.length === 0)
        return;
       if (lv === -1)
-       lv = await level.get(cmd);
+       lv = await _level.get(cmd);
       if ((lv & cfg.display.access) === 0)
        return;
       display.emote.addToShowList(p);
-      display.emote.show();
+      display.emote.showEmotes();
      }
 
      const event = function()
@@ -5686,14 +5762,14 @@
        }
        else
         await parseLine(cmd);
-       p = handleDuplicates(p);
+       p = _handleDuplicates(p);
        if (p.length === 0)
         return false;
        const r = shared.findInMaybeRange(cfg.event.cheer.bits, cmd.tags.bits);
        if (r === false)
        {
         display.emote.addToShowList(p);
-        display.emote.show();
+        display.emote.showEmotes();
         return true;
        }
        const u = parseUser(cmd, true);
@@ -5722,31 +5798,32 @@
         return;
        }
        const d = cmd.tags['user-id'];
-       const e = await findEmote_channel(d);
+       const e = await _findEmote_channel(d);
        display.kappa.show(e, r, {'%USER%': dn, '%AMOUNT%': c});
+      }
+
+      function _parseSubPlan(c)
+      {
+       if (!c.tags.hasOwnProperty('msg-param-sub-plan'))
+        return false;
+       const p = c.tags['msg-param-sub-plan'];
+       switch (p)
+       {
+        case '1000': return 't1';
+        case '2000': return 't2';
+        case '3000': return 't3';
+        case 'Prime': return 'prime';
+        default:
+       }
+       console.log('Unknown Sub Plan: ', p, c);
+       return false;
       }
 
       async function parseSub(cmd)
       {
-       function parsePlan(c)
-       {
-        if (!c.tags.hasOwnProperty('msg-param-sub-plan'))
-         return false;
-        const p = c.tags['msg-param-sub-plan'];
-        switch (p)
-        {
-         case '1000': return 't1';
-         case '2000': return 't2';
-         case '3000': return 't3';
-         case 'Prime': return 'prime';
-         default:
-        }
-        console.log('Unknown Sub Plan: ', p, c);
-        return false;
-       }
        if (!cmd.tags.hasOwnProperty('msg-id'))
         return;
-       const subPlan = parsePlan(cmd);
+       const subPlan = _parseSubPlan(cmd);
        if (subPlan === false)
         return;
        let mpoi = false;
@@ -5929,7 +6006,7 @@
         kC[k] = cfg.display.kappa.styles[k];
         if (cmd === false)
         {
-         kLast = kNow;
+         _kLast = kNow;
          display.kappa.show(false, kC);
          return;
         }
@@ -5954,8 +6031,8 @@
          parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
         if (cfg.display.extended.use7TV)
          parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
-        a = handleDuplicates(a);
-        kLast = kNow;
+        a = _handleDuplicates(a);
+        _kLast = kNow;
         display.kappa.show(a, kC);
         return;
        }
@@ -5970,11 +6047,11 @@
       };
      }();
 
-     const level = function()
+     const _level = function()
      {
-      const rFH = 3600000;  // follower state cache time (ms)
+      const _rFH = 3600000;  // follower state cache time (ms)
 
-      function jSplit(s, sep, limit)
+      function _jSplit(s, sep, limit)
       {
        let arr = [];
        let v = '';
@@ -5996,13 +6073,13 @@
        return arr;
       }
 
-      async function checkFollower(cmd)
+      async function _checkFollower(cmd)
       {
        const uID = cmd.tags['user-id'];
        if (twitch.net.fList.hasOwnProperty(uID))
        {
         const tDif = new Date().getTime() - twitch.net.fList[uID].t;
-        if (tDif < rFH)
+        if (tDif < _rFH)
          return twitch.net.fList[uID].value;
        }
        const url = 'https://api.twitch.tv/helix/users/follows?from_id=' + uID + '&to_id=' + cmd.tags['room-id'];
@@ -6035,7 +6112,7 @@
         const badges = cmd.tags.badges.split(',');
         for (let i = 0, l = badges.length; i < l; i++)
         {
-         const bData = jSplit(badges[i], '/', 2);
+         const bData = _jSplit(badges[i], '/', 2);
          switch (bData[0])
          {
           case 'broadcaster':
@@ -6093,7 +6170,7 @@
        }
        if (needF)
        {
-        const f = await checkFollower(cmd);
+        const f = await _checkFollower(cmd);
         if (f)
          r |= 0x002;
        }
@@ -6105,7 +6182,7 @@
       };
      }();
 
-     function handleDuplicates(a)
+     function _handleDuplicates(a)
      {
       const lA = a.length;
       if (lA < 1)
@@ -6171,7 +6248,7 @@
      };
     }();
 
-    async function findEmote_channel(chID)
+    async function _findEmote_channel(chID)
     {
      const url = 'https://api.twitch.tv/helix/chat/emotes?broadcaster_id=' + chID;
      const h = {
@@ -6207,7 +6284,7 @@
 
    const streamlabs = function()
    {
-    async function showStreamlabsDonations(dRet)
+    async function _showStreamlabsDonations(dRet)
     {
      for (let i = 0, l = dRet.length; i < l; i++)
      {
@@ -6244,7 +6321,7 @@
      }
     }
 
-    async function showStreamlabsPledges(pRet)
+    async function _showStreamlabsPledges(pRet)
     {
      for (let i = 0, l = pRet.length; i < l; i++)
      {
@@ -6281,35 +6358,46 @@
      }
     }
 
-    function streamlabsWS()
+    const streamlabsWS = function()
     {
-     let wsRetry = 0;
-     let p = 0;
-     const ws = new WebSocket('wss://sockets.streamlabs.com/socket.io/?token=' + cfg.streamlabs.token + '&transport=websocket');
-     ws.onclose = function()
+     let _wsRetry = 0;
+     let _tPing = false;
+     let _ws = null;
+
+     function task()
      {
-      if (p !== 0)
+      _wsRetry = 0;
+      _tPing = 0;
+      _ws = new WebSocket('wss://sockets.streamlabs.com/socket.io/?token=' + cfg.streamlabs.token + '&transport=websocket');
+      _ws.onclose = _wsClose;
+      _ws.onmessage = _wsMessage;
+     }
+
+     function _wsClose()
+     {
+      if (_tPing !== 0)
       {
-       window.clearInterval(p);
-       p = 0;
+       window.clearInterval(_tPing);
+       _tPing = 0;
       }
-      ws.onmessage = null;
-      ws.onclose = null;
+      _ws.onmessage = null;
+      _ws.onclose = null;
       if (twitch.net.dead)
        return;
-      const wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
-      if (wsRetry < 2)
-       wsRetry += 0.2;
-      window.setTimeout(function(){streamlabsWS();}, wsWait);
-     };
-     ws.onmessage = async function(ev)
+      const wsWait = Math.floor((wWS ** (1 + _wsRetry)) * 1000);
+      if (_wsRetry < 2)
+       _wsRetry += 0.2;
+      window.setTimeout(task, wsWait);
+     }
+
+     async function _wsMessage(ev)
      {
       if (twitch.net.dead)
       {
-       ws.close();
+       _ws.close();
        return;
       }
-      wsRetry = 0;
+      _wsRetry = 0;
       const d = ev.data;
       if (d.length < 1)
        return;
@@ -6323,12 +6411,12 @@
          if (c.hasOwnProperty('pingInterval'))
           t = c.pingInterval;
         }
-        if (p !== 0)
+        if (_tPing !== 0)
         {
-         window.clearInterval(p);
-         p = 0;
+         window.clearInterval(_tPing);
+         _tPing = 0;
         }
-        p = window.setInterval(function(){ws.send('2');}, t);
+        _tPing = window.setInterval(_wsPing, t);
         break;
        case '4':
         if (document.visibilityState === 'hidden')
@@ -6368,13 +6456,20 @@
          }
         }
         if (rD.length > 0)
-         await showStreamlabsDonations(rD);
+         await _showStreamlabsDonations(rD);
         if (rP.length > 0)
-         await showStreamlabsPledges(rP);
+         await _showStreamlabsPledges(rP);
         break;
       }
-     };
-    }
+     }
+
+     function _wsPing()
+     {
+      _ws.send('2');
+     }
+
+     return task;
+    }();
 
     return {
      socket: streamlabsWS
@@ -6383,7 +6478,7 @@
 
    const streamelements = function()
    {
-    async function showStreamElementsTip(dAmt, dName)
+    async function _showStreamElementsTip(dAmt, dName)
     {
      const v = Math.floor(dAmt * cfg.streamelements.curMul);
      if (v < 1)
@@ -6417,35 +6512,46 @@
      display.kappa.show(p, r, {'%USER%': dName, '%AMOUNT%': s});
     }
 
-    function streamelementsWS()
+    const streamelementsWS = function()
     {
-     let wsRetry = 0;
-     let p = 0;
-     const ws = new WebSocket('wss://realtime.streamelements.com/socket.io/?transport=websocket');
-     ws.onclose = function()
+     let _wsRetry = 0;
+     let _tPing = 0;
+     let _ws = null;
+
+     function task()
      {
-      if (p !== 0)
+      _wsRetry = 0;
+      _tPing = 0;
+      _ws = new WebSocket('wss://realtime.streamelements.com/socket.io/?transport=websocket');
+      _ws.onclose = _wsClose;
+      _ws.onmessage = _wsMessage;
+     }
+
+     function _wsClose()
+     {
+      if (_tPing !== 0)
       {
-       window.clearInterval(p);
-       p = 0;
+       window.clearInterval(_tPing);
+       _tPing = 0;
       }
-      ws.onmessage = null;
-      ws.onclose = null;
+      _ws.onmessage = null;
+      _ws.onclose = null;
       if (twitch.net.dead)
        return;
-      const wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
-      if (wsRetry < 2)
-       wsRetry += 0.2;
-      window.setTimeout(function(){streamelementsWS();}, wsWait);
-     };
-     ws.onmessage = async function(ev)
+      const wsWait = Math.floor((wWS ** (1 + _wsRetry)) * 1000);
+      if (_wsRetry < 2)
+       _wsRetry += 0.2;
+      window.setTimeout(task, wsWait);
+     }
+
+     async function _wsMessage(ev)
      {
       if (twitch.net.dead)
       {
-       ws.close();
+       _ws.close();
        return;
       }
-      wsRetry = 0;
+      _wsRetry = 0;
       const d = ev.data;
       if (d.length < 1)
        return;
@@ -6459,12 +6565,12 @@
          if (c.hasOwnProperty('pingInterval'))
           t = c.pingInterval;
         }
-        if (p !== 0)
+        if (_tPing !== 0)
         {
-         window.clearInterval(p);
-         p = 0;
+         window.clearInterval(_tPing);
+         _tPing = 0;
         }
-        p = window.setInterval(function(){ws.send('2');}, t);
+        _tPing = window.setInterval(_wsPing, t);
         break;
        case '4':
         if (d.slice(1, 2) === '0')
@@ -6474,7 +6580,7 @@
           a = '["authenticate",{"method":"oauth2","token":"' + cfg.streamelements.oauth + '"}]';
          else if (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN')
           a = '["authenticate",{"method":"jwt","token":"' + cfg.streamelements.token + '"}]';
-         ws.send('42' + a);
+         _ws.send('42' + a);
          return;
         }
         if (document.visibilityState === 'hidden')
@@ -6499,13 +6605,20 @@
         let n = false;
         if (o[1].data.hasOwnProperty('name'))
          n = o[1].data.name;
-        await showStreamElementsTip(o[1].data.amount, n);
+        await _showStreamElementsTip(o[1].data.amount, n);
         break;
       }
-     };
-    }
+     }
 
-    async function getOAuthToken(t)
+     function _wsPing()
+     {
+      _ws.send('2');
+     }
+
+     return task;
+    }();
+
+    async function _getOAuthToken(t)
     {
      const url = 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php?refresh=' + t;
      const r = await shared.httpRequest(url, {}, false, false);
@@ -6554,7 +6667,7 @@
       if (tokAge < 24 * 60 * 60)
        return;
      }
-     const ret = await getOAuthToken(cfg.streamelements.oauth_refresh);
+     const ret = await _getOAuthToken(cfg.streamelements.oauth_refresh);
      if (ret === false)
       return;
      cfg.streamelements.oauth = ret.access_token;
@@ -6575,14 +6688,14 @@
 
    const thirdparty = function()
    {
-    function addEmote(list, scope, code, id, url, users = null, zwe = false)
+    function _addEmote(list, scope, code, id, url, users = null, zwe = false)
     {
      list[code] = {scope: scope, url: url, id: id, users: users};
      if (scope === 'c' && !zwe)
       cList.push({url: url});
     }
 
-    function removeEmote(list, scope, code)
+    function _removeEmote(list, scope, code)
     {
      if (!list.hasOwnProperty(code))
       return;
@@ -6601,7 +6714,7 @@
      delete list[code];
     }
 
-    function removeEmoteByID(list, scope, id)
+    function _removeEmoteByID(list, scope, id)
     {
      for (let i = Object.keys(list).length - 1; i >= 0; i--)
      {
@@ -6610,25 +6723,25 @@
        continue;
       if (list[k].id !== id)
        continue;
-      removeEmote(list, scope, k);
+      _removeEmote(list, scope, k);
       break;
      }
     }
 
-    function removeEmoteByScope(list, scope)
+    function _removeEmoteByScope(list, scope)
     {
      for (let i = Object.keys(list).length - 1; i >= 0; i--)
      {
       const k = Object.keys(list)[i];
       if (list[k].scope !== scope)
        continue;
-      removeEmote(list, scope, k);
+      _removeEmote(list, scope, k);
      }
     }
 
     const ffz = function()
     {
-     function readFFZ_URL(entry)
+     function _readFFZ_URL(entry)
      {
       if (!entry.hasOwnProperty('urls'))
        return false;
@@ -6690,10 +6803,10 @@
        {
         if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
          continue;
-        const u = readFFZ_URL(j.sets[set].emoticons[i]);
+        const u = _readFFZ_URL(j.sets[set].emoticons[i]);
         if (u === false)
          continue;
-        addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
+        _addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
        }
       }
       //user-specific, from here on everything returns true
@@ -6718,10 +6831,10 @@
         {
          if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
           continue;
-         const u = readFFZ_URL(j.sets[set].emoticons[i]);
+         const u = _readFFZ_URL(j.sets[set].emoticons[i]);
          if (u === false)
           continue;
-         addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, aList);
+         _addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, aList);
         }
        }
       }
@@ -6738,7 +6851,7 @@
       const j = JSON.parse(r);
       if (!j.hasOwnProperty('sets'))
        return false;
-      removeEmoteByScope(thirdparty.emotes.ffz, 'c');
+      _removeEmoteByScope(thirdparty.emotes.ffz, 'c');
       for (const set in j.sets)
       {
        if (!j.sets[set].hasOwnProperty('emoticons'))
@@ -6747,10 +6860,10 @@
        {
         if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
          continue;
-        const u = readFFZ_URL(j.sets[set].emoticons[i]);
+        const u = _readFFZ_URL(j.sets[set].emoticons[i]);
         if (u === false)
          continue;
-        addEmote(thirdparty.emotes.ffz, 'c', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
+        _addEmote(thirdparty.emotes.ffz, 'c', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
        }
       }
       return true;
@@ -6764,7 +6877,7 @@
 
     const bttv = function()
     {
-     const rBE = 600000;   // bttv post-event emote recheck (ms)
+     const _rBE = 600000;   // bttv post-event emote recheck (ms)
 
      function reloadBTTV(chID)
      {
@@ -6799,10 +6912,10 @@
        if (bttvZWE.includes(j[i].code))
        {
         if (cfg.display.extended.useZWE)
-         addEmote(thirdparty.emotes.zwe.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x', null, true);
+         _addEmote(thirdparty.emotes.zwe.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x', null, true);
         continue;
        }
-       addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x');
+       _addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x');
       }
       return true;
      }
@@ -6813,7 +6926,7 @@
       const r = await shared.httpRequest(url);
       if (r === false)
        return false;
-      removeEmoteByScope(thirdparty.emotes.bttv, 'c');
+      _removeEmoteByScope(thirdparty.emotes.bttv, 'c');
       const j = JSON.parse(r);
       if (j.hasOwnProperty('channelEmotes'))
       {
@@ -6823,7 +6936,7 @@
          continue;
         if (!j.channelEmotes[i].hasOwnProperty('id'))
          continue;
-        addEmote(thirdparty.emotes.bttv, 'c', j.channelEmotes[i].code, j.channelEmotes[i].id, 'https://cdn.betterttv.net/emote/' + j.channelEmotes[i].id + '/3x');
+        _addEmote(thirdparty.emotes.bttv, 'c', j.channelEmotes[i].code, j.channelEmotes[i].id, 'https://cdn.betterttv.net/emote/' + j.channelEmotes[i].id + '/3x');
        }
       }
       if (j.hasOwnProperty('sharedEmotes'))
@@ -6834,42 +6947,56 @@
          continue;
         if (!j.sharedEmotes[i].hasOwnProperty('id'))
          continue;
-        addEmote(thirdparty.emotes.bttv, 'c', j.sharedEmotes[i].code, j.sharedEmotes[i].id, 'https://cdn.betterttv.net/emote/' + j.sharedEmotes[i].id + '/3x');
+        _addEmote(thirdparty.emotes.bttv, 'c', j.sharedEmotes[i].code, j.sharedEmotes[i].id, 'https://cdn.betterttv.net/emote/' + j.sharedEmotes[i].id + '/3x');
        }
       }
       return true;
      }
 
-     function loadBTTV_ws_channel(chID)
+     const loadBTTV_ws_channel = function()
      {
-      let wsRetry = 0;
-      const ws = new WebSocket('wss://sockets.betterttv.net/ws');
-      ws.onopen = function()
+      let _wsRetry = 0;
+      let _ch = 0;
+      let _ws = null;
+
+      function task(chID)
       {
-       ws.onopen = null;
-       ws.send('{"name":"join_channel","data":{"name":"twitch:' + chID + '"}}');
-       ws.send('{"name":"broadcast_me","data":{"name":"' + cfg.channel + '","channel":"twitch:' + chID + '"}}');
-      };
-      ws.onclose = function()
+       _wsRetry = 0;
+       _ch = chID;
+       _ws = new WebSocket('wss://sockets.betterttv.net/ws');
+       _ws.onopen = _wsOpen;
+       _ws.onclose = _wsClose;
+       _ws.onmessage = _wsMessage;
+      }
+
+      function _wsOpen()
       {
-       ws.onopen = null;
-       ws.onmessage = null;
-       ws.onclose = null;
+       _ws.onopen = null;
+       _ws.send('{"name":"join_channel","data":{"name":"twitch:' + _ch + '"}}');
+       _ws.send('{"name":"broadcast_me","data":{"name":"' + cfg.channel + '","channel":"twitch:' + _ch + '"}}');
+      }
+
+      function _wsClose()
+      {
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
        if (twitch.net.dead)
         return;
-       const wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
-       if (wsRetry < 2)
-        wsRetry += 0.2;
-       window.setTimeout(function(){loadBTTV_ws_channel(chID);}, wsWait);
-      };
-      ws.onmessage = function(ev)
+       const wsWait = Math.floor((wWS ** (1 + _wsRetry)) * 1000);
+       if (_wsRetry < 2)
+        _wsRetry += 0.2;
+       window.setTimeout(task, wsWait, _ch);
+      }
+
+      function _wsMessage(ev)
       {
        if (twitch.net.dead)
        {
-        ws.close();
+        _ws.close();
         return;
        }
-       wsRetry = 0;
+       _wsRetry = 0;
        const d = JSON.parse(ev.data);
        if (!d.hasOwnProperty('name'))
         return;
@@ -6891,11 +7018,11 @@
            continue;
           if (!d.data.emotes[i].hasOwnProperty('id'))
            continue;
-          addEmote(thirdparty.emotes.bttvU[d.data.name], 'u', d.data.emotes[i].code, d.data.emotes[i].id, 'https://cdn.betterttv.net/emote/' + d.data.emotes[i].id + '/3x');
+          _addEmote(thirdparty.emotes.bttvU[d.data.name], 'u', d.data.emotes[i].code, d.data.emotes[i].id, 'https://cdn.betterttv.net/emote/' + d.data.emotes[i].id + '/3x');
          }
          break;
         case 'emote_create':
-         if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + chID)
+         if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + _ch)
           return;
          if (!d.data.hasOwnProperty('emote'))
           return;
@@ -6905,21 +7032,21 @@
           return;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, 'https://cdn.betterttv.net/emote/' + d.data.emote.id + '/3x');
-         thirdparty.bttv.timer = window.setTimeout(reloadBTTV, rBE, chID);
+         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, 'https://cdn.betterttv.net/emote/' + d.data.emote.id + '/3x');
+         thirdparty.bttv.timer = window.setTimeout(reloadBTTV, _rBE, _ch);
          break;
         case 'emote_delete':
-         if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + chID)
+         if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + _ch)
           return;
          if (!d.data.hasOwnProperty('emoteId'))
           return;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emoteId);
-         thirdparty.bttv.timer = window.setTimeout(reloadBTTV, rBE, chID);
+         _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emoteId);
+         thirdparty.bttv.timer = window.setTimeout(reloadBTTV, _rBE, _ch);
          break;
         case 'emote_update':
-         if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + chID)
+         if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + _ch)
           return;
          if (!d.data.hasOwnProperty('emote'))
           return;
@@ -6929,13 +7056,15 @@
           return;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emote.id);
-         addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, 'https://cdn.betterttv.net/emote/' + d.data.emote.id + '/3x');
-         thirdparty.bttv.timer = window.setTimeout(reloadBTTV, rBE, chID);
+         _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emote.id);
+         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, 'https://cdn.betterttv.net/emote/' + d.data.emote.id + '/3x');
+         thirdparty.bttv.timer = window.setTimeout(reloadBTTV, _rBE, _ch);
          break;
        }
-      };
-     }
+      }
+
+      return task;
+     }();
 
      return {
       timer: false,      // timer for BTTV third-party channel emote kludge
@@ -6946,7 +7075,7 @@
      };
     }();
 
-    const seventv = function()
+    const _7tv = function()
     {
      async function load7TV_global()
      {
@@ -6986,10 +7115,10 @@
        if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
        {
         if (cfg.display.extended.useZWE)
-         addEmote(thirdparty.emotes.zwe['7tv'], 'g', j[i].name, j[i].id, t4, null, true);
+         _addEmote(thirdparty.emotes.zwe['7tv'], 'g', j[i].name, j[i].id, t4, null, true);
         continue;
        }
-       addEmote(thirdparty.emotes['7tv'], 'g', j[i].name, j[i].id, t4);
+       _addEmote(thirdparty.emotes['7tv'], 'g', j[i].name, j[i].id, t4);
       }
       return true;
      }
@@ -7005,8 +7134,8 @@
       if (r === false)
        return false;
       if (cfg.display.extended.useZWE)
-       removeEmoteByScope(thirdparty.emotes.zwe['7tv'], 'c');
-      removeEmoteByScope(thirdparty.emotes['7tv'], 'c');
+       _removeEmoteByScope(thirdparty.emotes.zwe['7tv'], 'c');
+      _removeEmoteByScope(thirdparty.emotes['7tv'], 'c');
       const j = JSON.parse(r);
       if (!Array.isArray(j))
        return false;
@@ -7034,15 +7163,15 @@
        if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
        {
         if (cfg.display.extended.useZWE)
-         addEmote(thirdparty.emotes.zwe['7tv'], 'c', j[i].name, j[i].id, t4, null, true);
+         _addEmote(thirdparty.emotes.zwe['7tv'], 'c', j[i].name, j[i].id, t4, null, true);
         continue;
        }
-       addEmote(thirdparty.emotes['7tv'], 'c', j[i].name, j[i].id, t4);
+       _addEmote(thirdparty.emotes['7tv'], 'c', j[i].name, j[i].id, t4);
       }
       return true;
      }
 
-     async function load7TV_channelID(chID)
+     async function _load7TV_channelID(chID)
      {
       const url = 'https://api.7tv.app/v2/users/' + chID;
       const r = await shared.httpRequest(url);
@@ -7054,50 +7183,65 @@
       return j.id;
      }
 
-     async function load7TV_ws_channel(chID)
+     const load7TV_ws_channel = function()
      {
-      let wsRetry = 0;
-      const accID = await load7TV_channelID(chID);
-      if (accID === false)
-       return;
-      const ws = new WebSocket('wss://events.7tv.io/v3');
-      ws.onclose = function()
+      let _wsRetry = 0;
+      let _ch = 0;
+      let _accID = false;
+      let _ws = null;
+
+      async function task(chID)
       {
-       ws.onmessage = null;
-       ws.onclose = null;
+       _wsRetry = 0;
+       _ch = chID;
+       _accID = await _load7TV_channelID(_ch);
+       if (_accID === false)
+        return;
+       _ws = new WebSocket('wss://events.7tv.io/v3');
+       _ws.onclose = _wsClose;
+       _ws.onmessage = _wsMessage;
+      }
+
+      function _wsClose()
+      {
+       _ws.onmessage = null;
+       _ws.onclose = null;
        if (twitch.net.dead)
         return;
-       const wsWait = Math.floor((wWS ** (1 + wsRetry)) * 1000);
-       if (wsRetry < 2)
-        wsRetry += 0.2;
-       window.setTimeout(function(){load7TV_ws_channel(chID);}, wsWait);
-      };
-      ws.onmessage = function(ev)
+       const wsWait = Math.floor((wWS ** (1 + _wsRetry)) * 1000);
+       if (_wsRetry < 2)
+        _wsRetry += 0.2;
+       window.setTimeout(task, wsWait, _ch);
+      }
+
+      function _wsMessage(ev)
       {
        if (twitch.net.dead)
        {
-        ws.close();
+        _ws.close();
         return;
        }
-       wsRetry = 0;
+       _wsRetry = 0;
        const d = JSON.parse(ev.data);
        switch(d.op)
        {
         case 0:
          if (thirdparty.timer !== false)
           window.clearTimeout(thirdparty.timer);
-         thirdparty.timer = window.setTimeout(reload3rdParty, 500, chID);
+         thirdparty.timer = window.setTimeout(reload3rdParty, 500, _ch);
          break;
         case 1:
-         ws.send(JSON.stringify({"op": 35, "d": {"type":"user.*", "condition": {"object_id": accID}}}));
-         ws.send(JSON.stringify({"op": 35, "d": {"type":"emote.*", "condition": {"object_id": accID}}}));
-         ws.send(JSON.stringify({"op": 35, "d": {"type":"emote_set.*", "condition": {"object_id": accID}}}));
+         _ws.send(JSON.stringify({"op": 35, "d": {"type":"user.*", "condition": {"object_id": _accID}}}));
+         _ws.send(JSON.stringify({"op": 35, "d": {"type":"emote.*", "condition": {"object_id": _accID}}}));
+         _ws.send(JSON.stringify({"op": 35, "d": {"type":"emote_set.*", "condition": {"object_id": _accID}}}));
          break;
         case 2:
          break;
        }
-      };
-     }
+      }
+
+      return task;
+     }();
 
      return {
       global: load7TV_global,
@@ -7115,7 +7259,7 @@
      if (cfg.display.extended.useFFZ)
       ffz.channel(twitch.net.channelID);
      if (cfg.display.extended.use7TV)
-      seventv.channel(twitch.net.channelID);
+      _7tv.channel(twitch.net.channelID);
      thirdparty.timer = window.setTimeout(reload3rdParty, thirdparty.interval, chID);
     }
 
@@ -7125,7 +7269,7 @@
      interval: 60000, // third-party channel emote recheck interval (ms)
      ffz: ffz,
      bttv: bttv,
-     '7tv': seventv,
+     '7tv': _7tv,
      reload: reload3rdParty
     };
    }();
@@ -7310,7 +7454,8 @@
 
    const login = function()
    {
-    let tL = false;     // timer for logout button display
+    let _tL = false;     // timer for logout button display
+    const _visTime = 5000;
 
     function shouldUseLogin()
     {
@@ -7344,7 +7489,7 @@
      let lsExpires = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.expires');
      if (lsChannel === null || lsOAuth === null)
      {
-      const h = getHashParams();
+      const h = _getHashParams();
       if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('expires'))
       {
        showLoginButton();
@@ -7368,7 +7513,7 @@
      return false;
     }
 
-    function getHashParams()
+    function _getHashParams()
     {
      const d = function(s) {
       const a = /\+/g;
@@ -7428,14 +7573,13 @@
 
     function showLogoutButton(v = false)
     {
-     const visTime = 5000;
      if (document.getElementById('cmdLogout'))
       document.body.removeChild(document.getElementById('cmdLogout'));
      let cmdLogout = document.createElement('button');
-     if (tL !== false)
+     if (_tL !== false)
      {
-      window.clearTimeout(tL);
-      tL = false;
+      window.clearTimeout(_tL);
+      _tL = false;
      }
      cmdLogout.setAttribute('id', 'cmdLogout');
      cmdLogout.setAttribute('type', 'button');
@@ -7447,47 +7591,13 @@
      sStyle += ' width: 5em;';
      sStyle += ' font-size: 1vw;';
      sStyle += ' padding: 0.5em;';
-     document.addEventListener(
-      'mouseover',
-      function()
-      {
-       cmdLogout.style.opacity = '1';
-       if (tL !== false)
-       {
-        window.clearTimeout(tL);
-        tL = false;
-       }
-       tL = window.setTimeout(
-        function()
-        {
-         if (tL !== false)
-         {
-          window.clearTimeout(tL);
-          tL = false;
-         }
-         cmdLogout.style.opacity = '0';
-        },
-        visTime
-       );
-      }
-     );
+     document.addEventListener('mouseover', _fadeInLogout);
      if (v)
      {
       cmdLogout.setAttribute('onclick', 'login.begin();');
       cmdLogout.innerHTML = 'Re-Auth';
       sStyle += ' opacity: 1;';
-      tL = window.setTimeout(
-       function()
-       {
-        if (tL !== false)
-        {
-         window.clearTimeout(tL);
-         tL = false;
-        }
-        cmdLogout.style.opacity = '0';
-       },
-       visTime
-      );
+      _tL = window.setTimeout(_fadeOutLogout, _visTime);
      }
      else
      {
@@ -7497,6 +7607,29 @@
      }
      cmdLogout.setAttribute('style', sStyle);
      document.body.appendChild(cmdLogout);
+    }
+
+    function _fadeInLogout()
+    {
+     if (document.getElementById('cmdLogout'))
+      document.getElementById('cmdLogout').style.opacity = '1';
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogout, _visTime);
+    }
+
+    function _fadeOutLogout()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById('cmdLogout'))
+      document.getElementById('cmdLogout').style.opacity = '0';
     }
 
     return {
