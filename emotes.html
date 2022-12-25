@@ -4169,13 +4169,19 @@
         if (sW > sH)
          cS = sH;
         const rC = shared.rnd(lK);
-        let sCS = cfg.display.kappa.styles[kStyle.style].size;
+        let sCS = 8 / 10;
+        if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('size'))
+         sCS = cfg.display.kappa.styles[kStyle.style].size;
         if (kStyle.prefs.hasOwnProperty('size'))
          sCS = kStyle.prefs.size;
-        let sCC = cfg.display.kappa.styles[kStyle.style].center;
+        let sCC = true;
+        if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('center'))
+         sCC = cfg.display.kappa.styles[kStyle.style].center;
         if (kStyle.prefs.hasOwnProperty('center'))
          sCC = kStyle.prefs.center;
-        let sCR = cfg.display.kappa.styles[kStyle.style].rotations;
+        let sCR = 5;
+        if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('rotations'))
+         sCR = cfg.display.kappa.styles[kStyle.style].rotations;
         if (kStyle.prefs.hasOwnProperty('rotations'))
          sCR = kStyle.prefs.rotations;
         list.TheCube(kList[rC].url, kList[rC].zwe ?? [], sW, sH, Math.floor(cS * sCS), sCC, sCR);
