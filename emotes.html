@@ -4882,24 +4882,6 @@
         }
         switch(cmd.command)
         {
-         case '001':
-         case '002':
-         case '003':
-         case '004':
-         case '353':
-         case '366':
-         case '372':
-         case '375':
-         case '376':
-         case 'CAP':
-         case 'JOIN':
-         case 'PART':
-         case 'WHISPER':
-         case 'CLEARCHAT':
-         case 'CLEARMSG':
-         case 'USERSTATE':
-         case 'GLOBALUSERSTATE':
-          break;
          case 'PING':
           _ws.send('PONG ' + cmd.params[0]);
           break;
@@ -4920,8 +4902,6 @@
            twitch.net.dead = true;
            shared.blargIAmDead(1);
           }
-          else
-           console.log('Unhandled IRC NOTICE: ', cmd);
           break;
          case 'ROOMSTATE':
           if (!cmd.hasOwnProperty('tags'))
@@ -4991,11 +4971,8 @@
            default:
             if (cmd.params.length > 1)
              parse.line(cmd);
-            console.log('Unhandled IRC USERNOTICE: ', cmd.tags['msg-id'], cmd);
           }
           break;
-         default:
-          console.log('Unhandled IRC Command: ', cmd.command, cmd);
         }
        }
       }
@@ -5041,10 +5018,7 @@
       if (!j.hasOwnProperty('data'))
        return false;
       if (j.data.length !== 1)
-      {
-       console.log('returned ', j.data.length, ' entries: ', j.data);
        return false;
-      }
       return j.data[0];
      }
 
@@ -6023,9 +5997,7 @@
         case '2000': return 't2';
         case '3000': return 't3';
         case 'Prime': return 'prime';
-        default:
        }
-       console.log('Unknown Sub Plan: ', p, c);
        return false;
       }
 
@@ -6162,8 +6134,6 @@
           return;
          display.kappa.show(a, gpb, {'%SENDER%': dn, '%AMOUNT%': mpmgc});
          break;
-        default:
-         console.log('Unknown Sub Type: ', cmd);
        }
       }
 
