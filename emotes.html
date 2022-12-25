@@ -4206,7 +4206,7 @@
 
     function sleep(ms)
     {
-     return new Promise(resolve => setTimeout(resolve, ms));
+     return new Promise(function(resolve){setTimeout(resolve, ms);});
     }
 
     function styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters)
@@ -4303,70 +4303,34 @@
       let uLF = false;    // user id of the most recent follower
       const rFC = 2500;   // follower count interval (ms)
 
-      function getFollowerChange(chID)
+      async function getFollowerChange(chID)
       {
-       let p = new Promise(
-        (resolve) =>
-        {
-         let x = new XMLHttpRequest();
-         x.open('GET', 'https://api.twitch.tv/helix/users/follows?to_id=' + chID + '&first=100&nocache=' + shared.rnd(0xFFFFFFFF));
-         x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
-         x.setRequestHeader('Client-Id', cfg.login.client);
-         x.onreadystatechange = async function()
-         {
-          if (x.readyState < 2)
-           return;
-          if (x.status !== 200)
-          {
-           x.onreadystatechange = null;
-           resolve(false);
-           return;
-          }
-          if (x.readyState !== 4)
-           return;
-          if (x.responseText === '')
-           return;
-          x.onreadystatechange = null;
-          if (x.responseText === null)
-          {
-           resolve(false);
-           return;
-          }
-          const j = JSON.parse(x.responseText);
-          if (!j.hasOwnProperty('total') || j.total < 1)
-          {
-           resolve(false);
-           return;
-          }
-          if (!j.hasOwnProperty('data') || !Array.isArray(j.data) || j.data.length < 1)
-          {
-           resolve(false);
-           return;
-          }
-          const findU = uLF;
-          uLF = j.data[0].from_id;
-          if (findU === false)
-          {
-           resolve(false);
-           return;
-          }
-          let s = [];
-          for (let i = 0, l = j.data.length; i < l; i++)
-          {
-           if (j.data[i].from_id === findU)
-           {
-            resolve(s);
-            return;
-           }
-           twitch.net.fList[j.data[i].from_id] = {value: true, t: new Date().getTime()};
-           s.push(j.data[i].from_name);
-          }
-          resolve([]);
-         };
-         x.send();
-        }
-       );
-       return p;
+       const url = 'https://api.twitch.tv/helix/users/follows?to_id=' + chID + '&first=100';
+       const h = {
+        'Authorization': 'Bearer ' + cfg.login.oauth,
+        'Client-Id': cfg.login.client
+       };
+       const r = await shared.httpRequest(url, h);
+       if (r === false)
+        return false;
+       const j = JSON.parse(r);
+       if (!j.hasOwnProperty('total') || j.total < 1)
+        return false;
+       if (!j.hasOwnProperty('data') || !Array.isArray(j.data) || j.data.length < 1)
+        return false;
+       const findU = uLF;
+       uLF = j.data[0].from_id;
+       if (findU === false)
+        return false;
+       let s = [];
+       for (let i = 0, l = j.data.length; i < l; i++)
+       {
+        if (j.data[i].from_id === findU)
+         return s;
+        twitch.net.fList[j.data[i].from_id] = {value: true, t: new Date().getTime()};
+        s.push(j.data[i].from_name);
+       }
+       return [];
       }
 
       async function detectFollowers(chID)
@@ -4391,131 +4355,102 @@
       };
      }();
 
-     function loadCheer_channel(chID)
+     async function loadCheer_channel(chID)
      {
       thirdparty.emotes.cheer = {};
-      let p = new Promise(
-       (resolve) =>
+      const url = 'https://api.twitch.tv/helix/bits/cheermotes?broadcaster_id=' + chID;
+       const h = {
+        'Authorization': 'Bearer ' + cfg.login.oauth,
+        'Client-Id': cfg.login.client
+       };
+      const r = await shared.httpRequest(url, h);
+      if (r === false)
+       return false;
+      const j = JSON.parse(r);
+      if (!j.hasOwnProperty('data'))
+       return false;
+      for (let c = 0, l = j.data.length; c < l; c++)
+      {
+       const set = j.data[c];
+       if (!set.hasOwnProperty('prefix'))
+        continue;
+       if (!set.hasOwnProperty('tiers'))
+        continue;
+       const prefix = set.prefix;
+       let tierList = [];
+       for (let i = set.tiers.length - 1; i >= 0; i--)
        {
-        let x = new XMLHttpRequest();
-        x.open('GET', 'https://api.twitch.tv/helix/bits/cheermotes?broadcaster_id=' + chID + '&nocache=' + shared.rnd(0xFFFFFFFF));
-        x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
-        x.setRequestHeader('Client-Id', cfg.login.client);
-        x.onreadystatechange = function()
+        if (!set.tiers[i].hasOwnProperty('min_bits'))
+         continue;
+        if (!set.tiers[i].hasOwnProperty('images'))
+         continue;
+        const amt = set.tiers[i].min_bits;
+        let img = null;
+        if (set.tiers[i].images.hasOwnProperty('dark'))
         {
-         if (x.readyState < 2)
-          return;
-         if (x.status !== 200)
+         if (set.tiers[i].images.dark.hasOwnProperty('animated'))
          {
-          x.onreadystatechange = null;
-          if (x.status === 401)
-           shared.blargIAmDead(3);
-          resolve(false);
-          return;
+          if (set.tiers[i].images.dark.animated.hasOwnProperty('4'))
+           img = set.tiers[i].images.dark.animated['4'];
+          else if (set.tiers[i].images.dark.animated.hasOwnProperty('3'))
+           img = set.tiers[i].images.dark.animated['3'];
+          else if (set.tiers[i].images.dark.animated.hasOwnProperty('2'))
+           img = set.tiers[i].images.dark.animated['2'];
+          else if (set.tiers[i].images.dark.animated.hasOwnProperty('1.5'))
+           img = set.tiers[i].images.dark.animated['1.5'];
+          else if (set.tiers[i].images.dark.animated.hasOwnProperty('1'))
+           img = set.tiers[i].images.dark.animated['1'];
          }
-         if (x.readyState !== 4)
-          return;
-         if (x.responseText === '')
-          return;
-         x.onreadystatechange = null;
-         if (x.responseText === null)
+         else if (set.tiers[i].images.dark.hasOwnProperty('static'))
          {
-          resolve(false);
-          return;
+          if (set.tiers[i].images.dark.static.hasOwnProperty('4'))
+           img = set.tiers[i].images.dark.static['4'];
+          else if (set.tiers[i].images.dark.static.hasOwnProperty('3'))
+           img = set.tiers[i].images.dark.static['3'];
+          else if (set.tiers[i].images.dark.static.hasOwnProperty('2'))
+           img = set.tiers[i].images.dark.static['2'];
+          else if (set.tiers[i].images.dark.static.hasOwnProperty('1.5'))
+           img = set.tiers[i].images.dark.static['1.5'];
+          else if (set.tiers[i].images.dark.static.hasOwnProperty('1'))
+           img = set.tiers[i].images.dark.static['1'];
          }
-         const j = JSON.parse(x.responseText);
-         if (!j.hasOwnProperty('data'))
+        }
+        else if (set.tiers[i].images.hasOwnProperty('light'))
+        {
+         if (set.tiers[i].images.light.hasOwnProperty('animated'))
          {
-          resolve(false);
-          return;
+          if (set.tiers[i].images.light.animated.hasOwnProperty('4'))
+           img = set.tiers[i].images.light.animated['4'];
+          else if (set.tiers[i].images.light.animated.hasOwnProperty('3'))
+           img = set.tiers[i].images.light.animated['3'];
+          else if (set.tiers[i].images.light.animated.hasOwnProperty('2'))
+           img = set.tiers[i].images.light.animated['2'];
+          else if (set.tiers[i].images.light.animated.hasOwnProperty('1.5'))
+           img = set.tiers[i].images.light.animated['1.5'];
+          else if (set.tiers[i].images.light.animated.hasOwnProperty('1'))
+           img = set.tiers[i].images.light.animated['1'];
          }
-         for (let c = 0, l = j.data.length; c < l; c++)
+         else if (set.tiers[i].images.light.hasOwnProperty('static'))
          {
-          const set = j.data[c];
-          if (!set.hasOwnProperty('prefix'))
-           continue;
-          if (!set.hasOwnProperty('tiers'))
-           continue;
-          const prefix = set.prefix;
-          let tierList = [];
-          for (let i = set.tiers.length - 1; i >= 0; i--)
-          {
-           if (!set.tiers[i].hasOwnProperty('min_bits'))
-            continue;
-           if (!set.tiers[i].hasOwnProperty('images'))
-            continue;
-           const amt = set.tiers[i].min_bits;
-           let img = null;
-           if (set.tiers[i].images.hasOwnProperty('dark'))
-           {
-            if (set.tiers[i].images.dark.hasOwnProperty('animated'))
-            {
-             if (set.tiers[i].images.dark.animated.hasOwnProperty('4'))
-              img = set.tiers[i].images.dark.animated['4'];
-             else if (set.tiers[i].images.dark.animated.hasOwnProperty('3'))
-              img = set.tiers[i].images.dark.animated['3'];
-             else if (set.tiers[i].images.dark.animated.hasOwnProperty('2'))
-              img = set.tiers[i].images.dark.animated['2'];
-             else if (set.tiers[i].images.dark.animated.hasOwnProperty('1.5'))
-              img = set.tiers[i].images.dark.animated['1.5'];
-             else if (set.tiers[i].images.dark.animated.hasOwnProperty('1'))
-              img = set.tiers[i].images.dark.animated['1'];
-            }
-            else if (set.tiers[i].images.dark.hasOwnProperty('static'))
-            {
-             if (set.tiers[i].images.dark.static.hasOwnProperty('4'))
-              img = set.tiers[i].images.dark.static['4'];
-             else if (set.tiers[i].images.dark.static.hasOwnProperty('3'))
-              img = set.tiers[i].images.dark.static['3'];
-             else if (set.tiers[i].images.dark.static.hasOwnProperty('2'))
-              img = set.tiers[i].images.dark.static['2'];
-             else if (set.tiers[i].images.dark.static.hasOwnProperty('1.5'))
-              img = set.tiers[i].images.dark.static['1.5'];
-             else if (set.tiers[i].images.dark.static.hasOwnProperty('1'))
-              img = set.tiers[i].images.dark.static['1'];
-            }
-           }
-           else if (set.tiers[i].images.hasOwnProperty('light'))
-           {
-            if (set.tiers[i].images.light.hasOwnProperty('animated'))
-            {
-             if (set.tiers[i].images.light.animated.hasOwnProperty('4'))
-              img = set.tiers[i].images.light.animated['4'];
-             else if (set.tiers[i].images.light.animated.hasOwnProperty('3'))
-              img = set.tiers[i].images.light.animated['3'];
-             else if (set.tiers[i].images.light.animated.hasOwnProperty('2'))
-              img = set.tiers[i].images.light.animated['2'];
-             else if (set.tiers[i].images.light.animated.hasOwnProperty('1.5'))
-              img = set.tiers[i].images.light.animated['1.5'];
-             else if (set.tiers[i].images.light.animated.hasOwnProperty('1'))
-              img = set.tiers[i].images.light.animated['1'];
-            }
-            else if (set.tiers[i].images.light.hasOwnProperty('static'))
-            {
-             if (set.tiers[i].images.light.static.hasOwnProperty('4'))
-              img = set.tiers[i].images.light.static['4'];
-             else if (set.tiers[i].images.light.static.hasOwnProperty('3'))
-              img = set.tiers[i].images.light.static['3'];
-             else if (set.tiers[i].images.light.static.hasOwnProperty('2'))
-              img = set.tiers[i].images.light.static['2'];
-             else if (set.tiers[i].images.light.static.hasOwnProperty('1.5'))
-              img = set.tiers[i].images.light.static['1.5'];
-             else if (set.tiers[i].images.light.static.hasOwnProperty('1'))
-              img = set.tiers[i].images.light.static['1'];
-            }
-           }
-           if (img === null)
-            continue;
-           tierList.push({min: amt, img: img});
-          }
-          thirdparty.emotes.cheer[prefix] = tierList;
+          if (set.tiers[i].images.light.static.hasOwnProperty('4'))
+           img = set.tiers[i].images.light.static['4'];
+          else if (set.tiers[i].images.light.static.hasOwnProperty('3'))
+           img = set.tiers[i].images.light.static['3'];
+          else if (set.tiers[i].images.light.static.hasOwnProperty('2'))
+           img = set.tiers[i].images.light.static['2'];
+          else if (set.tiers[i].images.light.static.hasOwnProperty('1.5'))
+           img = set.tiers[i].images.light.static['1.5'];
+          else if (set.tiers[i].images.light.static.hasOwnProperty('1'))
+           img = set.tiers[i].images.light.static['1'];
          }
-         resolve(true);
-        };
-        x.send();
+        }
+        if (img === null)
+         continue;
+        tierList.push({min: amt, img: img});
        }
-      );
-      return p;
+       thirdparty.emotes.cheer[prefix] = tierList;
+      }
+      return true;
      }
 
      function pubSub()
@@ -4822,55 +4757,25 @@
       return true;
      }
 
-     function getUserInfo(u)
+     async function getUserInfo(u)
      {
-      let p = new Promise(
-       (resolve) =>
-       {
-        let x = new XMLHttpRequest();
-        x.open('GET', 'https://api.twitch.tv/helix/users?login=' + u + '&nocache=' + shared.rnd(0xFFFFFFFF));
-        x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
-        x.setRequestHeader('Client-Id', cfg.login.client);
-        x.onreadystatechange = function()
-        {
-         if (x.readyState < 2)
-          return;
-         if (x.status !== 200)
-         {
-          x.onreadystatechange = null;
-          if (x.status === 401)
-           shared.blargIAmDead(3);
-          resolve(false);
-          return;
-         }
-         if (x.readyState !== 4)
-          return;
-         if (x.responseText === '')
-          return;
-         x.onreadystatechange = null;
-         if (x.responseText === null)
-         {
-          resolve(false);
-          return;
-         }
-         const j = JSON.parse(x.responseText);
-         if (!j.hasOwnProperty('data'))
-         {
-          resolve(false);
-          return;
-         }
-         if (j.data.length !== 1)
-         {
-          console.log('returned ', j.data.length, ' entries: ', j.data);
-          resolve(false);
-          return;
-         }
-         resolve(j.data[0]);
-        };
-        x.send();
-       }
-      );
-      return p;
+      const url = 'https://api.twitch.tv/helix/users?login=' + u;
+      const h = {
+       'Authorization': 'Bearer ' + cfg.login.oauth,
+       'Client-Id': cfg.login.client
+      };
+      const r = await shared.httpRequest(url, h);
+      if (r === false)
+       return false;
+      const j = JSON.parse(r);
+      if (!j.hasOwnProperty('data'))
+       return false;
+      if (j.data.length !== 1)
+      {
+       console.log('returned ', j.data.length, ' entries: ', j.data);
+       return false;
+      }
+      return j.data[0];
      }
 
      return {
@@ -4975,31 +4880,24 @@
 
        function checkURL(url)
        {
-        let p = new Promise(
-         async function(resolve)
+        const p = new Promise(
+         function(resolve)
          {
           if (uList.hasOwnProperty(url))
           {
            resolve(uList[url]);
            return;
           }
-          let x = new XMLHttpRequest();
+          const x = new XMLHttpRequest();
           x.open('HEAD', url);
           x.onreadystatechange = function()
           {
            if (x.readyState < 2)
             return;
            x.onreadystatechange = null;
-           if (x.status === 200)
-           {
-            uList[url] = true;
-            resolve(true);
-           }
-           else
-           {
-            uList[url] = false;
-            resolve(false);
-           }
+           const r = (x.status === 200);
+           uList[url] = r;
+           resolve(r);
           };
           x.send();
          }
@@ -5154,7 +5052,7 @@
         return [];
        const f = 'default';
        const t = 'dark';
-       const r = '3.0';
+       const x = '3.0';
        const m = cmd.params[1];
        const e = cmd.tags.emotes.split('/');
        if (dup === null)
@@ -5163,7 +5061,7 @@
        for (let i = 0, n = e.length; i < n; i++)
        {
         const eID = e[i].slice(0, e[i].indexOf(':'));
-        const u = 'https://static-cdn.jtvnw.net/emoticons/v2/' + eID + '/' + f + '/' + t + '/' + r;
+        const u = 'https://static-cdn.jtvnw.net/emoticons/v2/' + eID + '/' + f + '/' + t + '/' + x;
         const eVals = e[i].slice(e[i].indexOf(':') + 1).split(',');
         const eStart = parseInt(eVals[0].split('-')[0], 10);
         const eEnd = parseInt(eVals[0].split('-')[1], 10);
@@ -6098,60 +5996,31 @@
        return arr;
       }
 
-      function checkFollower(cmd)
+      async function checkFollower(cmd)
       {
-       let p = new Promise(
-        (resolve) =>
-        {
-         const uID = cmd.tags['user-id'];
-         if (twitch.net.fList.hasOwnProperty(uID))
-         {
-          const tDif = new Date().getTime() - twitch.net.fList[uID].t;
-          if (tDif < rFH)
-          {
-           resolve(twitch.net.fList[uID].value);
-           return;
-          }
-         }
-         const chID = cmd.tags['room-id'];
-         let x = new XMLHttpRequest();
-         x.open('GET', 'https://api.twitch.tv/helix/users/follows?from_id=' + uID + '&to_id=' + chID + '&nocache=' + shared.rnd(0xFFFFFFFF));
-         x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
-         x.setRequestHeader('Client-Id', cfg.login.client);
-         x.onreadystatechange = async function()
-         {
-          if (x.readyState < 2)
-           return;
-          if (x.status !== 200)
-          {
-           x.onreadystatechange = null;
-           resolve(false);
-           return;
-          }
-          if (x.readyState !== 4)
-           return;
-          if (x.responseText === '')
-           return;
-          x.onreadystatechange = null;
-          if (x.responseText === null)
-          {
-           resolve(false);
-           return;
-          }
-          const j = JSON.parse(x.responseText);
-          if (j.hasOwnProperty('total') && j.total > 0)
-          {
-           twitch.net.fList[uID] = {value: true, t: new Date().getTime()};
-           resolve(true);
-           return;
-          }
-          twitch.net.fList[uID] = {value: false, t: new Date().getTime()};
-          resolve(false);
-         };
-         x.send();
-        }
-       );
-       return p;
+       const uID = cmd.tags['user-id'];
+       if (twitch.net.fList.hasOwnProperty(uID))
+       {
+        const tDif = new Date().getTime() - twitch.net.fList[uID].t;
+        if (tDif < rFH)
+         return twitch.net.fList[uID].value;
+       }
+       const url = 'https://api.twitch.tv/helix/users/follows?from_id=' + uID + '&to_id=' + cmd.tags['room-id'];
+       const h = {
+        'Authorization': 'Bearer ' + cfg.login.oauth,
+        'Client-Id': cfg.login.client
+       };
+       const r = await shared.httpRequest(url, h);
+       if (r === false)
+        return false;
+       const j = JSON.parse(r);
+       if (j.hasOwnProperty('total') && j.total > 0)
+       {
+        twitch.net.fList[uID] = {value: true, t: new Date().getTime()};
+        return true;
+       }
+       twitch.net.fList[uID] = {value: false, t: new Date().getTime()};
+       return false;
       }
 
       async function parseLevel(cmd)
@@ -6302,55 +6171,32 @@
      };
     }();
 
-    function findEmote_channel(chID)
+    async function findEmote_channel(chID)
     {
-     let p = new Promise(
-      (resolve) =>
-      {
-       let x = new XMLHttpRequest();
-       x.open('GET', 'https://api.twitch.tv/helix/chat/emotes?broadcaster_id=' + chID + '&nocache=' + shared.rnd(0xFFFFFFFF));
-       x.setRequestHeader('Authorization', 'Bearer ' + cfg.login.oauth);
-       x.setRequestHeader('Client-Id', cfg.login.client);
-       x.onreadystatechange = function()
-       {
-        if (x.readyState < 2)
-         return;
-        if (x.status !== 200)
-        {
-         x.onreadystatechange = null;
-         if (x.status === 401)
-          shared.blargIAmDead(3);
-         resolve(false);
-         return;
-        }
-        if (x.readyState !== 4)
-         return;
-        if (x.responseText === '')
-         return;
-        x.onreadystatechange = null;
-        if (x.responseText === null)
-        {
-         resolve(false);
-         return;
-        }
-        const j = JSON.parse(x.responseText);
-        if (!j.hasOwnProperty('data'))
-        {
-         resolve(false);
-         return;
-        }
-        let ret = [];
-        const f = 'default';
-        const t = 'dark';
-        const r = '3.0';
-        for (let i = 0, l = j.data.length; i < l; i++)
-         ret.push({url: 'https://static-cdn.jtvnw.net/emoticons/v2/' + j.data[i].id + '/' + f + '/' + t + '/' + r});
-        resolve(ret);
-       };
-       x.send();
-      }
-     );
-     return p;
+     const url = 'https://api.twitch.tv/helix/chat/emotes?broadcaster_id=' + chID;
+     const h = {
+      'Authorization': 'Bearer ' + cfg.login.oauth,
+      'Client-Id': cfg.login.client
+     };
+     const r = await shared.httpRequest(url, h, true);
+     if (r === false)
+      return false;
+     const j = JSON.parse(r);
+     if (!j.hasOwnProperty('data'))
+      return false;
+     if (!Array.isArray(j.data))
+      return false;
+     let ret = [];
+     const f = 'default';
+     const t = 'dark';
+     const x = '3.0';
+     for (let i = 0, l = j.data.length; i < l; i++)
+     {
+      if (!j.data[i].hasOwnProperty('id'))
+       continue;
+      ret.push({url: 'https://static-cdn.jtvnw.net/emoticons/v2/' + j.data[i].id + '/' + f + '/' + t + '/' + x});
+     }
+     return ret;
     }
 
     return {
@@ -6659,56 +6505,20 @@
      };
     }
 
-    function getOAuthToken(r)
+    async function getOAuthToken(t)
     {
-     let p = new Promise(
-      (resolve) =>
-      {
-       let x = new XMLHttpRequest();
-       x.open('GET', 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php?refresh=' + r);
-       x.onreadystatechange = function()
-       {
-        if (x.readyState < 2)
-         return;
-        if (x.status !== 200)
-        {
-         x.onreadystatechange = null;
-         resolve(false);
-         return;
-        }
-        if (x.readyState !== 4)
-         return;
-        if (x.responseText === '')
-         return;
-        x.onreadystatechange = null;
-        if (x.responseText === null)
-        {
-         resolve(false);
-         return;
-        }
-        const j = JSON.parse(x.responseText);
-        if (!j.hasOwnProperty('access_token'))
-        {
-         resolve(false);
-         return;
-        }
-        if (!j.hasOwnProperty('refresh_token'))
-        {
-         resolve(false);
-         return;
-        }
-        if (!j.hasOwnProperty('expires_in'))
-        {
-         resolve(false);
-         return;
-        }
-        resolve(j);
-        return;
-       };
-       x.send();
-      }
-     );
-     return p;
+     const url = 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php?refresh=' + t;
+     const r = await shared.httpRequest(url, {}, false, false);
+     if (r === false)
+      return false;
+     const j = JSON.parse(r);
+     if (!j.hasOwnProperty('access_token'))
+      return false;
+     if (!j.hasOwnProperty('refresh_token'))
+      return false;
+     if (!j.hasOwnProperty('expires_in'))
+      return false;
+     return j;
     }
 
     async function updateOAuth()
@@ -6852,158 +6662,98 @@
       return false;
      }
 
-     function loadFFZ_global()
+     async function loadFFZ_global()
      {
       thirdparty.emotes.ffz = {};
-      let p = new Promise(
-       (resolve) =>
+      const url = 'https://api.frankerfacez.com/v1/set/global';
+      const r = await shared.httpRequest(url);
+      if (r === false)
+       return false;
+      const j = JSON.parse(r);
+      if (!j.hasOwnProperty('sets'))
+       return false;
+      let usedSets = [];
+      if (j.hasOwnProperty('default_sets'))
+      {
+       for (let i = 0, l = j.default_sets.length; i < l; i++)
+        usedSets.push(j.default_sets[i]);
+      }
+      for (const set in j.sets)
+      {
+       if (!j.sets.hasOwnProperty(set))
+        continue;
+       if (!usedSets.includes(j.sets[set].id))
+        continue;
+       if (!j.sets[set].hasOwnProperty('emoticons'))
+        continue;
+       for (let i = 0, l = j.sets[set].emoticons.length; i < l; i++)
        {
-        let x = new XMLHttpRequest();
-        x.open('GET', 'https://api.frankerfacez.com/v1/set/global?nocache=' + shared.rnd(0xFFFFFFFF));
-        x.onreadystatechange = function()
-        {
-         if (x.readyState < 2)
-          return;
-         if (x.status !== 200)
-         {
-          x.onreadystatechange = null;
-          resolve(false);
-          return;
-         }
-         if (x.readyState !== 4)
-          return;
-         if (x.responseText === '')
-          return;
-         x.onreadystatechange = null;
-         if (x.responseText === null)
-         {
-          resolve(false);
-          return;
-         }
-         const j = JSON.parse(x.responseText);
-         if (!j.hasOwnProperty('sets'))
-         {
-          resolve(false);
-          return;
-         }
-         let usedSets = [];
-         if (j.hasOwnProperty('default_sets'))
-         {
-          for (let i = 0, l = j.default_sets.length; i < l; i++)
-           usedSets.push(j.default_sets[i]);
-         }
-         for (const set in j.sets)
-         {
-          if (!j.sets.hasOwnProperty(set))
-           continue;
-          if (!usedSets.includes(j.sets[set].id))
-           continue;
-          if (!j.sets[set].hasOwnProperty('emoticons'))
-           continue;
-          for (let i = 0, l = j.sets[set].emoticons.length; i < l; i++)
-          {
-           if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
-            continue;
-           const u = readFFZ_URL(j.sets[set].emoticons[i]);
-           if (u === false)
-            continue;
-           addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
-          }
-         }
-         //user-specific, from here on everything resolve()s true
-         if (!j.hasOwnProperty('users'))
-         {
-          resolve(true);
-          return;
-         }
-         for (const setID in j.users)
-         {
-          if (!j.users.hasOwnProperty(setID))
-           continue;
-          const aList = j.users[setID];
-          if (!Array.isArray(aList))
-           continue;
-          for (const set in j.sets)
-          {
-           if (!j.sets.hasOwnProperty(set))
-            continue;
-           if (setID !== set)
-            continue;
-           if (!j.sets[set].hasOwnProperty('emoticons'))
-            continue;
-           for (let i = 0, l = j.sets[set].emoticons.length; i < l; i++)
-           {
-            if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
-             continue;
-            const u = readFFZ_URL(j.sets[set].emoticons[i]);
-            if (u === false)
-             continue;
-            addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, aList);
-           }
-          }
-         }
-         resolve(true);
-        };
-        x.send();
+        if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
+         continue;
+        const u = readFFZ_URL(j.sets[set].emoticons[i]);
+        if (u === false)
+         continue;
+        addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
        }
-      );
-      return p;
+      }
+      //user-specific, from here on everything returns true
+      if (!j.hasOwnProperty('users'))
+       return true;
+      for (const setID in j.users)
+      {
+       if (!j.users.hasOwnProperty(setID))
+        continue;
+       const aList = j.users[setID];
+       if (!Array.isArray(aList))
+        continue;
+       for (const set in j.sets)
+       {
+        if (!j.sets.hasOwnProperty(set))
+         continue;
+        if (setID !== set)
+         continue;
+        if (!j.sets[set].hasOwnProperty('emoticons'))
+         continue;
+        for (let i = 0, l = j.sets[set].emoticons.length; i < l; i++)
+        {
+         if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
+          continue;
+         const u = readFFZ_URL(j.sets[set].emoticons[i]);
+         if (u === false)
+          continue;
+         addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, aList);
+        }
+       }
+      }
+      return true;
      }
 
-     function loadFFZ_channel(chID)
+     async function loadFFZ_channel(chID)
      {
-      let p = new Promise(
-       (resolve) =>
+      thirdparty.emotes.ffz = {};
+      const url = 'https://api.frankerfacez.com/v1/room/id/' + chID;
+      const r = await shared.httpRequest(url);
+      if (r === false)
+       return false;
+      const j = JSON.parse(r);
+      if (!j.hasOwnProperty('sets'))
+       return false;
+      removeEmoteByScope(thirdparty.emotes.ffz, 'c');
+      for (const set in j.sets)
+      {
+       if (!j.sets[set].hasOwnProperty('emoticons'))
+        continue;
+       for (let i = 0, l = j.sets[set].emoticons.length; i < l; i++)
        {
-        let x = new XMLHttpRequest();
-        x.open('GET', 'https://api.frankerfacez.com/v1/room/id/' + chID + '?nocache=' + shared.rnd(0xFFFFFFFF));
-        x.onreadystatechange = function()
-        {
-         if (x.readyState < 2)
-          return;
-         if (x.status !== 200)
-         {
-          x.onreadystatechange = null;
-          resolve(false);
-          return;
-         }
-         if (x.readyState !== 4)
-          return;
-         if (x.responseText === '')
-          return;
-         x.onreadystatechange = null;
-         if (x.responseText === null)
-         {
-          resolve(false);
-          return;
-         }
-         const j = JSON.parse(x.responseText);
-         if (!j.hasOwnProperty('sets'))
-         {
-          resolve(false);
-          return;
-         }
-         removeEmoteByScope(thirdparty.emotes.ffz, 'c');
-         for (const set in j.sets)
-         {
-          if (!j.sets[set].hasOwnProperty('emoticons'))
-           continue;
-          for (let i = 0, l = j.sets[set].emoticons.length; i < l; i++)
-          {
-           if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
-            continue;
-           const u = readFFZ_URL(j.sets[set].emoticons[i]);
-           if (u === false)
-            continue;
-           addEmote(thirdparty.emotes.ffz, 'c', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
-          }
-         }
-         resolve(true);
-        };
-        x.send();
+        if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
+         continue;
+        const u = readFFZ_URL(j.sets[set].emoticons[i]);
+        if (u === false)
+         continue;
+        addEmote(thirdparty.emotes.ffz, 'c', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
        }
-      );
-      return p;
+      }
+      return true;
      }
 
      return {
@@ -7027,122 +6777,67 @@
       thirdparty.bttv.timer = window.setTimeout(reloadBTTV, thirdparty.interval, chID);
      }
 
-     function loadBTTV_global()
+     async function loadBTTV_global()
      {
       thirdparty.emotes.bttv = {};
       if (!thirdparty.emotes.hasOwnProperty('zwe'))
        thirdparty.emotes.zwe = {};
       thirdparty.emotes.zwe.bttv = {};
-      let p = new Promise(
-       (resolve) =>
+      const url = 'https://api.betterttv.net/3/cached/emotes/global';
+      const r = await shared.httpRequest(url);
+      if (r === false)
+       return false;
+      const j = JSON.parse(r);
+      if (!Array.isArray(j))
+       return false;
+      for (let i = 0, l = j.length; i < l; i++)
+      {
+       if (!j[i].hasOwnProperty('code'))
+        continue;
+       if (!j[i].hasOwnProperty('id'))
+        continue;
+       if (bttvZWE.includes(j[i].code))
        {
-        let x = new XMLHttpRequest();
-        x.open('GET', 'https://api.betterttv.net/3/cached/emotes/global?nocache=' + shared.rnd(0xFFFFFFFF));
-        x.onreadystatechange = function()
-        {
-         if (x.readyState < 2)
-          return;
-         if (x.status !== 200)
-         {
-          x.onreadystatechange = null;
-          resolve(false);
-          return;
-         }
-         if (x.readyState !== 4)
-          return;
-         if (x.responseText === '')
-          return;
-         x.onreadystatechange = null;
-         if (x.responseText === null)
-         {
-          resolve(false);
-          return;
-         }
-         const j = JSON.parse(x.responseText);
-         if (!Array.isArray(j))
-         {
-          resolve(false);
-          return;
-         }
-         for (let i = 0, l = j.length; i < l; i++)
-         {
-          if (!j[i].hasOwnProperty('code'))
-           continue;
-          if (!j[i].hasOwnProperty('id'))
-           continue;
-          if (bttvZWE.includes(j[i].code))
-          {
-           if (cfg.display.extended.useZWE)
-            addEmote(thirdparty.emotes.zwe.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x', null, true);
-           continue;
-          }
-          addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x');
-         }
-         resolve(true);
-        };
-        x.send();
+        if (cfg.display.extended.useZWE)
+         addEmote(thirdparty.emotes.zwe.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x', null, true);
+        continue;
        }
-      );
-      return p;
+       addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x');
+      }
+      return true;
      }
 
-     function loadBTTV_channel(chID)
+     async function loadBTTV_channel(chID)
      {
-      let p = new Promise(
-       (resolve) =>
+      const url = 'https://api.betterttv.net/3/cached/users/twitch/' + chID;
+      const r = await shared.httpRequest(url);
+      if (r === false)
+       return false;
+      removeEmoteByScope(thirdparty.emotes.bttv, 'c');
+      const j = JSON.parse(r);
+      if (j.hasOwnProperty('channelEmotes'))
+      {
+       for (let i = 0, l = j.channelEmotes.length; i < l; i++)
        {
-        let x = new XMLHttpRequest();
-        x.open('GET', 'https://api.betterttv.net/3/cached/users/twitch/' + chID + '?nocache=' + shared.rnd(0xFFFFFFFF));
-        x.onreadystatechange = function()
-        {
-         if (x.readyState < 2)
-          return;
-         if (x.status !== 200)
-         {
-          x.onreadystatechange = null;
-          resolve(false);
-          return;
-         }
-         if (x.readyState !== 4)
-          return;
-         if (x.responseText === '')
-          return;
-         x.onreadystatechange = null;
-         if (x.responseText === null)
-         {
-          resolve(false);
-          return;
-         }
-         removeEmoteByScope(thirdparty.emotes.bttv, 'c');
-         const j = JSON.parse(x.responseText);
-         if (j.hasOwnProperty('channelEmotes'))
-         {
-          for (let i = 0, l = j.channelEmotes.length; i < l; i++)
-          {
-           if (!j.channelEmotes[i].hasOwnProperty('code'))
-            continue;
-           if (!j.channelEmotes[i].hasOwnProperty('id'))
-            continue;
-           addEmote(thirdparty.emotes.bttv, 'c', j.channelEmotes[i].code, j.channelEmotes[i].id, 'https://cdn.betterttv.net/emote/' + j.channelEmotes[i].id + '/3x');
-          }
-         }
-         if (j.hasOwnProperty('sharedEmotes'))
-         {
-          for (let i = 0, l = j.sharedEmotes.length; i < l; i++)
-          {
-           if (!j.sharedEmotes[i].hasOwnProperty('code'))
-            continue;
-           if (!j.sharedEmotes[i].hasOwnProperty('id'))
-            continue;
-           addEmote(thirdparty.emotes.bttv, 'c', j.sharedEmotes[i].code, j.sharedEmotes[i].id, 'https://cdn.betterttv.net/emote/' + j.sharedEmotes[i].id + '/3x');
-          }
-         }
-         resolve(true);
-        };
-        x.send();
+        if (!j.channelEmotes[i].hasOwnProperty('code'))
+         continue;
+        if (!j.channelEmotes[i].hasOwnProperty('id'))
+         continue;
+        addEmote(thirdparty.emotes.bttv, 'c', j.channelEmotes[i].code, j.channelEmotes[i].id, 'https://cdn.betterttv.net/emote/' + j.channelEmotes[i].id + '/3x');
        }
-      );
-      return p;
+      }
+      if (j.hasOwnProperty('sharedEmotes'))
+      {
+       for (let i = 0, l = j.sharedEmotes.length; i < l; i++)
+       {
+        if (!j.sharedEmotes[i].hasOwnProperty('code'))
+         continue;
+        if (!j.sharedEmotes[i].hasOwnProperty('id'))
+         continue;
+        addEmote(thirdparty.emotes.bttv, 'c', j.sharedEmotes[i].code, j.sharedEmotes[i].id, 'https://cdn.betterttv.net/emote/' + j.sharedEmotes[i].id + '/3x');
+       }
+      }
+      return true;
      }
 
      function loadBTTV_ws_channel(chID)
@@ -7253,195 +6948,110 @@
 
     const seventv = function()
     {
-     function load7TV_global()
+     async function load7TV_global()
      {
       thirdparty.emotes['7tv'] = {};
       if (!thirdparty.emotes.hasOwnProperty('zwe'))
        thirdparty.emotes.zwe = {};
       if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
        thirdparty.emotes.zwe['7tv'] = {};
-      let p = new Promise(
-       (resolve) =>
+      const url = 'https://api.7tv.app/v2/emotes/global';
+      const r = await shared.httpRequest(url);
+      if (r === false)
+       return false;
+      const j = JSON.parse(r);
+      if (!Array.isArray(j))
+       return false;
+      for (let i = 0, l = j.length; i < l; i++)
+      {
+       if (!j[i].hasOwnProperty('name'))
+        continue;
+       if (!j[i].hasOwnProperty('urls'))
+        continue;
+       let t4 = null;
+       for (let u = 0, m = j[i].urls.length; u < m; u++)
        {
-        let x = new XMLHttpRequest();
-        x.open('GET', 'https://api.7tv.app/v2/emotes/global?nocache=' + shared.rnd(0xFFFFFFFF));
-        x.onreadystatechange = function()
+        const tN = j[i].urls[u][0];
+        const uN = j[i].urls[u][1];
+        if (tN === '4')
         {
-         if (x.readyState < 2)
-          return;
-         if (x.status !== 200)
-         {
-          x.onreadystatechange = null;
-          resolve(false);
-          return;
-         }
-         if (x.readyState !== 4)
-          return;
-         if (x.responseText === '')
-          return;
-         x.onreadystatechange = null;
-         if (x.responseText === null)
-         {
-          resolve(false);
-          return;
-         }
-         const j = JSON.parse(x.responseText);
-         if (!Array.isArray(j))
-         {
-          resolve(false);
-          return;
-         }
-         for (let i = 0, l = j.length; i < l; i++)
-         {
-          if (!j[i].hasOwnProperty('name'))
-           continue;
-          if (!j[i].hasOwnProperty('urls'))
-           continue;
-          let t4 = null;
-          for (let u = 0, m = j[i].urls.length; u < m; u++)
-          {
-           const tN = j[i].urls[u][0];
-           const uN = j[i].urls[u][1];
-           if (tN === '4')
-           {
-            t4 = uN;
-            break;
-           }
-           if (t4 !== null)
-            continue;
-           if (uN.includes('/' + tN + 'x'))
-            t4 = uN.replaceAll('/' + tN + 'x', '/4x');
-          }
-          if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
-          {
-           if (cfg.display.extended.useZWE)
-            addEmote(thirdparty.emotes.zwe['7tv'], 'g', j[i].name, j[i].id, t4, null, true);
-           continue;
-          }
-          addEmote(thirdparty.emotes['7tv'], 'g', j[i].name, j[i].id, t4);
-         }
-         resolve(true);
-        };
-        x.send();
+         t4 = uN;
+         break;
+        }
+        if (t4 !== null)
+         continue;
+        if (uN.includes('/' + tN + 'x'))
+         t4 = uN.replaceAll('/' + tN + 'x', '/4x');
        }
-      );
-      return p;
+       if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
+       {
+        if (cfg.display.extended.useZWE)
+         addEmote(thirdparty.emotes.zwe['7tv'], 'g', j[i].name, j[i].id, t4, null, true);
+        continue;
+       }
+       addEmote(thirdparty.emotes['7tv'], 'g', j[i].name, j[i].id, t4);
+      }
+      return true;
      }
 
-     function load7TV_channel(chID)
+     async function load7TV_channel(chID)
      {
       if (!thirdparty.emotes.hasOwnProperty('zwe'))
        thirdparty.emotes.zwe = {};
       if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
        thirdparty.emotes.zwe['7tv'] = {};
-      let p = new Promise(
-       (resolve) =>
+      const url = 'https://api.7tv.app/v2/users/' + chID + '/emotes';
+      const r = await shared.httpRequest(url);
+      if (r === false)
+       return false;
+      if (cfg.display.extended.useZWE)
+       removeEmoteByScope(thirdparty.emotes.zwe['7tv'], 'c');
+      removeEmoteByScope(thirdparty.emotes['7tv'], 'c');
+      const j = JSON.parse(r);
+      if (!Array.isArray(j))
+       return false;
+      for (let i = 0, l = j.length; i < l; i++)
+      {
+       if (!j[i].hasOwnProperty('name'))
+        continue;
+       if (!j[i].hasOwnProperty('urls'))
+        continue;
+       let t4 = null;
+       for (let u = 0, m = j[i].urls.length; u < m; u++)
        {
-        let x = new XMLHttpRequest();
-        x.open('GET', 'https://api.7tv.app/v2/users/' + chID + '/emotes?nocache=' + shared.rnd(0xFFFFFFFF));
-        x.onreadystatechange = function()
+        const tN = j[i].urls[u][0];
+        const uN = j[i].urls[u][1];
+        if (tN === '4')
         {
-         if (x.readyState < 2)
-          return;
-         if (x.status !== 200)
-         {
-          x.onreadystatechange = null;
-          resolve(false);
-          return;
-         }
-         if (x.readyState !== 4)
-          return;
-         if (x.responseText === '')
-          return;
-         x.onreadystatechange = null;
-         if (x.responseText === null)
-         {
-          resolve(false);
-          return;
-         }
-         if (cfg.display.extended.useZWE)
-          removeEmoteByScope(thirdparty.emotes.zwe['7tv'], 'c');
-         removeEmoteByScope(thirdparty.emotes['7tv'], 'c');
-         const j = JSON.parse(x.responseText);
-         if (!Array.isArray(j))
-         {
-          resolve(false);
-          return;
-         }
-         for (let i = 0, l = j.length; i < l; i++)
-         {
-          if (!j[i].hasOwnProperty('name'))
-           continue;
-          if (!j[i].hasOwnProperty('urls'))
-           continue;
-          let t4 = null;
-          for (let u = 0, m = j[i].urls.length; u < m; u++)
-          {
-           const tN = j[i].urls[u][0];
-           const uN = j[i].urls[u][1];
-           if (tN === '4')
-           {
-            t4 = uN;
-            break;
-           }
-           if (t4 !== null)
-            continue;
-           if (uN.includes('/' + tN + 'x'))
-            t4 = uN.replaceAll('/' + tN + 'x', '/4x');
-          }
-          if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
-          {
-           if (cfg.display.extended.useZWE)
-            addEmote(thirdparty.emotes.zwe['7tv'], 'c', j[i].name, j[i].id, t4, null, true);
-           continue;
-          }
-          addEmote(thirdparty.emotes['7tv'], 'c', j[i].name, j[i].id, t4);
-         }
-         resolve(true);
-        };
-        x.send();
+         t4 = uN;
+         break;
+        }
+        if (t4 !== null)
+         continue;
+        if (uN.includes('/' + tN + 'x'))
+         t4 = uN.replaceAll('/' + tN + 'x', '/4x');
        }
-      );
-      return p;
+       if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
+       {
+        if (cfg.display.extended.useZWE)
+         addEmote(thirdparty.emotes.zwe['7tv'], 'c', j[i].name, j[i].id, t4, null, true);
+        continue;
+       }
+       addEmote(thirdparty.emotes['7tv'], 'c', j[i].name, j[i].id, t4);
+      }
+      return true;
      }
 
-     function load7TV_channelID(chID)
+     async function load7TV_channelID(chID)
      {
-      let p = new Promise(
-       (resolve) =>
-       {
-        let x = new XMLHttpRequest();
-        x.open('GET', 'https://api.7tv.app/v2/users/' + chID + '?nocache=' + shared.rnd(0xFFFFFFFF));
-        x.onreadystatechange = function()
-        {
-         if (x.readyState < 2)
-          return;
-         if (x.status !== 200)
-         {
-          x.onreadystatechange = null;
-          resolve(false);
-          return;
-         }
-         if (x.readyState !== 4)
-          return;
-         if (x.responseText === '')
-          return;
-         x.onreadystatechange = null;
-         if (x.responseText === null)
-         {
-          resolve(false);
-          return;
-         }
-         const j = JSON.parse(x.responseText);
-         if (j.hasOwnProperty('id'))
-          resolve(j.id);
-         else
-          resolve(false);
-        };
-        x.send();
-       }
-      );
-      return p;
+      const url = 'https://api.7tv.app/v2/users/' + chID;
+      const r = await shared.httpRequest(url);
+      if (r === false)
+       return false;
+      const j = JSON.parse(r);
+      if (!j.hasOwnProperty('id'))
+       return false;
+      return j.id;
      }
 
      async function load7TV_ws_channel(chID)
@@ -7532,6 +7142,61 @@
      if (m < 1)
       return f * m;
      return Math.floor(f * m);
+    }
+
+    function _httpRequest_RSC(x)
+    {
+     if (x.readyState < 2)
+      return null;
+     if (x.status !== 200)
+     {
+      x.onreadystatechange = null;
+      return false;
+     }
+     if (x.readyState !== 4)
+      return null;
+     if (x.responseText === '')
+      return null;
+     x.onreadystatechange = null;
+     if (x.responseText === null)
+      return false;
+     return x.responseText;
+    }
+
+    function httpRequest(url, hdrs = {}, blargOnError = false, nocache = true)
+    {
+     const p = new Promise(
+      function(resolve)
+      {
+       const x = new XMLHttpRequest();
+       if (nocache)
+       {
+        if (url.includes('?'))
+         url+= '&';
+        else
+         url+= '?';
+        url+= 'nocache=' + rnd(0xFFFFFFFF);
+       }
+       x.open('GET', url);
+       for (const hK in hdrs)
+       {
+        if (!hdrs.hasOwnProperty(hK))
+         continue;
+        x.setRequestHeader(hK, hdrs[hK]);
+       }
+       x.onreadystatechange = function()
+       {
+        const r = _httpRequest_RSC(x);
+        if (r === null)
+         return;
+        if (r === false && blargOnError && x.status === 401)
+         shared.blargIAmDead(3);
+        resolve(r);
+       };
+       x.send();
+      }
+     );
+     return p;
     }
 
     function findInMaybeRange(r, v)
@@ -7637,6 +7302,7 @@
 
     return {
      rnd: rnd,
+     httpRequest: httpRequest,
      findInMaybeRange: findInMaybeRange,
      blargIAmDead: blargIAmDead
     };
