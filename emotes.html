@@ -4396,7 +4396,7 @@
       function getFollowerChange(chID)
       {
        let p = new Promise(
-        (resolve, reject) =>
+        (resolve) =>
         {
          let x = new XMLHttpRequest();
          x.open('GET', 'https://api.twitch.tv/helix/users/follows?to_id=' + chID + '&first=100&nocache=' + shared.rnd(0xFFFFFFFF));
@@ -4485,7 +4485,7 @@
      {
       thirdparty.emotes.cheer = {};
       let p = new Promise(
-       (resolve, reject) =>
+       (resolve) =>
        {
         let x = new XMLHttpRequest();
         x.open('GET', 'https://api.twitch.tv/helix/bits/cheermotes?broadcaster_id=' + chID + '&nocache=' + shared.rnd(0xFFFFFFFF));
@@ -4613,7 +4613,7 @@
       let wsRetry = 0;
       const ws = new WebSocket('wss://pubsub-edge.twitch.tv:443');
       let tmrPing = null;
-      ws.onopen = function(ev)
+      ws.onopen = function()
       {
        ws.onopen = null;
        tmrPing = window.setInterval(function(){ws.send('{"type": "PING"}');}, 4 * 60 * 1000);
@@ -4722,7 +4722,7 @@
       let wsRetry = 0;
       let firstRoomstate = true;
       const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
-      ws.onopen = function(ev)
+      ws.onopen = function()
       {
        ws.onopen = null;
        tIRC = setTimeout(
@@ -4915,7 +4915,7 @@
      function getUserInfo(u)
      {
       let p = new Promise(
-       (resolve, reject) =>
+       (resolve) =>
        {
         let x = new XMLHttpRequest();
         x.open('GET', 'https://api.twitch.tv/helix/users?login=' + u + '&nocache=' + shared.rnd(0xFFFFFFFF));
@@ -5066,7 +5066,7 @@
        function checkURL(url)
        {
         let p = new Promise(
-         async function(resolve, reject)
+         async function(resolve)
          {
           if (uList.hasOwnProperty(url))
           {
@@ -6191,7 +6191,7 @@
       function checkFollower(cmd)
       {
        let p = new Promise(
-        (resolve, reject) =>
+        (resolve) =>
         {
          let uID = cmd.tags['user-id'];
          if (twitch.net.fList.hasOwnProperty(uID))
@@ -6395,7 +6395,7 @@
     function findEmote_channel(chID)
     {
      let p = new Promise(
-      (resolve, reject) =>
+      (resolve) =>
       {
        let x = new XMLHttpRequest();
        x.open('GET', 'https://api.twitch.tv/helix/chat/emotes?broadcaster_id=' + chID + '&nocache=' + shared.rnd(0xFFFFFFFF));
@@ -6847,7 +6847,7 @@
      {
       thirdparty.emotes.ffz = {};
       let p = new Promise(
-       (resolve, reject) =>
+       (resolve) =>
        {
         let x = new XMLHttpRequest();
         x.open('GET', 'https://api.frankerfacez.com/v1/set/global?nocache=' + shared.rnd(0xFFFFFFFF));
@@ -6944,7 +6944,7 @@
      function loadFFZ_channel(chID)
      {
       let p = new Promise(
-       (resolve, reject) =>
+       (resolve) =>
        {
         let x = new XMLHttpRequest();
         x.open('GET', 'https://api.frankerfacez.com/v1/room/id/' + chID + '?nocache=' + shared.rnd(0xFFFFFFFF));
@@ -7025,7 +7025,7 @@
        thirdparty.emotes.zwe = {};
       thirdparty.emotes.zwe.bttv = {};
       let p = new Promise(
-       (resolve, reject) =>
+       (resolve) =>
        {
         let x = new XMLHttpRequest();
         x.open('GET', 'https://api.betterttv.net/3/cached/emotes/global?nocache=' + shared.rnd(0xFFFFFFFF));
@@ -7080,7 +7080,7 @@
      function loadBTTV_channel(chID)
      {
       let p = new Promise(
-       (resolve, reject) =>
+       (resolve) =>
        {
         let x = new XMLHttpRequest();
         x.open('GET', 'https://api.betterttv.net/3/cached/users/twitch/' + chID + '?nocache=' + shared.rnd(0xFFFFFFFF));
@@ -7140,7 +7140,7 @@
      {
       let wsRetry = 0;
       const ws = new WebSocket('wss://sockets.betterttv.net/ws');
-      ws.onopen = function(ev)
+      ws.onopen = function()
       {
        ws.onopen = null;
        ws.send('{"name":"join_channel","data":{"name":"twitch:' + chID + '"}}');
@@ -7252,7 +7252,7 @@
       if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
        thirdparty.emotes.zwe['7tv'] = {};
       let p = new Promise(
-       (resolve, reject) =>
+       (resolve) =>
        {
         let x = new XMLHttpRequest();
         x.open('GET', 'https://api.7tv.app/v2/emotes/global?nocache=' + shared.rnd(0xFFFFFFFF));
@@ -7344,7 +7344,7 @@
       if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
        thirdparty.emotes.zwe['7tv'] = {};
       let p = new Promise(
-       (resolve, reject) =>
+       (resolve) =>
        {
         let x = new XMLHttpRequest();
         x.open('GET', 'https://api.7tv.app/v2/users/' + chID + '/emotes?nocache=' + shared.rnd(0xFFFFFFFF));
@@ -7435,7 +7435,7 @@
      function load7TV_channelID(chID)
      {
       let p = new Promise(
-       (resolve, reject) =>
+       (resolve) =>
        {
         let x = new XMLHttpRequest();
         x.open('GET', 'https://api.7tv.app/v2/users/' + chID + '?nocache=' + shared.rnd(0xFFFFFFFF));
