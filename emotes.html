@@ -95,6 +95,8 @@
     *             Please only use oauth or token, not both. Token does not expire, but is also less secure. OAuth is
     *             recommended, if possible.
     *
+    *  oauth_refresh  A refresh token to get a new StreamElements OAuth ID when the current one expires.
+    *
     *  token      The JWT Token is used in lieu of a password to access the StreamElements API.
     *             Please grab your JWT Token from the StreamElements Dashboard:
     *             - Visit https://streamelements.com/dashboard/account/channels
@@ -554,6 +556,7 @@
     },
     streamelements: {
      oauth: 'OAUTH_ID', //Requires tips:read
+     oauth_refresh: 'OAUTH_REFRESH',
      token: 'JWT_TOKEN',
      curMul: 100,
      dispMul: 1,
@@ -6753,8 +6756,107 @@
      };
     }
 
+    function getOAuthToken(r)
+    {
+     let p = new Promise(
+      (resolve) =>
+      {
+       let x = new XMLHttpRequest();
+       x.open('GET', 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php?refresh=' + r);
+       x.onreadystatechange = function()
+       {
+        if (x.readyState < 2)
+         return;
+        if (x.status !== 200)
+        {
+         x.onreadystatechange = null;
+         resolve(false);
+         return;
+        }
+        if (x.readyState !== 4)
+         return;
+        if (x.responseText === '')
+         return;
+        x.onreadystatechange = null;
+        if (x.responseText === null)
+        {
+         resolve(false);
+         return;
+        }
+        const j = JSON.parse(x.responseText);
+        if (!j.hasOwnProperty('access_token'))
+        {
+         resolve(false);
+         return;
+        }
+        if (!j.hasOwnProperty('refresh_token'))
+        {
+         resolve(false);
+         return;
+        }
+        if (!j.hasOwnProperty('expires_in'))
+        {
+         resolve(false);
+         return;
+        }
+        resolve(j);
+        return;
+       };
+       x.send();
+      }
+     );
+     return p;
+    }
+
+    async function updateOAuth()
+    {
+     const lsOAuth = window.localStorage.getItem('streamelements.tips:read.oauth');
+     const lsRefresh = window.localStorage.getItem('streamelements.tips:read.refresh');
+     const lsExpires = window.localStorage.getItem('streamelements.tips:read.expires');
+     const lsRefreshed = window.localStorage.getItem('streamelements.tips:read.refreshed');
+     if (lsOAuth !== null)
+      cfg.streamelements.oauth = lsOAuth;
+     if (lsRefresh !== null)
+      cfg.streamelements.oauth_refresh = lsRefresh;
+     if (lsExpires !== null)
+      cfg.streamelements.oauth_expires = lsExpires;
+     if (lsRefreshed !== null)
+      cfg.streamelements.oauth_refreshed = lsRefreshed;
+     if (cfg.streamelements.hasOwnProperty('oauth_expires') && cfg.streamelements.oauth_expires > 0)
+     {
+      const expTime = cfg.streamelements.oauth_expires - Math.floor(new Date().getTime() / 1000);
+      if (expTime < 0)
+      {
+       window.localStorage.removeItem('streamelements.tips:read.oauth');
+       window.localStorage.removeItem('streamelements.tips:read.refresh');
+       window.localStorage.removeItem('streamelements.tips:read.expires');
+       window.localStorage.removeItem('streamelements.tips:read.refreshed');
+       shared.blargIAmDead(7);
+       return;
+      }
+     }
+     if (cfg.streamelements.hasOwnProperty('oauth_refreshed') && cfg.streamelements.oauth_refreshed > 0)
+     {
+      const tokAge = Math.floor(new Date().getTime() / 1000) - cfg.streamelements.oauth_refreshed;
+      if (tokAge < 24 * 60 * 60)
+       return;
+     }
+     const ret = await getOAuthToken(cfg.streamelements.oauth_refresh);
+     if (ret === false)
+      return;
+     cfg.streamelements.oauth = ret.access_token;
+     cfg.streamelements.oauth_refresh = ret.refresh_token;
+     cfg.streamelements.oauth_expires = Math.floor(new Date().getTime() / 1000) + ret.expires_in;
+     cfg.streamelements.oauth_refreshed = Math.floor(new Date().getTime() / 1000);
+     window.localStorage.setItem('streamelements.tips:read.oauth', cfg.streamelements.oauth);
+     window.localStorage.setItem('streamelements.tips:read.refresh', cfg.streamelements.oauth_refresh);
+     window.localStorage.setItem('streamelements.tips:read.expires', cfg.streamelements.oauth_expires);
+     window.localStorage.setItem('streamelements.tips:read.refreshed', cfg.streamelements.oauth_refreshed);
+    }
+
     return {
-     socket: streamelementsWS
+     socket: streamelementsWS,
+     updateOAuth: updateOAuth
     };
    }();
 
@@ -7659,6 +7761,9 @@
        else
         document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Point Redeems<br><br>Please Check Your Client ID and OAuth Token</div>';
        break;
+      case 7:
+       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Warning:<br><br>Your StreamElements OAuth Token is Expired<br><br>Please Update your StreamElements OAuth Token</div>';
+       break;
      }
      window.setTimeout(function(){document.body.innerHTML = ''; if (showButton) login.showIn();}, 15000);
     }
@@ -7893,8 +7998,13 @@
     }
     if (cfg.hasOwnProperty('streamlabs') && cfg.streamlabs.hasOwnProperty('token') && cfg.streamlabs.token !== false && cfg.streamlabs.token !== 'SOCKET_TOKEN')
      streamlabs.socket();
-    if (cfg.hasOwnProperty('streamelements') && ((cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID') || (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN')))
-     streamelements.socket();
+    if (cfg.hasOwnProperty('streamelements'))
+    {
+     if (cfg.streamelements.hasOwnProperty('oauth_refresh') && cfg.streamelements.oauth_refresh !== false && cfg.streamelements.oauth_refresh !== 'OAUTH_REFRESH')
+      await streamelements.updateOAuth();
+     if ((cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID') || (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN'))
+      streamelements.socket();
+    }
     if (cfg.display.extended.useFFZ)
      await thirdparty.ffz.global();
     if (cfg.display.extended.useBTTV)
