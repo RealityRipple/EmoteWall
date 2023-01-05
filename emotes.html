@@ -3013,7 +3013,7 @@
          for (let i = 0, l = oK.zwe.length; i < l; i++)
          {
           _eActive++;
-          iArr.push(emote.addEmoteToDoc(tInit, oK.zwe[i].url, s, true, false, {x: cX, y: cY}));
+          iArr.push(display.emote.addEmoteToDoc(tInit, oK.zwe[i].url, s, true, false, {x: cX, y: cY}));
          }
         }
         window.setTimeout(_explode, sendUp * 1000, tInit, kList, iArr, cX, cY, sS, sW, sH, iKC);
@@ -4363,7 +4363,7 @@
           return;
          const rB = shared.rnd(lK);
          _eActive--;
-         emote.list.StraightLine(kList[rB].url, kList[rB].zwe ?? [], sW, sH, sS, oH, oV, false, tInit);
+         display.emote.list.StraightLine(kList[rB].url, kList[rB].zwe ?? [], sW, sH, sS, oH, oV, false, tInit);
          await _sleep(50);
         }
         break;
@@ -4376,7 +4376,7 @@
           return;
          const rF = shared.rnd(lK);
          _eActive--;
-         emote.list.Fountain(kList[rF].url, kList[rF].zwe ?? [], sW, sH, sS, fX, fY, false, tInit);
+         display.emote.list.Fountain(kList[rF].url, kList[rF].zwe ?? [], sW, sH, sS, fX, fY, false, tInit);
          await _sleep(50);
         }
         break;
@@ -4387,12 +4387,12 @@
           return;
          const rN = shared.rnd(lK);
          _eActive--;
-         emote.list.Confetti(kList[rN].url, kList[rN].zwe ?? [], sW, sH, sSm, false, tInit);
+         display.emote.list.Confetti(kList[rN].url, kList[rN].zwe ?? [], sW, sH, sSm, false, tInit);
          await _sleep(25);
         }
         break;
        default:
-        if (typeof emote.list[kStyle.style] === 'undefined')
+        if (typeof display.emote.list[kStyle.style] === 'undefined')
          return false;
         for (let i = 0; i < kStyle.count; i++)
         {
@@ -4401,9 +4401,9 @@
          const r = shared.rnd(lK);
          _eActive--;
          if (kStyle.style === 'StraightLine')
-          emote.list.StraightLine(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, false, false, tInit);
+          display.emote.list.StraightLine(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, false, false, tInit);
          else
-          emote.list[kStyle.style](kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, tInit);
+          display.emote.list[kStyle.style](kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, tInit);
          await _sleep(100);
         }
       }
@@ -4576,7 +4576,7 @@
     function eraseAll()
     {
      _iTitanic = new Date().getTime();
-     kappa.hide();
+     display.kappa.hide();
      let cubes = document.getElementsByClassName('scene');
      while (cubes.length)
       cubes[0].parentElement.removeChild(cubes[0]);
@@ -4853,7 +4853,7 @@
          const n = d.data.redemption.reward.title;
          if (!d.data.redemption.hasOwnProperty('user_input'))
          {
-          await parse.event.redeem(n, false);
+          await twitch.parse.event.redeem(n, false);
           return;
          }
          const lnID = d.data.redemption.reward.id;
@@ -4866,7 +4866,7 @@
           _rList[lnID].name = n;
          while (_rList[lnID].cmds.length > 0)
          {
-          await parse.event.redeem(n, _rList[lnID].cmds.shift());
+          await twitch.parse.event.redeem(n, _rList[lnID].cmds.shift());
          }
          break;
        }
@@ -4937,7 +4937,7 @@
        {
         if (data[i].length === 0)
          continue;
-        let cmd = parse.message(data[i]);
+        let cmd = twitch.parse.message(data[i]);
         if (cmd === false)
         {
          console.log('Unparsed IRC Command: ', data[i]);
@@ -4956,8 +4956,8 @@
            // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
            cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
           }
-          if (!await parse.event.cheer(cmd))
-           parse.line(cmd);
+          if (!await twitch.parse.event.cheer(cmd))
+           twitch.parse.line(cmd);
           break;
          case 'NOTICE':
           if (cmd.params.length > 1 && cmd.params[1] === 'Login authentication failed')
@@ -5018,7 +5018,7 @@
           switch (cmd.tags['msg-id'])
           {
            case 'raid':
-            parse.event.raid(cmd);
+            twitch.parse.event.raid(cmd);
             break;
            case 'sub':
            case 'resub':
@@ -5026,14 +5026,14 @@
            case 'submysterygift':
            case 'giftpaidupgrade':
            case 'primepaidupgrade':
-            parse.event.sub(cmd);
+            twitch.parse.event.sub(cmd);
             break;
            case 'bitsbadgetier':
-            parse.event.badge(cmd);
+            twitch.parse.event.badge(cmd);
             break;
            default:
             if (cmd.params.length > 1)
-             parse.line(cmd);
+             twitch.parse.line(cmd);
           }
           break;
         }
@@ -5834,26 +5834,26 @@
          if ((lv & kAccess) !== 0)
          {
           let a = [];
-          a = a.concat(parse.content.twitch(cmd, true));
+          a = a.concat(twitch.parse.content.twitch(cmd, true));
           if (cfg.display.useEmoji)
-           a = a.concat(await parse.content.emoji(cmd, cfg.display.useEmoji, true));
+           a = a.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true));
           if (cfg.display.extended.useFFZ)
-           a = a.concat(parse.content['3rdparty'].ffz(cmd, true));
+           a = a.concat(twitch.parse.content['3rdparty'].ffz(cmd, true));
           if (cfg.display.extended.useBTTV)
           {
-           a = a.concat(parse.content['3rdparty'].bttv.general(cmd, true));
-           a = a.concat(parse.content['3rdparty'].bttv.user(cmd, true));
+           a = a.concat(twitch.parse.content['3rdparty'].bttv.general(cmd, true));
+           a = a.concat(twitch.parse.content['3rdparty'].bttv.user(cmd, true));
           }
           if (cfg.display.extended.use7TV)
-           a = a.concat(parse.content['3rdparty']['7tv'].general(cmd, true));
+           a = a.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd, true));
           if (cfg.display.extended.useBTTV)
-           parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
+           twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
           if (cfg.display.extended.use7TV)
-           parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
+           twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
           if (cfg.display.extended.useBTTV)
-           parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
+           twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
           if (cfg.display.extended.use7TV)
-           parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
+           twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
           a = _handleDuplicates(a);
           _kLast = kNow;
           display.kappa.show(a, kC);
@@ -5888,26 +5888,26 @@
         if ((lv & cfg.display.kappa.access) !== 0)
         {
          let a = [];
-         a = a.concat(parse.content.twitch(cmd, true));
+         a = a.concat(twitch.parse.content.twitch(cmd, true));
          if (cfg.display.useEmoji)
-          a = a.concat(await parse.content.emoji(cmd, cfg.display.useEmoji, true));
+          a = a.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true));
          if (cfg.display.extended.useFFZ)
-          a = a.concat(parse.content['3rdparty'].ffz(cmd, true));
+          a = a.concat(twitch.parse.content['3rdparty'].ffz(cmd, true));
          if (cfg.display.extended.useBTTV)
          {
-          a = a.concat(parse.content['3rdparty'].bttv.general(cmd, true));
-          a = a.concat(parse.content['3rdparty'].bttv.user(cmd, true));
+          a = a.concat(twitch.parse.content['3rdparty'].bttv.general(cmd, true));
+          a = a.concat(twitch.parse.content['3rdparty'].bttv.user(cmd, true));
          }
          if (cfg.display.extended.use7TV)
-          a = a.concat(parse.content['3rdparty']['7tv'].general(cmd, true));
+          a = a.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd, true));
          if (cfg.display.extended.useBTTV)
-          parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
+          twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
          if (cfg.display.extended.use7TV)
-          parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
+          twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
          if (cfg.display.extended.useBTTV)
-          parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
+          twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
          if (cfg.display.extended.use7TV)
-          parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
+          twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
          a = _handleDuplicates(a);
          _kLast = kNow;
          display.kappa.show(a);
@@ -5916,26 +5916,26 @@
        }
       }
       let p = [];
-      p = p.concat(parse.content.twitch(cmd));
+      p = p.concat(twitch.parse.content.twitch(cmd));
       if (cfg.display.useEmoji)
-       p = p.concat(await parse.content.emoji(cmd, cfg.display.useEmoji));
+       p = p.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji));
       if (cfg.display.extended.useFFZ)
-       p = p.concat(parse.content['3rdparty'].ffz(cmd));
+       p = p.concat(twitch.parse.content['3rdparty'].ffz(cmd));
       if (cfg.display.extended.useBTTV)
       {
-       p = p.concat(parse.content['3rdparty'].bttv.general(cmd));
-       p = p.concat(parse.content['3rdparty'].bttv.user(cmd));
+       p = p.concat(twitch.parse.content['3rdparty'].bttv.general(cmd));
+       p = p.concat(twitch.parse.content['3rdparty'].bttv.user(cmd));
       }
       if (cfg.display.extended.use7TV)
-       p = p.concat(parse.content['3rdparty']['7tv'].general(cmd));
+       p = p.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd));
       if (cfg.display.extended.useBTTV)
-       parse.content['3rdparty'].bttv.zwe(p, cmd, 1);
+       twitch.parse.content['3rdparty'].bttv.zwe(p, cmd, 1);
       if (cfg.display.extended.use7TV)
-       parse.content['3rdparty']['7tv'].zwe(p, cmd, 1);
+       twitch.parse.content['3rdparty']['7tv'].zwe(p, cmd, 1);
       if (cfg.display.extended.useBTTV)
-       parse.content['3rdparty'].bttv.zwe(p, cmd, 2);
+       twitch.parse.content['3rdparty'].bttv.zwe(p, cmd, 2);
       if (cfg.display.extended.use7TV)
-       parse.content['3rdparty']['7tv'].zwe(p, cmd, 2);
+       twitch.parse.content['3rdparty']['7tv'].zwe(p, cmd, 2);
       p = _handleDuplicates(p);
       if (p.length === 0)
        return;
@@ -5987,26 +5987,26 @@
        }
        if (cfg.event.cheer.useMsg)
        {
-        p = p.concat(parse.content.twitch(cmd));
+        p = p.concat(twitch.parse.content.twitch(cmd));
         if (cfg.display.useEmoji)
-         p = p.concat(await parse.content.emoji(cmd, cfg.display.useEmoji));
+         p = p.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji));
         if (cfg.display.extended.useFFZ)
-         p = p.concat(parse.content['3rdparty'].ffz(cmd));
+         p = p.concat(twitch.parse.content['3rdparty'].ffz(cmd));
         if (cfg.display.extended.useBTTV)
         {
-         p = p.concat(parse.content['3rdparty'].bttv.general(cmd));
-         p = p.concat(parse.content['3rdparty'].bttv.user(cmd));
+         p = p.concat(twitch.parse.content['3rdparty'].bttv.general(cmd));
+         p = p.concat(twitch.parse.content['3rdparty'].bttv.user(cmd));
         }
         if (cfg.display.extended.use7TV)
-         p = p.concat(parse.content['3rdparty']['7tv'].general(cmd));
+         p = p.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd));
         if (cfg.display.extended.useBTTV)
-         parse.content['3rdparty'].bttv.zwe(p, cmd, 1);
+         twitch.parse.content['3rdparty'].bttv.zwe(p, cmd, 1);
         if (cfg.display.extended.use7TV)
-         parse.content['3rdparty']['7tv'].zwe(p, cmd, 1);
+         twitch.parse.content['3rdparty']['7tv'].zwe(p, cmd, 1);
         if (cfg.display.extended.useBTTV)
-         parse.content['3rdparty'].bttv.zwe(p, cmd, 2);
+         twitch.parse.content['3rdparty'].bttv.zwe(p, cmd, 2);
         if (cfg.display.extended.use7TV)
-         parse.content['3rdparty']['7tv'].zwe(p, cmd, 2);
+         twitch.parse.content['3rdparty']['7tv'].zwe(p, cmd, 2);
        }
        else
         await parseLine(cmd);
@@ -6082,26 +6082,26 @@
        {
         if (cfg.event.sub.useMsg)
         {
-         a = a.concat(parse.content.twitch(cmd, true));
+         a = a.concat(twitch.parse.content.twitch(cmd, true));
          if (cfg.display.useEmoji)
-          a = a.concat(await parse.content.emoji(cmd, cfg.display.useEmoji, true));
+          a = a.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true));
          if (cfg.display.extended.useFFZ)
-          a = a.concat(parse.content['3rdparty'].ffz(cmd, true));
+          a = a.concat(twitch.parse.content['3rdparty'].ffz(cmd, true));
          if (cfg.display.extended.useBTTV)
          {
-          a = a.concat(parse.content['3rdparty'].bttv.general(cmd, true));
-          a = a.concat(parse.content['3rdparty'].bttv.user(cmd, true));
+          a = a.concat(twitch.parse.content['3rdparty'].bttv.general(cmd, true));
+          a = a.concat(twitch.parse.content['3rdparty'].bttv.user(cmd, true));
          }
          if (cfg.display.extended.use7TV)
-          a = a.concat(parse.content['3rdparty']['7tv'].general(cmd, true));
+          a = a.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd, true));
          if (cfg.display.extended.useBTTV)
-          parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
+          twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
          if (cfg.display.extended.use7TV)
-          parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
+          twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
          if (cfg.display.extended.useBTTV)
-          parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
+          twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
          if (cfg.display.extended.use7TV)
-          parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
+          twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
         }
         else
          await parseLine(cmd);
@@ -6255,26 +6255,26 @@
          return;
         }
         let a = [];
-        a = a.concat(parse.content.twitch(cmd, true));
+        a = a.concat(twitch.parse.content.twitch(cmd, true));
         if (cfg.display.useEmoji)
-         a = a.concat(await parse.content.emoji(cmd, cfg.display.useEmoji, true));
+         a = a.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true));
         if (cfg.display.extended.useFFZ)
-         a = a.concat(parse.content['3rdparty'].ffz(cmd, true));
+         a = a.concat(twitch.parse.content['3rdparty'].ffz(cmd, true));
         if (cfg.display.extended.useBTTV)
         {
-         a = a.concat(parse.content['3rdparty'].bttv.general(cmd, true));
-         a = a.concat(parse.content['3rdparty'].bttv.user(cmd, true));
+         a = a.concat(twitch.parse.content['3rdparty'].bttv.general(cmd, true));
+         a = a.concat(twitch.parse.content['3rdparty'].bttv.user(cmd, true));
         }
         if (cfg.display.extended.use7TV)
-         a = a.concat(parse.content['3rdparty']['7tv'].general(cmd, true));
+         a = a.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd, true));
         if (cfg.display.extended.useBTTV)
-         parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
+         twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
         if (cfg.display.extended.use7TV)
-         parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
+         twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
         if (cfg.display.extended.useBTTV)
-         parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
+         twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
         if (cfg.display.extended.use7TV)
-         parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
+         twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
         a = _handleDuplicates(a);
         _kLast = kNow;
         display.kappa.show(a, kC);
@@ -7502,9 +7502,9 @@
      window.clearTimeout(thirdparty.timer);
      thirdparty.timer = false;
      if (cfg.display.extended.useFFZ)
-      ffz.channel(twitch.net.channelID);
+      thirdparty.ffz.channel(twitch.net.channelID);
      if (cfg.display.extended.use7TV)
-      _7tv.channel(twitch.net.channelID);
+      thirdparty['7tv'].channel(twitch.net.channelID);
      thirdparty.timer = window.setTimeout(reload3rdParty, thirdparty.interval, chID);
     }
 
