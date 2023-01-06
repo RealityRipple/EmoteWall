@@ -207,14 +207,6 @@
     *                   value is possible: -1, which will refer to the AMOUNT value present in the event. This can be
     *                   the number of raiders, bits cheered, dollars tipped, subs gifted, or months subscribed.
     *
-    *     command Settings related to triggering a specific kappagen style by chat command.
-    *
-    *      access A bitwise flag representing which users can trigger this kappagen with a command.
-    *
-    *      aliases  An array of style-specific kappa command aliases which can be used to force-trigger this kappagen.
-    *
-    *     redeem  An array of style-specific channel point reward names which can be used to force-trigger this kappagen.
-    *
     *    Conga    Settings related to Conga kappagen. These settings will be the default for all instances of
     *             Conga kappagen.
     *
@@ -249,8 +241,7 @@
     *   aliases   An array of kappagen command aliases which can be used to force-trigger kappagens.
     *
     *   cooldown  The number of seconds between force-triggered kappagens using an above alias. Any commands sent before
-    *             the cooldown will be treated like normal text, which may include showing any emotes in the message as
-    *             normal emotes rather than in a kappagen.
+    *             the cooldown will be ignored, unless the another command shares the same alias.
     *
     *   conga     Settings related to Conga kappagen.
     *
@@ -339,8 +330,6 @@
     *               If TRUE, a kappagen will occur.
     *               If FALSE, no kappagen will occur.
     *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
-    *                Keep in mind that kappagen arrays are also associative, and may have independent settings for
-    *                kappas such as TheCube and Text. This applies to all such arrays listed below as well.
     *
     *   originEmotes  A boolean to toggle the use of the raiding streamer's channel emotes for raid kappagens.
     *                If TRUE, raid kappagens will use channel emotes from the raider's channel (not including third-party).
@@ -512,8 +501,8 @@
     *              The values used in these ranges can be controlled with the cfg.streamlabs.curMul setting (see above)
     *              based on your default currency in Streamlabs.
     *
-    *    pledge    Minimum pledge amount through Streamlabs for a kappagen. This value can be a boolean, integer,
-    *              or array:
+    *    pledge   Minimum pledge amount through Streamlabs for a kappagen. This value can be a boolean, integer,
+    *             or array:
     *              If TRUE, a kappagen will occur on all Streamlabs pledges.
     *              If FALSE, no kappagen will occur on pledges.
     *              If Integer, the value is the minimum amount required for a tip to trigger a kappagen.
@@ -541,6 +530,64 @@
     *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *              The values used in these ranges can be controlled with the cfg.streamelements.curMul setting (see above)
     *              based on your default currency in StreamElements.
+    *
+    * commands    An array of commands which can trigger one or more kappagens, or clear the screen.
+    *             Each command is an object with the following properties:
+    *
+    *  aliases    An array of kappa command aliases which can be used to force-trigger this kappagen.
+    *
+    *  access     A bitwise flag representing which users can trigger this kappagen with a command.
+    *             This value will fall back to the general kappagen access value.
+    *
+    *  cooldown   The number of seconds between force-triggered kappagens using an above alias. Any commands sent before
+    *             the cooldown will be ignored, unless the another command shares the same alias.
+    *             This value is optional; no value is the same as a value of 0, which is, no cooldown.
+    *
+    *  redeem     An array of style-specific channel point reward names which can be used to force-trigger this kappagen.
+    *
+    *  erase      If this property exists, the command will erase the screen rather than showing a style. Any 'styles'
+    *             property will be ignored, regardless of the value of erase.
+    *
+    *  styles     An array of styles. A kappagen of one of the listed styles will occur upon command.
+    *
+    *
+    * Note on Event and Command Kappagen Entries
+    * ------------------------------------------
+    *
+    * Keep in mind that kappagen arrays are also associative, and may have independent settings for kappas such as
+    * TheCube and Text. The kappagen style can also contain the following values:
+    *
+    *  count      The number of emotes to show for this kappagen. This can be an integer or an object.
+    *              If this property does not exist, it will fall back to the count setting for the kappagen style.
+    *               If the kappagen style has no count property, then the global kappagen count will be used.
+    *              If Integer, this is the number of emotes that will be shown in this kappagen.
+    *              If Object:
+    *
+    *   default   The number of emotes to show for this kappagen by default. This must be an integer.
+    *              If this property does not exist, it will fall back as the parent count would.
+    *              If Integer, this is the number of emotes that will be shown in this kappagen.
+    *
+    *   dynamic   This is a boolean value to determine if the count can be changed by users.
+    *              If this property does not exist, it will fall back to FALSE.
+    *              If TRUE, a user may include a number in the command's parameters, and that number will be used.
+    *              If FALSE, the default count will be used exclusively.
+    *
+    *   maximum   The maximum number of emotes to show for this kappagen if dynamic is set to TRUE. This must be
+    *             an integer.
+    *              If this property does not exist, it will fall back to the maximum number of emotes allowed on screen.
+    *              If Integer, this is the maximum number of emotes this kappagen style can display.
+    *
+    * emotes      A list of emotes that will be used for this kappagen. This can be an array or an object.
+    *              If Array, each entry must be a string containing the name or URL of an emote, or an emoji.
+    *               Please note that only your channel or global emotes can be named (including 3rd-party).
+    *              If object:
+    *
+    *  list       This must be an array of strings, the same as the Array entry of the parent emotes property above.
+    *
+    *  dynamic    This is a boolean value to determine if the displayed emotes can be set by the user.
+    *              If this property does not exist, it will fall back to TRUE.
+    *              If TRUE, a user may include emotes in the command's parameters, and those emotes will be used.
+    *              If FALSE, only the emotes in the list property above will be used.
     *
     */
 
@@ -721,7 +768,8 @@
       },
       streamelements: false
      }
-    }
+    },
+    commands: []
    };
 
    /* Additional Notes and Caveats
@@ -4153,6 +4201,17 @@
       return _getNextKappaEx(a, k.params);
      }
 
+     function _getKappaCountParam(p)
+     {
+      const a = p.split(' ');
+      for (let i = 0, l = a.length; i < l; i++)
+      {
+       if (!isNaN(a[i]))
+        return parseInt(a[i], 10);
+      }
+      return false;
+     }
+
      function _getNextKappaEx(kS = false, kP = false)
      {
       if (typeof kS !== 'object')
@@ -4182,16 +4241,35 @@
        iKC = cfg.display.kappa.styles[s].count;
       if (p === undefined)
        p = {};
+      let pMax = cfg.emote.max;
       if (p.hasOwnProperty('count'))
       {
-       let tKC = p.count;
+       let tKC = 0;
+       if (Number.isInteger(p.count))
+        tKC = p.count;
+       else
+       {
+        if (p.count.hasOwnProperty('maximum'))
+         pMax = p.count.max;
+        if (p.count.hasOwnProperty('default'))
+         tKC = p.count.default;
+        if (p.count.hasOwnProperty('dynamic') && p.count.dynamic !== false)
+        {
+         if (p.hasOwnProperty('params') && p.params !== null)
+         {
+          const pC = _getKappaCountParam(p.params);
+          if (pC !== false)
+           tKC = pC;
+         }
+        }
+       }
        if (tKC === -1 && kP !== false && kP.hasOwnProperty('%AMOUNT%') && Math.ceil(kP['%AMOUNT%']) > 0)
         tKC = Math.ceil(kP['%AMOUNT%']);
        if (tKC > 0)
         iKC = tKC;
       }
-      if (cfg.emote.max > 0 && iKC > cfg.emote.max)
-       iKC = cfg.emote.max;
+      if (pMax > 0 && iKC > pMax)
+       iKC = pMax;
       return {style: s, prefs: p, count: iKC};
      }
 
@@ -4228,6 +4306,103 @@
       return k.count;
      }
 
+     async function _StringArrayToEmoteArray(s)
+     {
+      let r = [];
+      let idx = 0;
+      for (let i = 0, l = s.length; i < l; i++)
+      {
+       let v = {};
+       v.str = s[i];
+       v.pos = idx;
+       idx+= s[i].length + 1;
+       if (s[i].includes('//'))
+       {
+        v.svc = 'u';
+        v.scope = 'g';
+        v.url = s[i];
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.twitch.hasOwnProperty(s[i]))
+       {
+        v.svc = 't';
+        v.url = thirdparty.emotes.twitch[s[i]].url;
+        v.scope = thirdparty.emotes.twitch[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (cfg.display.useEmoji !== false)
+       {
+        const cmd = {params: [null, s[i]]};
+        const eMoji = await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true);
+        if (eMoji.length > 0)
+        {
+         v.svc = 'e';
+         v.scope = 'g';
+         const vStart = v.pos;
+         for (let j = 0, m = eMoji.length; j < m; j++)
+         {
+          v.url = eMoji[j].url;
+          v.str = eMoji[j].str;
+          v.pos = vStart + eMoji[j].pos;
+          r.push(v);
+         }
+         continue;
+        }
+       }
+       if (thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope === 'c')
+       {
+        v.svc = 'f';
+        v.url = thirdparty.emotes.ffz[s[i]].url;
+        v.scope = thirdparty.emotes.ffz[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.bttv.hasOwnProperty(s[i]) && thirdparty.emotes.bttv[s[i]].scope === 'c')
+       {
+        v.svc = 'b';
+        v.url = thirdparty.emotes.bttv[s[i]].url;
+        v.scope = thirdparty.emotes.bttv[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes['7tv'].hasOwnProperty(s[i]) && thirdparty.emotes['7tv'][s[i]].scope === 'c')
+       {
+        v.svc = '7';
+        v.url = thirdparty.emotes['7tv'][s[i]].url;
+        v.scope = thirdparty.emotes['7tv'][s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope !== 'c')
+       {
+        v.svc = 'f';
+        v.url = thirdparty.emotes.ffz[s[i]].url;
+        v.scope = thirdparty.emotes.ffz[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.bttv.hasOwnProperty(s[i]) && thirdparty.emotes.bttv[s[i]].scope !== 'c')
+       {
+        v.svc = 'b';
+        v.url = thirdparty.emotes.bttv[s[i]].url;
+        v.scope = thirdparty.emotes.bttv[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes['7tv'].hasOwnProperty(s[i]) && thirdparty.emotes['7tv'][s[i]].scope !== 'c')
+       {
+        v.svc = '7';
+        v.url = thirdparty.emotes['7tv'][s[i]].url;
+        v.scope = thirdparty.emotes['7tv'][s[i]].scope;
+        r.push(v);
+        continue;
+       }
+      }
+      return r;
+     }
+
      async function showKappa(kList, kStyles = false, kParams = false)
      {
       const kStyle = _getNextKappaEx(kStyles, kParams);
@@ -4235,6 +4410,28 @@
        return;
       if (kStyle.style === undefined)
        return;
+      if (kStyle.prefs.hasOwnProperty('emotes'))
+      {
+       let kForce = [];
+       let bForce = false;
+       if (Array.isArray(kStyle.prefs.emotes))
+        kForce = kStyle.prefs.emotes;
+       else
+       {
+        if (kStyle.prefs.emotes.hasOwnProperty('list'))
+         kForce = kStyle.prefs.emotes.list;
+        if (kStyle.prefs.emotes.hasOwnProperty('dynamic') && kStyle.prefs.emotes.dynamic === false)
+         bForce = true;
+       }
+       if (!Array.isArray(kList) || kList.length < 1)
+        bForce = true;
+       if (bForce)
+       {
+        const fList = await _StringArrayToEmoteArray(kForce);
+        if (fList.length > 0)
+         kList = fList;
+       }
+      }
       if (!Array.isArray(kList) || kList.length < 1)
        kList = cList;
       if (!Array.isArray(kList) || kList.length < 1)
@@ -4588,6 +4785,7 @@
      let imgs = document.getElementsByTagName('img');
      while (imgs.length)
       imgs[0].parentElement.removeChild(imgs[0]);
+     twitch.parse.clearCooldowns();
     }
 
     return {
@@ -5069,7 +5267,9 @@
      async function _loadEmote_channel(chID)
      {
       cList = [];
-      const r = await _findEmote_channel(chID);
+      if (!thirdparty.emotes.hasOwnProperty('twitch'))
+       thirdparty.emotes.twitch = {};
+      const r = await _findEmote_channel(chID, thirdparty.emotes.twitch);
       if (r === false)
        return false;
       cList = r;
@@ -5105,7 +5305,7 @@
 
     const parse = function()
     {
-     let _kLast = 0;      // last kappagen command event (for cooldown)
+     let _aLast = {};     // last kappagen command event (for cooldown)
 
      function parseUser(cmd, latinOnly = false)
      {
@@ -5779,119 +5979,160 @@
       };
      }();
 
-     async function parseLine(cmd)
+     const parseLine = function()
      {
-      let lv = -1;
-      const kNow = new Date().getTime();
-      if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('custom-reward-id'))
+      async function task(cmd)
       {
+       if (await _parseCustomReward(cmd))
+        return;
+       if (cmd.params.length < 2)
+        return;
+       if (await _parseCommand(cmd))
+        return;
+       const p = _handleDuplicates(await _eListFromCmd(cmd));
+       if (p.length === 0)
+        return;
+       const lv = await _level.get(cmd);
+       if ((lv & cfg.display.access) === 0)
+        return;
+       display.emote.addToShowList(p);
+       display.emote.showEmotes();
+      }
+
+      async function _parseCustomReward(cmd)
+      {
+       if (!cmd.hasOwnProperty('tags'))
+        return false;
+       if (!cmd.tags.hasOwnProperty('custom-reward-id'))
+        return false;
        const lnID = cmd.tags['custom-reward-id'];
        if (!_rList.hasOwnProperty(lnID))
        {
         _rList[lnID] = {name: false, cmds: [cmd]};
-        return;
+        return true;
        }
        _rList[lnID].cmds.push(cmd);
        if (_rList[lnID].name === false)
-        return;
+        return true;
        while (_rList[lnID].cmds.length > 0)
        {
         await event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift());
        }
-       return;
+       return true;
       }
-      if (cmd.params.length > 1 && (cfg.display.kappa.cooldown === 0 || kNow - _kLast > cfg.display.kappa.cooldown * 1000))
+
+      async function _parseCommand(cmd)
       {
+       let lv = -1;
+       const kNow = new Date().getTime();
        const m = cmd.params[1].toLowerCase();
-       for (const k in cfg.display.kappa.styles)
+       let foundAdvCmd = false;
+       for (const k of cfg.commands)
        {
-        if (!cfg.display.kappa.styles.hasOwnProperty(k))
+        if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase'))
          continue;
-        if (!cfg.display.kappa.styles[k].hasOwnProperty('command'))
+        if (!k.hasOwnProperty('aliases'))
          continue;
-        if (!cfg.display.kappa.styles[k].command.hasOwnProperty('aliases'))
-         continue;
-        let kAccess = cfg.display.kappa.access;
-        if (cfg.display.kappa.styles[k].command.hasOwnProperty('access'))
-         kAccess = cfg.display.kappa.styles[k].command.access;
-        let kC = {};
-        kC[k] = cfg.display.kappa.styles[k];
-        if (cfg.display.kappa.styles[k].command.aliases.includes(m))
+        let foundKCmd = false;
+        if (k.aliases.includes(m))
+         foundKCmd = m;
+        if (foundKCmd === false)
         {
-         if (lv === -1)
-          lv = await _level.get(cmd);
-         if ((lv & kAccess) !== 0)
+         for (let i = 0, l = k.aliases.length; i < l; i++)
          {
-          _kLast = kNow;
-          display.kappa.show(false, kC);
-          return;
+          if (m.slice(0, k.aliases[i].length + 1) === k.aliases[i] + ' ')
+          {
+           foundKCmd = k.aliases[i];
+           break;
+          }
          }
         }
-        let foundKCmd = false;
-        for (let i = 0, l = cfg.display.kappa.styles[k].command.aliases.length; i < l; i++)
+        if (foundKCmd === false)
+         continue;
+        let kAccess = cfg.display.kappa.access;
+        if (k.hasOwnProperty('access'))
+         kAccess = k.access;
+        if (lv === -1)
+         lv = await _level.get(cmd);
+        if ((lv & kAccess) === 0)
+         continue;
+        foundAdvCmd = true;
+        if (k.hasOwnProperty('cooldown'))
         {
-         if (m.slice(0, cfg.display.kappa.styles[k].command.aliases[i].length + 1) === cfg.display.kappa.styles[k].command.aliases[i] + ' ')
+         let hK = _hashCode(k);
+         if (!_aLast.hasOwnProperty(hK))
+          _aLast[hK] = 0;
+         if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
+          continue;
+        }
+        if (k.hasOwnProperty('erase'))
+        {
+         display.eraseAll();
+         return;
+        }
+        let kC = {};
+        for (let kS in k.styles)
+        {
+         if (!k.styles.hasOwnProperty(kS))
+          continue;
+         kC[kS] = structuredClone(k.styles[kS]);
+         kC[kS].command = foundKCmd;
+         if (foundKCmd.length === m.length)
+          kC[kS].params = null;
+         else
+          kC[kS].params = m.slice(foundKCmd.length + 1);
+        }
+        let eA = false;
+        if (foundKCmd.length < m.length)
+         eA = _handleDuplicates(await _eListFromCmd(cmd, true));
+        _aLast[_hashCode(k)] = kNow;
+        display.kappa.show(eA, kC);
+        return true;
+       }
+       let foundCmd = false;
+       if (cfg.display.kappa.aliases.includes(m))
+        foundCmd = m;
+       if (foundCmd === false)
+       {
+        for (let i = 0, l = cfg.display.kappa.aliases.length; i < l; i++)
+        {
+         if (m.slice(0, cfg.display.kappa.aliases[i].length + 1) === cfg.display.kappa.aliases[i] + ' ')
          {
-          foundKCmd = true;
+          foundCmd = cfg.display.kappa.aliases[i];
           break;
          }
         }
-        if (foundKCmd)
-        {
-         if (lv === -1)
-          lv = await _level.get(cmd);
-         if ((lv & kAccess) !== 0)
-         {
-          const a = _handleDuplicates(await _eListFromCmd(cmd, true));
-          _kLast = kNow;
-          display.kappa.show(a, kC);
-          return;
-         }
-        }
        }
-       if (cfg.display.kappa.aliases.includes(m))
-       {
-        if (lv === -1)
-         lv = await _level.get(cmd);
-        if ((lv & cfg.display.kappa.access) !== 0)
-        {
-         _kLast = kNow;
-         display.kappa.show(false);
-         return;
-        }
-       }
-       let foundCmd = false;
-       for (let i = 0, l = cfg.display.kappa.aliases.length; i < l; i++)
-       {
-        if (m.slice(0, cfg.display.kappa.aliases[i].length + 1) === cfg.display.kappa.aliases[i] + ' ')
-        {
-         foundCmd = true;
-         break;
-        }
-       }
-       if (foundCmd)
-       {
-        if (lv === -1)
-         lv = await _level.get(cmd);
-        if ((lv & cfg.display.kappa.access) !== 0)
-        {
-         const a = _handleDuplicates(await _eListFromCmd(cmd, true));
-         _kLast = kNow;
-         display.kappa.show(a);
-         return;
-        }
-       }
+       if (foundCmd === false)
+        return foundAdvCmd;
+       if (lv === -1)
+        lv = await _level.get(cmd);
+       if ((lv & cfg.display.kappa.access) === 0)
+        return foundAdvCmd;
+       let h = _hashCode(null);
+       if (!_aLast.hasOwnProperty(h))
+        _aLast[h] = 0;
+       if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
+        return true;
+       let a = false;
+       if (foundCmd.length < m.length)
+        a = _handleDuplicates(await _eListFromCmd(cmd, true));
+       _aLast[h] = kNow;
+       display.kappa.show(a);
+       return true;
       }
-      const p = _handleDuplicates(await _eListFromCmd(cmd));
-      if (p.length === 0)
-       return;
-      if (lv === -1)
-       lv = await _level.get(cmd);
-      if ((lv & cfg.display.access) === 0)
-       return;
-      display.emote.addToShowList(p);
-      display.emote.showEmotes();
-     }
+
+      function _hashCode(o)
+      {
+       const s = JSON.stringify(o);
+       let h = 0;
+       for (let i = 0, l = s.length; i < l; i++)
+        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+       return h;
+      }
+
+      return task;
+     }();
 
      const event = function()
      {
@@ -6145,19 +6386,15 @@
       async function parseRedeem(title, cmd)
       {
        const kNow = new Date().getTime();
-       for (const k in cfg.display.kappa.styles)
+       for (const k of cfg.commands)
        {
-        if (!cfg.display.kappa.styles.hasOwnProperty(k))
+        if (!k.hasOwnProperty('redeem'))
          continue;
-        if (!cfg.display.kappa.styles[k].hasOwnProperty('redeem'))
+        if (!k.redeem.includes(title))
          continue;
-        if (!cfg.display.kappa.styles[k].redeem.includes(title))
-         continue;
-        let kC = {};
-        kC[k] = cfg.display.kappa.styles[k];
+        let kC = k.styles;
         if (cmd === false)
         {
-         _kLast = kNow;
          display.kappa.show(false, kC);
          return;
         }
@@ -6282,15 +6519,13 @@
         needF = true;
        else
        {
-        for (const k in cfg.display.kappa.styles)
+        for (const k of cfg.commands)
         {
-         if (!cfg.display.kappa.styles.hasOwnProperty(k))
+         if (!k.hasOwnProperty('styles'))
           continue;
-         if (!cfg.display.kappa.styles[k].hasOwnProperty('command'))
+         if (!k.hasOwnProperty('access'))
           continue;
-         if (!cfg.display.kappa.styles[k].command.hasOwnProperty('access'))
-          continue;
-         if ((cfg.display.kappa.styles[k].command.access & 0x002) === 0x002 && (cfg.display.kappa.styles[k].command.access & 0x001) !== 0x001)
+         if ((k.access & 0x002) === 0x002 && (k.access & 0x001) !== 0x001)
          {
           needF = true;
           break;
@@ -6394,17 +6629,23 @@
       return r;
      }
 
+     function clearCooldowns()
+     {
+      _aLast = {};
+     }
+
      return {
       user: parseUser,
       message: parseMsg,
       content: content,
       line: parseLine,
       event: event,
+      clearCooldowns: clearCooldowns,
       uReg: /[^A-Za-z0-9_]/
      };
     }();
 
-    async function _findEmote_channel(chID)
+    async function _findEmote_channel(chID, n = false)
     {
      const url = 'https://api.twitch.tv/helix/chat/emotes?broadcaster_id=' + chID;
      const h = {
@@ -6427,14 +6668,60 @@
      {
       if (!j.data[i].hasOwnProperty('id'))
        continue;
+      if (n !== false && j.data[i].hasOwnProperty('name'))
+      {
+       n[j.data[i].name] = {
+        scope: 'c',
+        url: 'https://static-cdn.jtvnw.net/emoticons/v2/' + j.data[i].id + '/' + f + '/' + t + '/' + x,
+        id: j.data[i].id,
+        users: null
+       };
+      }
       ret.push({url: 'https://static-cdn.jtvnw.net/emoticons/v2/' + j.data[i].id + '/' + f + '/' + t + '/' + x});
      }
      return ret;
     }
 
+    async function findEmote_global()
+    {
+     if (!thirdparty.emotes.hasOwnProperty('twitch'))
+      thirdparty.emotes.twitch = {};
+     const url = 'https://api.twitch.tv/helix/chat/emotes/global';
+     const h = {
+      'Authorization': 'Bearer ' + cfg.login.oauth,
+      'Client-Id': cfg.login.client
+     };
+     const r = await shared.httpRequest(url, h, true);
+     if (r === false)
+      return false;
+     const j = JSON.parse(r);
+     if (!j.hasOwnProperty('data'))
+      return false;
+     if (!Array.isArray(j.data))
+      return false;
+     const f = 'default';
+     const t = 'dark';
+     const x = '3.0';
+     for (let i = 0, l = j.data.length; i < l; i++)
+     {
+      if (!j.data[i].hasOwnProperty('id'))
+       continue;
+      if (!j.data[i].hasOwnProperty('name'))
+       continue;
+      thirdparty.emotes.twitch[j.data[i].name] = {
+       scope: 'g',
+       url: 'https://static-cdn.jtvnw.net/emoticons/v2/' + j.data[i].id + '/' + f + '/' + t + '/' + x,
+       id: j.data[i].id,
+       users: null
+      };
+     }
+     return true;
+    }
+
     return {
      net: net,
-     parse: parse
+     parse: parse,
+     global: findEmote_global
     };
    }();
 
@@ -7827,6 +8114,7 @@
      if ((cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID') || (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN'))
       streamelements.socket();
     }
+    await twitch.global();
     if (cfg.display.extended.useFFZ)
      await thirdparty.ffz.global();
     if (cfg.display.extended.useBTTV)
