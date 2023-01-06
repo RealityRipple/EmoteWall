@@ -7909,6 +7909,7 @@
    {
     let _tL = false;     // timer for logout button display
     const _visTime = 5000;
+    const _lsPath = 'twitch.chat:read+channel:read:redemptions';
 
     function shouldUseLogin()
     {
@@ -7918,28 +7919,28 @@
      login.inUse = true;
      if (window.localStorage.getItem('rrew.channel') !== null)
      {
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.channel', window.localStorage.getItem('rrew.channel'));
+      window.localStorage.setItem(_lsPath + '.channel', window.localStorage.getItem('rrew.channel'));
       window.localStorage.removeItem('rrew.channel');
      }
      if (window.localStorage.getItem('rrew.client') !== null)
      {
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.client', window.localStorage.getItem('rrew.client'));
+      window.localStorage.setItem(_lsPath + '.client', window.localStorage.getItem('rrew.client'));
       window.localStorage.removeItem('rrew.client');
      }
      if (window.localStorage.getItem('rrew.oauth') !== null)
      {
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.oauth', window.localStorage.getItem('rrew.oauth'));
+      window.localStorage.setItem(_lsPath + '.oauth', window.localStorage.getItem('rrew.oauth'));
       window.localStorage.removeItem('rrew.oauth');
      }
      if (window.localStorage.getItem('rrew.expires') !== null)
      {
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.expires', window.localStorage.getItem('rrew.expires'));
+      window.localStorage.setItem(_lsPath + '.expires', window.localStorage.getItem('rrew.expires'));
       window.localStorage.removeItem('rrew.expires');
      }
-     let lsChannel = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.channel');
-     let lsClient  = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.client');
-     let lsOAuth   = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.oauth');
-     let lsExpires = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.expires');
+     let lsChannel = window.localStorage.getItem(_lsPath + '.channel');
+     let lsClient  = window.localStorage.getItem(_lsPath + '.client');
+     let lsOAuth   = window.localStorage.getItem(_lsPath + '.oauth');
+     let lsExpires = window.localStorage.getItem(_lsPath + '.expires');
      if (lsChannel === null || lsOAuth === null)
      {
       const h = _getHashParams();
@@ -7952,10 +7953,10 @@
       lsClient = h.client;
       lsOAuth = h.oauth;
       lsExpires = h.expires;
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.channel', lsChannel);
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.oauth', lsOAuth);
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.client', lsClient);
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.expires', lsExpires);
+      window.localStorage.setItem(_lsPath + '.channel', lsChannel);
+      window.localStorage.setItem(_lsPath + '.oauth', lsOAuth);
+      window.localStorage.setItem(_lsPath + '.client', lsClient);
+      window.localStorage.setItem(_lsPath + '.expires', lsExpires);
      }
      cfg.channel = lsChannel;
      cfg.login.oauth = lsOAuth;
@@ -7985,10 +7986,10 @@
 
     function doLogin()
     {
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.channel');
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.oauth');
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.client');
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.expires');
+     window.localStorage.removeItem(_lsPath + '.channel');
+     window.localStorage.removeItem(_lsPath + '.oauth');
+     window.localStorage.removeItem(_lsPath + '.client');
+     window.localStorage.removeItem(_lsPath + '.expires');
      const o = encodeURIComponent(btoa(window.location));
      const c = encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8');
      const r = encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php');
@@ -8004,10 +8005,10 @@
      document.title = 'Log In to Access Emote Wall';
      if (document.getElementById('cmdLogout'))
       document.body.removeChild(document.getElementById('cmdLogout'));
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.channel');
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.oauth');
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.client');
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.expires');
+     window.localStorage.removeItem(_lsPath + '.channel');
+     window.localStorage.removeItem(_lsPath + '.oauth');
+     window.localStorage.removeItem(_lsPath + '.client');
+     window.localStorage.removeItem(_lsPath + '.expires');
      let cmdLogin = document.createElement('button');
      cmdLogin.setAttribute('id', 'cmdLogin');
      cmdLogin.setAttribute('type', 'button');
