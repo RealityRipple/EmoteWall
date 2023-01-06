@@ -2,12 +2,13 @@
 <html lang="en">
  <head>
   <meta charset="utf-8" />
+  <title>Emote Wall</title>
   <script>
    'use strict';
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.7 BETA
+    * v0.7.1 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -150,7 +151,7 @@
     *
     *             Just put a vertical pipe " | " in between each of the values representing levels of access:
     *
-    *              ACCESS                                 MEANING 
+    *              ACCESS                                 MEANING
     *             0x800 | 0x400                           broadcaster and moderator only
     *             0x800 | 0x400 | 0x100 | 0x040 | 0x020   broadcasters, mods, VIPs, and tier 2 and 3 subscribers
     *             0x800 | 0x010 | 0x002                   boradcaster, tier 1 subscribers, and followers
@@ -207,14 +208,6 @@
     *                   value is possible: -1, which will refer to the AMOUNT value present in the event. This can be
     *                   the number of raiders, bits cheered, dollars tipped, subs gifted, or months subscribed.
     *
-    *     command Settings related to triggering a specific kappagen style by chat command.
-    *
-    *      access A bitwise flag representing which users can trigger this kappagen with a command.
-    *
-    *      aliases  An array of style-specific kappa command aliases which can be used to force-trigger this kappagen.
-    *
-    *     redeem  An array of style-specific channel point reward names which can be used to force-trigger this kappagen.
-    *
     *    Conga    Settings related to Conga kappagen. These settings will be the default for all instances of
     *             Conga kappagen.
     *
@@ -249,8 +242,7 @@
     *   aliases   An array of kappagen command aliases which can be used to force-trigger kappagens.
     *
     *   cooldown  The number of seconds between force-triggered kappagens using an above alias. Any commands sent before
-    *             the cooldown will be treated like normal text, which may include showing any emotes in the message as
-    *             normal emotes rather than in a kappagen.
+    *             the cooldown will be ignored, unless the another command shares the same alias.
     *
     *   conga     Settings related to Conga kappagen.
     *
@@ -322,6 +314,10 @@
     *
     * event       Settings related to channel events which trigger emote-splosions (kappagen).
     *
+    *  clear      A boolean to toggle clearing the screen when chat is cleared.
+    *              If TRUE, the emote wall will be cleared when the /clear command is used.
+    *              If FALSE, the emote wall will ignore the /clear command.
+    *
     *  raid       Settings related to kappagens when being raided.
     *
     *   raiders   A streamer raids the channel with viewers. This value can be a boolean, integer, or array:
@@ -335,8 +331,6 @@
     *               If TRUE, a kappagen will occur.
     *               If FALSE, no kappagen will occur.
     *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
-    *                Keep in mind that kappagen arrays are also associative, and may have independent settings for
-    *                kappas such as TheCube and Text. This applies to all such arrays listed below as well.
     *
     *   originEmotes  A boolean to toggle the use of the raiding streamer's channel emotes for raid kappagens.
     *                If TRUE, raid kappagens will use channel emotes from the raider's channel (not including third-party).
@@ -508,8 +502,8 @@
     *              The values used in these ranges can be controlled with the cfg.streamlabs.curMul setting (see above)
     *              based on your default currency in Streamlabs.
     *
-    *    pledge    Minimum pledge amount through Streamlabs for a kappagen. This value can be a boolean, integer,
-    *              or array:
+    *    pledge   Minimum pledge amount through Streamlabs for a kappagen. This value can be a boolean, integer,
+    *             or array:
     *              If TRUE, a kappagen will occur on all Streamlabs pledges.
     *              If FALSE, no kappagen will occur on pledges.
     *              If Integer, the value is the minimum amount required for a tip to trigger a kappagen.
@@ -538,7 +532,155 @@
     *              The values used in these ranges can be controlled with the cfg.streamelements.curMul setting (see above)
     *              based on your default currency in StreamElements.
     *
+    * commands    An array of commands which can trigger one or more kappagens, or clear the screen.
+    *             Each command is an object with the following properties:
+    *
+    *  aliases    An array of kappa command aliases which can be used to force-trigger this kappagen.
+    *
+    *  access     A bitwise flag representing which users can trigger this kappagen with a command.
+    *             This value will fall back to the general kappagen access value.
+    *
+    *  cooldown   The number of seconds between force-triggered kappagens using an above alias. Any commands sent before
+    *             the cooldown will be ignored, unless the another command shares the same alias.
+    *             This value is optional; no value is the same as a value of 0, which is, no cooldown.
+    *
+    *  redeem     An array of style-specific channel point reward names which can be used to force-trigger this kappagen.
+    *
+    *  erase      If this property exists, the command will erase the screen rather than showing a style. Any 'styles'
+    *             property will be ignored, regardless of the value of erase.
+    *
+    *  styles     An array of styles. A kappagen of one of the listed styles will occur upon command.
+    *
+    *
+    * Note on Event and Command Kappagen Entries
+    * ------------------------------------------
+    *
+    * Keep in mind that kappagen arrays are also associative, and may have independent settings for kappas such as
+    * TheCube and Text. The kappagen style can also contain the following values:
+    *
+    *  count      The number of emotes to show for this kappagen. This can be an integer or an object.
+    *              If this property does not exist, it will fall back to the count setting for the kappagen style.
+    *               If the kappagen style has no count property, then the global kappagen count will be used.
+    *              If Integer, this is the number of emotes that will be shown in this kappagen.
+    *              If Object:
+    *
+    *   default   The number of emotes to show for this kappagen by default. This must be an integer.
+    *              If this property does not exist, it will fall back as the parent count would.
+    *              If Integer, this is the number of emotes that will be shown in this kappagen.
+    *
+    *   dynamic   This is a boolean value to determine if the count can be changed by users.
+    *              If this property does not exist, it will fall back to FALSE.
+    *              If TRUE, a user may include a number in the command's parameters, and that number will be used.
+    *              If FALSE, the default count will be used exclusively.
+    *
+    *   maximum   The maximum number of emotes to show for this kappagen if dynamic is set to TRUE. This must be
+    *             an integer.
+    *              If this property does not exist, it will fall back to the maximum number of emotes allowed on screen.
+    *              If Integer, this is the maximum number of emotes this kappagen style can display.
+    *
+    * emotes      A list of emotes that will be used for this kappagen. This can be an array or an object.
+    *              If Array, each entry must be a string containing the name or URL of an emote, or an emoji.
+    *               Please note that only your channel or global emotes can be named (including 3rd-party).
+    *              If object:
+    *
+    *  list       This must be an array of strings, the same as the Array entry of the parent emotes property above.
+    *
+    *  dynamic    This is a boolean value to determine if the displayed emotes can be set by the user.
+    *              If this property does not exist, it will fall back to TRUE.
+    *              If TRUE, a user may include emotes in the command's parameters, and those emotes will be used.
+    *              If FALSE, only the emotes in the list property above will be used.
+    *
+    *
+    * Additional Notes and Caveats
+    * ============================
+    *
+    * Update Procedure
+    * ----------------
+    *
+    *  To update this emote wall, simply use the Wizard to import and download it.
+    *   1) Visit the official page <https://realityripple.com/Tools/Twitch/EmoteWall/>.
+    *   2) Under "Config Wizard", click "Authorize on Twitch".
+    *   3) Import this HTML file by clicking Import.
+    *   4) Make any changes you need to make on each page.
+    *   5) At the end of your configuration, hit "Download".
+    *  You will receive a new version of this HTML file with your previous settings.
+    *
+    *
+    * Emojis
+    * ------
+    *
+    *  Twitch filters out the ZWJ (Zero-Width Joiner) character which is used for merging many emojis.
+    *  This system makes use of basic character detection to correctly parse many standard ZWJ-style emojis even without
+    *  the ZWJ character, however more complicated sets such as the "family units" are not possible to correctly handle.
+    *  The alternative character 0xE0002 used by some third-party Twitch chat projects will be correctly parsed as a
+    *  ZWJ according to the rules laid out in the RFC:
+    *   <https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f>
+    *
+    *
+    * Emote Dimensions
+    * ----------------
+    *
+    *  Emotes that are not square will be shrunk to fit while maintaining the original aspect ratio.
+    *
+    *
+    * Following
+    * ---------
+    *
+    *  Detecting followers on the current Twitch API is limited and relies on server-to-server events.
+    *  The current system uses a kludge and may have issues in rare situations. The current system regularly grabs the
+    *  most recent 100 followers and tries to find the previous request's latest follower, counting how many followers
+    *  exist in the list before the last known follower. If the latest follower is removed from the list, or if more
+    *  than 100 followers join between one check and another, the system will ignore the event and assign a new latest
+    *  follower. Real support for follow events requires an API change:
+    *   <https://twitch.uservoice.com/forums/310213/suggestions/41794465>
+    *   <https://twitch.uservoice.com/forums/310213/suggestions/40423873>
+    *
+    *
+    * Cheers
+    * ------
+    *
+    *  The cheer style will be used for kappagens. If a user cheers 1000 bits in a single 1000 bit emote, then the
+    *  kappagen will be made of the 1000-bit cheers. However, if the user cheers 1000 bits using multiple smaller cheer
+    *  emotes, those emotes will be used for the kappagen instead.
+    *
+    *
+    * Kappagen
+    * --------
+    *
+    *  Each emote-splosion uses the number of emotes defined in the kappa count preference mentioned above, except
+    *  Pyramid, which uses a constant number based on the pyramidDist array (below). If the trigger includes specific
+    *  emotes (via kappagen, cheer, or resub message), the ratio of one emote to another will be maintained.
+    *  If a user with kappa access posts "!kappagen PunchTrees PunchTrees SSSsss" then two thirds of the emotes in
+    *  the emote-splosion will be "PunchTrees", and one third will be "SSSsss".
+    *
+    *
+    * OBS
+    * ---
+    *
+    *  This emote wall may do better if the browser source has a frame rate limit of 30 or 60.
+    *  If you use your GPU while streaming, you may wish to disable Browser Source Hardware Acceleration.
+    *  It may also work better using a smaller screen resolution (such as 720p on a 1080p screen) and then stretching
+    *  the browser source to fit to the screen using the OBS Transform feature.
+    *
+    *
+    * Inefficiencies
+    * --------------
+    *
+    *  This emote wall uses normal <img> objects rather than a HTML Canvas. While this lowers efficiency, it also adds
+    *  better GIF file support and allows easier user manipulation.
+    *
+    *  At present, the "zoom in" and "zoom out" feature uses a resource-heavy design. I had hoped the new CSS directive
+    *  "scale: " would have helped, however it's useless without a "scale-origin" directive to accompany it.
+    *
+    *  The Bounce animation uses specific position-based drawing rather than actually being animated.
+    *
+    *  The Cube animation uses eight objects on screen for every image, making it a particularly resource-heavy drawing.
+    *
+    *  If your computer has trouble with this emote wall, please try disabling these options.
+    *
     */
+
+   /* jshint esversion: 11, bitwise: false, eqeqeq: true, loopfunc: true, forin: true, freeze: true, futurehostile: true, leanswitch: true, noarg: true, nocomma: true, nonbsp: true, nonew: true, noreturnawait: true, quotmark: single, shadow: outer, singleGroups: false, strict: global, trailingcomma: false, undef: true, unused: true, varstmt: true */
 
    var cfg = {
     channel: 'CHANNEL_NAME',
@@ -649,6 +791,7 @@
      }
     },
     event: {
+     clear: true,
      raid: {
       raiders: 2,
       originEmotes: false
@@ -716,102 +859,25 @@
       },
       streamelements: false
      }
-    }
+    },
+    commands: []
    };
-
-   /* Additional Notes and Caveats
-    * ============================
-    *
-    * Update Procedure
-    * ----------------
-    * 
-    *  To update this emote wall, simply use the Wizard to import and download it.
-    *   1) Visit the official page <https://realityripple.com/Tools/Twitch/EmoteWall/>.
-    *   2) Under "Config Wizard", click "Authorize on Twitch".
-    *   3) Import this HTML file by clicking Import.
-    *   4) Make any changes you need to make on each page.
-    *   5) At the end of your configuration, hit "Download".
-    *  You will receive a new version of this HTML file with your previous settings.
-    *
-    *
-    * Emojis
-    * ------
-    *
-    *  Twitch filters out the ZWJ (Zero-Width Joiner) character which is used for merging many emojis.
-    *  This system makes use of basic character detection to correctly parse many standard ZWJ-style emojis even without
-    *  the ZWJ character, however more complicated sets such as the "family units" are not possible to correctly handle.
-    *  The alternative character 0xE0002 used by some third-party Twitch chat projects will be correctly parsed as a
-    *  ZWJ according to the rules laid out in the RFC:
-    *   <https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f>
-    *
-    *
-    * Emote Dimensions
-    * ----------------
-    *
-    *  Emotes that are not square will be shrunk to fit while maintaining the original aspect ratio.
-    *
-    *
-    * Following
-    * ---------
-    *
-    *  Detecting followers on the current Twitch API is limited and relies on server-to-server events.
-    *  The current system uses a kludge and may have issues in rare situations. The current system regularly grabs the
-    *  most recent 100 followers and tries to find the previous request's latest follower, counting how many followers
-    *  exist in the list before the last known follower. If the latest follower is removed from the list, or if more
-    *  than 100 followers join between one check and another, the system will ignore the event and assign a new latest
-    *  follower. Real support for follow events requires an API change:
-    *   <https://twitch.uservoice.com/forums/310213/suggestions/41794465>
-    *   <https://twitch.uservoice.com/forums/310213/suggestions/40423873>
-    *
-    *
-    * Cheers
-    * ------
-    *
-    *  The cheer style will be used for kappagens. If a user cheers 1000 bits in a single 1000 bit emote, then the
-    *  kappagen will be made of the 1000-bit cheers. However, if the user cheers 1000 bits using multiple smaller cheer
-    *  emotes, those emotes will be used for the kappagen instead.
-    *
-    *
-    * Kappagen
-    * --------
-    *
-    *  Each emote-splosion uses the number of emotes defined in the kappa count preference mentioned above, except
-    *  Pyramid, which uses a constant number based on the pyramidDist array (below). If the trigger includes specific
-    *  emotes (via kappagen, cheer, or resub message), the ratio of one emote to another will be maintained.
-    *  If a user with kappa access posts "!kappagen PunchTrees PunchTrees SSSsss" then two thirds of the emotes in
-    *  the emote-splosion will be "PunchTrees", and one third will be "SSSsss".
-    *
-    *
-    * OBS
-    * ---
-    *
-    *  This emote wall may do better if the browser source has a frame rate limit of 30 or 60.
-    *  If you use your GPU while streaming, you may wish to disable Browser Source Hardware Acceleration.
-    *  It may also work better using a smaller screen resolution (such as 720p on a 1080p screen) and then stretching
-    *  the browser source to fit to the screen using the OBS Transform feature.
-    *
-    *
-    * Inefficiencies
-    * --------------
-    *
-    *  This emote wall uses normal <img> objects rather than a HTML Canvas. While this lowers efficiency, it also adds
-    *  better GIF file support and allows easier user manipulation.
-    *
-    *  At present, the "zoom in" and "zoom out" feature uses a resource-heavy design. I had hoped the new CSS directive
-    *  "scale: " would have helped, however it's useless without a "scale-origin" directive to accompany it.
-    *
-    *  The Bounce animation uses specific position-based drawing rather than actually being animated.
-    *
-    *  The Cube animation uses eight objects on screen for every image, making it a particularly resource-heavy drawing.
-    * 
-    *  If your computer has trouble with this emote wall, please try disabling these options.
-    *
-    */
 
    /* potentially alterable arrays */
 
+   // list of default images to use if your channel has no emotes
+   const bareList = [
+    {url: 'https://cdn.frankerfacez.com/emoticon/675080/4'}
+   ];
+
    // distribution of emojis for Pyramid and SmallPyramid kappagen
    const pyramidDist = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
+
+   // treat these BTTV emotes as zero-width (overlapping) emotes
+   const bttvZWE = [
+    'SoSnowy',  'IceCold',   'SantaHat', 'TopHat',
+    'ReinDeer', 'CandyCane', 'cvMask',   'cvHazmat'
+   ];
 
    // distribution of emojis for letters in message kappagens
    const alnumDist = {
@@ -1329,580 +1395,108 @@
     ]
    };
 
-   // treat these BTTV emotes as zero-width (overlapping) emotes
-   const bttvZWE = [
-    'SoSnowy',  'IceCold',   'SantaHat', 'TopHat',
-    'ReinDeer', 'CandyCane', 'cvMask',   'cvHazmat'
-   ];
-
-   // list of default images to use if your channel has no emotes
-   const bareList = [
-    {url: 'https://cdn.frankerfacez.com/emoticon/675080/4'}
-   ];
    //////////////////////////////////////////////////////////////////////////////
    // don't mess with things below this line without knowing what you're doing //
    //////////////////////////////////////////////////////////////////////////////
-  </script>
-  <title>Emote Wall</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-   :root
-   {
-    --height: 0px;
-    --width: 0px;
-    --emote-height: 0px;
-    --emote-height-s: 0px;
-    --emote-height-l: 0px;
-   }
-   body
-   {
-    margin: 0;
-    overflow: hidden;
-   }
-   img
-   {
-    object-fit: contain;
-    object-position: 50% 50%;
-   }
-   img.emote
-   {
-    position: fixed;
-    height: 100%;
-    border: 0;
-    margin: 0;
-    padding: 0;
-    offset-rotate: 0deg;
-   }
-
-   div.scene
-   {
-    position: fixed;
-    border: 0;
-    margin: 0;
-    padding: 0;
-   }
-   div.scene div.cube
-   {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    transform-style: preserve-3d;
-   }
-   div.scene div.cube .cubeFace
-   {
-    position: absolute;
-    background-color: rgba(255, 255, 255, 0.2);
-   }
-
-   div.scene img.dancer
-   {
-    text-align: center;
-    position: relative;
-    animation: dance 4s linear infinite;
-   }
-
-   @keyframes dance
-   {
-    0%
-    {
-     transform: translate(80%, 40%) rotate(30deg);
-    }
-    6%
-    {
-     transform: translate(50%, 10%) rotate(0deg);
-    }
-    13%
-    {
-     transform: translate(20%, 40%) rotate(-30deg);
-    }
-    19%
-    {
-     transform: translate(50%, 10%) rotate(0deg);
-    }
-    25%
-    {
-     transform: translate(80%, 40%) rotate(30deg);
-    }
-    31%
-    {
-     transform: translate(50%, 10%) rotate(0deg);
-    }
-    38%
-    {
-     transform: translate(20%, 40%) rotate(-30deg);
-    }
-    44%
-    {
-     transform: translate(20%, 10%) rotate(-30deg);
-    }
-    50%
-    {
-     transform: translate(20%, 40%) rotate(-30deg);
-    }
-    56%
-    {
-     transform: translate(50%, 10%) rotate(0deg);
-    }
-    63%
-    {
-     transform: translate(80%, 40%) rotate(30deg);
-    }
-    69%
-    {
-     transform: translate(50%, 10%) rotate(0deg);
-    }
-    75%
-    {
-     transform: translate(20%, 40%) rotate(-30deg);
-    }
-    81%
-    {
-     transform: translate(50%, 10%) rotate(0deg);
-    }
-    88%
-    {
-     transform: translate(80%, 40%) rotate(30deg);
-    }
-    94%
-    {
-     transform: translate(80%, 10%) rotate(30deg);
-    }
-    100%
-    {
-     transform: translate(80%, 40%) rotate(30deg);
-    }
-   }
-
-   @keyframes wiggleL
-   {
-    33%
-    {
-     transform: translateX(-50%);
-    }
-    66%
-    {
-     transform: translateX(50%);
-    }
-   }
-   @keyframes wiggleR
-   {
-    33%
-    {
-     transform: translateX(50%);
-    }
-    66%
-    {
-     transform: translateX(-50%);
-    }
-   }
-
-   @keyframes speedL
-   {
-    0%
-    {
-     transform: scale(1, 1);
-    }
-    10%
-    {
-     transform: scale(0.6, 1);
-    }
-    15%
-    {
-     transform: scale(0.6, 1);
-    }
-    20%
-    {
-     transform: scale(1, 0.4);
-    }
-    100%
-    {
-     transform: scale(1, 0.4) translate(calc(-1 * var(--width) * 4), 0);
-    }
-   }
-   @keyframes speedR
-   {
-    0%
-    {
-     transform: scale(1, 1);
-    }
-    10%
-    {
-     transform: scale(0.6, 1);
-    }
-    15%
-    {
-     transform: scale(0.6, 1);
-    }
-    20%
-    {
-     transform: scale(1, 0.4);
-    }
-    100%
-    {
-     transform: scale(1, 0.4) translate(calc(var(--width) * 4), 0);
-    }
-   }
-
-   @keyframes dropL
-   {
-    0%
-    {
-     transform: translateY(-100%);
-    }
-    10%
-    {
-     transform: translateY(0%);
-    }
-    20%
-    {
-     transform: translateY(0%);
-    }
-    25%
-    {
-     transform: translateY(0%) rotate(45deg);
-    }
-    27%
-    {
-     transform: translateY(0%) rotate(35deg);
-    }
-    30%
-    {
-     transform: translateY(0%) rotate(45deg);
-    }
-    100%
-    {
-     transform: translateY(var(--height)) rotate(350deg);
-    }
-   }
-   @keyframes dropR
-   {
-    0%
-    {
-     transform: translateY(-100%);
-    }
-    10%
-    {
-     transform: translateY(0%);
-    }
-    20%
-    {
-     transform: translateY(0%);
-    }
-    25%
-    {
-     transform: translateY(0%) rotate(-45deg);
-    }
-    27%
-    {
-     transform: translateY(0%) rotate(-35deg);
-    }
-    30%
-    {
-     transform: translateY(0%) rotate(-45deg);
-    }
-    100%
-    {
-     transform: translateY(var(--height)) rotate(-350deg);
-    }
-   }
-
-   @keyframes confettiA
-   {
-    0%
-    {
-     transform: translateY(-100%) rotate3d(0.25, 0.5, 0, 0deg);
-    }
-    100%
-    {
-     transform: translateY(var(--height)) rotate3d(0.25, 0.5, 0, -4500deg);
-    }
-   }
-
-   @keyframes confettiB
-   {
-    0%
-    {
-     transform: translateY(-100%) rotate3d(0.25, 0.5, 0, 0deg);
-    }
-    100%
-    {
-     transform: translateY(var(--height)) rotate3d(0.25, 0, 0, -4500deg);
-    }
-   }
-
-   @keyframes confettiC
-   {
-    0%
-    {
-     transform: translateY(-100%) rotate3d(0.25, 0.5, 0, 0deg);
-    }
-    100%
-    {
-     transform: translateY(var(--height)) rotate3d(0.25, -0.5, 0, -4500deg);
-    }
-   }
-
-   @keyframes offsetPath
-   {
-    0%
-    {
-     offset-distance: 0%;
-    }
-    100%
-    {
-     offset-distance: 100%;
-    }
-   }
-
-   @keyframes fadeIn
-   {
-    0%
-    {
-     opacity: 0;
-    }
-    100% /* 8% */
-    {
-     opacity: 1;
-    }
-   }
-
-   @keyframes fadeOut
-   {
-    0% /* 95% */
-    {
-     opacity: 1;
-    }
-    100%
-    {
-     opacity: 0;
-    }
-   }
-
-   @keyframes noFadeOut
-   {
-    99%
-    {
-     opacity: 1;
-    }
-    100%
-    {
-     opacity: 0;
-    }
-   }
-
-   @keyframes zoomIn
-   {
-    0%
-    {
-     margin: calc((var(--emote-height) - (var(--emote-height) * 0.1)) / 2);
-     max-height: calc(var(--emote-height) * 0.1);
-    }
-    24% /* 4% */
-    {
-     margin: calc((var(--emote-height) - (var(--emote-height) * 1.2)) / 2);
-     max-height: calc(var(--emote-height) * 1.2);
-    }
-    35% /* 6% */
-    {
-     margin: 0;
-     max-height: var(--emote-height);
-    }
-    47% /* 8% */
-    {
-     margin: calc((var(--emote-height) - (var(--emote-height) * 0.8)) / 2);
-     max-height: calc(var(--emote-height) * 0.8);
-    }
-    71% /* 12% */
-    {
-     margin: 0;
-     max-height: var(--emote-height);
-    }
-    88% /* 15% */
-    {
-     margin: calc((var(--emote-height) - (var(--emote-height) * 0.95)) / 2);
-     max-height: calc(var(--emote-height) * 0.95);
-    }
-    100% /* 17% */
-    {
-     margin: 0;
-     max-height: var(--emote-height);
-    }
-   }
-
-   @keyframes zoomOut
-   {
-    0% /* 95% */
-    {
-     margin: 0;
-     max-height: var(--emote-height);
-    }
-    100%
-    {
-     margin: calc((var(--emote-height) - (var(--emote-height) * 0.1)) / 2);
-     max-height: calc(var(--emote-height) * 0.1);
-    }
-   }
-
-   @keyframes zoomInS
-   {
-    0%
-    {
-     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 0.1)) / 2);
-     max-height: calc(var(--emote-height-s) * 0.1);
-    }
-    24% /* 4% */
-    {
-     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 1.2)) / 2);
-     max-height: calc(var(--emote-height-s) * 1.2);
-    }
-    35% /* 6% */
-    {
-     margin: 0;
-     max-height: var(--emote-height-s);
-    }
-    47% /* 8% */
-    {
-     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 0.8)) / 2);
-     max-height: calc(var(--emote-height-s) * 0.8);
-    }
-    71% /* 12% */
-    {
-     margin: 0;
-     max-height: var(--emote-height-s);
-    }
-    88% /* 15% */
-    {
-     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 0.95)) / 2);
-     max-height: calc(var(--emote-height-s) * 0.95);
-    }
-    100% /* 17% */
-    {
-     margin: 0;
-     max-height: var(--emote-height-s);
-    }
-   }
-
-   @keyframes zoomOutS
-   {
-    0% /* 95% */
-    {
-     margin: 0;
-     max-height: var(--emote-height-s);
-    }
-    100%
-    {
-     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 0.1)) / 2);
-     max-height: calc(var(--emote-height-s) * 0.1);
-    }
-   }
-
-   @keyframes zoomInL
-   {
-    0%
-    {
-     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.1)) / 2);
-     max-height: calc(var(--emote-height-l) * 0.1);
-    }
-    24% /* 4% */
-    {
-     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 1.2)) / 2);
-     max-height: calc(var(--emote-height-l) * 1.2);
-    }
-    35% /* 6% */
-    {
-     margin: 0;
-     max-height: var(--emote-height-l);
-    }
-    47% /* 8% */
-    {
-     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.8)) / 2);
-     max-height: calc(var(--emote-height-l) * 0.8);
-    }
-    71% /* 12% */
-    {
-     margin: 0;
-     max-height: var(--emote-height-l);
-    }
-    88% /* 15% */
-    {
-     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.95)) / 2);
-     max-height: calc(var(--emote-height-l) * 0.95);
-    }
-    100% /* 17% */
-    {
-     margin: 0;
-     max-height: var(--emote-height-l);
-    }
-   }
-
-   @keyframes zoomOutL
-   {
-    0% /* 95% */
-    {
-     margin: 0;
-     max-height: var(--emote-height-l);
-    }
-    100%
-    {
-     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.1)) / 2);
-     max-height: calc(var(--emote-height-l) * 0.1);
-    }
-   }
-
-   button
-   {
-    background-color: #7D5BBE;
-    transition: background 0.12s ease-in, color 0.12s ease-in;
-    white-space: nowrap;
-    cursor: pointer;
-    color: #FFFFFF;
-    border-radius: 4px;
-    border: none;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-   }
-   button:focus, button:hover
-   {
-    background-color: #772CE8;
-   }
-   button:focus
-   {
-    outline: none;
-   }
-   button:active
-   {
-    background-color: #5C16C5;
-   }
-  </style>
-  <script>
-   'use strict';
    if (typeof cfg === 'undefined')
     throw new Error('Corrupted Configuration detected.');
    document.title = cfg.channel + ' Emote Wall';
-   /* global variables */
-   let cList = [];     // list of channel-specific emotes, used for kappagens
-   const wWS = 5;      // websocket retry backoff base (ms = base ^ (1.0 + (0.2 per retry, max 1.0)))
+
+   let cList = [];
+   const wWS = 5;
+   const cURLs = {
+    ws: {
+     twitch: {
+      irc: 'wss://irc-ws.chat.twitch.tv',
+      pubSub: 'wss://pubsub-edge.twitch.tv'
+     },
+     streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket',
+     streamelements: 'wss://realtime.streamelements.com/socket.io/?transport=websocket',
+     bttv: 'wss://sockets.betterttv.net/ws',
+     '7tv': 'wss://events.7tv.io/v3'
+    },
+    api: {
+     twitch: {
+      users: {
+       root: 'https://api.twitch.tv/helix/users',
+       follows: 'https://api.twitch.tv/helix/users/follows'
+      },
+      bits: {
+       cheermotes: 'https://api.twitch.tv/helix/bits/cheermotes'
+      },
+      chat: {
+       emotes: {
+        root: 'https://api.twitch.tv/helix/chat/emotes',
+        global: 'https://api.twitch.tv/helix/chat/emotes/global'
+       }
+      }
+     },
+     ffz: {
+      set: {
+       global: 'https://api.frankerfacez.com/v1/set/global'
+      },
+      room: 'https://api.frankerfacez.com/v1/room/id/%CHANNEL_ID%'
+     },
+     bttv: {
+      emotes: {
+       global: 'https://api.betterttv.net/3/cached/emotes/global'
+      },
+      users: {
+       twitch: 'https://api.betterttv.net/3/cached/users/twitch/%CHANNEL_ID%'
+      }
+     },
+     '7tv': {
+      emotes: {
+       global: 'https://api.7tv.app/v2/emotes/global'
+      },
+      users: {
+       root: 'https://api.7tv.app/v2/users/%CHANNEL_ID%',
+       emotes: 'https://api.7tv.app/v2/users/%CHANNEL_ID%/emotes'
+      }
+     }
+    },
+    cdn: {
+     twitch: {
+      emote: 'https://static-cdn.jtvnw.net/emoticons/v2/%EMOTE_ID%/default/dark/3.0'
+     },
+     ffz: {
+      emoji: 'https://cdn.frankerfacez.com/static/emoji/images/%SET_ID%/'
+     },
+     bttv: {
+      emote: 'https://cdn.betterttv.net/emote/%EMOTE_ID%/3x'
+     }
+    },
+    html: {
+     rr: {
+      wizard: 'https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php',
+      se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php',
+      redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php'
+     },
+     twitch: 'https://id.twitch.tv/oauth2/authorize'
+    }
+   };
 
    const display = function()
    {
-    let _eActive = 0;    // active emote count (effective, not actual)
+    let _eActive = 0;
     let _iTitanic = 0;
-    const _tStart = 48;  // time to wait for transition trigger (ms)
-    const _tAnim = {     // animation timing constants
+    const _tStart = 48;
+    const _tAnim = {
      fade: {
-      in: 8,            // percentage of animation spent on fading in (8% of 5 seconds)
-      out: 8            // percentage of animation spent on fading out
+      in: 8,
+      out: 8
      },
      zoom: {
-      in: 17,           // percentage of animation spent on zooming in (17% of 5 seconds)
-      out: 8            // percentage of animation spent on zooming out
+      in: 17,
+      out: 8
      }
     };
 
     const emote = function()
     {
-     let _toShow = [];    // emote queue
+     let _toShow = [];
 
-     let _tEmote = false; // timer for emote queue
+     let _tEmote = false;
 
      const list = function()
      {
@@ -1923,9 +1517,8 @@
         sS = Math.ceil(sS / 2);
        else if (variationSize === 2)
         sS = sS * 2;
-       const sSm = Math.ceil(sS / 2);
-       const h = shared.rnd(sW) - sSm;
-       const v = shared.rnd(sH) - sSm;
+       const h = shared.rnd(sW - sS);
+       const v = shared.rnd(sH - sS);
        let s = 'top: ' + v + 'px;';
        s += ' left: ' + h + 'px;';
        s += ' height: ' + sS + 'px;';
@@ -1972,9 +1565,9 @@
        let vD = Math.floor(v + r * Math.sin(th));
        if (!x && !y)
        {
-        const sR = sW - sS;
-        const sB = sH - sS;
-        while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > sR && hD > sR) || (v > sB && vD > sB))
+        const sR = sW - sS - sSm;
+        const sB = sH - sS - sSm;
+        while ((h < sSm && hD < sSm) || (v < sSm && vD < sSm) || (h > sR && hD > sR) || (v > sB && vD > sB))
         {
          th = shared.rnd() * cRadius;
          hD = Math.floor(h + r * Math.cos(th));
@@ -2350,22 +1943,18 @@
          switch(dests[d - 1].w)
          {
           case 1:
-           //left
            iArr[i].style.transformOrigin = 'left center';
            iArr[i].style.transform = 'scale(0.7, 2)';
            break;
           case 2:
-           //top
            iArr[i].style.transformOrigin = 'center top';
            iArr[i].style.transform = 'scale(2, 0.7)';
            break;
           case 3:
-           //right
            iArr[i].style.transformOrigin = 'right center';
            iArr[i].style.transform = 'scale(0.7, 2)';
            break;
           case 4:
-           //bottom
            iArr[i].style.transformOrigin = 'center bottom';
            iArr[i].style.transform = 'scale(2, 0.7)';
            break;
@@ -2746,9 +2335,9 @@
         let th = shared.rnd() * cRadius;
         let hD = Math.floor(h + r * Math.cos(th));
         let vD = Math.floor(v + r * Math.sin(th));
-        const sR = sW - sS;
-        const sB = sH - sS;
-        while ((h < 0 && hD < 0) || (v < 0 && vD < 0) || (h > sR && hD > sR) || (v > sB && vD > sB))
+        const sR = sW - sS - sSm;
+        const sB = sH - sS - sSm;
+        while ((h < sSm && hD < sSm) || (v < sSm && vD < sSm) || (h > sR && hD > sR) || (v > sB && vD > sB))
         {
          th = shared.rnd() * cRadius;
          hD = Math.floor(h + r * Math.cos(th));
@@ -2968,11 +2557,11 @@
 
     const kappa = function()
     {
-     let _toKappa = [];   // kappagen queue
-     let _conga = [];     // CONGA TIME!
+     let _toKappa = [];
+     let _conga = [];
      const _dKappa = 500;
 
-     let _tKappa = false; // timer for kappagen queue
+     let _tKappa = false;
 
      const _list = function()
      {
@@ -3014,7 +2603,7 @@
          for (let i = 0, l = oK.zwe.length; i < l; i++)
          {
           _eActive++;
-          iArr.push(emote.addEmoteToDoc(tInit, oK.zwe[i].url, s, true, false, {x: cX, y: cY}));
+          iArr.push(display.emote.addEmoteToDoc(tInit, oK.zwe[i].url, s, true, false, {x: cX, y: cY}));
          }
         }
         window.setTimeout(_explode, sendUp * 1000, tInit, kList, iArr, cX, cY, sS, sW, sH, iKC);
@@ -3941,6 +3530,8 @@
 
       const Text = function()
       {
+       let _mL = 0;
+
        function task(kList, sW, sH, sMsg, iTime)
        {
         const tInit = new Date().getTime();
@@ -4007,7 +3598,15 @@
        {
         let o = [];
         let spc = [];
-        for (let y = 0, l = alnumDist['A'][0].length; y < l; y++)
+        if (_mL === 0)
+        {
+         for (let i = 0, k = Object.keys(alnumDist), l = k.length; i < l; i++)
+         {
+          if (_mL < alnumDist[k[i]][0].length)
+           _mL = alnumDist[k[i]][0].length;
+         }
+        }
+        for (let y = 0; y < _mL; y++)
         {
          spc.push(0);
         }
@@ -4063,7 +3662,7 @@
          return;
         img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
        }
-       
+
        function _tDrop(tInit, img, h, sH)
        {
         if (_iTitanic > tInit)
@@ -4149,6 +3748,17 @@
       return _getNextKappaEx(a, k.params);
      }
 
+     function _getKappaCountParam(p)
+     {
+      const a = p.split(' ');
+      for (let i = 0, l = a.length; i < l; i++)
+      {
+       if (!isNaN(a[i]))
+        return parseInt(a[i], 10);
+      }
+      return false;
+     }
+
      function _getNextKappaEx(kS = false, kP = false)
      {
       if (typeof kS !== 'object')
@@ -4178,16 +3788,35 @@
        iKC = cfg.display.kappa.styles[s].count;
       if (p === undefined)
        p = {};
+      let pMax = cfg.emote.max;
       if (p.hasOwnProperty('count'))
       {
-       let tKC = p.count;
+       let tKC = 0;
+       if (Number.isInteger(p.count))
+        tKC = p.count;
+       else
+       {
+        if (p.count.hasOwnProperty('maximum'))
+         pMax = p.count.max;
+        if (p.count.hasOwnProperty('default'))
+         tKC = p.count.default;
+        if (p.count.hasOwnProperty('dynamic') && p.count.dynamic !== false)
+        {
+         if (p.hasOwnProperty('params') && p.params !== null)
+         {
+          const pC = _getKappaCountParam(p.params);
+          if (pC !== false)
+           tKC = pC;
+         }
+        }
+       }
        if (tKC === -1 && kP !== false && kP.hasOwnProperty('%AMOUNT%') && Math.ceil(kP['%AMOUNT%']) > 0)
         tKC = Math.ceil(kP['%AMOUNT%']);
        if (tKC > 0)
         iKC = tKC;
       }
-      if (cfg.emote.max > 0 && iKC > cfg.emote.max)
-       iKC = cfg.emote.max;
+      if (pMax > 0 && iKC > pMax)
+       iKC = pMax;
       return {style: s, prefs: p, count: iKC};
      }
 
@@ -4224,6 +3853,103 @@
       return k.count;
      }
 
+     async function _StringArrayToEmoteArray(s)
+     {
+      let r = [];
+      let idx = 0;
+      for (let i = 0, l = s.length; i < l; i++)
+      {
+       let v = {};
+       v.str = s[i];
+       v.pos = idx;
+       idx+= s[i].length + 1;
+       if (s[i].includes('//'))
+       {
+        v.svc = 'u';
+        v.scope = 'g';
+        v.url = s[i];
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.hasOwnProperty('twitch') && thirdparty.emotes.twitch.hasOwnProperty(s[i]))
+       {
+        v.svc = 't';
+        v.url = thirdparty.emotes.twitch[s[i]].url;
+        v.scope = thirdparty.emotes.twitch[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (cfg.display.useEmoji !== false)
+       {
+        const cmd = {params: [null, s[i]]};
+        const eMoji = await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true);
+        if (eMoji.length > 0)
+        {
+         v.svc = 'e';
+         v.scope = 'g';
+         const vStart = v.pos;
+         for (let j = 0, m = eMoji.length; j < m; j++)
+         {
+          v.url = eMoji[j].url;
+          v.str = eMoji[j].str;
+          v.pos = vStart + eMoji[j].pos;
+          r.push(v);
+         }
+         continue;
+        }
+       }
+       if (thirdparty.emotes.hasOwnProperty('ffz') && thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope === 'c')
+       {
+        v.svc = 'f';
+        v.url = thirdparty.emotes.ffz[s[i]].url;
+        v.scope = thirdparty.emotes.ffz[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.hasOwnProperty('bttv') && thirdparty.emotes.bttv.hasOwnProperty(s[i]) && thirdparty.emotes.bttv[s[i]].scope === 'c')
+       {
+        v.svc = 'b';
+        v.url = thirdparty.emotes.bttv[s[i]].url;
+        v.scope = thirdparty.emotes.bttv[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.hasOwnProperty('7tv') && thirdparty.emotes['7tv'].hasOwnProperty(s[i]) && thirdparty.emotes['7tv'][s[i]].scope === 'c')
+       {
+        v.svc = '7';
+        v.url = thirdparty.emotes['7tv'][s[i]].url;
+        v.scope = thirdparty.emotes['7tv'][s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.hasOwnProperty('ffz') && thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope !== 'c')
+       {
+        v.svc = 'f';
+        v.url = thirdparty.emotes.ffz[s[i]].url;
+        v.scope = thirdparty.emotes.ffz[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.hasOwnProperty('bttv') && thirdparty.emotes.bttv.hasOwnProperty(s[i]) && thirdparty.emotes.bttv[s[i]].scope !== 'c')
+       {
+        v.svc = 'b';
+        v.url = thirdparty.emotes.bttv[s[i]].url;
+        v.scope = thirdparty.emotes.bttv[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.hasOwnProperty('7tv') && thirdparty.emotes['7tv'].hasOwnProperty(s[i]) && thirdparty.emotes['7tv'][s[i]].scope !== 'c')
+       {
+        v.svc = '7';
+        v.url = thirdparty.emotes['7tv'][s[i]].url;
+        v.scope = thirdparty.emotes['7tv'][s[i]].scope;
+        r.push(v);
+        continue;
+       }
+      }
+      return r;
+     }
+
      async function showKappa(kList, kStyles = false, kParams = false)
      {
       const kStyle = _getNextKappaEx(kStyles, kParams);
@@ -4231,6 +3957,28 @@
        return;
       if (kStyle.style === undefined)
        return;
+      if (kStyle.prefs.hasOwnProperty('emotes'))
+      {
+       let kForce = [];
+       let bForce = false;
+       if (Array.isArray(kStyle.prefs.emotes))
+        kForce = kStyle.prefs.emotes;
+       else
+       {
+        if (kStyle.prefs.emotes.hasOwnProperty('list'))
+         kForce = kStyle.prefs.emotes.list;
+        if (kStyle.prefs.emotes.hasOwnProperty('dynamic') && kStyle.prefs.emotes.dynamic === false)
+         bForce = true;
+       }
+       if (!Array.isArray(kList) || kList.length < 1)
+        bForce = true;
+       if (bForce)
+       {
+        const fList = await _StringArrayToEmoteArray(kForce);
+        if (fList.length > 0)
+         kList = fList;
+       }
+      }
       if (!Array.isArray(kList) || kList.length < 1)
        kList = cList;
       if (!Array.isArray(kList) || kList.length < 1)
@@ -4364,7 +4112,7 @@
           return;
          const rB = shared.rnd(lK);
          _eActive--;
-         emote.list.StraightLine(kList[rB].url, kList[rB].zwe ?? [], sW, sH, sS, oH, oV, false, tInit);
+         display.emote.list.StraightLine(kList[rB].url, kList[rB].zwe ?? [], sW, sH, sS, oH, oV, false, tInit);
          await _sleep(50);
         }
         break;
@@ -4377,7 +4125,7 @@
           return;
          const rF = shared.rnd(lK);
          _eActive--;
-         emote.list.Fountain(kList[rF].url, kList[rF].zwe ?? [], sW, sH, sS, fX, fY, false, tInit);
+         display.emote.list.Fountain(kList[rF].url, kList[rF].zwe ?? [], sW, sH, sS, fX, fY, false, tInit);
          await _sleep(50);
         }
         break;
@@ -4388,12 +4136,12 @@
           return;
          const rN = shared.rnd(lK);
          _eActive--;
-         emote.list.Confetti(kList[rN].url, kList[rN].zwe ?? [], sW, sH, sSm, false, tInit);
+         display.emote.list.Confetti(kList[rN].url, kList[rN].zwe ?? [], sW, sH, sSm, false, tInit);
          await _sleep(25);
         }
         break;
        default:
-        if (typeof emote.list[kStyle.style] === 'undefined')
+        if (typeof display.emote.list[kStyle.style] === 'undefined')
          return false;
         for (let i = 0; i < kStyle.count; i++)
         {
@@ -4402,9 +4150,9 @@
          const r = shared.rnd(lK);
          _eActive--;
          if (kStyle.style === 'StraightLine')
-          emote.list.StraightLine(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, false, false, tInit);
+          display.emote.list.StraightLine(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, false, false, tInit);
          else
-          emote.list[kStyle.style](kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, tInit);
+          display.emote.list[kStyle.style](kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, tInit);
          await _sleep(100);
         }
       }
@@ -4429,9 +4177,9 @@
 
     const _gc = function()
     {
-     let _toGC = {};      // list of image elements to garbage collect
+     let _toGC = {};
 
-     let _tGC = false;    // timer for garbage collection
+     let _tGC = false;
 
      function _doGC()
      {
@@ -4577,13 +4325,14 @@
     function eraseAll()
     {
      _iTitanic = new Date().getTime();
-     kappa.hide();
+     display.kappa.hide();
      let cubes = document.getElementsByClassName('scene');
      while (cubes.length)
       cubes[0].parentElement.removeChild(cubes[0]);
      let imgs = document.getElementsByTagName('img');
      while (imgs.length)
       imgs[0].parentElement.removeChild(imgs[0]);
+     twitch.parse.clearCooldowns();
     }
 
     return {
@@ -4595,18 +4344,18 @@
 
    const twitch = function()
    {
-    let _rList = {};     // list of triggered channel point redeems to match to PubSub events
+    let _rList = {};
 
     const net = function()
     {
      const follower = function()
      {
-      let _uLF = false;    // user id of the most recent follower
-      const _rFC = 2500;   // follower count interval (ms)
+      let _uLF = false;
+      const _rFC = 2500;
 
       async function getFollowerChange(chID)
       {
-       const url = 'https://api.twitch.tv/helix/users/follows?to_id=' + chID + '&first=100';
+       const url = cURLs.api.twitch.users.follows + '?to_id=' + chID + '&first=100';
        const h = {
         'Authorization': 'Bearer ' + cfg.login.oauth,
         'Client-Id': cfg.login.client
@@ -4650,20 +4399,21 @@
       }
 
       return {
-       list: {},          // cache of users in chat and their follow status
-       timer: false,      // timer for follower kludge
+       list: {},
+       timer: false,
        detect: detectFollowers
       };
      }();
 
-     async function loadCheer_channel(chID)
+     async function _loadCheer_channel(chID)
      {
-      thirdparty.emotes.cheer = {};
-      const url = 'https://api.twitch.tv/helix/bits/cheermotes?broadcaster_id=' + chID;
-       const h = {
-        'Authorization': 'Bearer ' + cfg.login.oauth,
-        'Client-Id': cfg.login.client
-       };
+      if (!thirdparty.emotes.hasOwnProperty('cheer'))
+       thirdparty.emotes.cheer = {};
+      const url = cURLs.api.twitch.bits.cheermotes + '?broadcaster_id=' + chID;
+      const h = {
+       'Authorization': 'Bearer ' + cfg.login.oauth,
+       'Client-Id': cfg.login.client
+      };
       const r = await shared.httpRequest(url, h);
       if (r === false)
        return false;
@@ -4762,7 +4512,7 @@
 
       function task()
       {
-       _ws = new WebSocket('wss://pubsub-edge.twitch.tv:443');
+       _ws = new WebSocket(cURLs.ws.twitch.pubSub);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
        _ws.onmessage = _wsMessage;
@@ -4854,7 +4604,7 @@
          const n = d.data.redemption.reward.title;
          if (!d.data.redemption.hasOwnProperty('user_input'))
          {
-          await parse.event.redeem(n, false);
+          await twitch.parse.event.redeem(n, false);
           return;
          }
          const lnID = d.data.redemption.reward.id;
@@ -4867,7 +4617,7 @@
           _rList[lnID].name = n;
          while (_rList[lnID].cmds.length > 0)
          {
-          await parse.event.redeem(n, _rList[lnID].cmds.shift());
+          await twitch.parse.event.redeem(n, _rList[lnID].cmds.shift());
          }
          break;
        }
@@ -4886,12 +4636,12 @@
       let _wsRetry = 0;
       let _firstRS = true;
       let _ws = null;
-      let _tTimeout = false;   // timer for irc connection timeout
+      let _tTimeout = false;
 
       function task()
       {
        _firstRS = true;
-       _ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+       _ws = new WebSocket(cURLs.ws.twitch.irc);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
        _ws.onmessage = _wsMessage;
@@ -4938,7 +4688,7 @@
        {
         if (data[i].length === 0)
          continue;
-        let cmd = parse.message(data[i]);
+        let cmd = twitch.parse.message(data[i]);
         if (cmd === false)
         {
          console.log('Unparsed IRC Command: ', data[i]);
@@ -4953,12 +4703,9 @@
           if (document.visibilityState === 'hidden')
            return;
           if (cmd.params.length > 1)
-          {
-           // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
-           cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
-          }
-          if (!await parse.event.cheer(cmd))
-           parse.line(cmd);
+           cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
+          if (!await twitch.parse.event.cheer(cmd))
+           twitch.parse.line(cmd);
           break;
          case 'NOTICE':
           if (cmd.params.length > 1 && cmd.params[1] === 'Login authentication failed')
@@ -4981,8 +4728,8 @@
             _tTimeout = false;
            }
            _firstRS = false;
-           await loadEmote_channel(twitch.net.channelID);
-           await loadCheer_channel(twitch.net.channelID);
+           await _loadEmote_channel(twitch.net.channelID);
+           await _loadCheer_channel(twitch.net.channelID);
            if (cfg.display.extended.useFFZ)
             thirdparty.ffz.channel(twitch.net.channelID);
            if (cfg.display.extended.useBTTV)
@@ -5012,14 +4759,11 @@
           if (!cmd.tags.hasOwnProperty('msg-id'))
            continue;
           if (cmd.params.length > 1)
-          {
-           // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
-           cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
-          }
+           cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
           switch (cmd.tags['msg-id'])
           {
            case 'raid':
-            parse.event.raid(cmd);
+            twitch.parse.event.raid(cmd);
             break;
            case 'sub':
            case 'resub':
@@ -5027,15 +4771,19 @@
            case 'submysterygift':
            case 'giftpaidupgrade':
            case 'primepaidupgrade':
-            parse.event.sub(cmd);
+            twitch.parse.event.sub(cmd);
             break;
            case 'bitsbadgetier':
-            parse.event.badge(cmd);
+            twitch.parse.event.badge(cmd);
             break;
            default:
             if (cmd.params.length > 1)
-             parse.line(cmd);
+             twitch.parse.line(cmd);
           }
+          break;
+         case 'CLEARCHAT':
+          if (cfg.event.clear)
+           display.eraseAll();
           break;
         }
        }
@@ -5058,10 +4806,12 @@
       return task;
      }();
 
-     async function loadEmote_channel(chID)
+     async function _loadEmote_channel(chID)
      {
       cList = [];
-      const r = await _findEmote_channel(chID);
+      if (!thirdparty.emotes.hasOwnProperty('twitch'))
+       thirdparty.emotes.twitch = {};
+      const r = await _findEmote_channel(chID, thirdparty.emotes.twitch);
       if (r === false)
        return false;
       cList = r;
@@ -5070,7 +4820,7 @@
 
      async function getUserInfo(u)
      {
-      const url = 'https://api.twitch.tv/helix/users?login=' + u;
+      const url = cURLs.api.twitch.users.root + '?login=' + u;
       const h = {
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
@@ -5089,7 +4839,7 @@
      return {
       channelID: 0,
       fList: follower.list,
-      dead: false,       // hard disconnect (usually caused by an error)
+      dead: false,
       irc: irc,
       userInfo: getUserInfo
      };
@@ -5097,7 +4847,7 @@
 
     const parse = function()
     {
-     let _kLast = 0;      // last kappagen command event (for cooldown)
+     let _aLast = {};
 
      function parseUser(cmd, latinOnly = false)
      {
@@ -5185,7 +4935,7 @@
      {
       const emoji = function()
       {
-       let _uList = {};     // checkURL Cache
+       let _uList = {};
 
        async function task(cmd, set, dup = null)
        {
@@ -5199,7 +4949,7 @@
         {
          emList.push(match);
         }
-        const kcSeg = /((?:[0-9#\*]\ufe0f\u20e3)+)+/gu; //keycap
+        const kcSeg = /((?:[0-9#\*]\ufe0f\u20e3)+)+/gu;
         match = '';
         while ((match = kcSeg.exec(msg)) !== null)
         {
@@ -5212,7 +4962,7 @@
         if (set === true)
          set = 'twemoji';
         let ret = [];
-        const uri = 'https://cdn.frankerfacez.com/static/emoji/images/' + set + '/';
+        const uri = cURLs.cdn.ffz.emoji.replaceAll('%SET_ID%', set);
         let addList = {};
         function showEmoji(c, p)
         {
@@ -5243,35 +4993,35 @@
            continue;
           }
           const lL = cpList.length - 1;
-          if (p === 'fe0f') //emoji variation
+          if (p === 'fe0f')
            cpList[lL] += '-' + p;
-          else if (p === '200d') //zwj
+          else if (p === '200d')
            cpList[lL] += '-' + p;
-          else if (p === '20e3') //keycap
+          else if (p === '20e3')
            cpList[lL] += '-' + p;
-          else if (p.match(/1f3f[b-f]/)) //skin tone
+          else if (p.match(/1f3f[b-f]/))
            cpList[lL] += '-' + p;
-          else if (p.match(/1f9b[0-3]/)) //hair
+          else if (p.match(/1f9b[0-3]/))
           {
            if (cpList[lL].slice(-5) === '-200d')
             cpList[lL] += '-' + p;
            else
             cpList[lL] += '-200d-' + p;
           }
-          else if (p.match(/264[0|2]/) || p.match(/26a7/)) //gender
+          else if (p.match(/264[0|2]/) || p.match(/26a7/))
           {
            if (cpList[lL].slice(-5) === '-200d')
             cpList[lL] += '-' + p;
            else
             cpList[lL] += '-200d-' + p;
           }
-          else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].length < 11) //country code (2 chars max)
+          else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].length < 11)
            cpList[lL] += '-' + p;
-          else if (p === '1f308' && cpList[lL] === '1f3f3-fe0f') //rainbow flag
+          else if (p === '1f308' && cpList[lL] === '1f3f3-fe0f')
            cpList[lL] += '-200d-' + p;
-          else if (p === '2620' && cpList[lL] === '1f3f4') //pirate flag
+          else if (p === '2620' && cpList[lL] === '1f3f4')
            cpList[lL] += '-200d-' + p;
-          else if (cpList[lL].slice(-5) === '-200d') //post-zwj
+          else if (cpList[lL].slice(-5) === '-200d')
            cpList[lL] += '-' + p;
           else
            cpList.push(p);
@@ -5365,9 +5115,6 @@
         return [];
        if (cmd.params.length < 2)
         return [];
-       const f = 'default';
-       const t = 'dark';
-       const x = '3.0';
        const m = cmd.params[1];
        const e = cmd.tags.emotes.split('/');
        if (dup === null)
@@ -5376,7 +5123,7 @@
        for (let i = 0, n = e.length; i < n; i++)
        {
         const eID = e[i].slice(0, e[i].indexOf(':'));
-        const u = 'https://static-cdn.jtvnw.net/emoticons/v2/' + eID + '/' + f + '/' + t + '/' + x;
+        const u = cURLs.cdn.twitch.emote.replaceAll('%EMOTE_ID%', eID);
         const eVals = e[i].slice(e[i].indexOf(':') + 1).split(',');
         const eStart = parseInt(eVals[0].split('-')[0], 10);
         const eEnd = parseInt(eVals[0].split('-')[1], 10);
@@ -5395,7 +5142,7 @@
        return ret;
       }
 
-      const _3rdparty = function()
+      const $3rdparty = function()
       {
        function parseFFZ(cmd, dup = null)
        {
@@ -5617,7 +5364,7 @@
         };
        }();
 
-       const _7tv = function()
+       const $7tv = function()
        {
         function parse7TV(cmd, dup = null)
         {
@@ -5760,197 +5507,175 @@
        return {
         ffz: parseFFZ,
         bttv: bttv,
-        '7tv': _7tv
+        '7tv': $7tv
        };
       }();
 
       return {
        emoji: emoji,
        twitch: parseT,
-       '3rdparty': _3rdparty
+       '3rdparty': $3rdparty
       };
      }();
 
-     async function parseLine(cmd)
+     const parseLine = function()
      {
-      let lv = -1;
-      const kNow = new Date().getTime();
-      if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('custom-reward-id'))
+      async function task(cmd)
       {
+       if (await _parseCustomReward(cmd))
+        return;
+       if (cmd.params.length < 2)
+        return;
+       if (await _parseCommand(cmd))
+        return;
+       const p = _handleDuplicates(await _eListFromCmd(cmd));
+       if (p.length === 0)
+        return;
+       const lv = await _level.get(cmd);
+       if ((lv & cfg.display.access) === 0)
+        return;
+       display.emote.addToShowList(p);
+       display.emote.showEmotes();
+      }
+
+      async function _parseCustomReward(cmd)
+      {
+       if (!cmd.hasOwnProperty('tags'))
+        return false;
+       if (!cmd.tags.hasOwnProperty('custom-reward-id'))
+        return false;
        const lnID = cmd.tags['custom-reward-id'];
        if (!_rList.hasOwnProperty(lnID))
        {
         _rList[lnID] = {name: false, cmds: [cmd]};
-        return;
+        return true;
        }
        _rList[lnID].cmds.push(cmd);
        if (_rList[lnID].name === false)
-        return;
+        return true;
        while (_rList[lnID].cmds.length > 0)
        {
         await event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift());
        }
-       return;
+       return true;
       }
-      if (cmd.params.length > 1 && (cfg.display.kappa.cooldown === 0 || kNow - _kLast > cfg.display.kappa.cooldown * 1000))
+
+      async function _parseCommand(cmd)
       {
+       let lv = -1;
+       const kNow = new Date().getTime();
        const m = cmd.params[1].toLowerCase();
-       for (const k in cfg.display.kappa.styles)
+       let foundAdvCmd = false;
+       for (const k of cfg.commands)
        {
-        if (!cfg.display.kappa.styles.hasOwnProperty(k))
+        if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase'))
          continue;
-        if (!cfg.display.kappa.styles[k].hasOwnProperty('command'))
+        if (!k.hasOwnProperty('aliases'))
          continue;
-        if (!cfg.display.kappa.styles[k].command.hasOwnProperty('aliases'))
-         continue;
-        let kAccess = cfg.display.kappa.access;
-        if (cfg.display.kappa.styles[k].command.hasOwnProperty('access'))
-         kAccess = cfg.display.kappa.styles[k].command.access;
-        let kC = {};
-        kC[k] = cfg.display.kappa.styles[k];
-        if (cfg.display.kappa.styles[k].command.aliases.includes(m))
+        let foundKCmd = false;
+        if (k.aliases.includes(m))
+         foundKCmd = m;
+        if (foundKCmd === false)
         {
-         if (lv === -1)
-          lv = await _level.get(cmd);
-         if ((lv & kAccess) !== 0)
+         for (let i = 0, l = k.aliases.length; i < l; i++)
          {
-          _kLast = kNow;
-          display.kappa.show(false, kC);
-          return;
+          if (m.slice(0, k.aliases[i].length + 1) === k.aliases[i] + ' ')
+          {
+           foundKCmd = k.aliases[i];
+           break;
+          }
          }
         }
-        let foundKCmd = false;
-        for (let i = 0, l = cfg.display.kappa.styles[k].command.aliases.length; i < l; i++)
+        if (foundKCmd === false)
+         continue;
+        let kAccess = cfg.display.kappa.access;
+        if (k.hasOwnProperty('access'))
+         kAccess = k.access;
+        if (lv === -1)
+         lv = await _level.get(cmd);
+        if ((lv & kAccess) === 0)
+         continue;
+        foundAdvCmd = true;
+        if (k.hasOwnProperty('cooldown'))
         {
-         if (m.slice(0, cfg.display.kappa.styles[k].command.aliases[i].length + 1) === cfg.display.kappa.styles[k].command.aliases[i] + ' ')
+         let hK = _hashCode(k);
+         if (!_aLast.hasOwnProperty(hK))
+          _aLast[hK] = 0;
+         if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
+          continue;
+        }
+        if (k.hasOwnProperty('erase'))
+        {
+         display.eraseAll();
+         return;
+        }
+        let kC = {};
+        for (let kS in k.styles)
+        {
+         if (!k.styles.hasOwnProperty(kS))
+          continue;
+         kC[kS] = JSON.parse(JSON.stringify(k.styles[kS]));
+         kC[kS].command = foundKCmd;
+         if (foundKCmd.length === m.length)
+          kC[kS].params = null;
+         else
+          kC[kS].params = m.slice(foundKCmd.length + 1);
+        }
+        let eA = false;
+        if (foundKCmd.length < m.length)
+         eA = _handleDuplicates(await _eListFromCmd(cmd, true));
+        _aLast[_hashCode(k)] = kNow;
+        display.kappa.show(eA, kC);
+        return true;
+       }
+       let foundCmd = false;
+       if (cfg.display.kappa.aliases.includes(m))
+        foundCmd = m;
+       if (foundCmd === false)
+       {
+        for (let i = 0, l = cfg.display.kappa.aliases.length; i < l; i++)
+        {
+         if (m.slice(0, cfg.display.kappa.aliases[i].length + 1) === cfg.display.kappa.aliases[i] + ' ')
          {
-          foundKCmd = true;
+          foundCmd = cfg.display.kappa.aliases[i];
           break;
          }
         }
-        if (foundKCmd)
-        {
-         if (lv === -1)
-          lv = await _level.get(cmd);
-         if ((lv & kAccess) !== 0)
-         {
-          let a = [];
-          a = a.concat(parse.content.twitch(cmd, true));
-          if (cfg.display.useEmoji)
-           a = a.concat(await parse.content.emoji(cmd, cfg.display.useEmoji, true));
-          if (cfg.display.extended.useFFZ)
-           a = a.concat(parse.content['3rdparty'].ffz(cmd, true));
-          if (cfg.display.extended.useBTTV)
-          {
-           a = a.concat(parse.content['3rdparty'].bttv.general(cmd, true));
-           a = a.concat(parse.content['3rdparty'].bttv.user(cmd, true));
-          }
-          if (cfg.display.extended.use7TV)
-           a = a.concat(parse.content['3rdparty']['7tv'].general(cmd, true));
-          if (cfg.display.extended.useBTTV)
-           parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
-          if (cfg.display.extended.use7TV)
-           parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
-          if (cfg.display.extended.useBTTV)
-           parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
-          if (cfg.display.extended.use7TV)
-           parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
-          a = _handleDuplicates(a);
-          _kLast = kNow;
-          display.kappa.show(a, kC);
-          return;
-         }
-        }
        }
-       if (cfg.display.kappa.aliases.includes(m))
-       {
-        if (lv === -1)
-         lv = await _level.get(cmd);
-        if ((lv & cfg.display.kappa.access) !== 0)
-        {
-         _kLast = kNow;
-         display.kappa.show(false);
-         return;
-        }
-       }
-       let foundCmd = false;
-       for (let i = 0, l = cfg.display.kappa.aliases.length; i < l; i++)
-       {
-        if (m.slice(0, cfg.display.kappa.aliases[i].length + 1) === cfg.display.kappa.aliases[i] + ' ')
-        {
-         foundCmd = true;
-         break;
-        }
-       }
-       if (foundCmd)
-       {
-        if (lv === -1)
-         lv = await _level.get(cmd);
-        if ((lv & cfg.display.kappa.access) !== 0)
-        {
-         let a = [];
-         a = a.concat(parse.content.twitch(cmd, true));
-         if (cfg.display.useEmoji)
-          a = a.concat(await parse.content.emoji(cmd, cfg.display.useEmoji, true));
-         if (cfg.display.extended.useFFZ)
-          a = a.concat(parse.content['3rdparty'].ffz(cmd, true));
-         if (cfg.display.extended.useBTTV)
-         {
-          a = a.concat(parse.content['3rdparty'].bttv.general(cmd, true));
-          a = a.concat(parse.content['3rdparty'].bttv.user(cmd, true));
-         }
-         if (cfg.display.extended.use7TV)
-          a = a.concat(parse.content['3rdparty']['7tv'].general(cmd, true));
-         if (cfg.display.extended.useBTTV)
-          parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
-         if (cfg.display.extended.use7TV)
-          parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
-         if (cfg.display.extended.useBTTV)
-          parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
-         if (cfg.display.extended.use7TV)
-          parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
-         a = _handleDuplicates(a);
-         _kLast = kNow;
-         display.kappa.show(a);
-         return;
-        }
-       }
+       if (foundCmd === false)
+        return foundAdvCmd;
+       if (lv === -1)
+        lv = await _level.get(cmd);
+       if ((lv & cfg.display.kappa.access) === 0)
+        return foundAdvCmd;
+       let h = _hashCode(null);
+       if (!_aLast.hasOwnProperty(h))
+        _aLast[h] = 0;
+       if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
+        return true;
+       let a = false;
+       if (foundCmd.length < m.length)
+        a = _handleDuplicates(await _eListFromCmd(cmd, true));
+       _aLast[h] = kNow;
+       display.kappa.show(a);
+       return true;
       }
-      let p = [];
-      p = p.concat(parse.content.twitch(cmd));
-      if (cfg.display.useEmoji)
-       p = p.concat(await parse.content.emoji(cmd, cfg.display.useEmoji));
-      if (cfg.display.extended.useFFZ)
-       p = p.concat(parse.content['3rdparty'].ffz(cmd));
-      if (cfg.display.extended.useBTTV)
+
+      function _hashCode(o)
       {
-       p = p.concat(parse.content['3rdparty'].bttv.general(cmd));
-       p = p.concat(parse.content['3rdparty'].bttv.user(cmd));
+       const s = JSON.stringify(o);
+       let h = 0;
+       for (let i = 0, l = s.length; i < l; i++)
+        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+       return h;
       }
-      if (cfg.display.extended.use7TV)
-       p = p.concat(parse.content['3rdparty']['7tv'].general(cmd));
-      if (cfg.display.extended.useBTTV)
-       parse.content['3rdparty'].bttv.zwe(p, cmd, 1);
-      if (cfg.display.extended.use7TV)
-       parse.content['3rdparty']['7tv'].zwe(p, cmd, 1);
-      if (cfg.display.extended.useBTTV)
-       parse.content['3rdparty'].bttv.zwe(p, cmd, 2);
-      if (cfg.display.extended.use7TV)
-       parse.content['3rdparty']['7tv'].zwe(p, cmd, 2);
-      p = _handleDuplicates(p);
-      if (p.length === 0)
-       return;
-      if (lv === -1)
-       lv = await _level.get(cmd);
-      if ((lv & cfg.display.access) === 0)
-       return;
-      display.emote.addToShowList(p);
-      display.emote.showEmotes();
-     }
+
+      return task;
+     }();
 
      const event = function()
      {
-      let bList = [];     // list of giftbomb event origin ids (to prevent kappas for each gift in a bomb)
+      let bList = [];
 
       async function parseCheer(cmd)
       {
@@ -5988,26 +5713,8 @@
        }
        if (cfg.event.cheer.useMsg)
        {
-        p = p.concat(parse.content.twitch(cmd));
-        if (cfg.display.useEmoji)
-         p = p.concat(await parse.content.emoji(cmd, cfg.display.useEmoji));
-        if (cfg.display.extended.useFFZ)
-         p = p.concat(parse.content['3rdparty'].ffz(cmd));
-        if (cfg.display.extended.useBTTV)
-        {
-         p = p.concat(parse.content['3rdparty'].bttv.general(cmd));
-         p = p.concat(parse.content['3rdparty'].bttv.user(cmd));
-        }
-        if (cfg.display.extended.use7TV)
-         p = p.concat(parse.content['3rdparty']['7tv'].general(cmd));
-        if (cfg.display.extended.useBTTV)
-         parse.content['3rdparty'].bttv.zwe(p, cmd, 1);
-        if (cfg.display.extended.use7TV)
-         parse.content['3rdparty']['7tv'].zwe(p, cmd, 1);
-        if (cfg.display.extended.useBTTV)
-         parse.content['3rdparty'].bttv.zwe(p, cmd, 2);
-        if (cfg.display.extended.use7TV)
-         parse.content['3rdparty']['7tv'].zwe(p, cmd, 2);
+        const a = await _eListFromCmd(cmd);
+        p = p.concat(a);
        }
        else
         await parseLine(cmd);
@@ -6082,28 +5789,7 @@
        if (cmd.params.length > 1)
        {
         if (cfg.event.sub.useMsg)
-        {
-         a = a.concat(parse.content.twitch(cmd, true));
-         if (cfg.display.useEmoji)
-          a = a.concat(await parse.content.emoji(cmd, cfg.display.useEmoji, true));
-         if (cfg.display.extended.useFFZ)
-          a = a.concat(parse.content['3rdparty'].ffz(cmd, true));
-         if (cfg.display.extended.useBTTV)
-         {
-          a = a.concat(parse.content['3rdparty'].bttv.general(cmd, true));
-          a = a.concat(parse.content['3rdparty'].bttv.user(cmd, true));
-         }
-         if (cfg.display.extended.use7TV)
-          a = a.concat(parse.content['3rdparty']['7tv'].general(cmd, true));
-         if (cfg.display.extended.useBTTV)
-          parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
-         if (cfg.display.extended.use7TV)
-          parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
-         if (cfg.display.extended.useBTTV)
-          parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
-         if (cfg.display.extended.use7TV)
-          parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
-        }
+         a = await _eListFromCmd(cmd, true);
         else
          await parseLine(cmd);
        }
@@ -6238,46 +5924,19 @@
 
       async function parseRedeem(title, cmd)
       {
-       const kNow = new Date().getTime();
-       for (const k in cfg.display.kappa.styles)
+       for (const k of cfg.commands)
        {
-        if (!cfg.display.kappa.styles.hasOwnProperty(k))
+        if (!k.hasOwnProperty('redeem'))
          continue;
-        if (!cfg.display.kappa.styles[k].hasOwnProperty('redeem'))
+        if (!k.redeem.includes(title))
          continue;
-        if (!cfg.display.kappa.styles[k].redeem.includes(title))
-         continue;
-        let kC = {};
-        kC[k] = cfg.display.kappa.styles[k];
+        let kC = k.styles;
         if (cmd === false)
         {
-         _kLast = kNow;
          display.kappa.show(false, kC);
          return;
         }
-        let a = [];
-        a = a.concat(parse.content.twitch(cmd, true));
-        if (cfg.display.useEmoji)
-         a = a.concat(await parse.content.emoji(cmd, cfg.display.useEmoji, true));
-        if (cfg.display.extended.useFFZ)
-         a = a.concat(parse.content['3rdparty'].ffz(cmd, true));
-        if (cfg.display.extended.useBTTV)
-        {
-         a = a.concat(parse.content['3rdparty'].bttv.general(cmd, true));
-         a = a.concat(parse.content['3rdparty'].bttv.user(cmd, true));
-        }
-        if (cfg.display.extended.use7TV)
-         a = a.concat(parse.content['3rdparty']['7tv'].general(cmd, true));
-        if (cfg.display.extended.useBTTV)
-         parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
-        if (cfg.display.extended.use7TV)
-         parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
-        if (cfg.display.extended.useBTTV)
-         parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
-        if (cfg.display.extended.use7TV)
-         parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
-        a = _handleDuplicates(a);
-        _kLast = kNow;
+        const a = _handleDuplicates(await _eListFromCmd(cmd, true));
         display.kappa.show(a, kC);
         return;
        }
@@ -6294,7 +5953,7 @@
 
      const _level = function()
      {
-      const _rFH = 3600000;  // follower state cache time (ms)
+      const _rFH = 3600000;
 
       function _jSplit(s, sep, limit)
       {
@@ -6327,7 +5986,7 @@
         if (tDif < _rFH)
          return twitch.net.fList[uID].value;
        }
-       const url = 'https://api.twitch.tv/helix/users/follows?from_id=' + uID + '&to_id=' + cmd.tags['room-id'];
+       const url = cURLs.api.twitch.users.follows + '?from_id=' + uID + '&to_id=' + cmd.tags['room-id'];
        const h = {
         'Authorization': 'Bearer ' + cfg.login.oauth,
         'Client-Id': cfg.login.client
@@ -6398,15 +6057,13 @@
         needF = true;
        else
        {
-        for (const k in cfg.display.kappa.styles)
+        for (const k of cfg.commands)
         {
-         if (!cfg.display.kappa.styles.hasOwnProperty(k))
+         if (!k.hasOwnProperty('styles'))
           continue;
-         if (!cfg.display.kappa.styles[k].hasOwnProperty('command'))
+         if (!k.hasOwnProperty('access'))
           continue;
-         if (!cfg.display.kappa.styles[k].command.hasOwnProperty('access'))
-          continue;
-         if ((cfg.display.kappa.styles[k].command.access & 0x002) === 0x002 && (cfg.display.kappa.styles[k].command.access & 0x001) !== 0x001)
+         if ((k.access & 0x002) === 0x002 && (k.access & 0x001) !== 0x001)
          {
           needF = true;
           break;
@@ -6484,19 +6141,51 @@
       return r;
      }
 
+     async function _eListFromCmd(cmd, dup = null)
+     {
+      let r = [];
+      r = r.concat(twitch.parse.content.twitch(cmd, dup));
+      if (cfg.display.useEmoji)
+       r = r.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+      if (cfg.display.extended.useFFZ)
+       r = r.concat(twitch.parse.content['3rdparty'].ffz(cmd, dup));
+      if (cfg.display.extended.useBTTV)
+      {
+       r = r.concat(twitch.parse.content['3rdparty'].bttv.general(cmd, dup));
+       r = r.concat(twitch.parse.content['3rdparty'].bttv.user(cmd, dup));
+      }
+      if (cfg.display.extended.use7TV)
+       r = r.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd, dup));
+      if (cfg.display.extended.useBTTV)
+       twitch.parse.content['3rdparty'].bttv.zwe(r, cmd, 1, dup);
+      if (cfg.display.extended.use7TV)
+       twitch.parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
+      if (cfg.display.extended.useBTTV)
+       twitch.parse.content['3rdparty'].bttv.zwe(r, cmd, 2, dup);
+      if (cfg.display.extended.use7TV)
+       twitch.parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
+      return r;
+     }
+
+     function clearCooldowns()
+     {
+      _aLast = {};
+     }
+
      return {
       user: parseUser,
       message: parseMsg,
       content: content,
       line: parseLine,
       event: event,
+      clearCooldowns: clearCooldowns,
       uReg: /[^A-Za-z0-9_]/
      };
     }();
 
-    async function _findEmote_channel(chID)
+    async function _findEmote_channel(chID, n = false)
     {
-     const url = 'https://api.twitch.tv/helix/chat/emotes?broadcaster_id=' + chID;
+     const url = cURLs.api.twitch.chat.emotes.root + '?broadcaster_id=' + chID;
      const h = {
       'Authorization': 'Bearer ' + cfg.login.oauth,
       'Client-Id': cfg.login.client
@@ -6510,21 +6199,62 @@
      if (!Array.isArray(j.data))
       return false;
      let ret = [];
-     const f = 'default';
-     const t = 'dark';
-     const x = '3.0';
      for (let i = 0, l = j.data.length; i < l; i++)
      {
       if (!j.data[i].hasOwnProperty('id'))
        continue;
-      ret.push({url: 'https://static-cdn.jtvnw.net/emoticons/v2/' + j.data[i].id + '/' + f + '/' + t + '/' + x});
+      const eURL = cURLs.cdn.twitch.emote.replaceAll('%EMOTE_ID%', j.data[i].id);
+      if (n !== false && j.data[i].hasOwnProperty('name'))
+      {
+       n[j.data[i].name] = {
+        scope: 'c',
+        url: eURL,
+        id: j.data[i].id,
+        users: null
+       };
+      }
+      ret.push({url: eURL});
      }
      return ret;
     }
 
+    async function findEmote_global()
+    {
+     if (!thirdparty.emotes.hasOwnProperty('twitch'))
+      thirdparty.emotes.twitch = {};
+     const url = cURLs.api.twitch.chat.emotes.global;
+     const h = {
+      'Authorization': 'Bearer ' + cfg.login.oauth,
+      'Client-Id': cfg.login.client
+     };
+     const r = await shared.httpRequest(url, h, true);
+     if (r === false)
+      return false;
+     const j = JSON.parse(r);
+     if (!j.hasOwnProperty('data'))
+      return false;
+     if (!Array.isArray(j.data))
+      return false;
+     for (let i = 0, l = j.data.length; i < l; i++)
+     {
+      if (!j.data[i].hasOwnProperty('id'))
+       continue;
+      if (!j.data[i].hasOwnProperty('name'))
+       continue;
+      thirdparty.emotes.twitch[j.data[i].name] = {
+       scope: 'g',
+       url: cURLs.cdn.twitch.emote.replaceAll('%EMOTE_ID%', j.data[i].id),
+       id: j.data[i].id,
+       users: null
+      };
+     }
+     return true;
+    }
+
     return {
      net: net,
-     parse: parse
+     parse: parse,
+     global: findEmote_global
     };
    }();
 
@@ -6614,7 +6344,7 @@
      {
       _wsRetry = 0;
       _tPing = 0;
-      _ws = new WebSocket('wss://sockets.streamlabs.com/socket.io/?token=' + cfg.streamlabs.token + '&transport=websocket');
+      _ws = new WebSocket(cURLs.ws.streamlabs + '&token=' + cfg.streamlabs.token);
       _ws.onclose = _wsClose;
       _ws.onmessage = _wsMessage;
      }
@@ -6768,7 +6498,7 @@
      {
       _wsRetry = 0;
       _tPing = 0;
-      _ws = new WebSocket('wss://realtime.streamelements.com/socket.io/?transport=websocket');
+      _ws = new WebSocket(cURLs.ws.streamelements);
       _ws.onclose = _wsClose;
       _ws.onmessage = _wsMessage;
      }
@@ -6866,7 +6596,7 @@
 
     async function _getOAuthToken(t)
     {
-     const url = 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php?refresh=' + t;
+     const url = cURLs.html.rr.se + '?refresh=' + t;
      const r = await shared.httpRequest(url, {}, false, false);
      if (r === false)
       return false;
@@ -7023,8 +6753,9 @@
 
      async function loadFFZ_global()
      {
-      thirdparty.emotes.ffz = {};
-      const url = 'https://api.frankerfacez.com/v1/set/global';
+      if (!thirdparty.emotes.hasOwnProperty('ffz'))
+       thirdparty.emotes.ffz = {};
+      const url = cURLs.api.ffz.set.global;
       const r = await shared.httpRequest(url);
       if (r === false)
        return false;
@@ -7055,7 +6786,6 @@
         _addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
        }
       }
-      //user-specific, from here on everything returns true
       if (!j.hasOwnProperty('users'))
        return true;
       for (const setID in j.users)
@@ -7089,8 +6819,9 @@
 
      async function loadFFZ_channel(chID)
      {
-      thirdparty.emotes.ffz = {};
-      const url = 'https://api.frankerfacez.com/v1/room/id/' + chID;
+      if (!thirdparty.emotes.hasOwnProperty('ffz'))
+       thirdparty.emotes.ffz = {};
+      const url = cURLs.api.ffz.room.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest(url);
       if (r === false)
        return false;
@@ -7123,7 +6854,7 @@
 
     const bttv = function()
     {
-     const _rBE = 600000;   // bttv post-event emote recheck (ms)
+     const _rBE = 600000;
 
      function reloadBTTV(chID)
      {
@@ -7138,11 +6869,13 @@
 
      async function loadBTTV_global()
      {
-      thirdparty.emotes.bttv = {};
+      if (!thirdparty.emotes.hasOwnProperty('bttv'))
+       thirdparty.emotes.bttv = {};
       if (!thirdparty.emotes.hasOwnProperty('zwe'))
        thirdparty.emotes.zwe = {};
-      thirdparty.emotes.zwe.bttv = {};
-      const url = 'https://api.betterttv.net/3/cached/emotes/global';
+      if (!thirdparty.emotes.zwe.hasOwnProperty('bttv'))
+       thirdparty.emotes.zwe.bttv = {};
+      const url = cURLs.api.bttv.emotes.global;
       const r = await shared.httpRequest(url);
       if (r === false)
        return false;
@@ -7155,20 +6888,23 @@
         continue;
        if (!j[i].hasOwnProperty('id'))
         continue;
+       const eURL = cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', j[i].id);
        if (bttvZWE.includes(j[i].code))
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x', null, true);
+         _addEmote(thirdparty.emotes.zwe.bttv, 'g', j[i].code, j[i].id, eURL, null, true);
         continue;
        }
-       _addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, 'https://cdn.betterttv.net/emote/' + j[i].id + '/3x');
+       _addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, eURL);
       }
       return true;
      }
 
      async function loadBTTV_channel(chID)
      {
-      const url = 'https://api.betterttv.net/3/cached/users/twitch/' + chID;
+      if (!thirdparty.emotes.hasOwnProperty('bttv'))
+       thirdparty.emotes.bttv = {};
+      const url = cURLs.api.bttv.users.twitch.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest(url);
       if (r === false)
        return false;
@@ -7182,7 +6918,7 @@
          continue;
         if (!j.channelEmotes[i].hasOwnProperty('id'))
          continue;
-        _addEmote(thirdparty.emotes.bttv, 'c', j.channelEmotes[i].code, j.channelEmotes[i].id, 'https://cdn.betterttv.net/emote/' + j.channelEmotes[i].id + '/3x');
+        _addEmote(thirdparty.emotes.bttv, 'c', j.channelEmotes[i].code, j.channelEmotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', j.channelEmotes[i].id));
        }
       }
       if (j.hasOwnProperty('sharedEmotes'))
@@ -7193,7 +6929,7 @@
          continue;
         if (!j.sharedEmotes[i].hasOwnProperty('id'))
          continue;
-        _addEmote(thirdparty.emotes.bttv, 'c', j.sharedEmotes[i].code, j.sharedEmotes[i].id, 'https://cdn.betterttv.net/emote/' + j.sharedEmotes[i].id + '/3x');
+        _addEmote(thirdparty.emotes.bttv, 'c', j.sharedEmotes[i].code, j.sharedEmotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', j.sharedEmotes[i].id));
        }
       }
       return true;
@@ -7209,7 +6945,7 @@
       {
        _wsRetry = 0;
        _ch = chID;
-       _ws = new WebSocket('wss://sockets.betterttv.net/ws');
+       _ws = new WebSocket(cURLs.ws.bttv);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
        _ws.onmessage = _wsMessage;
@@ -7264,7 +7000,7 @@
            continue;
           if (!d.data.emotes[i].hasOwnProperty('id'))
            continue;
-          _addEmote(thirdparty.emotes.bttvU[d.data.name], 'u', d.data.emotes[i].code, d.data.emotes[i].id, 'https://cdn.betterttv.net/emote/' + d.data.emotes[i].id + '/3x');
+          _addEmote(thirdparty.emotes.bttvU[d.data.name], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id));
          }
          break;
         case 'emote_create':
@@ -7278,7 +7014,7 @@
           return;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, 'https://cdn.betterttv.net/emote/' + d.data.emote.id + '/3x');
+         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id));
          thirdparty.bttv.timer = window.setTimeout(reloadBTTV, _rBE, _ch);
          break;
         case 'emote_delete':
@@ -7303,7 +7039,7 @@
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
          _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emote.id);
-         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, 'https://cdn.betterttv.net/emote/' + d.data.emote.id + '/3x');
+         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id));
          thirdparty.bttv.timer = window.setTimeout(reloadBTTV, _rBE, _ch);
          break;
        }
@@ -7313,7 +7049,7 @@
      }();
 
      return {
-      timer: false,      // timer for BTTV third-party channel emote kludge
+      timer: false,
       global: loadBTTV_global,
       channel: loadBTTV_channel,
       socket: loadBTTV_ws_channel,
@@ -7321,16 +7057,17 @@
      };
     }();
 
-    const _7tv = function()
+    const $7tv = function()
     {
      async function load7TV_global()
      {
-      thirdparty.emotes['7tv'] = {};
+      if (!thirdparty.emotes.hasOwnProperty('7tv'))
+       thirdparty.emotes['7tv'] = {};
       if (!thirdparty.emotes.hasOwnProperty('zwe'))
        thirdparty.emotes.zwe = {};
       if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
        thirdparty.emotes.zwe['7tv'] = {};
-      const url = 'https://api.7tv.app/v2/emotes/global';
+      const url = cURLs.api['7tv'].emotes.global;
       const r = await shared.httpRequest(url);
       if (r === false)
        return false;
@@ -7358,7 +7095,7 @@
         if (uN.includes('/' + tN + 'x'))
          t4 = uN.replaceAll('/' + tN + 'x', '/4x');
        }
-       if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
+       if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80)
        {
         if (cfg.display.extended.useZWE)
          _addEmote(thirdparty.emotes.zwe['7tv'], 'g', j[i].name, j[i].id, t4, null, true);
@@ -7371,11 +7108,13 @@
 
      async function load7TV_channel(chID)
      {
+      if (!thirdparty.emotes.hasOwnProperty('7tv'))
+       thirdparty.emotes['7tv'] = {};
       if (!thirdparty.emotes.hasOwnProperty('zwe'))
        thirdparty.emotes.zwe = {};
       if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
        thirdparty.emotes.zwe['7tv'] = {};
-      const url = 'https://api.7tv.app/v2/users/' + chID + '/emotes';
+      const url = cURLs.api['7tv'].users.emotes.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest(url);
       if (r === false)
        return false;
@@ -7406,7 +7145,7 @@
         if (uN.includes('/' + tN + 'x'))
          t4 = uN.replaceAll('/' + tN + 'x', '/4x');
        }
-       if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
+       if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80)
        {
         if (cfg.display.extended.useZWE)
          _addEmote(thirdparty.emotes.zwe['7tv'], 'c', j[i].name, j[i].id, t4, null, true);
@@ -7419,7 +7158,7 @@
 
      async function _load7TV_channelID(chID)
      {
-      const url = 'https://api.7tv.app/v2/users/' + chID;
+      const url = cURLs.api['7tv'].users.root.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest(url);
       if (r === false)
        return false;
@@ -7443,7 +7182,7 @@
        _accID = await _load7TV_channelID(_ch);
        if (_accID === false)
         return;
-       _ws = new WebSocket('wss://events.7tv.io/v3');
+       _ws = new WebSocket(cURLs.ws['7tv']);
        _ws.onclose = _wsClose;
        _ws.onmessage = _wsMessage;
       }
@@ -7477,9 +7216,9 @@
          thirdparty.timer = window.setTimeout(reload3rdParty, 500, _ch);
          break;
         case 1:
-         _ws.send(JSON.stringify({"op": 35, "d": {"type":"user.*", "condition": {"object_id": _accID}}}));
-         _ws.send(JSON.stringify({"op": 35, "d": {"type":"emote.*", "condition": {"object_id": _accID}}}));
-         _ws.send(JSON.stringify({"op": 35, "d": {"type":"emote_set.*", "condition": {"object_id": _accID}}}));
+         _ws.send(JSON.stringify({'op': 35, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
+         _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
+         _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
          break;
         case 2:
          break;
@@ -7503,19 +7242,19 @@
      window.clearTimeout(thirdparty.timer);
      thirdparty.timer = false;
      if (cfg.display.extended.useFFZ)
-      ffz.channel(twitch.net.channelID);
+      thirdparty.ffz.channel(twitch.net.channelID);
      if (cfg.display.extended.use7TV)
-      _7tv.channel(twitch.net.channelID);
+      thirdparty['7tv'].channel(twitch.net.channelID);
      thirdparty.timer = window.setTimeout(reload3rdParty, thirdparty.interval, chID);
     }
 
     return {
-     emotes: {},      // pre-listed emotes, sub-grouped into: cheer, ffz, 7tv, bttv, and bttvU (user-specific BTTV)
-     timer: false,    // timer for third-party channel emote kludge
-     interval: 60000, // third-party channel emote recheck interval (ms)
+     emotes: {},
+     timer: false,
+     interval: 60000,
      ffz: ffz,
      bttv: bttv,
-     '7tv': _7tv,
+     '7tv': $7tv,
      reload: reload3rdParty
     };
    }();
@@ -7700,8 +7439,9 @@
 
    const login = function()
    {
-    let _tL = false;     // timer for logout button display
+    let _tL = false;
     const _visTime = 5000;
+    const _lsPath = 'twitch.chat:read+channel:read:redemptions';
 
     function shouldUseLogin()
     {
@@ -7709,30 +7449,10 @@
      if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== 'CHANNEL_NAME' && cfg.hasOwnProperty('login') && cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== 'OAUTH_ID')
       return false;
      login.inUse = true;
-     if (window.localStorage.getItem('rrew.channel') !== null)
-     {
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.channel', window.localStorage.getItem('rrew.channel'));
-      window.localStorage.removeItem('rrew.channel');
-     }
-     if (window.localStorage.getItem('rrew.client') !== null)
-     {
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.client', window.localStorage.getItem('rrew.client'));
-      window.localStorage.removeItem('rrew.client');
-     }
-     if (window.localStorage.getItem('rrew.oauth') !== null)
-     {
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.oauth', window.localStorage.getItem('rrew.oauth'));
-      window.localStorage.removeItem('rrew.oauth');
-     }
-     if (window.localStorage.getItem('rrew.expires') !== null)
-     {
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.expires', window.localStorage.getItem('rrew.expires'));
-      window.localStorage.removeItem('rrew.expires');
-     }
-     let lsChannel = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.channel');
-     let lsClient  = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.client');
-     let lsOAuth   = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.oauth');
-     let lsExpires = window.localStorage.getItem('twitch.chat:read+channel:read:redemptions.expires');
+     let lsChannel = window.localStorage.getItem(_lsPath + '.channel');
+     let lsClient  = window.localStorage.getItem(_lsPath + '.client');
+     let lsOAuth   = window.localStorage.getItem(_lsPath + '.oauth');
+     let lsExpires = window.localStorage.getItem(_lsPath + '.expires');
      if (lsChannel === null || lsOAuth === null)
      {
       const h = _getHashParams();
@@ -7745,10 +7465,10 @@
       lsClient = h.client;
       lsOAuth = h.oauth;
       lsExpires = h.expires;
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.channel', lsChannel);
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.oauth', lsOAuth);
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.client', lsClient);
-      window.localStorage.setItem('twitch.chat:read+channel:read:redemptions.expires', lsExpires);
+      window.localStorage.setItem(_lsPath + '.channel', lsChannel);
+      window.localStorage.setItem(_lsPath + '.oauth', lsOAuth);
+      window.localStorage.setItem(_lsPath + '.client', lsClient);
+      window.localStorage.setItem(_lsPath + '.expires', lsExpires);
      }
      cfg.channel = lsChannel;
      cfg.login.oauth = lsOAuth;
@@ -7763,7 +7483,7 @@
     {
      const d = function(s) {
       const a = /\+/g;
-      return decodeURIComponent(s.replace(a, " "));
+      return decodeURIComponent(s.replace(a, ' '));
      };
      let hashParams = {};
      const r = /([^&;=]+)=?([^&;]*)/g;
@@ -7778,17 +7498,17 @@
 
     function doLogin()
     {
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.channel');
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.oauth');
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.client');
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.expires');
+     window.localStorage.removeItem(_lsPath + '.channel');
+     window.localStorage.removeItem(_lsPath + '.oauth');
+     window.localStorage.removeItem(_lsPath + '.client');
+     window.localStorage.removeItem(_lsPath + '.expires');
      const o = encodeURIComponent(btoa(window.location));
      const c = encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8');
-     const r = encodeURIComponent('https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php');
+     const r = encodeURIComponent(cURLs.html.rr.wizard);
      const s = encodeURIComponent('chat:read channel:read:redemptions');
-     let u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + c + '&redirect_uri=' + r + '&response_type=token&scope=' + s + '&state=redirto_' + o + '&force_verify=true';
+     let u = cURLs.html.twitch + '?client_id=' + c + '&redirect_uri=' + r + '&response_type=token&scope=' + s + '&state=redirto_' + o + '&force_verify=true';
      if (u.length > 1500)
-      u = 'https://realityripple.com/Tools/Twitch/tempRedir.php?c=' + c + '&r=' + r + '&s=' + s + '&u=' + encodeURIComponent(window.location);
+      u = cURLs.html.rr.redir + '?c=' + c + '&r=' + r + '&s=' + s + '&u=' + encodeURIComponent(window.location);
      window.location = u;
     }
 
@@ -7797,10 +7517,10 @@
      document.title = 'Log In to Access Emote Wall';
      if (document.getElementById('cmdLogout'))
       document.body.removeChild(document.getElementById('cmdLogout'));
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.channel');
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.oauth');
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.client');
-     window.localStorage.removeItem('twitch.chat:read+channel:read:redemptions.expires');
+     window.localStorage.removeItem(_lsPath + '.channel');
+     window.localStorage.removeItem(_lsPath + '.oauth');
+     window.localStorage.removeItem(_lsPath + '.client');
+     window.localStorage.removeItem(_lsPath + '.expires');
      let cmdLogin = document.createElement('button');
      cmdLogin.setAttribute('id', 'cmdLogin');
      cmdLogin.setAttribute('type', 'button');
@@ -7879,7 +7599,7 @@
     }
 
     return {
-     inUse: false,      // interactive login in use
+     inUse: false,
      use: shouldUseLogin,
      begin: doLogin,
      showIn: showLoginButton,
@@ -7917,6 +7637,7 @@
      if ((cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID') || (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN'))
       streamelements.socket();
     }
+    await twitch.global();
     if (cfg.display.extended.useFFZ)
      await thirdparty.ffz.global();
     if (cfg.display.extended.useBTTV)
@@ -7928,5 +7649,534 @@
 
    window.addEventListener('load', startup);
   </script>
+  <style>
+   :root
+   {
+    --height: 0px;
+    --width: 0px;
+    --emote-height: 0px;
+    --emote-height-s: 0px;
+    --emote-height-l: 0px;
+   }
+   body
+   {
+    margin: 0;
+    overflow: hidden;
+   }
+   img
+   {
+    object-fit: contain;
+    object-position: 50% 50%;
+   }
+   img.emote
+   {
+    position: fixed;
+    height: 100%;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    offset-rotate: 0deg;
+   }
+
+   div.scene
+   {
+    position: fixed;
+    border: 0;
+    margin: 0;
+    padding: 0;
+   }
+   div.scene div.cube
+   {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+   }
+   div.scene div.cube .cubeFace
+   {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.2);
+   }
+
+   div.scene img.dancer
+   {
+    text-align: center;
+    position: relative;
+    animation: dance 4s linear infinite;
+   }
+
+   @keyframes dance
+   {
+    0%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+    6%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    13%
+    {
+     transform: translate(20%, 40%) rotate(-30deg);
+    }
+    19%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    25%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+    31%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    38%
+    {
+     transform: translate(20%, 40%) rotate(-30deg);
+    }
+    44%
+    {
+     transform: translate(20%, 10%) rotate(-30deg);
+    }
+    50%
+    {
+     transform: translate(20%, 40%) rotate(-30deg);
+    }
+    56%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    63%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+    69%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    75%
+    {
+     transform: translate(20%, 40%) rotate(-30deg);
+    }
+    81%
+    {
+     transform: translate(50%, 10%) rotate(0deg);
+    }
+    88%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+    94%
+    {
+     transform: translate(80%, 10%) rotate(30deg);
+    }
+    100%
+    {
+     transform: translate(80%, 40%) rotate(30deg);
+    }
+   }
+
+   @keyframes wiggleL
+   {
+    33%
+    {
+     transform: translateX(-50%);
+    }
+    66%
+    {
+     transform: translateX(50%);
+    }
+   }
+   @keyframes wiggleR
+   {
+    33%
+    {
+     transform: translateX(50%);
+    }
+    66%
+    {
+     transform: translateX(-50%);
+    }
+   }
+
+   @keyframes speedL
+   {
+    0%
+    {
+     transform: scale(1, 1);
+    }
+    10%
+    {
+     transform: scale(0.6, 1);
+    }
+    15%
+    {
+     transform: scale(0.6, 1);
+    }
+    20%
+    {
+     transform: scale(1, 0.4);
+    }
+    100%
+    {
+     transform: scale(1, 0.4) translate(calc(-1 * var(--width) * 4), 0);
+    }
+   }
+   @keyframes speedR
+   {
+    0%
+    {
+     transform: scale(1, 1);
+    }
+    10%
+    {
+     transform: scale(0.6, 1);
+    }
+    15%
+    {
+     transform: scale(0.6, 1);
+    }
+    20%
+    {
+     transform: scale(1, 0.4);
+    }
+    100%
+    {
+     transform: scale(1, 0.4) translate(calc(var(--width) * 4), 0);
+    }
+   }
+
+   @keyframes dropL
+   {
+    0%
+    {
+     transform: translateY(-100%);
+    }
+    10%
+    {
+     transform: translateY(0%);
+    }
+    20%
+    {
+     transform: translateY(0%);
+    }
+    25%
+    {
+     transform: translateY(0%) rotate(45deg);
+    }
+    27%
+    {
+     transform: translateY(0%) rotate(35deg);
+    }
+    30%
+    {
+     transform: translateY(0%) rotate(45deg);
+    }
+    100%
+    {
+     transform: translateY(var(--height)) rotate(350deg);
+    }
+   }
+   @keyframes dropR
+   {
+    0%
+    {
+     transform: translateY(-100%);
+    }
+    10%
+    {
+     transform: translateY(0%);
+    }
+    20%
+    {
+     transform: translateY(0%);
+    }
+    25%
+    {
+     transform: translateY(0%) rotate(-45deg);
+    }
+    27%
+    {
+     transform: translateY(0%) rotate(-35deg);
+    }
+    30%
+    {
+     transform: translateY(0%) rotate(-45deg);
+    }
+    100%
+    {
+     transform: translateY(var(--height)) rotate(-350deg);
+    }
+   }
+
+   @keyframes confettiA
+   {
+    0%
+    {
+     transform: translateY(-100%) rotate3d(0.25, 0.5, 0, 0deg);
+    }
+    100%
+    {
+     transform: translateY(var(--height)) rotate3d(0.25, 0.5, 0, -4500deg);
+    }
+   }
+
+   @keyframes confettiB
+   {
+    0%
+    {
+     transform: translateY(-100%) rotate3d(0.25, 0.5, 0, 0deg);
+    }
+    100%
+    {
+     transform: translateY(var(--height)) rotate3d(0.25, 0, 0, -4500deg);
+    }
+   }
+
+   @keyframes confettiC
+   {
+    0%
+    {
+     transform: translateY(-100%) rotate3d(0.25, 0.5, 0, 0deg);
+    }
+    100%
+    {
+     transform: translateY(var(--height)) rotate3d(0.25, -0.5, 0, -4500deg);
+    }
+   }
+
+   @keyframes offsetPath
+   {
+    0%
+    {
+     offset-distance: 0%;
+    }
+    100%
+    {
+     offset-distance: 100%;
+    }
+   }
+
+   @keyframes fadeIn
+   {
+    0%
+    {
+     opacity: 0;
+    }
+    100% /* 8% */
+    {
+     opacity: 1;
+    }
+   }
+
+   @keyframes fadeOut
+   {
+    0% /* 95% */
+    {
+     opacity: 1;
+    }
+    100%
+    {
+     opacity: 0;
+    }
+   }
+
+   @keyframes noFadeOut
+   {
+    99%
+    {
+     opacity: 1;
+    }
+    100%
+    {
+     opacity: 0;
+    }
+   }
+
+   @keyframes zoomIn
+   {
+    0%
+    {
+     margin: calc((var(--emote-height) - (var(--emote-height) * 0.1)) / 2);
+     max-height: calc(var(--emote-height) * 0.1);
+    }
+    24% /* 4% */
+    {
+     margin: calc((var(--emote-height) - (var(--emote-height) * 1.2)) / 2);
+     max-height: calc(var(--emote-height) * 1.2);
+    }
+    35% /* 6% */
+    {
+     margin: 0;
+     max-height: var(--emote-height);
+    }
+    47% /* 8% */
+    {
+     margin: calc((var(--emote-height) - (var(--emote-height) * 0.8)) / 2);
+     max-height: calc(var(--emote-height) * 0.8);
+    }
+    71% /* 12% */
+    {
+     margin: 0;
+     max-height: var(--emote-height);
+    }
+    88% /* 15% */
+    {
+     margin: calc((var(--emote-height) - (var(--emote-height) * 0.95)) / 2);
+     max-height: calc(var(--emote-height) * 0.95);
+    }
+    100% /* 17% */
+    {
+     margin: 0;
+     max-height: var(--emote-height);
+    }
+   }
+
+   @keyframes zoomOut
+   {
+    0% /* 95% */
+    {
+     margin: 0;
+     max-height: var(--emote-height);
+    }
+    100%
+    {
+     margin: calc((var(--emote-height) - (var(--emote-height) * 0.1)) / 2);
+     max-height: calc(var(--emote-height) * 0.1);
+    }
+   }
+
+   @keyframes zoomInS
+   {
+    0%
+    {
+     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 0.1)) / 2);
+     max-height: calc(var(--emote-height-s) * 0.1);
+    }
+    24% /* 4% */
+    {
+     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 1.2)) / 2);
+     max-height: calc(var(--emote-height-s) * 1.2);
+    }
+    35% /* 6% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-s);
+    }
+    47% /* 8% */
+    {
+     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 0.8)) / 2);
+     max-height: calc(var(--emote-height-s) * 0.8);
+    }
+    71% /* 12% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-s);
+    }
+    88% /* 15% */
+    {
+     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 0.95)) / 2);
+     max-height: calc(var(--emote-height-s) * 0.95);
+    }
+    100% /* 17% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-s);
+    }
+   }
+
+   @keyframes zoomOutS
+   {
+    0% /* 95% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-s);
+    }
+    100%
+    {
+     margin: calc((var(--emote-height-s) - (var(--emote-height-s) * 0.1)) / 2);
+     max-height: calc(var(--emote-height-s) * 0.1);
+    }
+   }
+
+   @keyframes zoomInL
+   {
+    0%
+    {
+     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.1)) / 2);
+     max-height: calc(var(--emote-height-l) * 0.1);
+    }
+    24% /* 4% */
+    {
+     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 1.2)) / 2);
+     max-height: calc(var(--emote-height-l) * 1.2);
+    }
+    35% /* 6% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-l);
+    }
+    47% /* 8% */
+    {
+     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.8)) / 2);
+     max-height: calc(var(--emote-height-l) * 0.8);
+    }
+    71% /* 12% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-l);
+    }
+    88% /* 15% */
+    {
+     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.95)) / 2);
+     max-height: calc(var(--emote-height-l) * 0.95);
+    }
+    100% /* 17% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-l);
+    }
+   }
+
+   @keyframes zoomOutL
+   {
+    0% /* 95% */
+    {
+     margin: 0;
+     max-height: var(--emote-height-l);
+    }
+    100%
+    {
+     margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.1)) / 2);
+     max-height: calc(var(--emote-height-l) * 0.1);
+    }
+   }
+
+   button
+   {
+    background-color: #7D5BBE;
+    transition: background 0.12s ease-in, color 0.12s ease-in;
+    white-space: nowrap;
+    cursor: pointer;
+    color: #FFFFFF;
+    border-radius: 4px;
+    border: none;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+   }
+   button:focus, button:hover
+   {
+    background-color: #772CE8;
+   }
+   button:focus
+   {
+    outline: none;
+   }
+   button:active
+   {
+    background-color: #5C16C5;
+   }
+  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
  </head>
 </html>
