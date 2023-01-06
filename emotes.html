@@ -1931,9 +1931,9 @@
    if (typeof cfg === 'undefined')
     throw new Error('Corrupted Configuration detected.');
    document.title = cfg.channel + ' Emote Wall';
-   /* global variables */
-   let cList = [];     // list of channel-specific emotes, used for kappagens
-   const wWS = 5;      // websocket retry backoff base (ms = base ^ (1.0 + (0.2 per retry, max 1.0)))
+
+   let cList = [];
+   const wWS = 5;
    const cURLs = {
     ws: {
      twitch: {
@@ -2008,25 +2008,25 @@
 
    const display = function()
    {
-    let _eActive = 0;    // active emote count (effective, not actual)
+    let _eActive = 0;
     let _iTitanic = 0;
-    const _tStart = 48;  // time to wait for transition trigger (ms)
-    const _tAnim = {     // animation timing constants
+    const _tStart = 48;
+    const _tAnim = {
      fade: {
-      in: 8,            // percentage of animation spent on fading in (8% of 5 seconds)
-      out: 8            // percentage of animation spent on fading out
+      in: 8,
+      out: 8
      },
      zoom: {
-      in: 17,           // percentage of animation spent on zooming in (17% of 5 seconds)
-      out: 8            // percentage of animation spent on zooming out
+      in: 17,
+      out: 8
      }
     };
 
     const emote = function()
     {
-     let _toShow = [];    // emote queue
+     let _toShow = [];
 
-     let _tEmote = false; // timer for emote queue
+     let _tEmote = false;
 
      const list = function()
      {
@@ -2473,22 +2473,18 @@
          switch(dests[d - 1].w)
          {
           case 1:
-           //left
            iArr[i].style.transformOrigin = 'left center';
            iArr[i].style.transform = 'scale(0.7, 2)';
            break;
           case 2:
-           //top
            iArr[i].style.transformOrigin = 'center top';
            iArr[i].style.transform = 'scale(2, 0.7)';
            break;
           case 3:
-           //right
            iArr[i].style.transformOrigin = 'right center';
            iArr[i].style.transform = 'scale(0.7, 2)';
            break;
           case 4:
-           //bottom
            iArr[i].style.transformOrigin = 'center bottom';
            iArr[i].style.transform = 'scale(2, 0.7)';
            break;
@@ -3091,11 +3087,11 @@
 
     const kappa = function()
     {
-     let _toKappa = [];   // kappagen queue
-     let _conga = [];     // CONGA TIME!
+     let _toKappa = [];
+     let _conga = [];
      const _dKappa = 500;
 
-     let _tKappa = false; // timer for kappagen queue
+     let _tKappa = false;
 
      const _list = function()
      {
@@ -4711,9 +4707,9 @@
 
     const _gc = function()
     {
-     let _toGC = {};      // list of image elements to garbage collect
+     let _toGC = {};
 
-     let _tGC = false;    // timer for garbage collection
+     let _tGC = false;
 
      function _doGC()
      {
@@ -4878,14 +4874,14 @@
 
    const twitch = function()
    {
-    let _rList = {};     // list of triggered channel point redeems to match to PubSub events
+    let _rList = {};
 
     const net = function()
     {
      const follower = function()
      {
-      let _uLF = false;    // user id of the most recent follower
-      const _rFC = 2500;   // follower count interval (ms)
+      let _uLF = false;
+      const _rFC = 2500;
 
       async function getFollowerChange(chID)
       {
@@ -4933,8 +4929,8 @@
       }
 
       return {
-       list: {},          // cache of users in chat and their follow status
-       timer: false,      // timer for follower kludge
+       list: {},
+       timer: false,
        detect: detectFollowers
       };
      }();
@@ -5170,7 +5166,7 @@
       let _wsRetry = 0;
       let _firstRS = true;
       let _ws = null;
-      let _tTimeout = false;   // timer for irc connection timeout
+      let _tTimeout = false;
 
       function task()
       {
@@ -5237,10 +5233,7 @@
           if (document.visibilityState === 'hidden')
            return;
           if (cmd.params.length > 1)
-          {
-           // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
-           cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
-          }
+           cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
           if (!await twitch.parse.event.cheer(cmd))
            twitch.parse.line(cmd);
           break;
@@ -5296,10 +5289,7 @@
           if (!cmd.tags.hasOwnProperty('msg-id'))
            continue;
           if (cmd.params.length > 1)
-          {
-           // https://gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f
-           cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d'); //zwj alternate
-          }
+           cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
           switch (cmd.tags['msg-id'])
           {
            case 'raid':
@@ -5379,7 +5369,7 @@
      return {
       channelID: 0,
       fList: follower.list,
-      dead: false,       // hard disconnect (usually caused by an error)
+      dead: false,
       irc: irc,
       userInfo: getUserInfo
      };
@@ -5387,7 +5377,7 @@
 
     const parse = function()
     {
-     let _aLast = {};     // last kappagen command event (for cooldown)
+     let _aLast = {};
 
      function parseUser(cmd, latinOnly = false)
      {
@@ -5475,7 +5465,7 @@
      {
       const emoji = function()
       {
-       let _uList = {};     // checkURL Cache
+       let _uList = {};
 
        async function task(cmd, set, dup = null)
        {
@@ -5489,7 +5479,7 @@
         {
          emList.push(match);
         }
-        const kcSeg = /((?:[0-9#\*]\ufe0f\u20e3)+)+/gu; //keycap
+        const kcSeg = /((?:[0-9#\*]\ufe0f\u20e3)+)+/gu;
         match = '';
         while ((match = kcSeg.exec(msg)) !== null)
         {
@@ -5533,35 +5523,35 @@
            continue;
           }
           const lL = cpList.length - 1;
-          if (p === 'fe0f') //emoji variation
+          if (p === 'fe0f')
            cpList[lL] += '-' + p;
-          else if (p === '200d') //zwj
+          else if (p === '200d')
            cpList[lL] += '-' + p;
-          else if (p === '20e3') //keycap
+          else if (p === '20e3')
            cpList[lL] += '-' + p;
-          else if (p.match(/1f3f[b-f]/)) //skin tone
+          else if (p.match(/1f3f[b-f]/))
            cpList[lL] += '-' + p;
-          else if (p.match(/1f9b[0-3]/)) //hair
+          else if (p.match(/1f9b[0-3]/))
           {
            if (cpList[lL].slice(-5) === '-200d')
             cpList[lL] += '-' + p;
            else
             cpList[lL] += '-200d-' + p;
           }
-          else if (p.match(/264[0|2]/) || p.match(/26a7/)) //gender
+          else if (p.match(/264[0|2]/) || p.match(/26a7/))
           {
            if (cpList[lL].slice(-5) === '-200d')
             cpList[lL] += '-' + p;
            else
             cpList[lL] += '-200d-' + p;
           }
-          else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].length < 11) //country code (2 chars max)
+          else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].length < 11)
            cpList[lL] += '-' + p;
-          else if (p === '1f308' && cpList[lL] === '1f3f3-fe0f') //rainbow flag
+          else if (p === '1f308' && cpList[lL] === '1f3f3-fe0f')
            cpList[lL] += '-200d-' + p;
-          else if (p === '2620' && cpList[lL] === '1f3f4') //pirate flag
+          else if (p === '2620' && cpList[lL] === '1f3f4')
            cpList[lL] += '-200d-' + p;
-          else if (cpList[lL].slice(-5) === '-200d') //post-zwj
+          else if (cpList[lL].slice(-5) === '-200d')
            cpList[lL] += '-' + p;
           else
            cpList.push(p);
@@ -6215,7 +6205,7 @@
 
      const event = function()
      {
-      let bList = [];     // list of giftbomb event origin ids (to prevent kappas for each gift in a bomb)
+      let bList = [];
 
       async function parseCheer(cmd)
       {
@@ -6493,7 +6483,7 @@
 
      const _level = function()
      {
-      const _rFH = 3600000;  // follower state cache time (ms)
+      const _rFH = 3600000;
 
       function _jSplit(s, sep, limit)
       {
@@ -7326,7 +7316,6 @@
         _addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
        }
       }
-      //user-specific, from here on everything returns true
       if (!j.hasOwnProperty('users'))
        return true;
       for (const setID in j.users)
@@ -7395,7 +7384,7 @@
 
     const bttv = function()
     {
-     const _rBE = 600000;   // bttv post-event emote recheck (ms)
+     const _rBE = 600000;
 
      function reloadBTTV(chID)
      {
@@ -7590,7 +7579,7 @@
      }();
 
      return {
-      timer: false,      // timer for BTTV third-party channel emote kludge
+      timer: false,
       global: loadBTTV_global,
       channel: loadBTTV_channel,
       socket: loadBTTV_ws_channel,
@@ -7636,7 +7625,7 @@
         if (uN.includes('/' + tN + 'x'))
          t4 = uN.replaceAll('/' + tN + 'x', '/4x');
        }
-       if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
+       if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80)
        {
         if (cfg.display.extended.useZWE)
          _addEmote(thirdparty.emotes.zwe['7tv'], 'g', j[i].name, j[i].id, t4, null, true);
@@ -7686,7 +7675,7 @@
         if (uN.includes('/' + tN + 'x'))
          t4 = uN.replaceAll('/' + tN + 'x', '/4x');
        }
-       if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80) //Zero-Width
+       if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80)
        {
         if (cfg.display.extended.useZWE)
          _addEmote(thirdparty.emotes.zwe['7tv'], 'c', j[i].name, j[i].id, t4, null, true);
@@ -7790,9 +7779,9 @@
     }
 
     return {
-     emotes: {},      // pre-listed emotes, sub-grouped into: cheer, ffz, 7tv, bttv, and bttvU (user-specific BTTV)
-     timer: false,    // timer for third-party channel emote kludge
-     interval: 60000, // third-party channel emote recheck interval (ms)
+     emotes: {},
+     timer: false,
+     interval: 60000,
      ffz: ffz,
      bttv: bttv,
      '7tv': $7tv,
@@ -7980,7 +7969,7 @@
 
    const login = function()
    {
-    let _tL = false;     // timer for logout button display
+    let _tL = false;
     const _visTime = 5000;
     const _lsPath = 'twitch.chat:read+channel:read:redemptions';
 
@@ -8160,7 +8149,7 @@
     }
 
     return {
-     inUse: false,      // interactive login in use
+     inUse: false,
      use: shouldUseLogin,
      begin: doLogin,
      showIn: showLoginButton,
