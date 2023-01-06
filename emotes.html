@@ -3993,6 +3993,8 @@
 
       const Text = function()
       {
+       let _mL = 0;
+
        function task(kList, sW, sH, sMsg, iTime)
        {
         const tInit = new Date().getTime();
@@ -4059,7 +4061,15 @@
        {
         let o = [];
         let spc = [];
-        for (let y = 0, l = alnumDist['A'][0].length; y < l; y++)
+        if (_mL === 0)
+        {
+         for (let i = 0, k = Object.keys(alnumDist), l = k.length; i < l; i++)
+         {
+          if (_mL < alnumDist[k[i]][0].length)
+           _mL = alnumDist[k[i]][0].length;
+         }
+        }
+        for (let y = 0; y < _mL; y++)
         {
          spc.push(0);
         }
