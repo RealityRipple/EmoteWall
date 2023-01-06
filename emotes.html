@@ -5833,28 +5833,7 @@
           lv = await _level.get(cmd);
          if ((lv & kAccess) !== 0)
          {
-          let a = [];
-          a = a.concat(twitch.parse.content.twitch(cmd, true));
-          if (cfg.display.useEmoji)
-           a = a.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true));
-          if (cfg.display.extended.useFFZ)
-           a = a.concat(twitch.parse.content['3rdparty'].ffz(cmd, true));
-          if (cfg.display.extended.useBTTV)
-          {
-           a = a.concat(twitch.parse.content['3rdparty'].bttv.general(cmd, true));
-           a = a.concat(twitch.parse.content['3rdparty'].bttv.user(cmd, true));
-          }
-          if (cfg.display.extended.use7TV)
-           a = a.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd, true));
-          if (cfg.display.extended.useBTTV)
-           twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
-          if (cfg.display.extended.use7TV)
-           twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
-          if (cfg.display.extended.useBTTV)
-           twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
-          if (cfg.display.extended.use7TV)
-           twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
-          a = _handleDuplicates(a);
+          const a = _handleDuplicates(await _eListFromCmd(cmd, true));
           _kLast = kNow;
           display.kappa.show(a, kC);
           return;
@@ -5887,56 +5866,14 @@
          lv = await _level.get(cmd);
         if ((lv & cfg.display.kappa.access) !== 0)
         {
-         let a = [];
-         a = a.concat(twitch.parse.content.twitch(cmd, true));
-         if (cfg.display.useEmoji)
-          a = a.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true));
-         if (cfg.display.extended.useFFZ)
-          a = a.concat(twitch.parse.content['3rdparty'].ffz(cmd, true));
-         if (cfg.display.extended.useBTTV)
-         {
-          a = a.concat(twitch.parse.content['3rdparty'].bttv.general(cmd, true));
-          a = a.concat(twitch.parse.content['3rdparty'].bttv.user(cmd, true));
-         }
-         if (cfg.display.extended.use7TV)
-          a = a.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd, true));
-         if (cfg.display.extended.useBTTV)
-          twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
-         if (cfg.display.extended.use7TV)
-          twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
-         if (cfg.display.extended.useBTTV)
-          twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
-         if (cfg.display.extended.use7TV)
-          twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
-         a = _handleDuplicates(a);
+         const a = _handleDuplicates(await _eListFromCmd(cmd, true));
          _kLast = kNow;
          display.kappa.show(a);
          return;
         }
        }
       }
-      let p = [];
-      p = p.concat(twitch.parse.content.twitch(cmd));
-      if (cfg.display.useEmoji)
-       p = p.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji));
-      if (cfg.display.extended.useFFZ)
-       p = p.concat(twitch.parse.content['3rdparty'].ffz(cmd));
-      if (cfg.display.extended.useBTTV)
-      {
-       p = p.concat(twitch.parse.content['3rdparty'].bttv.general(cmd));
-       p = p.concat(twitch.parse.content['3rdparty'].bttv.user(cmd));
-      }
-      if (cfg.display.extended.use7TV)
-       p = p.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd));
-      if (cfg.display.extended.useBTTV)
-       twitch.parse.content['3rdparty'].bttv.zwe(p, cmd, 1);
-      if (cfg.display.extended.use7TV)
-       twitch.parse.content['3rdparty']['7tv'].zwe(p, cmd, 1);
-      if (cfg.display.extended.useBTTV)
-       twitch.parse.content['3rdparty'].bttv.zwe(p, cmd, 2);
-      if (cfg.display.extended.use7TV)
-       twitch.parse.content['3rdparty']['7tv'].zwe(p, cmd, 2);
-      p = _handleDuplicates(p);
+      const p = _handleDuplicates(await _eListFromCmd(cmd));
       if (p.length === 0)
        return;
       if (lv === -1)
@@ -5987,26 +5924,8 @@
        }
        if (cfg.event.cheer.useMsg)
        {
-        p = p.concat(twitch.parse.content.twitch(cmd));
-        if (cfg.display.useEmoji)
-         p = p.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji));
-        if (cfg.display.extended.useFFZ)
-         p = p.concat(twitch.parse.content['3rdparty'].ffz(cmd));
-        if (cfg.display.extended.useBTTV)
-        {
-         p = p.concat(twitch.parse.content['3rdparty'].bttv.general(cmd));
-         p = p.concat(twitch.parse.content['3rdparty'].bttv.user(cmd));
-        }
-        if (cfg.display.extended.use7TV)
-         p = p.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd));
-        if (cfg.display.extended.useBTTV)
-         twitch.parse.content['3rdparty'].bttv.zwe(p, cmd, 1);
-        if (cfg.display.extended.use7TV)
-         twitch.parse.content['3rdparty']['7tv'].zwe(p, cmd, 1);
-        if (cfg.display.extended.useBTTV)
-         twitch.parse.content['3rdparty'].bttv.zwe(p, cmd, 2);
-        if (cfg.display.extended.use7TV)
-         twitch.parse.content['3rdparty']['7tv'].zwe(p, cmd, 2);
+        const a = await _eListFromCmd(cmd);
+        p = p.concat(a);
        }
        else
         await parseLine(cmd);
@@ -6081,28 +6000,7 @@
        if (cmd.params.length > 1)
        {
         if (cfg.event.sub.useMsg)
-        {
-         a = a.concat(twitch.parse.content.twitch(cmd, true));
-         if (cfg.display.useEmoji)
-          a = a.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true));
-         if (cfg.display.extended.useFFZ)
-          a = a.concat(twitch.parse.content['3rdparty'].ffz(cmd, true));
-         if (cfg.display.extended.useBTTV)
-         {
-          a = a.concat(twitch.parse.content['3rdparty'].bttv.general(cmd, true));
-          a = a.concat(twitch.parse.content['3rdparty'].bttv.user(cmd, true));
-         }
-         if (cfg.display.extended.use7TV)
-          a = a.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd, true));
-         if (cfg.display.extended.useBTTV)
-          twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
-         if (cfg.display.extended.use7TV)
-          twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
-         if (cfg.display.extended.useBTTV)
-          twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
-         if (cfg.display.extended.use7TV)
-          twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
-        }
+         a = await _eListFromCmd(cmd, true);
         else
          await parseLine(cmd);
        }
@@ -6254,29 +6152,7 @@
          display.kappa.show(false, kC);
          return;
         }
-        let a = [];
-        a = a.concat(twitch.parse.content.twitch(cmd, true));
-        if (cfg.display.useEmoji)
-         a = a.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true));
-        if (cfg.display.extended.useFFZ)
-         a = a.concat(twitch.parse.content['3rdparty'].ffz(cmd, true));
-        if (cfg.display.extended.useBTTV)
-        {
-         a = a.concat(twitch.parse.content['3rdparty'].bttv.general(cmd, true));
-         a = a.concat(twitch.parse.content['3rdparty'].bttv.user(cmd, true));
-        }
-        if (cfg.display.extended.use7TV)
-         a = a.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd, true));
-        if (cfg.display.extended.useBTTV)
-         twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 1, true);
-        if (cfg.display.extended.use7TV)
-         twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 1, true);
-        if (cfg.display.extended.useBTTV)
-         twitch.parse.content['3rdparty'].bttv.zwe(a, cmd, 2, true);
-        if (cfg.display.extended.use7TV)
-         twitch.parse.content['3rdparty']['7tv'].zwe(a, cmd, 2, true);
-        a = _handleDuplicates(a);
-        _kLast = kNow;
+        const a = _handleDuplicates(await _eListFromCmd(cmd, true));
         display.kappa.show(a, kC);
         return;
        }
@@ -6480,6 +6356,32 @@
          r.push(a[i]);
        }
       }
+      return r;
+     }
+
+     async function _eListFromCmd(cmd, dup = null)
+     {
+      let r = [];
+      r = r.concat(twitch.parse.content.twitch(cmd, dup));
+      if (cfg.display.useEmoji)
+       r = r.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+      if (cfg.display.extended.useFFZ)
+       r = r.concat(twitch.parse.content['3rdparty'].ffz(cmd, dup));
+      if (cfg.display.extended.useBTTV)
+      {
+       r = r.concat(twitch.parse.content['3rdparty'].bttv.general(cmd, dup));
+       r = r.concat(twitch.parse.content['3rdparty'].bttv.user(cmd, dup));
+      }
+      if (cfg.display.extended.use7TV)
+       r = r.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd, dup));
+      if (cfg.display.extended.useBTTV)
+       twitch.parse.content['3rdparty'].bttv.zwe(r, cmd, 1, dup);
+      if (cfg.display.extended.use7TV)
+       twitch.parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
+      if (cfg.display.extended.useBTTV)
+       twitch.parse.content['3rdparty'].bttv.zwe(r, cmd, 2, dup);
+      if (cfg.display.extended.use7TV)
+       twitch.parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
       return r;
      }
 
