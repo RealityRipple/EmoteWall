@@ -322,6 +322,10 @@
     *
     * event       Settings related to channel events which trigger emote-splosions (kappagen).
     *
+    *  clear      A boolean to toggle clearing the screen when chat is cleared.
+    *              If TRUE, the emote wall will be cleared when the /clear command is used.
+    *              If FALSE, the emote wall will ignore the /clear command.
+    *
     *  raid       Settings related to kappagens when being raided.
     *
     *   raiders   A streamer raids the channel with viewers. This value can be a boolean, integer, or array:
@@ -649,6 +653,7 @@
      }
     },
     event: {
+     clear: true,
      raid: {
       raiders: 2,
       originEmotes: false
@@ -5035,6 +5040,10 @@
             if (cmd.params.length > 1)
              twitch.parse.line(cmd);
           }
+          break;
+         case 'CLEARCHAT':
+          if (cfg.event.clear)
+           display.eraseAll();
           break;
         }
        }
