@@ -870,7 +870,11 @@
       streamelements: false
      }
     },
-    commands: []
+    commands: [],
+    ignore: {
+     users: false,
+     emotes: false
+    }
    };
 
    /* potentially alterable arrays */
@@ -4556,6 +4560,8 @@
             return;
            if (!r.payload.event.hasOwnProperty('user_id'))
             return;
+           if (cfg.ignore.users !== false && r.payload.event.hasOwnProperty('user_login') && cfg.ignore.users.includes(r.payload.event.user_login))
+            return;
            if (!r.payload.event.hasOwnProperty('user_name'))
             return;
            twitch.net.fList[r.payload.event.user_id] = {value: true, t: new Date().getTime()};
@@ -4568,6 +4574,8 @@
            if (!r.payload.event.hasOwnProperty('reward'))
             return;
            if (!r.payload.event.reward.hasOwnProperty('title'))
+            return;
+           if (cfg.ignore.users !== false && r.payload.event.hasOwnProperty('user_login') && cfg.ignore.users.includes(r.payload.event.user_login))
             return;
            const n = r.payload.event.reward.title;
            if (!r.payload.event.hasOwnProperty('user_input') || r.payload.event.user_input === '')
@@ -4607,6 +4615,8 @@
            if (!r.payload.hasOwnProperty('event'))
             return;
            if (!r.payload.event.hasOwnProperty('from_broadcaster_user_id'))
+            return;
+           if (cfg.ignore.users !== false && r.payload.event.hasOwnProperty('from_broadcaster_user_login') && cfg.ignore.users.includes(r.payload.event.from_broadcaster_user_login))
             return;
            if (!r.payload.event.hasOwnProperty('from_broadcaster_user_name'))
             return;
@@ -5777,6 +5787,8 @@
         return true;
        }
        const u = _parseUser(cmd, true);
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        return;
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -5793,6 +5805,8 @@
        if (r === false)
         return;
        const u = _parseUser(cmd, true);
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        return;
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -5851,6 +5865,8 @@
        if (cmd.tags.hasOwnProperty('msg-param-mass-gift-count'))
         mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
        const u = _parseUser(cmd, true);
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        return;
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -5942,6 +5958,8 @@
         return;
        const c = cmd.tags['msg-param-threshold'];
        const u = _parseUser(cmd, true);
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        return;
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -6216,6 +6234,9 @@
      async function _eListFromCmd(cmd, dup = null)
      {
       let r = [];
+      const u = _parseUser(cmd, true);
+      if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+       return r;
       r = r.concat(twitch.parse.content.twitch(cmd, dup));
       if (cfg.display.useEmoji)
        r = r.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
@@ -6236,6 +6257,17 @@
        twitch.parse.content['3rdparty'].bttv.zwe(r, cmd, 2, dup);
       if (cfg.display.extended.use7TV)
        twitch.parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
+      if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
+      {
+       for (let i = r.length - 1; i >= 0; i--)
+       {
+        let m = r[i].str;
+        if (r[i].svc === 'e')
+         m = String.fromCharCode(parseInt(m, 16));
+        if (cfg.ignore.emotes.includes(m))
+         r.splice(i, 1);
+       }
+      }
       return r;
      }
 
@@ -6273,6 +6305,8 @@
      for (let i = 0, l = j.data.length; i < l; i++)
      {
       if (!j.data[i].hasOwnProperty('id'))
+       continue;
+      if (cfg.ignore.emotes !== false && j.data[i].hasOwnProperty('name') && cfg.ignore.emotes.includes(j.data[i].name))
        continue;
       const eURL = cURLs.cdn.twitch.emote.replaceAll('%EMOTE_ID%', j.data[i].id);
       if (n !== false && j.data[i].hasOwnProperty('name'))
@@ -6737,6 +6771,8 @@
    {
     function _addEmote(list, scope, code, id, url, users = null, zwe = false)
     {
+     if (cfg.ignore.emotes !== false  && cfg.ignore.emotes.includes(code))
+      return;
      list[code] = {scope: scope, url: url, id: id, users: users};
      if (scope === 'c' && !zwe)
       cList.push({url: url});
