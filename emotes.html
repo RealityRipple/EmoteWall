@@ -4761,7 +4761,7 @@
           break;
          case 'PRIVMSG':
           if (document.visibilityState === 'hidden')
-           return;
+           continue;
           if (cmd.params.length > 1)
            cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
           if (!await twitch.parse.event.cheer(cmd))
@@ -4811,7 +4811,7 @@
           break;
          case 'USERNOTICE':
           if (document.visibilityState === 'hidden')
-           return;
+           continue;
           if (!cmd.hasOwnProperty('tags'))
            continue;
           if (!cmd.tags.hasOwnProperty('msg-id'))
