@@ -861,6 +861,7 @@
       '1': false,
       '100': true
      },
+     ban: false,
      tip: {
       useProfileImage: false,
       streamlabs: {
@@ -4840,8 +4841,19 @@
           }
           break;
          case 'CLEARCHAT':
-          if (cfg.event.clear)
-           display.eraseAll();
+          switch (cmd.params.length)
+          {
+           case 1:
+            if (cfg.event.clear)
+             display.eraseAll();
+            break;
+           case 2:
+            if (document.visibilityState === 'hidden')
+             continue;
+            if (cfg.event.ban !== false && !cmd.tags.hasOwnProperty('ban-duration'))
+             await twitch.parse.event.ban(cmd);
+            break;
+          }
           break;
         }
        }
@@ -4876,9 +4888,11 @@
       return true;
      }
 
-     async function getUserInfo(u)
+     async function getUserInfo(u, isID = false)
      {
-      const url = cURLs.api.twitch.users.root + '?login=' + u;
+      let url = cURLs.api.twitch.users.root + '?login=' + u;
+      if (isID)
+       url = cURLs.api.twitch.users.root + '?id=' + u;
       const h = {
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
@@ -6008,6 +6022,20 @@
        }
       }
 
+      async function parseBan(cmd)
+      {
+       let dn = cmd.params[1];
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
+        return;
+       if (cmd.tags.hasOwnProperty('target-user-id'))
+       {
+        const r = await twitch.net.userInfo(cmd.tags['target-user-id'], true);
+        if (r.hasOwnProperty('display_name'))
+         dn = r.display_name;
+       }
+       display.kappa.show(false, cfg.event.ban, {'%USER%': dn});
+      }
+
       async function parseShoutoutCreate(uID, uName)
       {
        if (!cfg.event.shoutout.create.targetEmotes)
@@ -6036,6 +6064,7 @@
        sub: parseSub,
        badge: parseBadge,
        redeem: parseRedeem,
+       ban: parseBan,
        shoutoutCreate: parseShoutoutCreate,
        shoutoutReceive: parseShoutoutReceive
       };
