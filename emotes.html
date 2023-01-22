@@ -686,7 +686,7 @@
     channel: 'CHANNEL_NAME',
     login: {
      client: '4umzcpmjkg6ar78b81s7302jlj33t8',
-     oauth: 'OAUTH_ID' //Requires chat:read; channel:read:redemptions
+     oauth: 'OAUTH_ID' //Requires chat:read; channel:read:redemptions; moderator:read:shoutouts
     },
     streamlabs: {
      token: 'SOCKET_TOKEN', //Requires socket.token
@@ -797,6 +797,16 @@
       originEmotes: false
      },
      follow: true,
+     shoutout: {
+      create: {
+       styles: true,
+       targetEmotes: true
+      },
+      receive: {
+       styles: true,
+       originEmotes: true
+      }
+     },
      sub: {
       useMsg: true,
       t1: {
@@ -1408,7 +1418,7 @@
     ws: {
      twitch: {
       irc: 'wss://irc-ws.chat.twitch.tv',
-      pubSub: 'wss://pubsub-edge.twitch.tv'
+      eventSub: 'wss://eventsub-beta.wss.twitch.tv/ws'
      },
      streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket',
      streamelements: 'wss://realtime.streamelements.com/socket.io/?transport=websocket',
@@ -1429,7 +1439,8 @@
         root: 'https://api.twitch.tv/helix/chat/emotes',
         global: 'https://api.twitch.tv/helix/chat/emotes/global'
        }
-      }
+      },
+      eventSub: 'https://api.twitch.tv/helix/eventsub/subscriptions'
      },
      ffz: {
       set: {
@@ -4348,63 +4359,6 @@
 
     const net = function()
     {
-     const follower = function()
-     {
-      let _uLF = false;
-      const _rFC = 2500;
-
-      async function getFollowerChange(chID)
-      {
-       const url = cURLs.api.twitch.users.follows + '?to_id=' + chID + '&first=100';
-       const h = {
-        'Authorization': 'Bearer ' + cfg.login.oauth,
-        'Client-Id': cfg.login.client
-       };
-       const r = await shared.httpRequest(url, h);
-       if (r === false)
-        return false;
-       const j = JSON.parse(r);
-       if (!j.hasOwnProperty('total') || j.total < 1)
-        return false;
-       if (!j.hasOwnProperty('data') || !Array.isArray(j.data) || j.data.length < 1)
-        return false;
-       const findU = _uLF;
-       _uLF = j.data[0].from_id;
-       if (findU === false)
-        return false;
-       let s = [];
-       for (let i = 0, l = j.data.length; i < l; i++)
-       {
-        if (j.data[i].from_id === findU)
-         return s;
-        twitch.net.fList[j.data[i].from_id] = {value: true, t: new Date().getTime()};
-        s.push(j.data[i].from_name);
-       }
-       return [];
-      }
-
-      async function detectFollowers(chID)
-      {
-       if (follower.timer === false)
-        return;
-       window.clearTimeout(follower.timer);
-       follower.timer = false;
-       const fRet = await getFollowerChange(chID);
-       if (document.visibilityState !== 'hidden' && fRet !== false && fRet.length > 0)
-       {
-        for (let i = 0, l = fRet.length; i < l; i++)
-         display.kappa.show(false, cfg.event.follow, {'%USER%': fRet[i]});
-       }
-       follower.timer = window.setTimeout(detectFollowers, _rFC, chID);
-      }
-
-      return {
-       list: {},
-       timer: false,
-       detect: detectFollowers
-      };
-     }();
-
      async function _loadCheer_channel(chID)
      {
       if (!thirdparty.emotes.hasOwnProperty('cheer'))
@@ -4504,15 +4458,20 @@
       return true;
      }
 
-     const pubSub = function()
+     const eventSub = function()
      {
       let _wsRetry = null;
       let _ws = null;
-      let _tPing = null;
+      let _ch = 0;
+      let _sess = null;
+      let _lTimeout = 5000;
+      let _tTimeout = false;
 
-      function task()
+      function task(chID = null)
       {
-       _ws = new WebSocket(cURLs.ws.twitch.pubSub);
+       if (chID !== null)
+        _ch = chID;
+       _ws = new WebSocket(cURLs.ws.twitch.eventSub);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
        _ws.onmessage = _wsMessage;
@@ -4521,23 +4480,15 @@
       function _wsOpen()
       {
        _ws.onopen = null;
-       _tPing = window.setInterval(_wsPing, 4 * 60 * 1000);
-       let req = {};
-       req.type = 'LISTEN';
-       req.nonce = 'init';
-       req.data = {};
-       req.data.topics = [];
-       req.data.topics.push('channel-points-channel-v1.' + twitch.net.channelID);
-       req.data.auth_token = cfg.login.oauth;
-       _ws.send(JSON.stringify(req));
+       _tTimeout = setTimeout(_wsTimeout, _lTimeout);
       }
 
       function _wsClose()
       {
-       if (_tPing !== null)
+       if (_tTimeout !== false)
        {
-        window.clearInterval(_tPing);
-        _tPing = null;
+        clearTimeout(_tTimeout);
+        _tTimeout = false;
        }
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -4552,80 +4503,179 @@
 
       async function _wsMessage(ev)
       {
+       if (_tTimeout !== false)
+       {
+        clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
        if (twitch.net.dead)
        {
         _ws.close();
         return;
        }
+       _tTimeout = setTimeout(_wsTimeout, _lTimeout);
        _wsRetry = 0;
        const r = JSON.parse(ev.data);
-       if (!r.hasOwnProperty('type'))
+       if (!r.hasOwnProperty('metadata'))
         return;
-       switch (r.type)
+       if (!r.hasOwnProperty('payload'))
+        return;
+       switch (r.metadata.message_type)
        {
-        case 'RESPONSE':
-         if (r.hasOwnProperty('error') && r.error !== '')
+        case 'session_welcome':
+         if (!r.payload.hasOwnProperty('session'))
+          return;
+         if (r.payload.session.hasOwnProperty('id'))
+          _sess = r.payload.session.id;
+         if (r.payload.session.hasOwnProperty('keepalive_timeout_seconds'))
          {
-          _ws.close();
-          if (r.error === 'ERR_BADAUTH')
+          _lTimeout = parseInt(r.payload.session.keepalive_timeout_seconds, 10) * 2 * 1000;
+          if (_tTimeout !== false)
           {
-           twitch.net.dead = true;
-           shared.blargIAmDead(6);
-           return;
+           clearTimeout(_tTimeout);
+           _tTimeout = false;
           }
-          alert('Error Connecting to Twitch PubSub: ' + r.error);
-          return;
+          _tTimeout = setTimeout(_wsTimeout, _lTimeout);
          }
+         await _unsubscribe();
+         if (cfg.event.follow !== false)
+          await _subscribe('channel.follow');
+         await _subscribe('channel.channel_points_custom_reward_redemption.add');
+         if (cfg.event.shoutout !== false && cfg.event.shoutout.hasOwnProperty('create') && cfg.event.shoutout.create !== false && cfg.event.shoutout.create.hasOwnProperty('styles') && cfg.event.shoutout.create.styles !== false)
+          await _subscribe('channel.shoutout.create');
+         if (cfg.event.shoutout !== false && cfg.event.shoutout.hasOwnProperty('receive') && cfg.event.shoutout.receive !== false && cfg.event.shoutout.receive.hasOwnProperty('styles') &&cfg.event.shoutout.receive.styles !== false)
+          await _subscribe('channel.shoutout.receive');
          break;
-        case 'MESSAGE':
-         if (document.visibilityState === 'hidden')
+        case 'notification':
+         if (!r.metadata.hasOwnProperty('subscription_type'))
           return;
-         if (!r.hasOwnProperty('data'))
-          return;
-         if (!r.data.hasOwnProperty('topic'))
-          return;
-         if (r.data.topic !== 'channel-points-channel-v1.' + twitch.net.channelID)
-          return;
-         if (!r.data.hasOwnProperty('message'))
-          return;
-         const d = JSON.parse(r.data.message);
-         if (!d.hasOwnProperty('type'))
-          return;
-         if (d.type !== 'reward-redeemed')
-          return;
-         if (!d.hasOwnProperty('data'))
-          return;
-         if (!d.data.hasOwnProperty('redemption'))
-          return;
-         if (!d.data.redemption.hasOwnProperty('reward'))
-          return;
-         if (!d.data.redemption.reward.hasOwnProperty('title'))
-          return;
-         const n = d.data.redemption.reward.title;
-         if (!d.data.redemption.hasOwnProperty('user_input'))
+         switch (r.metadata.subscription_type)
          {
-          await twitch.parse.event.redeem(n, false);
-          return;
-         }
-         const lnID = d.data.redemption.reward.id;
-         if (!_rList.hasOwnProperty(lnID))
-         {
-          _rList[lnID] = {name: n, cmds: []};
-          return;
-         }
-         if (_rList[lnID].name === false)
-          _rList[lnID].name = n;
-         while (_rList[lnID].cmds.length > 0)
-         {
-          await twitch.parse.event.redeem(n, _rList[lnID].cmds.shift());
+          case 'channel.follow':
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('user_id'))
+            return;
+           if (!r.payload.event.hasOwnProperty('user_name'))
+            return;
+           twitch.net.fList[r.payload.event.user_id] = {value: true, t: new Date().getTime()};
+           if (document.visibilityState !== 'hidden')
+            display.kappa.show(false, cfg.event.follow, {'%USER%': r.payload.event.user_name});
+           break;
+          case 'channel.channel_points_custom_reward_redemption.add':
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('reward'))
+            return;
+           if (!r.payload.event.reward.hasOwnProperty('title'))
+            return;
+           const n = r.payload.event.reward.title;
+           if (!r.payload.event.hasOwnProperty('user_input') || r.payload.event.user_input === '')
+           {
+            await twitch.parse.event.redeem(n, false);
+            return;
+           }
+           if (!r.payload.event.reward.hasOwnProperty('id'))
+            return;
+           const lnID = r.payload.event.reward.id;
+           if (!_rList.hasOwnProperty(lnID))
+           {
+            _rList[lnID] = {name: n, cmds: []};
+            return;
+           }
+           if (_rList[lnID].name === false)
+            _rList[lnID].name = n;
+           while (_rList[lnID].cmds.length > 0)
+           {
+            await twitch.parse.event.redeem(n, _rList[lnID].cmds.shift());
+           }
+           break;
+          case 'channel.shoutout.create':
+           if (document.visibilityState === 'hidden')
+            return;
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('to_broadcaster_user_id'))
+            return;
+           if (!r.payload.event.hasOwnProperty('to_broadcaster_user_name'))
+            return;
+           await twitch.parse.event.shoutoutCreate(r.payload.event.to_broadcaster_user_id, r.payload.event.to_broadcaster_user_name);
+           break;
+          case 'channel.shoutout.receive':
+           if (document.visibilityState === 'hidden')
+            return;
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('from_broadcaster_user_id'))
+            return;
+           if (!r.payload.event.hasOwnProperty('from_broadcaster_user_name'))
+            return;
+           await twitch.parse.event.shoutoutReceive(r.payload.event.from_broadcaster_user_id, r.payload.event.from_broadcaster_user_name);
+           break;
          }
          break;
        }
       }
 
-      function _wsPing()
+      function _wsTimeout()
       {
-       _ws.send('{"type": "PING"}');
+       _lTimeout = 5000;
+       if (twitch.net.dead === true)
+        return;
+       if (_tTimeout !== false)
+       {
+        clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       _ws.close();
+       task();
+      }
+
+      async function _unsubscribe()
+      {
+       const h = {
+        'Authorization': 'Bearer ' + cfg.login.oauth,
+        'Client-Id': cfg.login.client
+       };
+       const r = await shared.httpRequest(cURLs.api.twitch.eventSub, h);
+       const j = JSON.parse(r);
+       if (!j.hasOwnProperty('data'))
+        return;
+       if (!j.hasOwnProperty('total'))
+        return;
+       if (j.total < 1)
+        return;
+       for (let i = 0; i < j.total; i++)
+       {
+        if (!j.data[i].hasOwnProperty('id'))
+         continue;
+        if (j.data[i].hasOwnProperty('status') && j.data[i].status === 'websocket_disconnected')
+         shared.httpSend('DELETE', cURLs.api.twitch.eventSub + '?id=' + j.data[i].id, null, h);
+       }
+      }
+
+      async function _subscribe(type)
+      {
+       let d = {
+        'type': type,
+        'version': '1',
+        'condition': {'broadcaster_user_id': _ch},
+        'transport': {'method': 'websocket', 'session_id': _sess}
+       };
+       switch (type)
+       {
+        case 'channel.shoutout.create':
+        case 'channel.shoutout.receive':
+         d.version = 'beta';
+         d.condition.moderator_user_id = _ch;
+         break;
+       }
+       const h = {
+        'Authorization': 'Bearer ' + cfg.login.oauth,
+        'Client-Id': cfg.login.client,
+        'Content-Type': 'application/json'
+       };
+       await shared.httpSend('POST', cURLs.api.twitch.eventSub, JSON.stringify(d), h);
       }
 
       return task;
@@ -4746,9 +4796,7 @@
             thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval, twitch.net.channelID);
            if (cfg.display.extended.useBTTV)
             thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval, twitch.net.channelID);
-           if (cfg.event.follow !== false)
-            follower.timer = window.setTimeout(follower.detect, 16, twitch.net.channelID);
-           pubSub();
+           eventSub(twitch.net.channelID);
           }
           break;
          case 'USERNOTICE':
@@ -4838,7 +4886,7 @@
 
      return {
       channelID: 0,
-      fList: follower.list,
+      fList: [],
       dead: false,
       irc: irc,
       userInfo: getUserInfo
@@ -5942,12 +5990,36 @@
        }
       }
 
+      async function parseShoutoutCreate(uID, uName)
+      {
+       if (!cfg.event.shoutout.create.targetEmotes)
+       {
+        display.kappa.show(false, cfg.event.shoutout.create.styles, {'%USER%': uName});
+        return;
+       }
+       const e = await _findEmote_channel(uID);
+       display.kappa.show(e, cfg.event.shoutout.create.styles, {'%USER%': uName});
+      }
+
+      async function parseShoutoutReceive(uID, uName)
+      {
+       if (!cfg.event.shoutout.receive.originEmotes)
+       {
+        display.kappa.show(false, cfg.event.shoutout.receive.styles, {'%USER%': uName});
+        return;
+       }
+       const e = await _findEmote_channel(uID);
+       display.kappa.show(e, cfg.event.shoutout.receive.styles, {'%USER%': uName});
+      }
+
       return {
        cheer: parseCheer,
        raid: parseRaid,
        sub: parseSub,
        badge: parseBadge,
-       redeem: parseRedeem
+       redeem: parseRedeem,
+       shoutoutCreate: parseShoutoutCreate,
+       shoutoutReceive: parseShoutoutReceive
       };
      }();
 
@@ -7327,6 +7399,39 @@
      return p;
     }
 
+    function httpSend(type, url, body = null, hdrs = {})
+    {
+     const p = new Promise(
+      function(resolve)
+      {
+       const x = new XMLHttpRequest();
+       x.open(type, url);
+       for (const hK in hdrs)
+       {
+        if (!hdrs.hasOwnProperty(hK))
+         continue;
+        x.setRequestHeader(hK, hdrs[hK]);
+       }
+       x.onreadystatechange = function()
+       {
+        const r = _httpRequest_RSC(x);
+        if (r === null)
+        {
+         if (type === 'DELETE')
+          resolve(true);
+         return;
+        }
+        resolve(r);
+       };
+       if (body === null)
+        x.send();
+       else
+        x.send(body);
+      }
+     );
+     return p;
+    }
+
     function findInMaybeRange(r, v)
     {
      const t = typeof r;
@@ -7431,6 +7536,7 @@
     return {
      rnd: rnd,
      httpRequest: httpRequest,
+     httpSend: httpSend,
      findInMaybeRange: findInMaybeRange,
      blargIAmDead: blargIAmDead
     };
@@ -7440,7 +7546,7 @@
    {
     let _tL = false;
     const _visTime = 5000;
-    const _lsPath = 'twitch.chat:read+channel:read:redemptions';
+    const _lsPath = 'twitch.chat:read+channel:read:redemptions+moderator:read:shoutouts';
 
     function shouldUseLogin()
     {
@@ -7504,7 +7610,7 @@
      const o = encodeURIComponent(btoa(window.location));
      const c = encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8');
      const r = encodeURIComponent(cURLs.html.rr.wizard);
-     const s = encodeURIComponent('chat:read channel:read:redemptions');
+     const s = encodeURIComponent('chat:read channel:read:redemptions moderator:read:shoutouts');
      let u = cURLs.html.twitch + '?client_id=' + c + '&redirect_uri=' + r + '&response_type=token&scope=' + s + '&state=redirto_' + o + '&force_verify=true';
      if (u.length > 1500)
       u = cURLs.html.rr.redir + '?c=' + c + '&r=' + r + '&s=' + s + '&u=' + encodeURIComponent(window.location);
