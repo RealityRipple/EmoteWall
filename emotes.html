@@ -4849,7 +4849,7 @@
     {
      let _aLast = {};
 
-     function parseUser(cmd, latinOnly = false)
+     function _parseUser(cmd, latinOnly = false)
      {
       let data = cmd.prefix;
       let ret = {};
@@ -5161,7 +5161,7 @@
           continue;
          if (thirdparty.emotes.ffz[m[i]].users !== null)
          {
-          const u = parseUser(cmd);
+          const u = _parseUser(cmd);
           if (!thirdparty.emotes.ffz[m[i]].users.includes(u.host))
            continue;
          }
@@ -5320,7 +5320,7 @@
           return [];
          if (cmd.params.length < 2)
           return [];
-         const u = parseUser(cmd);
+         const u = _parseUser(cmd);
          if (!thirdparty.emotes.bttvU.hasOwnProperty(u.host))
           return [];
          const m = cmd.params[1].split(' ');
@@ -5728,7 +5728,7 @@
         display.emote.showEmotes();
         return true;
        }
-       const u = parseUser(cmd, true);
+       const u = _parseUser(cmd, true);
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -5744,7 +5744,7 @@
        const r = shared.findInMaybeRange(cfg.event.raid.raiders, c);
        if (r === false)
         return;
-       const u = parseUser(cmd, true);
+       const u = _parseUser(cmd, true);
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -5802,7 +5802,7 @@
        let mpmgc = 1;
        if (cmd.tags.hasOwnProperty('msg-param-mass-gift-count'))
         mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
-       const u = parseUser(cmd, true);
+       const u = _parseUser(cmd, true);
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -5893,7 +5893,7 @@
        if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
         return;
        const c = cmd.tags['msg-param-threshold'];
-       const u = parseUser(cmd, true);
+       const u = _parseUser(cmd, true);
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -6173,7 +6173,6 @@
      }
 
      return {
-      user: parseUser,
       message: parseMsg,
       content: content,
       line: parseLine,
