@@ -686,7 +686,17 @@
     channel: 'CHANNEL_NAME',
     login: {
      client: '4umzcpmjkg6ar78b81s7302jlj33t8',
-     oauth: 'OAUTH_ID' //Requires chat:read; channel:read:redemptions; moderator:read:shoutouts
+     oauth: 'OAUTH_ID',
+     scope: [
+      'chat:read',                 // required
+    //'channel:read:redemptions',  // optional. only required if you use channel point redeem commands
+    //'channel:read:hype_train',   // optional. only required if you use hype train events
+    //'channel:read:goals',        // optional. only required if you use goal events
+    //'channel:read:polls',        // optional. only required if you use poll events
+    //'channel:read:predictions',  // optional. only required if you use prediction events
+    //'channel:read:charity',      // optional. only required if you use Twitch charity events
+    //'moderator:read:shoutouts'   // optional. only required if you use shoutout events
+     ]
     },
     streamlabs: {
      token: 'SOCKET_TOKEN', //Requires socket.token
@@ -799,11 +809,11 @@
      follow: true,
      shoutout: {
       create: {
-       styles: true,
+       styles: false,
        targetEmotes: true
       },
       receive: {
-       styles: true,
+       styles: false,
        originEmotes: true
       }
      },
@@ -861,6 +871,23 @@
       '1': false,
       '100': true
      },
+     hypetrain: {
+      begin: false,
+      success: false
+     },
+     poll: {
+      begin: false,
+      end: false
+     },
+     prediction: {
+      begin: false,
+      resolved: false
+     },
+     goal: {
+      begin: false,
+      achieved: false
+     },
+     charity: false,
      ban: false,
      tip: {
       useProfileImage: false,
@@ -4545,11 +4572,30 @@
          await _unsubscribe();
          if (cfg.event.follow !== false)
           await _subscribe('channel.follow');
-         await _subscribe('channel.channel_points_custom_reward_redemption.add');
-         if (cfg.event.shoutout !== false && cfg.event.shoutout.hasOwnProperty('create') && cfg.event.shoutout.create !== false && cfg.event.shoutout.create.hasOwnProperty('styles') && cfg.event.shoutout.create.styles !== false)
+         if (cfg.login.scope.includes('channel:read:redemptions'))
+          await _subscribe('channel.channel_points_custom_reward_redemption.add');
+         if (cfg.event.shoutout !== false && cfg.login.scope.includes('moderator:read:shoutouts') && cfg.event.shoutout.hasOwnProperty('create') && cfg.event.shoutout.create !== false && cfg.event.shoutout.create.hasOwnProperty('styles') && cfg.event.shoutout.create.styles !== false)
           await _subscribe('channel.shoutout.create');
-         if (cfg.event.shoutout !== false && cfg.event.shoutout.hasOwnProperty('receive') && cfg.event.shoutout.receive !== false && cfg.event.shoutout.receive.hasOwnProperty('styles') &&cfg.event.shoutout.receive.styles !== false)
+         if (cfg.event.shoutout !== false && cfg.login.scope.includes('moderator:read:shoutouts') && cfg.event.shoutout.hasOwnProperty('receive') && cfg.event.shoutout.receive !== false && cfg.event.shoutout.receive.hasOwnProperty('styles') &&cfg.event.shoutout.receive.styles !== false)
           await _subscribe('channel.shoutout.receive');
+         if (cfg.event.hypetrain !== false && cfg.login.scope.includes('channel:read:hype_train') && cfg.event.hypetrain.hasOwnProperty('begin') && cfg.event.hypetrain.begin !== false)
+          await _subscribe('channel.hype_train.begin');
+         if (cfg.event.hypetrain !== false && cfg.login.scope.includes('channel:read:hype_train') && cfg.event.hypetrain.hasOwnProperty('success') && cfg.event.hypetrain.success !== false)
+          await _subscribe('channel.hype_train.end');
+         if (cfg.event.poll !== false && cfg.login.scope.includes('channel:read:polls') && cfg.event.poll.hasOwnProperty('begin') && cfg.event.poll.begin !== false)
+          await _subscribe('channel.poll.begin');
+         if (cfg.event.poll !== false && cfg.login.scope.includes('channel:read:polls') && cfg.event.poll.hasOwnProperty('end') && cfg.event.poll.end !== false)
+          await _subscribe('channel.poll.end');
+         if (cfg.event.prediction !== false && cfg.login.scope.includes('channel:read:predictions') && cfg.event.prediction.hasOwnProperty('begin') && cfg.event.prediction.begin !== false)
+          await _subscribe('channel.prediction.begin');
+         if (cfg.event.prediction !== false && cfg.login.scope.includes('channel:read:predictions') && cfg.event.prediction.hasOwnProperty('resolved') && cfg.event.prediction.resolved !== false)
+          await _subscribe('channel.prediction.end');
+         if (cfg.event.charity !== false && cfg.login.scope.includes('channel:read:charity'))
+          await _subscribe('channel.charity_campaign.donate');
+         if (cfg.event.goal !== false && cfg.login.scope.includes('channel:read:goals') && cfg.event.goal.hasOwnProperty('begin') && cfg.event.goal.begin !== false)
+          await _subscribe('channel.goal.begin');
+         if (cfg.event.goal !== false && cfg.login.scope.includes('channel:read:goals') && cfg.event.goal.hasOwnProperty('achieved') && cfg.event.goal.achieved !== false)
+          await _subscribe('channel.goal.end');
          break;
         case 'notification':
          if (!r.metadata.hasOwnProperty('subscription_type'))
@@ -4622,6 +4668,123 @@
            if (!r.payload.event.hasOwnProperty('from_broadcaster_user_name'))
             return;
            await twitch.parse.event.shoutoutReceive(r.payload.event.from_broadcaster_user_id, r.payload.event.from_broadcaster_user_name);
+           break;
+          case 'channel.hype_train.begin':
+           if (document.visibilityState === 'hidden')
+            return;
+           display.kappa.show(false, cfg.event.hypetrain.begin);
+           break;
+          case 'channel.hype_train.end':
+           if (document.visibilityState === 'hidden')
+            return;
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('level'))
+            return;
+           const rs = shared.findInMaybeRange(cfg.event.hypetrain.success, r.payload.event.level);
+           if (rs === false)
+            return;
+           display.kappa.show(false, rs);
+           break;
+          case 'channel.poll.begin':
+           if (document.visibilityState === 'hidden')
+            return;
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('title'))
+            return;
+           if (cfg.event.poll !== false && cfg.event.poll.hasOwnProperty('begin'))
+            display.kappa.show(false, cfg.event.poll.begin, {'%TITLE%': r.payload.event.title});
+           break;
+          case 'channel.poll.end':
+           if (document.visibilityState === 'hidden')
+            return;
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('title'))
+            return;
+           if (!r.payload.event.hasOwnProperty('status') || r.payload.event.status !== 'completed')
+            return;
+           if (!r.payload.event.hasOwnProperty('choices'))
+            return;
+           twitch.parse.event.pollEnd(r.payload.event);
+           break;
+          case 'channel.prediction.begin':
+           if (document.visibilityState === 'hidden')
+            return;
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('title'))
+            return;
+           if (cfg.event.prediction !== false && cfg.event.prediction.hasOwnProperty('begin'))
+            display.kappa.show(false, cfg.event.prediction.begin, {'%TITLE%': r.payload.event.title});
+           break;
+          case 'channel.prediction.end':
+           if (document.visibilityState === 'hidden')
+            return;
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('title'))
+            return;
+           if (!r.payload.event.hasOwnProperty('status') || r.payload.event.status !== 'resolved')
+            return;
+           if (!r.payload.event.hasOwnProperty('winning_outcome_id'))
+            return;
+           if (!r.payload.event.hasOwnProperty('outcomes'))
+            return;
+           twitch.parse.event.predictionEnd(r.payload.event);
+           break;
+          case 'channel.charity_campaign.donate':
+           if (document.visibilityState === 'hidden')
+            return;
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('user_name'))
+            return;
+           const dName = r.payload.event.user_name;
+           if (!r.payload.event.hasOwnProperty('amount'))
+            return;
+           if (!r.payload.event.amount.hasOwnProperty('value'))
+            return;
+           if (!r.payload.event.amount.hasOwnProperty('decimal_places'))
+            return;
+           if (!r.payload.event.amount.hasOwnProperty('currency'))
+            return;
+           const dAmt = r.payload.event.amount.value / Math.pow(10, r.payload.event.decimal_places) + ' ' + r.payload.event.amount.currency;
+           const rd = shared.findInMaybeRange(cfg.event.charity, r.payload.event.amount.value);
+           if (rd === false)
+            return;
+           display.kappa.show(false, rd, {'%USER%': dName, '%AMOUNT%': dAmt});
+           break;
+          case 'channel.goal.begin':
+           if (document.visibilityState === 'hidden')
+            return;
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('type'))
+            return
+           if (!r.payload.event.hasOwnProperty('description'))
+            return;
+           if (!r.payload.event.hasOwnProperty('target_amount'))
+            return;
+           if (cfg.event.goal !== false && cfg.event.goal.hasOwnProperty('begin'))
+            display.kappa.show(false, cfg.event.goal.begin, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.target_amount});
+           break;
+          case 'channel.goal.end':
+           if (document.visibilityState === 'hidden')
+            return;
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('type'))
+            return
+           if (!r.payload.event.hasOwnProperty('description'))
+            return;;
+           if (!r.payload.event.hasOwnProperty('current_amount'))
+            return;
+           if (!r.payload.event.hasOwnProperty('is_achieved') || r.payload.event.is_achieved !== true)
+            return;
+           if (cfg.event.goal !== false && cfg.event.goal.hasOwnProperty('achieved'))
+            display.kappa.show(false, cfg.event.goal.achieved, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.current_amount});
            break;
          }
          break;
@@ -6058,6 +6221,53 @@
        display.kappa.show(e, cfg.event.shoutout.receive.styles, {'%USER%': uName});
       }
 
+      function parsePollEnd(e)
+      {
+       let vPoll = 0;
+       for (let i = 0, l = e.choices.length; i < l; i++)
+       {
+        if (!e.choices[i].hasOwnProperty('title'))
+         continue;
+        if (!e.choices[i].hasOwnProperty('votes'))
+         continue;
+        if (vPoll < e.choices[i].votes)
+         vPoll = e.choices[i].votes;
+       }
+       let rPoll = [];
+       for (let i = 0, l = e.choices.length; i < l; i++)
+       {
+        if (!e.choices[i].hasOwnProperty('title'))
+         continue;
+        if (!e.choices[i].hasOwnProperty('votes'))
+         continue;
+        if (e.choices[i].votes === vPoll)
+         rPoll.push(e.choices[i].title);
+       }
+       let sPoll = 'None';
+       if (rPoll.length > 0)
+        sPoll = rPoll.join(' + ');
+       if (cfg.event.poll !== false && cfg.event.poll.hasOwnProperty('end'))
+        display.kappa.show(false, cfg.event.poll.end, {'%TITLE%': e.title, '%RESULT%': sPoll});
+      }
+
+      function parsePredictionEnd(e)
+      {
+       let sPrediction = 'None';
+       for (let i = 0, l = e.outcomes.length; i < l; i++)
+       {
+        if (!e.outcomes[i].hasOwnProperty('id'))
+         continue;
+        if (e.outcomes[i].id !== e.winning_outcome_id)
+         continue;
+        if (!e.outcomes[i].hasOwnProperty('title'))
+         continue;
+        sPrediction = e.outcomes[i].title;
+        break;
+       }
+       if (cfg.event.prediction !== false && cfg.event.prediction.hasOwnProperty('resolved'))
+        display.kappa.show(false, cfg.event.prediction.resolved, {'%TITLE%': e.title, '%RESULT%': sPrediction});
+      }
+
       return {
        cheer: parseCheer,
        raid: parseRaid,
@@ -6066,7 +6276,9 @@
        redeem: parseRedeem,
        ban: parseBan,
        shoutoutCreate: parseShoutoutCreate,
-       shoutoutReceive: parseShoutoutReceive
+       shoutoutReceive: parseShoutoutReceive,
+       pollEnd: parsePollEnd,
+       predictionEnd: parsePredictionEnd
       };
      }();
 
@@ -7611,7 +7823,42 @@
    {
     let _tL = false;
     const _visTime = 5000;
-    const _lsPath = 'twitch.chat:read+channel:read:redemptions+moderator:read:shoutouts';
+
+    function _activeScope()
+    {
+     let r = [];
+     r.push('chat:read');
+     for (const k of cfg.commands)
+     {
+      if (!k.hasOwnProperty('redeem') || !Array.isArray(k.redeem) || k.redeem.length < 1)
+       continue;
+      r.push('channel:read:redemptions');
+      break;
+     }
+     if (cfg.event.hypetrain !== false && ((cfg.event.hypetrain.hasOwnProperty('begin') && cfg.event.hypetrain.begin !== false) || (cfg.event.hypetrain.hasOwnProperty('success') && cfg.event.hypetrain.success !== false)))
+      r.push('channel:read:hype_train');
+     if (cfg.event.goal !== false && ((cfg.event.goal.hasOwnProperty('begin') && cfg.event.goal.begin !== false) || (cfg.event.goal.hasOwnProperty('achieved') && cfg.event.goal.achieved !== false)))
+      r.push('channel:read:goals');
+     if (cfg.event.poll !== false && ((cfg.event.poll.hasOwnProperty('begin') && cfg.event.poll.begin !== false) || (cfg.event.poll.hasOwnProperty('end') && cfg.event.poll.end !== false)))
+      r.push('channel:read:polls');
+     if (cfg.event.prediction !== false && ((cfg.event.prediction.hasOwnProperty('begin') && cfg.event.prediction.begin !== false) || (cfg.event.prediction.hasOwnProperty('resolved') && cfg.event.prediction.resolved !== false)))
+      r.push('channel:read:predictions');
+     if (cfg.event.charity !== false)
+      r.push('channel:read:charity');
+     if (cfg.event.shoutout !== false && ((cfg.event.shoutout.hasOwnProperty('create') && cfg.event.shoutout.create !== false && cfg.event.shoutout.create.hasOwnProperty('styles') && cfg.event.shoutout.create.styles !== false) || (cfg.event.shoutout.hasOwnProperty('receive') && cfg.event.shoutout.receive !== false && cfg.event.shoutout.receive.hasOwnProperty('styles') && cfg.event.shoutout.receive.styles !== false)))
+      r.push('moderator:read:shoutouts');
+     return r;
+    }
+
+    function _uScope()
+    {
+     return encodeURIComponent(_activeScope().join(' '));
+    }
+
+    function _lsPath()
+    {
+     return 'twitch.' + _activeScope().join('+');
+    }
 
     function shouldUseLogin()
     {
@@ -7619,14 +7866,15 @@
      if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== 'CHANNEL_NAME' && cfg.hasOwnProperty('login') && cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== 'OAUTH_ID')
       return false;
      login.inUse = true;
-     let lsChannel = window.localStorage.getItem(_lsPath + '.channel');
-     let lsClient  = window.localStorage.getItem(_lsPath + '.client');
-     let lsOAuth   = window.localStorage.getItem(_lsPath + '.oauth');
-     let lsExpires = window.localStorage.getItem(_lsPath + '.expires');
+     let lsChannel = window.localStorage.getItem(_lsPath() + '.channel');
+     let lsClient  = window.localStorage.getItem(_lsPath() + '.client');
+     let lsOAuth   = window.localStorage.getItem(_lsPath() + '.oauth');
+     let lsExpires = window.localStorage.getItem(_lsPath() + '.expires');
+     let lsScope   = window.localStorage.getItem(_lsPath() + '.scope');
      if (lsChannel === null || lsOAuth === null)
      {
       const h = _getHashParams();
-      if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('expires'))
+      if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('expires') || !h.hasOwnProperty('scope'))
       {
        login.showIn();
        return true;
@@ -7635,15 +7883,18 @@
       lsClient = h.client;
       lsOAuth = h.oauth;
       lsExpires = h.expires;
-      window.localStorage.setItem(_lsPath + '.channel', lsChannel);
-      window.localStorage.setItem(_lsPath + '.oauth', lsOAuth);
-      window.localStorage.setItem(_lsPath + '.client', lsClient);
-      window.localStorage.setItem(_lsPath + '.expires', lsExpires);
+      lsScope = decodeURIComponent(h.scope);
+      window.localStorage.setItem(_lsPath() + '.channel', lsChannel);
+      window.localStorage.setItem(_lsPath() + '.oauth', lsOAuth);
+      window.localStorage.setItem(_lsPath() + '.client', lsClient);
+      window.localStorage.setItem(_lsPath() + '.expires', lsExpires);
+      window.localStorage.setItem(_lsPath() + '.scope', lsScope);
      }
      cfg.channel = lsChannel;
      cfg.login.oauth = lsOAuth;
      cfg.login.client = lsClient;
      cfg.login.expires = lsExpires;
+     cfg.login.scope = decodeURIComponent(lsScope).split(' ');
      document.title = cfg.channel + ' Emote Wall';
      showLogoutButton();
      return false;
@@ -7668,17 +7919,17 @@
 
     function doLogin()
     {
-     window.localStorage.removeItem(_lsPath + '.channel');
-     window.localStorage.removeItem(_lsPath + '.oauth');
-     window.localStorage.removeItem(_lsPath + '.client');
-     window.localStorage.removeItem(_lsPath + '.expires');
+     window.localStorage.removeItem(_lsPath() + '.channel');
+     window.localStorage.removeItem(_lsPath() + '.oauth');
+     window.localStorage.removeItem(_lsPath() + '.client');
+     window.localStorage.removeItem(_lsPath() + '.expires');
+     window.localStorage.removeItem(_lsPath() + '.scope');
      const o = encodeURIComponent(btoa(window.location));
      const c = encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8');
      const r = encodeURIComponent(cURLs.html.rr.wizard);
-     const s = encodeURIComponent('chat:read channel:read:redemptions moderator:read:shoutouts');
-     let u = cURLs.html.twitch + '?client_id=' + c + '&redirect_uri=' + r + '&response_type=token&scope=' + s + '&state=redirto_' + o + '&force_verify=true';
+     let u = cURLs.html.twitch + '?client_id=' + c + '&redirect_uri=' + r + '&response_type=token&scope=' + _uScope() + '&state=redirto_' + o + '&force_verify=true';
      if (u.length > 1500)
-      u = cURLs.html.rr.redir + '?c=' + c + '&r=' + r + '&s=' + s + '&u=' + encodeURIComponent(window.location);
+      u = cURLs.html.rr.redir + '?c=' + c + '&r=' + r + '&s=' + _uScope() + '&u=' + encodeURIComponent(window.location);
      window.location = u;
     }
 
@@ -7687,10 +7938,11 @@
      document.title = 'Log In to Access Emote Wall';
      if (document.getElementById('cmdLogout'))
       document.body.removeChild(document.getElementById('cmdLogout'));
-     window.localStorage.removeItem(_lsPath + '.channel');
-     window.localStorage.removeItem(_lsPath + '.oauth');
-     window.localStorage.removeItem(_lsPath + '.client');
-     window.localStorage.removeItem(_lsPath + '.expires');
+     window.localStorage.removeItem(_lsPath() + '.channel');
+     window.localStorage.removeItem(_lsPath() + '.oauth');
+     window.localStorage.removeItem(_lsPath() + '.client');
+     window.localStorage.removeItem(_lsPath() + '.expires');
+     window.localStorage.removeItem(_lsPath() + '.scope');
      let cmdLogin = document.createElement('button');
      cmdLogin.setAttribute('id', 'cmdLogin');
      cmdLogin.setAttribute('type', 'button');
