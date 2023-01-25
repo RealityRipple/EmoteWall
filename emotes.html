@@ -888,6 +888,7 @@
       achieved: false
      },
      charity: false,
+     timeout: false,
      ban: false,
      tip: {
       useProfileImage: false,
@@ -5013,8 +5014,16 @@
            case 2:
             if (document.visibilityState === 'hidden')
              continue;
-            if (cfg.event.ban !== false && !cmd.tags.hasOwnProperty('ban-duration'))
-             await twitch.parse.event.ban(cmd);
+            if (cmd.tags.hasOwnProperty('ban-duration'))
+            {
+             if (cfg.event.timeout !== false)
+             await twitch.parse.event.timeout(cmd);
+            }
+            else
+            {
+             if (cfg.event.ban !== false)
+              await twitch.parse.event.ban(cmd);
+            }
             break;
           }
           break;
@@ -6199,6 +6208,24 @@
        display.kappa.show(false, cfg.event.ban, {'%USER%': dn});
       }
 
+      async function parseTimeout(cmd)
+      {
+       let dn = cmd.params[1];
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
+        return;
+       if (cmd.tags.hasOwnProperty('target-user-id'))
+       {
+        const r = await twitch.net.userInfo(cmd.tags['target-user-id'], true);
+        if (r.hasOwnProperty('display_name'))
+         dn = r.display_name;
+       }
+       const dDur = cmd.tags['ban-duration'];
+       const r = shared.findInMaybeRange(cfg.event.timeout, dDur);
+       if (r === false)
+        return;
+       display.kappa.show(false, r, {'%USER%': dn, '%AMOUNT%': dDur});
+      }
+
       async function parseShoutoutCreate(uID, uName)
       {
        if (!cfg.event.shoutout.create.targetEmotes)
@@ -6275,6 +6302,7 @@
        badge: parseBadge,
        redeem: parseRedeem,
        ban: parseBan,
+       timeout: parseTimeout,
        shoutoutCreate: parseShoutoutCreate,
        shoutoutReceive: parseShoutoutReceive,
        pollEnd: parsePollEnd,
