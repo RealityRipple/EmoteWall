@@ -1451,7 +1451,10 @@
     ws: {
      twitch: {
       irc: 'wss://irc-ws.chat.twitch.tv',
-      eventSub: 'wss://eventsub-beta.wss.twitch.tv/ws'
+      eventSub: {
+       beta: 'wss://eventsub-beta.wss.twitch.tv/ws',
+       release: 'wss://eventsub.wss.twitch.tv/ws'
+      }
      },
      streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket',
      streamelements: 'wss://realtime.streamelements.com/socket.io/?transport=websocket',
@@ -4493,6 +4496,7 @@
 
      const eventSub = function()
      {
+      let _wsURL = cURLs.ws.twitch.eventSub.release;
       let _wsRetry = null;
       let _ws = null;
       let _oldWS = null;
@@ -4505,7 +4509,7 @@
       {
        if (chID !== null)
         _ch = chID;
-       _ws = new WebSocket(cURLs.ws.twitch.eventSub);
+       _ws = new WebSocket(_wsURL);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
        _ws.onmessage = _wsMessage;
@@ -4529,6 +4533,12 @@
        _ws.onclose = null;
        if (twitch.net.dead)
         return;
+       if (_wsURL === cURLs.ws.twitch.eventSub.release)
+       {
+        _wsURL = cURLs.ws.twitch.eventSub.beta;
+        window.setTimeout(task, 100);
+        return;
+       }
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
@@ -4864,11 +4874,11 @@
        }
       }
 
-      async function _subscribe(type)
+      async function _subscribe(type, version = '1')
       {
        let d = {
         'type': type,
-        'version': '1',
+        'version': version,
         'condition': {'broadcaster_user_id': _ch},
         'transport': {'method': 'websocket', 'session_id': _sess}
        };
@@ -4876,7 +4886,6 @@
        {
         case 'channel.shoutout.create':
         case 'channel.shoutout.receive':
-         d.version = 'beta';
          d.condition.moderator_user_id = _ch;
          break;
        }
@@ -4885,7 +4894,19 @@
         'Client-Id': cfg.login.client,
         'Content-Type': 'application/json'
        };
-       await shared.httpSend('POST', cURLs.api.twitch.eventSub, JSON.stringify(d), h);
+       const r = await shared.httpSend('POST', cURLs.api.twitch.eventSub, JSON.stringify(d), h);
+       if (r !== false)
+        return true;
+       if (version !== '1')
+        return false;
+       switch (type)
+       {
+        case 'channel.shoutout.create':
+        case 'channel.shoutout.receive':
+         return await _subscribe(type, 'beta');
+         break;
+       }
+       return false;
       }
 
       return task;
