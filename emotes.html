@@ -7101,9 +7101,9 @@
         {
          let a = '';
          if (cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID')
-          a = '["authenticate",{"method":"oauth2","token":"' + cfg.streamelements.oauth + '"}]';
+          a = JSON.stringify(['authenticate', {'method': 'oauth2', 'token': cfg.streamelements.oauth}]);
          else if (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN')
-          a = '["authenticate",{"method":"jwt","token":"' + cfg.streamelements.token + '"}]';
+          a = JSON.stringify(['authenticate', {'method': 'jwt', 'token': cfg.streamelements.token}]);
          _ws.send('42' + a);
          return;
         }
@@ -7504,8 +7504,8 @@
       function _wsOpen()
       {
        _ws.onopen = null;
-       _ws.send('{"name":"join_channel","data":{"name":"twitch:' + _ch + '"}}');
-       _ws.send('{"name":"broadcast_me","data":{"name":"' + cfg.channel + '","channel":"twitch:' + _ch + '"}}');
+       _ws.send(JSON.stringify({'name': 'join_channel', 'data': {'name': 'twitch:' + _ch}}));
+       _ws.send(JSON.stringify({'name': 'broadcast_me', 'data': {'name': cfg.channel, 'channel': 'twitch:' + _ch}}));
       }
 
       function _wsClose()
