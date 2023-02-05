@@ -4677,7 +4677,6 @@
         return;
        }
        _tTimeout = setTimeout(_wsTimeout, _lTimeout);
-       _wsRetry = 0;
        const r = JSON.parse(ev.data);
        if (!r.hasOwnProperty('metadata'))
         return;
@@ -4705,33 +4704,24 @@
           }
           _tTimeout = setTimeout(_wsTimeout, _lTimeout);
          }
-         await _unsubscribe();
-         if (cfg.event.follow !== false)
-          await _subscribe('channel.follow');
-         if (cfg.login.scope.includes('channel:read:redemptions'))
-          await _subscribe('channel.channel_points_custom_reward_redemption.add');
-         if (cfg.event.shoutout !== false && cfg.login.scope.includes('moderator:read:shoutouts') && cfg.event.shoutout.hasOwnProperty('create') && cfg.event.shoutout.create !== false && cfg.event.shoutout.create.hasOwnProperty('styles') && cfg.event.shoutout.create.styles !== false)
-          await _subscribe('channel.shoutout.create');
-         if (cfg.event.shoutout !== false && cfg.login.scope.includes('moderator:read:shoutouts') && cfg.event.shoutout.hasOwnProperty('receive') && cfg.event.shoutout.receive !== false && cfg.event.shoutout.receive.hasOwnProperty('styles') &&cfg.event.shoutout.receive.styles !== false)
-          await _subscribe('channel.shoutout.receive');
-         if (cfg.event.hypetrain !== false && cfg.login.scope.includes('channel:read:hype_train') && cfg.event.hypetrain.hasOwnProperty('begin') && cfg.event.hypetrain.begin !== false)
-          await _subscribe('channel.hype_train.begin');
-         if (cfg.event.hypetrain !== false && cfg.login.scope.includes('channel:read:hype_train') && cfg.event.hypetrain.hasOwnProperty('success') && cfg.event.hypetrain.success !== false)
-          await _subscribe('channel.hype_train.end');
-         if (cfg.event.poll !== false && cfg.login.scope.includes('channel:read:polls') && cfg.event.poll.hasOwnProperty('begin') && cfg.event.poll.begin !== false)
-          await _subscribe('channel.poll.begin');
-         if (cfg.event.poll !== false && cfg.login.scope.includes('channel:read:polls') && cfg.event.poll.hasOwnProperty('end') && cfg.event.poll.end !== false)
-          await _subscribe('channel.poll.end');
-         if (cfg.event.prediction !== false && cfg.login.scope.includes('channel:read:predictions') && cfg.event.prediction.hasOwnProperty('begin') && cfg.event.prediction.begin !== false)
-          await _subscribe('channel.prediction.begin');
-         if (cfg.event.prediction !== false && cfg.login.scope.includes('channel:read:predictions') && cfg.event.prediction.hasOwnProperty('resolved') && cfg.event.prediction.resolved !== false)
-          await _subscribe('channel.prediction.end');
-         if (cfg.event.charity !== false && cfg.login.scope.includes('channel:read:charity'))
-          await _subscribe('channel.charity_campaign.donate');
-         if (cfg.event.goal !== false && cfg.login.scope.includes('channel:read:goals') && cfg.event.goal.hasOwnProperty('begin') && cfg.event.goal.begin !== false)
-          await _subscribe('channel.goal.begin');
-         if (cfg.event.goal !== false && cfg.login.scope.includes('channel:read:goals') && cfg.event.goal.hasOwnProperty('achieved') && cfg.event.goal.achieved !== false)
-          await _subscribe('channel.goal.end');
+         const haveSubs = await _handleSubs();
+         if (!haveSubs)
+         {
+          if (_tTimeout !== false)
+          {
+           clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          _ws.onopen = null;
+          _ws.onmessage = null;
+          _ws.onclose = null;
+          _ws.close();
+          _ws = null;
+          return;
+         }
+         break;
+        case 'session_keepalive':
+         _wsRetry = 0;
          break;
         case 'notification':
          if (!r.metadata.hasOwnProperty('subscription_type'))
@@ -4942,7 +4932,10 @@
          _oldWS.onclose = null;
          _oldWS.onmessage = null;
          _ws = null;
-         window.setTimeout(task, 100);
+         const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+         if (_wsRetry < 2)
+          _wsRetry += 0.2;
+         window.setTimeout(task, wsWait);
          break;
         case 'revocation':
          if (!r.metadata.hasOwnProperty('subscription_type'))
@@ -4966,8 +4959,81 @@
         clearTimeout(_tTimeout);
         _tTimeout = false;
        }
-       _ws.close();
+       if (_ws !== null)
+        _ws.close();
        task();
+      }
+
+      async function _handleSubs()
+      {
+       const aSubs = [
+        {id: 'channel.follow', scope: false, cfg: ['event.follow']},
+        {id: 'channel.channel_points_custom_reward_redemption.add', scope: ['channel:read:redemptions'], cfg: false},
+        {id: 'channel.shoutout.create', scope: ['moderator:read:shoutouts'], cfg: ['event.shoutout.create.styles']},
+        {id: 'channel.shoutout.receive', scope: ['moderator:read:shoutouts'], cfg: ['event.shoutout.receive.styles']},
+        {id: 'channel.hype_train.begin', scope: ['channel:read:hype_train'], cfg: ['event.hypetrain.begin']},
+        {id: 'channel.hype_train.end', scope: ['channel:read:hype_train'], cfg: ['event.hypetrain.success']},
+        {id: 'channel.poll.begin', scope: ['channel:read:polls'], cfg: ['event.poll.begin']},
+        {id: 'channel.poll.end', scope: ['channel:read:polls'], cfg: ['event.poll.end']},
+        {id: 'channel.prediction.begin', scope: ['channel:read:predictions'], cfg: ['event.prediction.begin']},
+        {id: 'channel.prediction.end', scope: ['channel:read:predictions'], cfg: ['event.prediction.resolved']},
+        {id: 'channel.goal.begin', scope: ['channel:read:goals'], cfg: ['event.goal.begin']},
+        {id: 'channel.goal.end', scope: ['channel:read:goals'], cfg: ['event.goal.achieved']},
+        {id: 'channel.charity_campaign.donate', scope: ['channel:read:charity'], cfg: ['event.charity']}
+       ];
+       const aActive = await _unsubscribe();
+       let didSomething = aActive.length > 0;
+       for (let i = 0, l = aSubs.length; i < l; i++)
+       {
+        if (await _handleSub(aSubs[i], aActive) !== false)
+         didSomething = true;
+       }
+       return didSomething;
+      }
+
+      async function _handleSub(sub, aActive)
+      {
+       if (sub.hasOwnProperty('cfg') && sub.cfg !== false)
+       {
+        let found = true;
+        for (let i = 0, l = sub.cfg.length; i < l; i++)
+        {
+         let aPref = sub.cfg[i].split('.');
+         let cPref = cfg;
+         found = true;
+         for (let j = 0, m = aPref.length; j < m; j++)
+         {
+          if (!cPref.hasOwnProperty(aPref[j]))
+          {
+           found = false;
+           break;
+          }
+          if (cPref[aPref[j]] === false)
+          {
+           found = false;
+           break;
+          }
+          cPref = cPref[aPref[j]];
+         }
+         if (found !== false)
+          break;
+        }
+        if (found === false)
+         return false;
+       }
+       if (sub.hasOwnProperty('scope') && sub.scope !== false)
+       {
+        for (let i = 0, l = sub.scope.length; i < l; i++)
+        {
+         if (!cfg.login.scope.includes(sub.scope[i]))
+          return false;
+        }
+       }
+       if (aActive.includes(sub.id))
+        return false;
+       if (!sub.hasOwnProperty('v'))
+        return _subscribe(sub.id);
+       return _subscribe(sub.id, sub.v);
       }
 
       async function _unsubscribe()
@@ -4979,18 +5045,42 @@
        const r = await shared.httpRequest(cURLs.api.twitch.eventSub, h);
        const j = JSON.parse(r);
        if (!j.hasOwnProperty('data'))
-        return;
+        return [];
        if (!j.hasOwnProperty('total'))
-        return;
+        return [];
        if (j.total < 1)
-        return;
+        return [];
+       let rList = [];
        for (let i = 0; i < j.total; i++)
        {
         if (!j.data[i].hasOwnProperty('id'))
          continue;
-        if (j.data[i].hasOwnProperty('status') && j.data[i].status === 'websocket_disconnected')
-         shared.httpSend('DELETE', cURLs.api.twitch.eventSub + '?id=' + j.data[i].id, null, h);
+        if (!j.data[i].hasOwnProperty('status'))
+         continue;
+        switch (j.data[i].status)
+        {
+         case 'enabled':
+          if (!j.data[i].hasOwnProperty('type'))
+           continue;
+          if (!j.data[i].hasOwnProperty('transport'))
+           continue;
+          if (!j.data[i].transport.hasOwnProperty('method'))
+           continue;
+          if (j.data[i].transport.method !== 'websocket')
+           continue;
+          if (!j.data[i].transport.hasOwnProperty('session_id'))
+           continue;
+          if (j.data[i].transport.session_id !== _sess)
+           continue;
+          rList.push(j.data[i].type);
+          break;
+         case 'websocket_disconnected':
+         case 'websocket_failed_ping_pong':
+          shared.httpSend('DELETE', cURLs.api.twitch.eventSub + '?id=' + j.data[i].id, null, h);
+          break;
+        }
        }
+       return rList;
       }
 
       async function _subscribe(type, version = '1')
