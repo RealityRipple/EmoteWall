@@ -1632,7 +1632,8 @@
      },
      bttv: {
       emote: 'https://cdn.betterttv.net/emote/%EMOTE_ID%/3x'
-     }
+     },
+     crew: 'https://uploads.realityripple.com/Pictures/crew/%DIRECTION%/%COLOR%.png'
     },
     html: {
      rr: {
@@ -5527,6 +5528,12 @@
         {
          emList.push(match);
         }
+        const acSeg = /(\u0d9e)/gu;
+        match = '';
+        while ((match = acSeg.exec(msg)) !== null)
+        {
+         emList.push(match);
+        }
         if (emList.length === 0)
          return [];
         if (dup === null)
@@ -5551,6 +5558,22 @@
          }
          addList[c]++;
          ret.push({svc: 'e', url: uri + c + '.png', str: c, pos: p});
+         return true;
+        }
+        function showCrew(p)
+        {
+         if (!addList.hasOwnProperty('0d9e'))
+          addList['0d9e'] = 0;
+         else
+         {
+          if (dup === false)
+           return false;
+          if (dup !== true && addList['0d9e'] >= dup)
+           return false;
+         }
+         addList['0d9e']++;
+         const crew = cURLs.cdn.crew.replaceAll('%DIRECTION%', shared.rnd(2)).replaceAll('%COLOR%', shared.rnd(18));
+         ret.push({svc: 'e', url: crew, str: '0d9e', pos: p});
          return true;
         }
         for (let i = 0, l = emList.length; i < l; i++)
@@ -5603,6 +5626,11 @@
          if (lP === 1)
          {
           let s = cpList[0];
+          if (s === '0d9e')
+          {
+           showCrew(emList[i].index);
+           continue;
+          }
           let tU;
           if (s.slice(-5) === '-fe0f')
           {
