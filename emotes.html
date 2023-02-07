@@ -6981,7 +6981,6 @@
 
      function task()
      {
-      _wsRetry = 0;
       _tPing = 0;
       _ws = new WebSocket(cURLs.ws.streamlabs + '&token=' + cfg.streamlabs.token);
       _ws.onclose = _wsClose;
@@ -7135,7 +7134,6 @@
 
      function task()
      {
-      _wsRetry = 0;
       _tPing = 0;
       _ws = new WebSocket(cURLs.ws.streamelements);
       _ws.onclose = _wsClose;
@@ -7582,10 +7580,10 @@
       let _ch = 0;
       let _ws = null;
 
-      function task(chID)
+      function task(chID = false)
       {
-       _wsRetry = 0;
-       _ch = chID;
+       if (chID !== false)
+        _ch = chID;
        _ws = new WebSocket(cURLs.ws.bttv);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
@@ -7609,7 +7607,7 @@
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(task, wsWait, _ch);
+       window.setTimeout(task, wsWait);
       }
 
       function _wsMessage(ev)
@@ -7811,25 +7809,45 @@
 
      const load7TV_ws_channel = function()
      {
+      const _lDelay = 500;
       let _wsRetry = 0;
+      let _wsR_RL = 0;
+      let _wsR_M = 0;
       let _ch = 0;
       let _accID = false;
       let _ws = null;
+      let _sess = null;
+      let _lTimeout = 5000;
+      let _tTimeout = false;
+      let _okCt = 0;
 
-      async function task(chID)
+      async function task(chID = false)
       {
-       _wsRetry = 0;
-       _ch = chID;
+       if (chID !== false)
+        _ch = chID;
        _accID = await _load7TV_channelID(_ch);
        if (_accID === false)
         return;
        _ws = new WebSocket(cURLs.ws['7tv']);
+       _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
        _ws.onmessage = _wsMessage;
       }
 
+      function _wsOpen()
+      {
+       _ws.onopen = null;
+       _tTimeout = setTimeout(_wsTimeout, _lTimeout);
+      }
+
       function _wsClose()
       {
+       if (_tTimeout !== false)
+       {
+        clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       _ws.onopen = null;
        _ws.onmessage = null;
        _ws.onclose = null;
        if (twitch.net.dead)
@@ -7837,33 +7855,182 @@
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(task, wsWait, _ch);
+       window.setTimeout(task, wsWait);
       }
 
       function _wsMessage(ev)
       {
+       if (_tTimeout !== false)
+       {
+        clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
        if (twitch.net.dead)
        {
         _ws.close();
         return;
        }
-       _wsRetry = 0;
+       _tTimeout = setTimeout(_wsTimeout, _lTimeout);
        const d = JSON.parse(ev.data);
+       if (!d.hasOwnProperty('op'))
+        return;
+       if (!d.hasOwnProperty('d'))
+        return;
        switch(d.op)
        {
         case 0:
          if (thirdparty.timer !== false)
           window.clearTimeout(thirdparty.timer);
-         thirdparty.timer = window.setTimeout(reload3rdParty, 500, _ch);
+         thirdparty.timer = window.setTimeout(reload3rdParty, _lDelay, _ch);
          break;
         case 1:
-         _ws.send(JSON.stringify({'op': 35, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
-         _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
-         _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
+         _okCt = 0;
+         if (_sess !== null)
+          _ws.send(JSON.stringify({'op': 34, 'd': {'session_id': _sess}}));
+         else
+          _wsSub();
+         if (d.d.hasOwnProperty('session_id'))
+          _sess = d.d.session_id;
+         if (d.d.hasOwnProperty('heartbeat_interval'))
+         {
+          _lTimeout = parseInt(d.d.heartbeat_interval, 10) * 3;
+          if (_tTimeout !== false)
+          {
+           clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          _tTimeout = setTimeout(_wsTimeout, _lTimeout);
+         }
          break;
         case 2:
+         if (_okCt !== 3)
+         {
+          if (_tTimeout !== false)
+          {
+           clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          _ws.onopen = null;
+          _ws.onmessage = null;
+          _ws.onclose = null;
+          _ws.close();
+          _ws = null;
+          window.setTimeout(task, _lDelay);
+          return;
+         }
+         _wsRetry = 0;
+         _wsR_RL = 0;
+         _wsR_M = 0;
+         break;
+        case 5:
+         if (!d.d.hasOwnProperty('command'))
+          return;
+         switch(d.d.command)
+         {
+          case 'RESUME':
+           if (!d.d.hasOwnProperty('data'))
+            return;
+           if (!d.d.data.hasOwnProperty('success'))
+            return;
+           if (d.d.data.success === false)
+            _wsSub();
+           else
+           {
+            if (!d.d.data.hasOwnProperty('subscriptions_restored'))
+             return;
+            if (d.d.data.subscriptions_restored !== 3)
+            {
+             if (d.d.data.subscriptions_restored > 0)
+              _wsUnsub();
+             _wsSub();
+            }
+            else
+             _okCt = d.d.data.subscriptions_restored;
+           }
+           break;
+          case 'SUBSCRIBE':
+           _okCt++;
+           break;
+         }
+         break;
+        case 7:
+         if (_tTimeout !== false)
+         {
+          clearTimeout(_tTimeout);
+          _tTimeout = false;
+         }
+         _ws.onopen = null;
+         _ws.onmessage = null;
+         _ws.onclose = null;
+         _ws.close();
+         _ws = null;
+         let wsWait = _lDelay;
+         if (d.d.hasOwnProperty('code'))
+         {
+          switch (d.d.code)
+          {
+           case 4001:
+           case 4002:
+           case 4003:
+           case 4004:
+           case 4009:
+           case 4010:
+           case 4011:
+            _sess = null;
+            return;
+           case 4005:
+            wsWait = Math.floor((5 ** (1 + _wsR_RL) / 5) * 60 * 1000);
+            if (_wsR_RL < 2.6)
+             _wsR_RL += 0.2;
+            break;
+           case 4006:
+            if (wsWait < 4 * 60 * 1000)
+             wsWait = 4 * 60 * 1000;
+            break;
+           case 4007:
+            wsWait = 5 * 60 * 1000 + Math.floor(wWS ** (1 + _wsR_M) * 1000) - 5000;
+            if (_wsR_M < 2)
+             _wsR_M += 0.2;
+            break;
+           case 4000:
+           case 4008:
+            wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+            if (_wsRetry < 2)
+             _wsRetry += 0.2;
+            break;
+          }
+         }
+         window.setTimeout(task, wsWait);
          break;
        }
+      }
+
+      function _wsUnsub()
+      {
+       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
+       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
+       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
+      }
+
+      function _wsSub()
+      {
+       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
+       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
+       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
+      }
+
+      function _wsTimeout()
+      {
+       _lTimeout = 5000;
+       if (twitch.net.dead === true)
+        return;
+       if (_tTimeout !== false)
+       {
+        clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       _ws.close();
+       task();
       }
 
       return task;
