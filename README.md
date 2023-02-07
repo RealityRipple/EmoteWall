@@ -35,11 +35,6 @@ Twitch filters out the ZWJ (Zero-Width Joiner) character which is used for mergi
 ### Emote Dimensions
 Emotes that are not square will be shrunk to fit while maintaining the original aspect ratio.
 
-### Following
-Detecting followers on the current Twitch API is limited and relies on server-to-server events. The current system uses a kludge and may have issues in rare situations. The current system regularly grabs the most recent 100 followers and tries to find the previous request's latest follower, counting how many followers exist in the list before the last known follower. If the latest follower is removed from the list, or if more than 100 followers join between one check and another, the system will ignore the event and assign a new latest follower. Real support for follow events requires an API change:  
-[Add follow notification flag to Helix ](//twitch.uservoice.com/forums/310213/suggestions/41794465)  
-[Add "channel follows" as a topic in PubSub ](//twitch.uservoice.com/forums/310213/suggestions/40423873)
-
 ### Cheers
 The cheer style will be used for kappagens. If a user cheers 1000 bits in a single 1000 bit emote, then the kappagen will be made of the 1000-bit cheers. However, if the user cheers 1000 bits using multiple smaller cheer emotes, those emotes will be used for the kappagen instead.
 
