@@ -822,6 +822,7 @@
      oauth_refresh: 'OAUTH_REFRESH',
      scope: [
       'chat:read',                 // required
+    //'moderator:read:followers',  // optional. only required if you use follow events or access
     //'channel:read:redemptions',  // optional. only required if you use channel point redeem commands
     //'channel:read:hype_train',   // optional. only required if you use hype train events
     //'channel:read:goals',        // optional. only required if you use goal events
@@ -1596,12 +1597,12 @@
     },
     api: {
      twitch: {
-      users: {
-       root: 'https://api.twitch.tv/helix/users',
-       follows: 'https://api.twitch.tv/helix/users/follows'
-      },
+      users: 'https://api.twitch.tv/helix/users',
       bits: {
        cheermotes: 'https://api.twitch.tv/helix/bits/cheermotes'
+      },
+      channels: {
+       followers: 'https://api.twitch.tv/helix/channels/followers'
       },
       chat: {
        emotes: {
@@ -4982,7 +4983,7 @@
       async function _handleSubs()
       {
        const aSubs = [
-        {id: 'channel.follow', scope: false, cfg: ['event.follow']},
+        {id: 'channel.follow', v: '2', scope: ['moderator:read:followers'], cfg: ['event.follow']},
         {id: 'channel.channel_points_custom_reward_redemption.add', scope: ['channel:read:redemptions'], cfg: false},
         {id: 'channel.shoutout.create', scope: ['moderator:read:shoutouts'], cfg: ['event.shoutout.create.styles']},
         {id: 'channel.shoutout.receive', scope: ['moderator:read:shoutouts'], cfg: ['event.shoutout.receive.styles']},
@@ -5108,6 +5109,7 @@
        };
        switch (type)
        {
+        case 'channel.follow':
         case 'channel.shoutout.create':
         case 'channel.shoutout.receive':
          d.condition.moderator_user_id = _ch;
@@ -5121,13 +5123,19 @@
        const r = await shared.httpSend('POST', cURLs.api.twitch.eventSub, JSON.stringify(d), h);
        if (r !== false)
         return true;
-       if (version !== '1')
-        return false;
        switch (type)
        {
         case 'channel.shoutout.create':
         case 'channel.shoutout.receive':
-         return _subscribe(type, 'beta');
+         if (version === '1')
+          return _subscribe(type, 'beta');
+         break;
+        case 'channel.follow':
+         if (version === '2')
+          return _subscribe(type, 'beta');
+         else if (version === 'beta')
+          return _subscribe(type, '1');
+         break;
        }
        return false;
       }
@@ -5344,9 +5352,9 @@
 
      async function getUserInfo(u, isID = false)
      {
-      let url = cURLs.api.twitch.users.root + '?login=' + u;
+      let url = cURLs.api.twitch.users + '?login=' + u;
       if (isID)
-       url = cURLs.api.twitch.users.root + '?id=' + u;
+       url = cURLs.api.twitch.users + '?id=' + u;
       const h = {
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
@@ -6678,7 +6686,7 @@
         if (tDif < _rFH)
          return twitch.net.fList[uID].value;
        }
-       const url = cURLs.api.twitch.users.follows + '?from_id=' + uID + '&to_id=' + cmd.tags['room-id'];
+       const url = cURLs.api.twitch.channels.followers + '?user_id=' + uID + '&broadcaster_id=' + cmd.tags['room-id'];
        const h = {
         'Authorization': 'Bearer ' + cfg.login.oauth,
         'Client-Id': cfg.login.client
@@ -6687,7 +6695,7 @@
        if (r === false)
         return false;
        const j = JSON.parse(r);
-       if (j.hasOwnProperty('total') && j.total > 0)
+       if (j.hasOwnProperty('data') && j.data.length > 0)
        {
         twitch.net.fList[uID] = {value: true, t: new Date().getTime()};
         return true;
@@ -8357,6 +8365,33 @@
       r.push('channel:read:redemptions');
       break;
      }
+     let needF = false;
+     if (cfg.event.follow !== false)
+      needF = true;
+     else
+     {
+      if ((cfg.display.access & 0x002) === 0x002 && (cfg.display.access & 0x001) !== 0x001)
+       needF = true;
+      else if ((cfg.display.kappa.access & 0x002) === 0x002 && (cfg.display.kappa.access & 0x001) !== 0x001)
+       needF = true;
+      else
+      {
+       for (const k of cfg.commands)
+       {
+        if (!k.hasOwnProperty('styles'))
+         continue;
+        if (!k.hasOwnProperty('access'))
+         continue;
+        if ((k.access & 0x002) === 0x002 && (k.access & 0x001) !== 0x001)
+        {
+         needF = true;
+         break;
+        }
+       }
+      }
+     }
+     if (needF)
+      r.push('moderator:read:followers');
      if (cfg.event.hypetrain !== false && ((cfg.event.hypetrain.hasOwnProperty('begin') && cfg.event.hypetrain.begin !== false) || (cfg.event.hypetrain.hasOwnProperty('success') && cfg.event.hypetrain.success !== false)))
       r.push('channel:read:hype_train');
      if (cfg.event.goal !== false && ((cfg.event.goal.hasOwnProperty('begin') && cfg.event.goal.begin !== false) || (cfg.event.goal.hasOwnProperty('achieved') && cfg.event.goal.achieved !== false)))
