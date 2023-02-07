@@ -31,25 +31,39 @@
     *
     * login       Settings related to the login process.
     *
-    *             NOTE: OAuth tokens expire automatically (usually after 60 days). Please make sure to update
-    *                   these values on a regular basis, if not using the interactive login process.
+    *             NOTE: OAuth refresh tokens expire automatically (usually after around half a year).
+    *                   If you don't use the Emote Wall for around this long, you may have to log in again.
+    *                   Regular OAuth tokens expire much sooner (usually after 60 days). If you use the manual oauth
+    *                   method, please make sure to update these values on a regular basis.
     *
     *  client     The Client ID value is used to track which third-party project is accessing your account.
     *             This emote wall does not require a constant ID, and will work with whatever tool you use to
     *             get an OAuth ID (see below).
     *
     *  oauth      The OAuth ID value is used in lieu of a password to access the Twitch API.
+    *             By default, this value is not required.
+    *             If you do not wish to use the oauth_refresh method, which relies on a file on my webserver,
+    *             you can generate your own OAuth2 token manually using a third-party Twitch Token Generator, and set
+    *             this value to the token you receive. However, it will expire and require updating manually.
+    *
+    *  oauth_refresh  A refresh token to get a new Twitch OAuth ID when the current one expires.
+    *                This value is used instead of the oauth value above, by default. Using a refresh token allows the
+    *             emote wall to stay logged in for a much longer period of time. Please note that this feature makes
+    *             use of the browser's Local Storage to store new OAuth Tokens and Refresh Tokens as they're generated.
+    *             New OAuth Tokens are generated every 60 minutes, and Twitch may or may not send a new Refresh Token
+    *             at the same time. If the token expires, the Local Storage values will be erased on the next refesh
+    *             attempt automatically.
     *             Please generate an OAuth ID and matching Client ID:
-    *             - Visit https://realityripple.com/Tools/Twitch/EmoteWall/
+    *             - Visit <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *             - Click the "Authenticate on Twitch" button under "Do-it-Yourself" and log in
     *             - Fill out the captcha prompt, if necessary
     *             - Copy the Client ID value and paste it into "client:"
-    *             - Copy the OAuth ID value and paste it into "oauth:"
+    *             - Copy the OAuth Refresh value and paste it into "oauth_refresh:"
     *             If you ever stop using this emote wall, please log into Twitch and visit
-    *             https://www.twitch.tv/settings/connections . Under "Other Connections", click the "Disconnect" button
-    *             next to "RealityRipple's Home-Made Emote Wall". If you want to use a different Twitch OAuth generator
-    *             (or do it yourself), feel free.
-    *             If FALSE, the interactive login process will be enabled.
+    *             <https://www.twitch.tv/settings/connections>. Under "Other Connections", click the "Disconnect" button
+    *             next to "RealityRipple's Home-Made Emote Wall".
+    *
+    *             If both oauth and oauth_refresh are FALSE (or missing), the interactive login process will be enabled.
     *
     *  scope      A list of scopes which the OAuth ID provides access to. Please make sure this list reflects
     *             any scope selections you made while creating the token above.
@@ -89,17 +103,17 @@
     *
     * streamelements  Settings related to StreamElements tips.
     *
-    *  refresh    A refresh token to get a new StreamElements OAuth ID when the current one expires.
-    *             The OAuth ID value is used in lieu of a password to access the StreamElements API.
+    *  oauth_refresh  A refresh token to get a new StreamElements OAuth ID when the current one expires.
+    *                The OAuth ID value is used in lieu of a password to access the StreamElements API.
     *             Please generate an OAuth ID:
     *             - Visit https://realityripple.com/Tools/Twitch/EmoteWall/
     *             - Click the "StreamElements Tip Support" button and log in
-    *             - Copy the OAuth ID value and paste it into "refresh:"
+    *             - Copy the Token value and paste it into "oauth_refresh:"
     *             If you ever stop using this emote wall, please log into StreamElements and visit
     *             https://streamelements.com/dashboard/account/security. Click the "Reset my Personal Access Token"
     *             button. If you want to use a different StreamElements OAuth generator (or do it yourself), feel free.
-    *             Please only use refresh or token, not both. Token does not expire, but is also less secure. OAuth is
-    *             recommended, if possible.
+    *             Please only use oauth_refresh or token, not both. Token does not expire, but is also less secure.
+    *             OAuth is recommended, if possible.
     *
     *  token      The JWT Token is used in lieu of a password to access the StreamElements API.
     *             Please grab your JWT Token from the StreamElements Dashboard:
@@ -805,7 +819,7 @@
     channel: 'CHANNEL_NAME',
     login: {
      client: '4umzcpmjkg6ar78b81s7302jlj33t8',
-     oauth: 'OAUTH_ID',
+     oauth_refresh: 'OAUTH_REFRESH',
      scope: [
       'chat:read',                 // required
     //'channel:read:redemptions',  // optional. only required if you use channel point redeem commands
@@ -1635,6 +1649,7 @@
     html: {
      rr: {
       wizard: 'https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php',
+      t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
       se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php',
       redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php'
      },
@@ -5187,6 +5202,8 @@
         {
          case 'PING':
           _ws.send('PONG ' + cmd.params[0]);
+          if (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')
+           await twitch.net.updateOAuth();
           break;
          case 'PRIVMSG':
           if (document.visibilityState === 'hidden')
@@ -5307,7 +5324,7 @@
         _tTimeout = false;
        }
        _ws.close();
-       shared.blargIAmDead(5);
+       shared.blargIAmDead(4);
       }
 
       return task;
@@ -5345,12 +5362,63 @@
       return j.data[0];
      }
 
+     async function _getOAuthToken(t)
+     {
+      const url = cURLs.html.rr.t + '?refresh=' + t;
+      const r = await shared.httpRequest(url, {}, true, false);
+      if (r === false)
+       return false;
+      if (r === null)
+      {
+       shared.blargIAmDead(1);
+       window.localStorage.removeItem(login.path() + '.oauth');
+       window.localStorage.removeItem(login.path() + '.refresh');
+       window.localStorage.removeItem(login.path() + '.refreshed');
+       return false;
+      }
+      const j = JSON.parse(r);
+      if (!j.hasOwnProperty('access_token'))
+       return false;
+      if (!j.hasOwnProperty('refresh_token'))
+       return false;
+      return j;
+     }
+
+     async function updateOAuth()
+     {
+      const lsOAuth = window.localStorage.getItem(login.path() + '.oauth');
+      const lsRefresh = window.localStorage.getItem(login.path() + '.refresh');
+      const lsRefreshed = window.localStorage.getItem(login.path() + '.refreshed');
+      if (lsOAuth !== null)
+       cfg.login.oauth = lsOAuth;
+      if (lsRefresh !== null)
+       cfg.login.oauth_refresh = lsRefresh;
+      if (lsRefreshed !== null)
+       cfg.login.oauth_refreshed = lsRefreshed;
+      if (cfg.login.hasOwnProperty('oauth_refreshed') && cfg.login.oauth_refreshed > 0)
+      {
+       const tokAge = Math.floor(new Date().getTime() / 1000) - cfg.login.oauth_refreshed;
+       if (tokAge < 60 * 60)
+        return;
+      }
+      const ret = await _getOAuthToken(cfg.login.oauth_refresh);
+      if (ret === false)
+       return;
+      cfg.login.oauth = ret.access_token;
+      cfg.login.oauth_refresh = ret.refresh_token;
+      cfg.login.oauth_refreshed = Math.floor(new Date().getTime() / 1000);
+      window.localStorage.setItem(login.path() + '.oauth', cfg.login.oauth);
+      window.localStorage.setItem(login.path() + '.refresh', cfg.login.oauth_refresh);
+      window.localStorage.setItem(login.path() + '.refreshed', cfg.login.oauth_refreshed);
+     }
+
      return {
       channelID: 0,
       fList: [],
       dead: false,
       irc: irc,
-      userInfo: getUserInfo
+      userInfo: getUserInfo,
+      updateOAuth: updateOAuth
      };
     }();
 
@@ -6830,6 +6898,11 @@
      const r = await shared.httpRequest(url, h, true);
      if (r === false)
       return false;
+     if (r === null)
+     {
+      shared.blargIAmDead(3);
+      return false;
+     }
      const j = JSON.parse(r);
      if (!j.hasOwnProperty('data'))
       return false;
@@ -6869,6 +6942,11 @@
      const r = await shared.httpRequest(url, h, true);
      if (r === false)
       return false;
+     if (r === null)
+     {
+      shared.blargIAmDead(3);
+      return false;
+     }
      const j = JSON.parse(r);
      if (!j.hasOwnProperty('data'))
       return false;
@@ -7270,7 +7348,7 @@
        window.localStorage.removeItem('streamelements.tips:read.refresh');
        window.localStorage.removeItem('streamelements.tips:read.expires');
        window.localStorage.removeItem('streamelements.tips:read.refreshed');
-       shared.blargIAmDead(6);
+       shared.blargIAmDead(5);
        return;
       }
      }
@@ -8100,7 +8178,7 @@
      return x.responseText;
     }
 
-    function httpRequest(url, hdrs = {}, blargOnError = false, nocache = true)
+    function httpRequest(url, hdrs = {}, nullOn401 = false, nocache = true)
     {
      const p = new Promise(
       function(resolve)
@@ -8126,8 +8204,11 @@
         const r = _httpRequest_RSC(x);
         if (r === null)
          return;
-        if (r === false && blargOnError && x.status === 401)
-         shared.blargIAmDead(3);
+        if (r === false && nullOn401 && x.status === 401)
+        {
+         resolve(null);
+         return;
+        }
         resolve(r);
        };
        x.send();
@@ -8226,7 +8307,7 @@
         login.showOut(true);
        }
        else
-        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Connect to Twitch<br><br>Please Update Your OAuth Token</div>';
+        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Connect to Twitch<br><br>Please Update Your OAuth Refresh Token</div>';
        break;
       case 2:
        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Corrupted Configuration<br><br>Please Check Your Browser\'s Error Console</div>';
@@ -8239,21 +8320,12 @@
         login.showIn();
        }
        else
-        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Emotes<br><br>Please Check Your Client ID and OAuth Token</div>';
+        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Emotes<br><br>Please Check Your Client ID and OAuth Refresh Token</div>';
        break;
       case 4:
-       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Warning:<br><br>Your Credentials Will Expire Soon<br><br>Please Update Your OAuth Token</div>';
-       if (login.inUse)
-       {
-        login.showOut(true);
-        window.setTimeout(function(){document.body.innerHTML = ''; login.showOut(true);}, 15000);
-        return;
-       }
-       break;
-      case 5:
        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>The Connection to the IRC Channel was Incomplete<br><br>Please Check your Channel</div>';
        break;
-      case 6:
+      case 5:
        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Warning:<br><br>Your StreamElements OAuth Token is Expired<br><br>Please Update your StreamElements OAuth Token</div>';
        break;
      }
@@ -8305,7 +8377,7 @@
      return encodeURIComponent(_activeScope().join(' '));
     }
 
-    function _lsPath()
+    function lsPath()
     {
      return 'twitch.' + _activeScope().join('+');
     }
@@ -8313,18 +8385,18 @@
     function shouldUseLogin()
     {
      login.inUse = false;
-     if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== 'CHANNEL_NAME' && cfg.hasOwnProperty('login') && cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== 'OAUTH_ID')
+     if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== 'CHANNEL_NAME' && cfg.hasOwnProperty('login') && ((cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== 'OAUTH_ID') || (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')))
       return false;
      login.inUse = true;
-     let lsChannel = window.localStorage.getItem(_lsPath() + '.channel');
-     let lsClient  = window.localStorage.getItem(_lsPath() + '.client');
-     let lsOAuth   = window.localStorage.getItem(_lsPath() + '.oauth');
-     let lsExpires = window.localStorage.getItem(_lsPath() + '.expires');
-     let lsScope   = window.localStorage.getItem(_lsPath() + '.scope');
-     if (lsChannel === null || lsOAuth === null)
+     let lsChannel = window.localStorage.getItem(login.path() + '.channel');
+     let lsClient  = window.localStorage.getItem(login.path() + '.client');
+     let lsOAuth   = window.localStorage.getItem(login.path() + '.oauth');
+     let lsRefresh = window.localStorage.getItem(login.path() + '.refresh');
+     let lsScope   = window.localStorage.getItem(login.path() + '.scope');
+     if (lsChannel === null || lsRefresh === null)
      {
       const h = _getHashParams();
-      if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('expires') || !h.hasOwnProperty('scope'))
+      if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('oauth_refresh') || !h.hasOwnProperty('scope'))
       {
        login.showIn();
        return true;
@@ -8332,18 +8404,18 @@
       lsChannel = h.channel;
       lsClient = h.client;
       lsOAuth = h.oauth;
-      lsExpires = h.expires;
+      lsRefresh = h.oauth_refresh;
       lsScope = decodeURIComponent(h.scope);
-      window.localStorage.setItem(_lsPath() + '.channel', lsChannel);
-      window.localStorage.setItem(_lsPath() + '.oauth', lsOAuth);
-      window.localStorage.setItem(_lsPath() + '.client', lsClient);
-      window.localStorage.setItem(_lsPath() + '.expires', lsExpires);
-      window.localStorage.setItem(_lsPath() + '.scope', lsScope);
+      window.localStorage.setItem(login.path() + '.channel', lsChannel);
+      window.localStorage.setItem(login.path() + '.oauth', lsOAuth);
+      window.localStorage.setItem(login.path() + '.refresh', lsRefresh);
+      window.localStorage.setItem(login.path() + '.client', lsClient);
+      window.localStorage.setItem(login.path() + '.scope', lsScope);
      }
      cfg.channel = lsChannel;
      cfg.login.oauth = lsOAuth;
+     cfg.login.oauth_refresh = lsRefresh;
      cfg.login.client = lsClient;
-     cfg.login.expires = lsExpires;
      cfg.login.scope = decodeURIComponent(lsScope).split(' ');
      document.title = cfg.channel + ' Emote Wall';
      showLogoutButton();
@@ -8369,17 +8441,17 @@
 
     function doLogin()
     {
-     window.localStorage.removeItem(_lsPath() + '.channel');
-     window.localStorage.removeItem(_lsPath() + '.oauth');
-     window.localStorage.removeItem(_lsPath() + '.client');
-     window.localStorage.removeItem(_lsPath() + '.expires');
-     window.localStorage.removeItem(_lsPath() + '.scope');
+     window.localStorage.removeItem(login.path() + '.channel');
+     window.localStorage.removeItem(login.path() + '.oauth');
+     window.localStorage.removeItem(login.path() + '.refresh');
+     window.localStorage.removeItem(login.path() + '.client');
+     window.localStorage.removeItem(login.path() + '.scope');
      const o = encodeURIComponent(btoa(window.location));
      const c = encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8');
      const r = encodeURIComponent(cURLs.html.rr.wizard);
-     let u = cURLs.html.twitch + '?client_id=' + c + '&redirect_uri=' + r + '&response_type=token&scope=' + _uScope() + '&state=redirto_' + o + '&force_verify=true';
+     let u = cURLs.html.twitch + '?client_id=' + c + '&redirect_uri=' + r + '&response_type=code&scope=' + _uScope() + '&state=redirto_' + o + '&force_verify=true';
      if (u.length > 1500)
-      u = cURLs.html.rr.redir + '?c=' + c + '&r=' + r + '&s=' + _uScope() + '&u=' + encodeURIComponent(window.location);
+      u = cURLs.html.rr.redir + '?t=code&c=' + c + '&r=' + r + '&s=' + _uScope() + '&u=' + encodeURIComponent(window.location);
      window.location = u;
     }
 
@@ -8388,11 +8460,11 @@
      document.title = 'Log In to Access Emote Wall';
      if (document.getElementById('cmdLogout'))
       document.body.removeChild(document.getElementById('cmdLogout'));
-     window.localStorage.removeItem(_lsPath() + '.channel');
-     window.localStorage.removeItem(_lsPath() + '.oauth');
-     window.localStorage.removeItem(_lsPath() + '.client');
-     window.localStorage.removeItem(_lsPath() + '.expires');
-     window.localStorage.removeItem(_lsPath() + '.scope');
+     window.localStorage.removeItem(login.path() + '.channel');
+     window.localStorage.removeItem(login.path() + '.oauth');
+     window.localStorage.removeItem(login.path() + '.refresh');
+     window.localStorage.removeItem(login.path() + '.client');
+     window.localStorage.removeItem(login.path() + '.scope');
      let cmdLogin = document.createElement('button');
      cmdLogin.setAttribute('id', 'cmdLogin');
      cmdLogin.setAttribute('type', 'button');
@@ -8475,7 +8547,8 @@
      use: shouldUseLogin,
      begin: doLogin,
      showIn: showLoginButton,
-     showOut: showLogoutButton
+     showOut: showLogoutButton,
+     path: lsPath
     };
    }();
 
@@ -8488,18 +8561,6 @@
     }
     if (login.use() === true)
      return;
-    if (cfg.login.hasOwnProperty('expires') && cfg.login.expires > 0)
-    {
-     const expTime = cfg.login.expires - new Date().getTime();
-     if (expTime > 0)
-     {
-      const expDays = Math.floor(expTime / 1000 / 60 / 60 / 24);
-      if (expDays < 7)
-      {
-       shared.blargIAmDead(4);
-      }
-     }
-    }
     if (cfg.hasOwnProperty('streamlabs') && cfg.streamlabs.hasOwnProperty('token') && cfg.streamlabs.token !== false && cfg.streamlabs.token !== 'SOCKET_TOKEN')
      streamlabs.socket();
     if (cfg.hasOwnProperty('streamelements'))
@@ -8509,6 +8570,8 @@
      if ((cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID') || (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN'))
       streamelements.socket();
     }
+    if (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')
+     await twitch.net.updateOAuth();
     await twitch.global();
     if (cfg.display.extended.useFFZ)
      await thirdparty.ffz.global();
