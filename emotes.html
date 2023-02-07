@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.7.2 BETA
+    * v0.7.3 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -31,25 +31,39 @@
     *
     * login       Settings related to the login process.
     *
-    *             NOTE: OAuth tokens expire automatically (usually after 60 days). Please make sure to update
-    *                   these values on a regular basis, if not using the interactive login process.
+    *             NOTE: OAuth refresh tokens expire automatically (usually after around half a year).
+    *                   If you don't use the Emote Wall for around this long, you may have to log in again.
+    *                   Regular OAuth tokens expire much sooner (usually after 60 days). If you use the manual oauth
+    *                   method, please make sure to update these values on a regular basis.
     *
     *  client     The Client ID value is used to track which third-party project is accessing your account.
     *             This emote wall does not require a constant ID, and will work with whatever tool you use to
     *             get an OAuth ID (see below).
     *
     *  oauth      The OAuth ID value is used in lieu of a password to access the Twitch API.
+    *             By default, this value is not required.
+    *             If you do not wish to use the oauth_refresh method, which relies on a file on my webserver,
+    *             you can generate your own OAuth2 token manually using a third-party Twitch Token Generator, and set
+    *             this value to the token you receive. However, it will expire and require updating manually.
+    *
+    *  oauth_refresh  A refresh token to get a new Twitch OAuth ID when the current one expires.
+    *                This value is used instead of the oauth value above, by default. Using a refresh token allows the
+    *             emote wall to stay logged in for a much longer period of time. Please note that this feature makes
+    *             use of the browser's Local Storage to store new OAuth Tokens and Refresh Tokens as they're generated.
+    *             New OAuth Tokens are generated every 60 minutes, and Twitch may or may not send a new Refresh Token
+    *             at the same time. If the token expires, the Local Storage values will be erased on the next refesh
+    *             attempt automatically.
     *             Please generate an OAuth ID and matching Client ID:
-    *             - Visit https://realityripple.com/Tools/Twitch/EmoteWall/
+    *             - Visit <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *             - Click the "Authenticate on Twitch" button under "Do-it-Yourself" and log in
     *             - Fill out the captcha prompt, if necessary
     *             - Copy the Client ID value and paste it into "client:"
-    *             - Copy the OAuth ID value and paste it into "oauth:"
+    *             - Copy the OAuth Refresh value and paste it into "oauth_refresh:"
     *             If you ever stop using this emote wall, please log into Twitch and visit
-    *             https://www.twitch.tv/settings/connections . Under "Other Connections", click the "Disconnect" button
-    *             next to "RealityRipple's Home-Made Emote Wall". If you want to use a different Twitch OAuth generator
-    *             (or do it yourself), feel free.
-    *             If FALSE, the interactive login process will be enabled.
+    *             <https://www.twitch.tv/settings/connections>. Under "Other Connections", click the "Disconnect" button
+    *             next to "RealityRipple's Home-Made Emote Wall".
+    *
+    *             If both oauth and oauth_refresh are FALSE (or missing), the interactive login process will be enabled.
     *
     *  scope      A list of scopes which the OAuth ID provides access to. Please make sure this list reflects
     *             any scope selections you made while creating the token above.
@@ -58,11 +72,11 @@
     *
     *  token      The Socket Token is used in lieu of a password to access the Streamlabs API.
     *             Please generate a Socket Token:
-    *             - Visit https://realityripple.com/Tools/Twitch/EmoteWall/
+    *             - Visit <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *             - Click the "Streamlabs Tip Support" button and log in
     *             - Copy the Token value and paste it into "token:"
     *             If you ever stop using this emote wall, please log into Streamlabs and visit
-    *             https://streamlabs.com/dashboard#/settings/api-settings . Under "Connected Apps", click the
+    *             <https://streamlabs.com/dashboard#/settings/api-settings>. Under "Connected Apps", click the
     *             "Revoke Access" button next to "RealityRipple's Home-Made Emote Wall". If you want to use a different
     *             Streamlabs OAuth generator (or do it yourself), feel free.
     *
@@ -89,21 +103,21 @@
     *
     * streamelements  Settings related to StreamElements tips.
     *
-    *  refresh    A refresh token to get a new StreamElements OAuth ID when the current one expires.
-    *             The OAuth ID value is used in lieu of a password to access the StreamElements API.
+    *  oauth_refresh  A refresh token to get a new StreamElements OAuth ID when the current one expires.
+    *                The OAuth ID value is used in lieu of a password to access the StreamElements API.
     *             Please generate an OAuth ID:
-    *             - Visit https://realityripple.com/Tools/Twitch/EmoteWall/
+    *             - Visit <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *             - Click the "StreamElements Tip Support" button and log in
-    *             - Copy the OAuth ID value and paste it into "refresh:"
+    *             - Copy the Token value and paste it into "oauth_refresh:"
     *             If you ever stop using this emote wall, please log into StreamElements and visit
-    *             https://streamelements.com/dashboard/account/security. Click the "Reset my Personal Access Token"
+    *             <https://streamelements.com/dashboard/account/security>. Click the "Reset my Personal Access Token"
     *             button. If you want to use a different StreamElements OAuth generator (or do it yourself), feel free.
-    *             Please only use refresh or token, not both. Token does not expire, but is also less secure. OAuth is
-    *             recommended, if possible.
+    *             Please only use oauth_refresh or token, not both. Token does not expire, but is also less secure.
+    *             OAuth is recommended, if possible.
     *
     *  token      The JWT Token is used in lieu of a password to access the StreamElements API.
     *             Please grab your JWT Token from the StreamElements Dashboard:
-    *             - Visit https://streamelements.com/dashboard/account/channels
+    *             - Visit <https://streamelements.com/dashboard/account/channels>
     *             - Click the "Show secrets" button
     *             - Copy the JWT Token value and paste it into "token:"
     *             Please only use refresh or token, not both. Token does not expire, but is also less secure. OAuth is
@@ -742,19 +756,6 @@
     *  Emotes that are not square will be shrunk to fit while maintaining the original aspect ratio.
     *
     *
-    * Following
-    * ---------
-    *
-    *  Detecting followers on the current Twitch API is limited and relies on server-to-server events.
-    *  The current system uses a kludge and may have issues in rare situations. The current system regularly grabs the
-    *  most recent 100 followers and tries to find the previous request's latest follower, counting how many followers
-    *  exist in the list before the last known follower. If the latest follower is removed from the list, or if more
-    *  than 100 followers join between one check and another, the system will ignore the event and assign a new latest
-    *  follower. Real support for follow events requires an API change:
-    *   <https://twitch.uservoice.com/forums/310213/suggestions/41794465>
-    *   <https://twitch.uservoice.com/forums/310213/suggestions/40423873>
-    *
-    *
     * Cheers
     * ------
     *
@@ -805,9 +806,10 @@
     channel: 'CHANNEL_NAME',
     login: {
      client: '4umzcpmjkg6ar78b81s7302jlj33t8',
-     oauth: 'OAUTH_ID',
+     oauth_refresh: 'OAUTH_REFRESH',
      scope: [
       'chat:read',                 // required
+    //'moderator:read:followers',  // optional. only required if you use follow events or access
     //'channel:read:redemptions',  // optional. only required if you use channel point redeem commands
     //'channel:read:hype_train',   // optional. only required if you use hype train events
     //'channel:read:goals',        // optional. only required if you use goal events
@@ -1582,12 +1584,12 @@
     },
     api: {
      twitch: {
-      users: {
-       root: 'https://api.twitch.tv/helix/users',
-       follows: 'https://api.twitch.tv/helix/users/follows'
-      },
+      users: 'https://api.twitch.tv/helix/users',
       bits: {
        cheermotes: 'https://api.twitch.tv/helix/bits/cheermotes'
+      },
+      channels: {
+       followers: 'https://api.twitch.tv/helix/channels/followers'
       },
       chat: {
        emotes: {
@@ -1630,11 +1632,13 @@
      },
      bttv: {
       emote: 'https://cdn.betterttv.net/emote/%EMOTE_ID%/3x'
-     }
+     },
+     crew: 'https://uploads.realityripple.com/Pictures/crew/%DIRECTION%/%COLOR%.png'
     },
     html: {
      rr: {
       wizard: 'https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php',
+      t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
       se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php',
       redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php'
      },
@@ -4228,7 +4232,7 @@
         let sTM = 'HYPE!';
         if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('message'))
          sTM = cfg.display.kappa.styles[kStyle.style].message[shared.rnd(cfg.display.kappa.styles[kStyle.style].message.length)];
-        if (kStyle.prefs.hasOwnProperty('message'))
+        if (kStyle.prefs.hasOwnProperty('message') && Array.isArray(kStyle.prefs.message) && kStyle.prefs.message.length > 0)
          sTM = kStyle.prefs.message[shared.rnd(kStyle.prefs.message.length)];
         let sTT = cfg.emote.time;
         if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('time'))
@@ -4308,7 +4312,7 @@
         break;
        default:
         if (typeof display.emote.list[kStyle.style] === 'undefined')
-         return false;
+         return;
         for (let i = 0; i < kStyle.count; i++)
         {
          if (_iTitanic > tInit)
@@ -4677,7 +4681,6 @@
         return;
        }
        _tTimeout = setTimeout(_wsTimeout, _lTimeout);
-       _wsRetry = 0;
        const r = JSON.parse(ev.data);
        if (!r.hasOwnProperty('metadata'))
         return;
@@ -4705,33 +4708,24 @@
           }
           _tTimeout = setTimeout(_wsTimeout, _lTimeout);
          }
-         await _unsubscribe();
-         if (cfg.event.follow !== false)
-          await _subscribe('channel.follow');
-         if (cfg.login.scope.includes('channel:read:redemptions'))
-          await _subscribe('channel.channel_points_custom_reward_redemption.add');
-         if (cfg.event.shoutout !== false && cfg.login.scope.includes('moderator:read:shoutouts') && cfg.event.shoutout.hasOwnProperty('create') && cfg.event.shoutout.create !== false && cfg.event.shoutout.create.hasOwnProperty('styles') && cfg.event.shoutout.create.styles !== false)
-          await _subscribe('channel.shoutout.create');
-         if (cfg.event.shoutout !== false && cfg.login.scope.includes('moderator:read:shoutouts') && cfg.event.shoutout.hasOwnProperty('receive') && cfg.event.shoutout.receive !== false && cfg.event.shoutout.receive.hasOwnProperty('styles') &&cfg.event.shoutout.receive.styles !== false)
-          await _subscribe('channel.shoutout.receive');
-         if (cfg.event.hypetrain !== false && cfg.login.scope.includes('channel:read:hype_train') && cfg.event.hypetrain.hasOwnProperty('begin') && cfg.event.hypetrain.begin !== false)
-          await _subscribe('channel.hype_train.begin');
-         if (cfg.event.hypetrain !== false && cfg.login.scope.includes('channel:read:hype_train') && cfg.event.hypetrain.hasOwnProperty('success') && cfg.event.hypetrain.success !== false)
-          await _subscribe('channel.hype_train.end');
-         if (cfg.event.poll !== false && cfg.login.scope.includes('channel:read:polls') && cfg.event.poll.hasOwnProperty('begin') && cfg.event.poll.begin !== false)
-          await _subscribe('channel.poll.begin');
-         if (cfg.event.poll !== false && cfg.login.scope.includes('channel:read:polls') && cfg.event.poll.hasOwnProperty('end') && cfg.event.poll.end !== false)
-          await _subscribe('channel.poll.end');
-         if (cfg.event.prediction !== false && cfg.login.scope.includes('channel:read:predictions') && cfg.event.prediction.hasOwnProperty('begin') && cfg.event.prediction.begin !== false)
-          await _subscribe('channel.prediction.begin');
-         if (cfg.event.prediction !== false && cfg.login.scope.includes('channel:read:predictions') && cfg.event.prediction.hasOwnProperty('resolved') && cfg.event.prediction.resolved !== false)
-          await _subscribe('channel.prediction.end');
-         if (cfg.event.charity !== false && cfg.login.scope.includes('channel:read:charity'))
-          await _subscribe('channel.charity_campaign.donate');
-         if (cfg.event.goal !== false && cfg.login.scope.includes('channel:read:goals') && cfg.event.goal.hasOwnProperty('begin') && cfg.event.goal.begin !== false)
-          await _subscribe('channel.goal.begin');
-         if (cfg.event.goal !== false && cfg.login.scope.includes('channel:read:goals') && cfg.event.goal.hasOwnProperty('achieved') && cfg.event.goal.achieved !== false)
-          await _subscribe('channel.goal.end');
+         const haveSubs = await _handleSubs();
+         if (!haveSubs)
+         {
+          if (_tTimeout !== false)
+          {
+           clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          _ws.onopen = null;
+          _ws.onmessage = null;
+          _ws.onclose = null;
+          _ws.close();
+          _ws = null;
+          return;
+         }
+         break;
+        case 'session_keepalive':
+         _wsRetry = 0;
          break;
         case 'notification':
          if (!r.metadata.hasOwnProperty('subscription_type'))
@@ -4942,7 +4936,10 @@
          _oldWS.onclose = null;
          _oldWS.onmessage = null;
          _ws = null;
-         window.setTimeout(task, 100);
+         const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+         if (_wsRetry < 2)
+          _wsRetry += 0.2;
+         window.setTimeout(task, wsWait);
          break;
         case 'revocation':
          if (!r.metadata.hasOwnProperty('subscription_type'))
@@ -4966,8 +4963,94 @@
         clearTimeout(_tTimeout);
         _tTimeout = false;
        }
-       _ws.close();
+       if (_ws !== null)
+        _ws.close();
        task();
+      }
+
+      async function _handleSubs()
+      {
+       const aSubs = [
+        {id: 'channel.follow', v: '2', scope: ['moderator:read:followers'], cfg: ['event.follow']},
+        {id: 'channel.channel_points_custom_reward_redemption.add', scope: ['channel:read:redemptions'], cfg: false},
+        {id: 'channel.shoutout.create', scope: ['moderator:read:shoutouts'], cfg: ['event.shoutout.create.styles']},
+        {id: 'channel.shoutout.receive', scope: ['moderator:read:shoutouts'], cfg: ['event.shoutout.receive.styles']},
+        {id: 'channel.hype_train.begin', scope: ['channel:read:hype_train'], cfg: ['event.hypetrain.begin']},
+        {id: 'channel.hype_train.end', scope: ['channel:read:hype_train'], cfg: ['event.hypetrain.success']},
+        {id: 'channel.poll.begin', scope: ['channel:read:polls'], cfg: ['event.poll.begin']},
+        {id: 'channel.poll.end', scope: ['channel:read:polls'], cfg: ['event.poll.end']},
+        {id: 'channel.prediction.begin', scope: ['channel:read:predictions'], cfg: ['event.prediction.begin']},
+        {id: 'channel.prediction.end', scope: ['channel:read:predictions'], cfg: ['event.prediction.resolved']},
+        {id: 'channel.goal.begin', scope: ['channel:read:goals'], cfg: ['event.goal.begin']},
+        {id: 'channel.goal.end', scope: ['channel:read:goals'], cfg: ['event.goal.achieved']},
+        {id: 'channel.charity_campaign.donate', scope: ['channel:read:charity'], cfg: ['event.charity']}
+       ];
+       const aActive = await _unsubscribe();
+       let didSomething = aActive.length > 0;
+       for (let i = 0, l = aSubs.length; i < l; i++)
+       {
+        if (await _handleSub(aSubs[i], aActive) !== false)
+         didSomething = true;
+       }
+       return didSomething;
+      }
+
+      async function _handleSub(sub, aActive)
+      {
+       if (sub.hasOwnProperty('cfg') && sub.cfg !== false)
+       {
+        let found = true;
+        for (let i = 0, l = sub.cfg.length; i < l; i++)
+        {
+         let aPref = sub.cfg[i].split('.');
+         let cPref = cfg;
+         found = true;
+         for (let j = 0, m = aPref.length; j < m; j++)
+         {
+          if (!cPref.hasOwnProperty(aPref[j]))
+          {
+           found = false;
+           break;
+          }
+          if (cPref[aPref[j]] === false)
+          {
+           found = false;
+           break;
+          }
+          cPref = cPref[aPref[j]];
+         }
+         if (found !== false)
+          break;
+        }
+        if (found === false)
+         return false;
+       }
+       else if (sub.id === 'channel.channel_points_custom_reward_redemption.add')
+       {
+        let found = false;
+        for (const k of cfg.commands)
+        {
+         if (!k.hasOwnProperty('redeem') || !Array.isArray(k.redeem) || k.redeem.length < 1)
+          continue;
+         found = true;
+         break;
+        }
+        if (found === false)
+         return false;
+       }
+       if (sub.hasOwnProperty('scope') && sub.scope !== false)
+       {
+        for (let i = 0, l = sub.scope.length; i < l; i++)
+        {
+         if (!cfg.login.scope.includes(sub.scope[i]))
+          return false;
+        }
+       }
+       if (aActive.includes(sub.id))
+        return false;
+       if (!sub.hasOwnProperty('v'))
+        return _subscribe(sub.id);
+       return _subscribe(sub.id, sub.v);
       }
 
       async function _unsubscribe()
@@ -4979,18 +5062,42 @@
        const r = await shared.httpRequest(cURLs.api.twitch.eventSub, h);
        const j = JSON.parse(r);
        if (!j.hasOwnProperty('data'))
-        return;
+        return [];
        if (!j.hasOwnProperty('total'))
-        return;
+        return [];
        if (j.total < 1)
-        return;
+        return [];
+       let rList = [];
        for (let i = 0; i < j.total; i++)
        {
         if (!j.data[i].hasOwnProperty('id'))
          continue;
-        if (j.data[i].hasOwnProperty('status') && j.data[i].status === 'websocket_disconnected')
-         shared.httpSend('DELETE', cURLs.api.twitch.eventSub + '?id=' + j.data[i].id, null, h);
+        if (!j.data[i].hasOwnProperty('status'))
+         continue;
+        switch (j.data[i].status)
+        {
+         case 'enabled':
+          if (!j.data[i].hasOwnProperty('type'))
+           continue;
+          if (!j.data[i].hasOwnProperty('transport'))
+           continue;
+          if (!j.data[i].transport.hasOwnProperty('method'))
+           continue;
+          if (j.data[i].transport.method !== 'websocket')
+           continue;
+          if (!j.data[i].transport.hasOwnProperty('session_id'))
+           continue;
+          if (j.data[i].transport.session_id !== _sess)
+           continue;
+          rList.push(j.data[i].type);
+          break;
+         case 'websocket_disconnected':
+         case 'websocket_failed_ping_pong':
+          shared.httpSend('DELETE', cURLs.api.twitch.eventSub + '?id=' + j.data[i].id, null, h);
+          break;
+        }
        }
+       return rList;
       }
 
       async function _subscribe(type, version = '1')
@@ -5003,6 +5110,7 @@
        };
        switch (type)
        {
+        case 'channel.follow':
         case 'channel.shoutout.create':
         case 'channel.shoutout.receive':
          d.condition.moderator_user_id = _ch;
@@ -5016,13 +5124,19 @@
        const r = await shared.httpSend('POST', cURLs.api.twitch.eventSub, JSON.stringify(d), h);
        if (r !== false)
         return true;
-       if (version !== '1')
-        return false;
        switch (type)
        {
         case 'channel.shoutout.create':
         case 'channel.shoutout.receive':
-         return _subscribe(type, 'beta');
+         if (version === '1')
+          return _subscribe(type, 'beta');
+         break;
+        case 'channel.follow':
+         if (version === '2')
+          return _subscribe(type, 'beta');
+         else if (version === 'beta')
+          return _subscribe(type, '1');
+         break;
        }
        return false;
       }
@@ -5097,6 +5211,8 @@
         {
          case 'PING':
           _ws.send('PONG ' + cmd.params[0]);
+          if (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')
+           await twitch.net.updateOAuth();
           break;
          case 'PRIVMSG':
           if (document.visibilityState === 'hidden')
@@ -5176,6 +5292,7 @@
            default:
             if (cmd.params.length > 1)
              twitch.parse.line(cmd);
+            break;
           }
           break;
          case 'CLEARCHAT':
@@ -5216,7 +5333,7 @@
         _tTimeout = false;
        }
        _ws.close();
-       shared.blargIAmDead(5);
+       shared.blargIAmDead(4);
       }
 
       return task;
@@ -5236,9 +5353,9 @@
 
      async function getUserInfo(u, isID = false)
      {
-      let url = cURLs.api.twitch.users.root + '?login=' + u;
+      let url = cURLs.api.twitch.users + '?login=' + u;
       if (isID)
-       url = cURLs.api.twitch.users.root + '?id=' + u;
+       url = cURLs.api.twitch.users + '?id=' + u;
       const h = {
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
@@ -5254,12 +5371,63 @@
       return j.data[0];
      }
 
+     async function _getOAuthToken(t)
+     {
+      const url = cURLs.html.rr.t + '?refresh=' + t;
+      const r = await shared.httpRequest(url, {}, true, false);
+      if (r === false)
+       return false;
+      if (r === null)
+      {
+       shared.blargIAmDead(1);
+       window.localStorage.removeItem(login.path() + '.oauth');
+       window.localStorage.removeItem(login.path() + '.refresh');
+       window.localStorage.removeItem(login.path() + '.refreshed');
+       return false;
+      }
+      const j = JSON.parse(r);
+      if (!j.hasOwnProperty('access_token'))
+       return false;
+      if (!j.hasOwnProperty('refresh_token'))
+       return false;
+      return j;
+     }
+
+     async function updateOAuth()
+     {
+      const lsOAuth = window.localStorage.getItem(login.path() + '.oauth');
+      const lsRefresh = window.localStorage.getItem(login.path() + '.refresh');
+      const lsRefreshed = window.localStorage.getItem(login.path() + '.refreshed');
+      if (lsOAuth !== null)
+       cfg.login.oauth = lsOAuth;
+      if (lsRefresh !== null)
+       cfg.login.oauth_refresh = lsRefresh;
+      if (lsRefreshed !== null)
+       cfg.login.oauth_refreshed = lsRefreshed;
+      if (cfg.login.hasOwnProperty('oauth_refreshed') && cfg.login.oauth_refreshed > 0)
+      {
+       const tokAge = Math.floor(new Date().getTime() / 1000) - cfg.login.oauth_refreshed;
+       if (tokAge < 60 * 60)
+        return;
+      }
+      const ret = await _getOAuthToken(cfg.login.oauth_refresh);
+      if (ret === false)
+       return;
+      cfg.login.oauth = ret.access_token;
+      cfg.login.oauth_refresh = ret.refresh_token;
+      cfg.login.oauth_refreshed = Math.floor(new Date().getTime() / 1000);
+      window.localStorage.setItem(login.path() + '.oauth', cfg.login.oauth);
+      window.localStorage.setItem(login.path() + '.refresh', cfg.login.oauth_refresh);
+      window.localStorage.setItem(login.path() + '.refreshed', cfg.login.oauth_refreshed);
+     }
+
      return {
       channelID: 0,
       fList: [],
       dead: false,
       irc: irc,
-      userInfo: getUserInfo
+      userInfo: getUserInfo,
+      updateOAuth: updateOAuth
      };
     }();
 
@@ -5373,6 +5541,12 @@
         {
          emList.push(match);
         }
+        const acSeg = /(\u0d9e)/gu;
+        match = '';
+        while ((match = acSeg.exec(msg)) !== null)
+        {
+         emList.push(match);
+        }
         if (emList.length === 0)
          return [];
         if (dup === null)
@@ -5397,6 +5571,22 @@
          }
          addList[c]++;
          ret.push({svc: 'e', url: uri + c + '.png', str: c, pos: p});
+         return true;
+        }
+        function showCrew(p)
+        {
+         if (!addList.hasOwnProperty('0d9e'))
+          addList['0d9e'] = 0;
+         else
+         {
+          if (dup === false)
+           return false;
+          if (dup !== true && addList['0d9e'] >= dup)
+           return false;
+         }
+         addList['0d9e']++;
+         const crew = cURLs.cdn.crew.replaceAll('%DIRECTION%', shared.rnd(2)).replaceAll('%COLOR%', shared.rnd(18));
+         ret.push({svc: 'e', url: crew, str: '0d9e', pos: p});
          return true;
         }
         for (let i = 0, l = emList.length; i < l; i++)
@@ -5449,6 +5639,11 @@
          if (lP === 1)
          {
           let s = cpList[0];
+          if (s === '0d9e')
+          {
+           showCrew(emList[i].index);
+           continue;
+          }
           let tU;
           if (s.slice(-5) === '-fe0f')
           {
@@ -6519,7 +6714,7 @@
         if (tDif < _rFH)
          return twitch.net.fList[uID].value;
        }
-       const url = cURLs.api.twitch.users.follows + '?from_id=' + uID + '&to_id=' + cmd.tags['room-id'];
+       const url = cURLs.api.twitch.channels.followers + '?user_id=' + uID + '&broadcaster_id=' + cmd.tags['room-id'];
        const h = {
         'Authorization': 'Bearer ' + cfg.login.oauth,
         'Client-Id': cfg.login.client
@@ -6528,7 +6723,7 @@
        if (r === false)
         return false;
        const j = JSON.parse(r);
-       if (j.hasOwnProperty('total') && j.total > 0)
+       if (j.hasOwnProperty('data') && j.data.length > 0)
        {
         twitch.net.fList[uID] = {value: true, t: new Date().getTime()};
         return true;
@@ -6739,6 +6934,11 @@
      const r = await shared.httpRequest(url, h, true);
      if (r === false)
       return false;
+     if (r === null)
+     {
+      shared.blargIAmDead(3);
+      return false;
+     }
      const j = JSON.parse(r);
      if (!j.hasOwnProperty('data'))
       return false;
@@ -6778,6 +6978,11 @@
      const r = await shared.httpRequest(url, h, true);
      if (r === false)
       return false;
+     if (r === null)
+     {
+      shared.blargIAmDead(3);
+      return false;
+     }
      const j = JSON.parse(r);
      if (!j.hasOwnProperty('data'))
       return false;
@@ -6890,7 +7095,6 @@
 
      function task()
      {
-      _wsRetry = 0;
       _tPing = 0;
       _ws = new WebSocket(cURLs.ws.streamlabs + '&token=' + cfg.streamlabs.token);
       _ws.onclose = _wsClose;
@@ -7044,7 +7248,6 @@
 
      function task()
      {
-      _wsRetry = 0;
       _tPing = 0;
       _ws = new WebSocket(cURLs.ws.streamelements);
       _ws.onclose = _wsClose;
@@ -7101,9 +7304,9 @@
         {
          let a = '';
          if (cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID')
-          a = '["authenticate",{"method":"oauth2","token":"' + cfg.streamelements.oauth + '"}]';
+          a = JSON.stringify(['authenticate', {'method': 'oauth2', 'token': cfg.streamelements.oauth}]);
          else if (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN')
-          a = '["authenticate",{"method":"jwt","token":"' + cfg.streamelements.token + '"}]';
+          a = JSON.stringify(['authenticate', {'method': 'jwt', 'token': cfg.streamelements.token}]);
          _ws.send('42' + a);
          return;
         }
@@ -7181,7 +7384,7 @@
        window.localStorage.removeItem('streamelements.tips:read.refresh');
        window.localStorage.removeItem('streamelements.tips:read.expires');
        window.localStorage.removeItem('streamelements.tips:read.refreshed');
-       shared.blargIAmDead(6);
+       shared.blargIAmDead(5);
        return;
       }
      }
@@ -7491,10 +7694,10 @@
       let _ch = 0;
       let _ws = null;
 
-      function task(chID)
+      function task(chID = false)
       {
-       _wsRetry = 0;
-       _ch = chID;
+       if (chID !== false)
+        _ch = chID;
        _ws = new WebSocket(cURLs.ws.bttv);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
@@ -7504,8 +7707,8 @@
       function _wsOpen()
       {
        _ws.onopen = null;
-       _ws.send('{"name":"join_channel","data":{"name":"twitch:' + _ch + '"}}');
-       _ws.send('{"name":"broadcast_me","data":{"name":"' + cfg.channel + '","channel":"twitch:' + _ch + '"}}');
+       _ws.send(JSON.stringify({'name': 'join_channel', 'data': {'name': 'twitch:' + _ch}}));
+       _ws.send(JSON.stringify({'name': 'broadcast_me', 'data': {'name': cfg.channel, 'channel': 'twitch:' + _ch}}));
       }
 
       function _wsClose()
@@ -7518,7 +7721,7 @@
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(task, wsWait, _ch);
+       window.setTimeout(task, wsWait);
       }
 
       function _wsMessage(ev)
@@ -7720,25 +7923,45 @@
 
      const load7TV_ws_channel = function()
      {
+      const _lDelay = 500;
       let _wsRetry = 0;
+      let _wsR_RL = 0;
+      let _wsR_M = 0;
       let _ch = 0;
       let _accID = false;
       let _ws = null;
+      let _sess = null;
+      let _lTimeout = 5000;
+      let _tTimeout = false;
+      let _okCt = 0;
 
-      async function task(chID)
+      async function task(chID = false)
       {
-       _wsRetry = 0;
-       _ch = chID;
+       if (chID !== false)
+        _ch = chID;
        _accID = await _load7TV_channelID(_ch);
        if (_accID === false)
         return;
        _ws = new WebSocket(cURLs.ws['7tv']);
+       _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
        _ws.onmessage = _wsMessage;
       }
 
+      function _wsOpen()
+      {
+       _ws.onopen = null;
+       _tTimeout = setTimeout(_wsTimeout, _lTimeout);
+      }
+
       function _wsClose()
       {
+       if (_tTimeout !== false)
+       {
+        clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       _ws.onopen = null;
        _ws.onmessage = null;
        _ws.onclose = null;
        if (twitch.net.dead)
@@ -7746,33 +7969,182 @@
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(task, wsWait, _ch);
+       window.setTimeout(task, wsWait);
       }
 
       function _wsMessage(ev)
       {
+       if (_tTimeout !== false)
+       {
+        clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
        if (twitch.net.dead)
        {
         _ws.close();
         return;
        }
-       _wsRetry = 0;
+       _tTimeout = setTimeout(_wsTimeout, _lTimeout);
        const d = JSON.parse(ev.data);
+       if (!d.hasOwnProperty('op'))
+        return;
+       if (!d.hasOwnProperty('d'))
+        return;
        switch(d.op)
        {
         case 0:
          if (thirdparty.timer !== false)
           window.clearTimeout(thirdparty.timer);
-         thirdparty.timer = window.setTimeout(reload3rdParty, 500, _ch);
+         thirdparty.timer = window.setTimeout(reload3rdParty, _lDelay, _ch);
          break;
         case 1:
-         _ws.send(JSON.stringify({'op': 35, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
-         _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
-         _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
+         _okCt = 0;
+         if (_sess !== null)
+          _ws.send(JSON.stringify({'op': 34, 'd': {'session_id': _sess}}));
+         else
+          _wsSub();
+         if (d.d.hasOwnProperty('session_id'))
+          _sess = d.d.session_id;
+         if (d.d.hasOwnProperty('heartbeat_interval'))
+         {
+          _lTimeout = parseInt(d.d.heartbeat_interval, 10) * 3;
+          if (_tTimeout !== false)
+          {
+           clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          _tTimeout = setTimeout(_wsTimeout, _lTimeout);
+         }
          break;
         case 2:
+         if (_okCt !== 3)
+         {
+          if (_tTimeout !== false)
+          {
+           clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          _ws.onopen = null;
+          _ws.onmessage = null;
+          _ws.onclose = null;
+          _ws.close();
+          _ws = null;
+          window.setTimeout(task, _lDelay);
+          return;
+         }
+         _wsRetry = 0;
+         _wsR_RL = 0;
+         _wsR_M = 0;
+         break;
+        case 5:
+         if (!d.d.hasOwnProperty('command'))
+          return;
+         switch(d.d.command)
+         {
+          case 'RESUME':
+           if (!d.d.hasOwnProperty('data'))
+            return;
+           if (!d.d.data.hasOwnProperty('success'))
+            return;
+           if (d.d.data.success === false)
+            _wsSub();
+           else
+           {
+            if (!d.d.data.hasOwnProperty('subscriptions_restored'))
+             return;
+            if (d.d.data.subscriptions_restored !== 3)
+            {
+             if (d.d.data.subscriptions_restored > 0)
+              _wsUnsub();
+             _wsSub();
+            }
+            else
+             _okCt = d.d.data.subscriptions_restored;
+           }
+           break;
+          case 'SUBSCRIBE':
+           _okCt++;
+           break;
+         }
+         break;
+        case 7:
+         if (_tTimeout !== false)
+         {
+          clearTimeout(_tTimeout);
+          _tTimeout = false;
+         }
+         _ws.onopen = null;
+         _ws.onmessage = null;
+         _ws.onclose = null;
+         _ws.close();
+         _ws = null;
+         let wsWait = _lDelay;
+         if (d.d.hasOwnProperty('code'))
+         {
+          switch (d.d.code)
+          {
+           case 4001:
+           case 4002:
+           case 4003:
+           case 4004:
+           case 4009:
+           case 4010:
+           case 4011:
+            _sess = null;
+            return;
+           case 4005:
+            wsWait = Math.floor((5 ** (1 + _wsR_RL) / 5) * 60 * 1000);
+            if (_wsR_RL < 2.6)
+             _wsR_RL += 0.2;
+            break;
+           case 4006:
+            if (wsWait < 4 * 60 * 1000)
+             wsWait = 4 * 60 * 1000;
+            break;
+           case 4007:
+            wsWait = 5 * 60 * 1000 + Math.floor(wWS ** (1 + _wsR_M) * 1000) - 5000;
+            if (_wsR_M < 2)
+             _wsR_M += 0.2;
+            break;
+           case 4000:
+           case 4008:
+            wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+            if (_wsRetry < 2)
+             _wsRetry += 0.2;
+            break;
+          }
+         }
+         window.setTimeout(task, wsWait);
          break;
        }
+      }
+
+      function _wsUnsub()
+      {
+       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
+       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
+       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
+      }
+
+      function _wsSub()
+      {
+       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
+       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
+       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
+      }
+
+      function _wsTimeout()
+      {
+       _lTimeout = 5000;
+       if (twitch.net.dead === true)
+        return;
+       if (_tTimeout !== false)
+       {
+        clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       _ws.close();
+       task();
       }
 
       return task;
@@ -7842,7 +8214,7 @@
      return x.responseText;
     }
 
-    function httpRequest(url, hdrs = {}, blargOnError = false, nocache = true)
+    function httpRequest(url, hdrs = {}, nullOn401 = false, nocache = true)
     {
      const p = new Promise(
       function(resolve)
@@ -7868,8 +8240,11 @@
         const r = _httpRequest_RSC(x);
         if (r === null)
          return;
-        if (r === false && blargOnError && x.status === 401)
-         shared.blargIAmDead(3);
+        if (r === false && nullOn401 && x.status === 401)
+        {
+         resolve(null);
+         return;
+        }
         resolve(r);
        };
        x.send();
@@ -7968,7 +8343,7 @@
         login.showOut(true);
        }
        else
-        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Connect to Twitch<br><br>Please Update Your OAuth Token</div>';
+        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Connect to Twitch<br><br>Please Update Your OAuth Refresh Token</div>';
        break;
       case 2:
        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Corrupted Configuration<br><br>Please Check Your Browser\'s Error Console</div>';
@@ -7981,21 +8356,12 @@
         login.showIn();
        }
        else
-        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Emotes<br><br>Please Check Your Client ID and OAuth Token</div>';
+        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Emotes<br><br>Please Check Your Client ID and OAuth Refresh Token</div>';
        break;
       case 4:
-       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Warning:<br><br>Your Credentials Will Expire Soon<br><br>Please Update Your OAuth Token</div>';
-       if (login.inUse)
-       {
-        login.showOut(true);
-        window.setTimeout(function(){document.body.innerHTML = ''; login.showOut(true);}, 15000);
-        return;
-       }
-       break;
-      case 5:
        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>The Connection to the IRC Channel was Incomplete<br><br>Please Check your Channel</div>';
        break;
-      case 6:
+      case 5:
        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Warning:<br><br>Your StreamElements OAuth Token is Expired<br><br>Please Update your StreamElements OAuth Token</div>';
        break;
      }
@@ -8027,6 +8393,33 @@
       r.push('channel:read:redemptions');
       break;
      }
+     let needF = false;
+     if (cfg.event.follow !== false)
+      needF = true;
+     else
+     {
+      if ((cfg.display.access & 0x002) === 0x002 && (cfg.display.access & 0x001) !== 0x001)
+       needF = true;
+      else if ((cfg.display.kappa.access & 0x002) === 0x002 && (cfg.display.kappa.access & 0x001) !== 0x001)
+       needF = true;
+      else
+      {
+       for (const k of cfg.commands)
+       {
+        if (!k.hasOwnProperty('styles'))
+         continue;
+        if (!k.hasOwnProperty('access'))
+         continue;
+        if ((k.access & 0x002) === 0x002 && (k.access & 0x001) !== 0x001)
+        {
+         needF = true;
+         break;
+        }
+       }
+      }
+     }
+     if (needF)
+      r.push('moderator:read:followers');
      if (cfg.event.hypetrain !== false && ((cfg.event.hypetrain.hasOwnProperty('begin') && cfg.event.hypetrain.begin !== false) || (cfg.event.hypetrain.hasOwnProperty('success') && cfg.event.hypetrain.success !== false)))
       r.push('channel:read:hype_train');
      if (cfg.event.goal !== false && ((cfg.event.goal.hasOwnProperty('begin') && cfg.event.goal.begin !== false) || (cfg.event.goal.hasOwnProperty('achieved') && cfg.event.goal.achieved !== false)))
@@ -8047,7 +8440,7 @@
      return encodeURIComponent(_activeScope().join(' '));
     }
 
-    function _lsPath()
+    function lsPath()
     {
      return 'twitch.' + _activeScope().join('+');
     }
@@ -8055,18 +8448,18 @@
     function shouldUseLogin()
     {
      login.inUse = false;
-     if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== 'CHANNEL_NAME' && cfg.hasOwnProperty('login') && cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== 'OAUTH_ID')
+     if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== 'CHANNEL_NAME' && cfg.hasOwnProperty('login') && ((cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== 'OAUTH_ID') || (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')))
       return false;
      login.inUse = true;
-     let lsChannel = window.localStorage.getItem(_lsPath() + '.channel');
-     let lsClient  = window.localStorage.getItem(_lsPath() + '.client');
-     let lsOAuth   = window.localStorage.getItem(_lsPath() + '.oauth');
-     let lsExpires = window.localStorage.getItem(_lsPath() + '.expires');
-     let lsScope   = window.localStorage.getItem(_lsPath() + '.scope');
-     if (lsChannel === null || lsOAuth === null)
+     let lsChannel = window.localStorage.getItem(login.path() + '.channel');
+     let lsClient  = window.localStorage.getItem(login.path() + '.client');
+     let lsOAuth   = window.localStorage.getItem(login.path() + '.oauth');
+     let lsRefresh = window.localStorage.getItem(login.path() + '.refresh');
+     let lsScope   = window.localStorage.getItem(login.path() + '.scope');
+     if (lsChannel === null || lsRefresh === null)
      {
       const h = _getHashParams();
-      if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('expires') || !h.hasOwnProperty('scope'))
+      if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('oauth_refresh') || !h.hasOwnProperty('scope'))
       {
        login.showIn();
        return true;
@@ -8074,18 +8467,18 @@
       lsChannel = h.channel;
       lsClient = h.client;
       lsOAuth = h.oauth;
-      lsExpires = h.expires;
+      lsRefresh = h.oauth_refresh;
       lsScope = decodeURIComponent(h.scope);
-      window.localStorage.setItem(_lsPath() + '.channel', lsChannel);
-      window.localStorage.setItem(_lsPath() + '.oauth', lsOAuth);
-      window.localStorage.setItem(_lsPath() + '.client', lsClient);
-      window.localStorage.setItem(_lsPath() + '.expires', lsExpires);
-      window.localStorage.setItem(_lsPath() + '.scope', lsScope);
+      window.localStorage.setItem(login.path() + '.channel', lsChannel);
+      window.localStorage.setItem(login.path() + '.oauth', lsOAuth);
+      window.localStorage.setItem(login.path() + '.refresh', lsRefresh);
+      window.localStorage.setItem(login.path() + '.client', lsClient);
+      window.localStorage.setItem(login.path() + '.scope', lsScope);
      }
      cfg.channel = lsChannel;
      cfg.login.oauth = lsOAuth;
+     cfg.login.oauth_refresh = lsRefresh;
      cfg.login.client = lsClient;
-     cfg.login.expires = lsExpires;
      cfg.login.scope = decodeURIComponent(lsScope).split(' ');
      document.title = cfg.channel + ' Emote Wall';
      showLogoutButton();
@@ -8111,17 +8504,17 @@
 
     function doLogin()
     {
-     window.localStorage.removeItem(_lsPath() + '.channel');
-     window.localStorage.removeItem(_lsPath() + '.oauth');
-     window.localStorage.removeItem(_lsPath() + '.client');
-     window.localStorage.removeItem(_lsPath() + '.expires');
-     window.localStorage.removeItem(_lsPath() + '.scope');
+     window.localStorage.removeItem(login.path() + '.channel');
+     window.localStorage.removeItem(login.path() + '.oauth');
+     window.localStorage.removeItem(login.path() + '.refresh');
+     window.localStorage.removeItem(login.path() + '.client');
+     window.localStorage.removeItem(login.path() + '.scope');
      const o = encodeURIComponent(btoa(window.location));
      const c = encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8');
      const r = encodeURIComponent(cURLs.html.rr.wizard);
-     let u = cURLs.html.twitch + '?client_id=' + c + '&redirect_uri=' + r + '&response_type=token&scope=' + _uScope() + '&state=redirto_' + o + '&force_verify=true';
+     let u = cURLs.html.twitch + '?client_id=' + c + '&redirect_uri=' + r + '&response_type=code&scope=' + _uScope() + '&state=redirto_' + o + '&force_verify=true';
      if (u.length > 1500)
-      u = cURLs.html.rr.redir + '?c=' + c + '&r=' + r + '&s=' + _uScope() + '&u=' + encodeURIComponent(window.location);
+      u = cURLs.html.rr.redir + '?t=code&c=' + c + '&r=' + r + '&s=' + _uScope() + '&u=' + encodeURIComponent(window.location);
      window.location = u;
     }
 
@@ -8130,11 +8523,11 @@
      document.title = 'Log In to Access Emote Wall';
      if (document.getElementById('cmdLogout'))
       document.body.removeChild(document.getElementById('cmdLogout'));
-     window.localStorage.removeItem(_lsPath() + '.channel');
-     window.localStorage.removeItem(_lsPath() + '.oauth');
-     window.localStorage.removeItem(_lsPath() + '.client');
-     window.localStorage.removeItem(_lsPath() + '.expires');
-     window.localStorage.removeItem(_lsPath() + '.scope');
+     window.localStorage.removeItem(login.path() + '.channel');
+     window.localStorage.removeItem(login.path() + '.oauth');
+     window.localStorage.removeItem(login.path() + '.refresh');
+     window.localStorage.removeItem(login.path() + '.client');
+     window.localStorage.removeItem(login.path() + '.scope');
      let cmdLogin = document.createElement('button');
      cmdLogin.setAttribute('id', 'cmdLogin');
      cmdLogin.setAttribute('type', 'button');
@@ -8217,7 +8610,8 @@
      use: shouldUseLogin,
      begin: doLogin,
      showIn: showLoginButton,
-     showOut: showLogoutButton
+     showOut: showLogoutButton,
+     path: lsPath
     };
    }();
 
@@ -8230,18 +8624,6 @@
     }
     if (login.use() === true)
      return;
-    if (cfg.login.hasOwnProperty('expires') && cfg.login.expires > 0)
-    {
-     const expTime = cfg.login.expires - new Date().getTime();
-     if (expTime > 0)
-     {
-      const expDays = Math.floor(expTime / 1000 / 60 / 60 / 24);
-      if (expDays < 7)
-      {
-       shared.blargIAmDead(4);
-      }
-     }
-    }
     if (cfg.hasOwnProperty('streamlabs') && cfg.streamlabs.hasOwnProperty('token') && cfg.streamlabs.token !== false && cfg.streamlabs.token !== 'SOCKET_TOKEN')
      streamlabs.socket();
     if (cfg.hasOwnProperty('streamelements'))
@@ -8251,6 +8633,8 @@
      if ((cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID') || (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN'))
       streamelements.socket();
     }
+    if (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')
+     await twitch.net.updateOAuth();
     await twitch.global();
     if (cfg.display.extended.useFFZ)
      await thirdparty.ffz.global();
