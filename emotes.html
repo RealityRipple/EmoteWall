@@ -8035,7 +8035,10 @@
           _ws.onclose = null;
           _ws.close();
           _ws = null;
-          window.setTimeout(task, _lDelay);
+          const wsRedo = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+          if (_wsRetry < 2)
+           _wsRetry += 0.2;
+          window.setTimeout(task, wsRedo);
           return;
          }
          _wsRetry = 0;
