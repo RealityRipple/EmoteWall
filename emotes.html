@@ -5168,6 +5168,8 @@
 
       function _wsOpen()
       {
+       if (_ws === null)
+        return;
        _ws.onopen = null;
        _tTimeout = setTimeout(_wsTimeout, 5000);
        _ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
@@ -5183,9 +5185,12 @@
         clearTimeout(_tTimeout);
         _tTimeout = false;
        }
+       if (_ws === null)
+        return;
        _ws.onopen = null;
        _ws.onmessage = null;
        _ws.onclose = null;
+       _ws = null;
        if (twitch.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
@@ -5196,9 +5201,12 @@
 
       async function _wsMessage(ev)
       {
+       if (_ws === null)
+        return;
        if (twitch.net.dead)
        {
         _ws.close();
+        _ws = null;
         return;
        }
        _wsRetry = 0;
@@ -5330,6 +5338,8 @@
 
       function _wsTimeout()
       {
+       if (_ws === null)
+        return;
        if (twitch.net.dead === true)
         return;
        twitch.net.dead = true;
@@ -5339,6 +5349,7 @@
         _tTimeout = false;
        }
        _ws.close();
+       _ws = null;
        shared.blargIAmDead(4);
       }
 
@@ -7114,8 +7125,11 @@
        window.clearInterval(_tPing);
        _tPing = 0;
       }
+      if (_ws === null)
+       return;
       _ws.onmessage = null;
       _ws.onclose = null;
+      _ws = null;
       if (twitch.net.dead)
        return;
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
@@ -7126,9 +7140,12 @@
 
      async function _wsMessage(ev)
      {
+      if (_ws === null)
+       return;
       if (twitch.net.dead)
       {
        _ws.close();
+       _ws = null;
        return;
       }
       _wsRetry = 0;
@@ -7199,6 +7216,8 @@
 
      function _wsPing()
      {
+      if (_ws === null)
+       return;
       _ws.send('2');
      }
 
@@ -7267,8 +7286,11 @@
        window.clearInterval(_tPing);
        _tPing = 0;
       }
+      if (_ws === null)
+       return;
       _ws.onmessage = null;
       _ws.onclose = null;
+      _ws = null;
       if (twitch.net.dead)
        return;
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
@@ -7279,9 +7301,12 @@
 
      async function _wsMessage(ev)
      {
+      if (_ws === null)
+       return;
       if (twitch.net.dead)
       {
        _ws.close();
+       _ws = null;
        return;
       }
       _wsRetry = 0;
@@ -7345,6 +7370,8 @@
 
      function _wsPing()
      {
+      if (_ws === null)
+       return;
       _ws.send('2');
      }
 
@@ -7712,6 +7739,8 @@
 
       function _wsOpen()
       {
+       if (_ws === null)
+        return;
        _ws.onopen = null;
        _ws.send(JSON.stringify({'name': 'join_channel', 'data': {'name': 'twitch:' + _ch}}));
        _ws.send(JSON.stringify({'name': 'broadcast_me', 'data': {'name': cfg.channel, 'channel': 'twitch:' + _ch}}));
@@ -7719,9 +7748,12 @@
 
       function _wsClose()
       {
+       if (_ws === null)
+        return;
        _ws.onopen = null;
        _ws.onmessage = null;
        _ws.onclose = null;
+       _ws = null;
        if (twitch.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
@@ -7732,9 +7764,12 @@
 
       function _wsMessage(ev)
       {
+       if (_ws === null)
+        return;
        if (twitch.net.dead)
        {
         _ws.close();
+        _ws = null;
         return;
        }
        _wsRetry = 0;
@@ -7956,6 +7991,8 @@
 
       function _wsOpen()
       {
+       if (_ws === null)
+        return;
        _ws.onopen = null;
        _tTimeout = setTimeout(_wsTimeout, _lTimeout);
       }
@@ -7967,9 +8004,12 @@
         clearTimeout(_tTimeout);
         _tTimeout = false;
        }
+       if (_ws === null)
+        return;
        _ws.onopen = null;
        _ws.onmessage = null;
        _ws.onclose = null;
+       _ws = null;
        if (twitch.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
@@ -7985,9 +8025,12 @@
         clearTimeout(_tTimeout);
         _tTimeout = false;
        }
+       if (_ws === null)
+        return;
        if (twitch.net.dead)
        {
         _ws.close();
+        _ws = null;
         return;
        }
        _tTimeout = setTimeout(_wsTimeout, _lTimeout);
@@ -8130,6 +8173,8 @@
 
       function _wsUnsub()
       {
+       if (_ws === null)
+        return;
        _ws.send(JSON.stringify({'op': 36, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
        _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
        _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
@@ -8137,6 +8182,8 @@
 
       function _wsSub()
       {
+       if (_ws === null)
+        return;
        _ws.send(JSON.stringify({'op': 35, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
        _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
        _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
@@ -8144,6 +8191,8 @@
 
       function _wsTimeout()
       {
+       if (_ws === null)
+        return;
        _lTimeout = 5000;
        if (twitch.net.dead === true)
         return;
@@ -8153,6 +8202,7 @@
         _tTimeout = false;
        }
        _ws.close();
+       _ws = null;
        task();
       }
 
