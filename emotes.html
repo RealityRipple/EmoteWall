@@ -5109,8 +5109,17 @@
            continue;
           rList.push(j.data[i].type);
           break;
+         case 'authorization_revoked':
+         case 'moderator_removed':
+         case 'user_removed':
+         case 'version_removed':
          case 'websocket_disconnected':
          case 'websocket_failed_ping_pong':
+         case 'websocket_received_inbound_traffic':
+         case 'websocket_connection_unused':
+         case 'websocket_internal_error':
+         case 'websocket_network_timeout':
+         case 'websocket_network_error':
           shared.httpSend('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', j.data[i].id), null, h);
           break;
         }
