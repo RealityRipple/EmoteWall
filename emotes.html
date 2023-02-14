@@ -4668,6 +4668,12 @@
         window.setTimeout(task, 100);
         return;
        }
+       if (_wsURL.length > cURLs.ws.twitch.eventSub.release.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.release.length) === cURLs.ws.twitch.eventSub.release)
+        _wsURL = cURLs.ws.twitch.eventSub.release;
+       else if (_wsURL.length > cURLs.ws.twitch.eventSub.beta.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.beta.length) === cURLs.ws.twitch.eventSub.beta)
+        _wsURL = cURLs.ws.twitch.eventSub.beta;
+       else
+        _wsURL = cURLs.ws.twitch.eventSub.release;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
@@ -4971,6 +4977,12 @@
        }
        if (_ws !== null)
         _ws.close();
+       if (_wsURL.length > cURLs.ws.twitch.eventSub.release.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.release.length) === cURLs.ws.twitch.eventSub.release)
+        _wsURL = cURLs.ws.twitch.eventSub.release;
+       else if (_wsURL.length > cURLs.ws.twitch.eventSub.beta.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.beta.length) === cURLs.ws.twitch.eventSub.beta)
+        _wsURL = cURLs.ws.twitch.eventSub.beta;
+       else
+        _wsURL = cURLs.ws.twitch.eventSub.release;
        task();
       }
 
