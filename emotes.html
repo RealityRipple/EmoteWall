@@ -7642,10 +7642,8 @@
       return true;
      }
 
-     async function loadFFZ_channel(chID)
+     async function readFFZ_channel(chID)
      {
-      if (!thirdparty.emotes.hasOwnProperty('ffz'))
-       thirdparty.emotes.ffz = {};
       const url = cURLs.api.ffz.room.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest(url);
       if (r === false)
@@ -7653,7 +7651,7 @@
       const j = JSON.parse(r);
       if (!j.hasOwnProperty('sets'))
        return false;
-      _removeEmoteByScope(thirdparty.emotes.ffz, 'c');
+      let ret = [];
       for (const set in j.sets)
       {
        if (!j.sets[set].hasOwnProperty('emoticons'))
@@ -7665,15 +7663,31 @@
         const u = _readFFZ_URL(j.sets[set].emoticons[i]);
         if (u === false)
          continue;
-        _addEmote(thirdparty.emotes.ffz, 'c', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
+        ret.push({name: j.sets[set].emoticons[i].name, id: j.sets[set].emoticons[i].id, url: u});
        }
+      }
+      return ret;
+     }
+
+     async function loadFFZ_channel(chID)
+     {
+      if (!thirdparty.emotes.hasOwnProperty('ffz'))
+       thirdparty.emotes.ffz = {};
+      const r = await readFFZ_channel(chID);
+      if (r === false)
+       return false;
+      _removeEmoteByScope(thirdparty.emotes.ffz, 'c');
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       _addEmote(thirdparty.emotes.ffz, 'c', r[i].name, r[i].id, r[i].url);
       }
       return true;
      }
 
      return {
       global: loadFFZ_global,
-      channel: loadFFZ_channel
+      channel: loadFFZ_channel,
+      channelEx: readFFZ_channel
      };
     }();
 
@@ -7725,16 +7739,14 @@
       return true;
      }
 
-     async function loadBTTV_channel(chID)
+     async function readBTTV_channel(chID)
      {
-      if (!thirdparty.emotes.hasOwnProperty('bttv'))
-       thirdparty.emotes.bttv = {};
       const url = cURLs.api.bttv.users.twitch.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest(url);
       if (r === false)
        return false;
-      _removeEmoteByScope(thirdparty.emotes.bttv, 'c');
       const j = JSON.parse(r);
+      let ret = [];
       if (j.hasOwnProperty('channelEmotes'))
       {
        for (let i = 0, l = j.channelEmotes.length; i < l; i++)
@@ -7743,7 +7755,7 @@
          continue;
         if (!j.channelEmotes[i].hasOwnProperty('id'))
          continue;
-        _addEmote(thirdparty.emotes.bttv, 'c', j.channelEmotes[i].code, j.channelEmotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', j.channelEmotes[i].id));
+        ret.push({name: j.channelEmotes[i].code, id: j.channelEmotes[i].id, url: cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', j.channelEmotes[i].id)});
        }
       }
       if (j.hasOwnProperty('sharedEmotes'))
@@ -7754,8 +7766,23 @@
          continue;
         if (!j.sharedEmotes[i].hasOwnProperty('id'))
          continue;
-        _addEmote(thirdparty.emotes.bttv, 'c', j.sharedEmotes[i].code, j.sharedEmotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', j.sharedEmotes[i].id));
+        ret.push({name: j.sharedEmotes[i].code, id: j.sharedEmotes[i].id, url: cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', j.sharedEmotes[i].id)});
        }
+      }
+      return ret;
+     }
+
+     async function loadBTTV_channel(chID)
+     {
+      if (!thirdparty.emotes.hasOwnProperty('bttv'))
+       thirdparty.emotes.bttv = {};
+      const r = await readBTTV_channel(chID);
+      if (r === false)
+       return false;
+      _removeEmoteByScope(thirdparty.emotes.bttv, 'c');
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       _addEmote(thirdparty.emotes.bttv, 'c', r[i].name, r[i].id, r[i].url);
       }
       return true;
      }
@@ -7885,6 +7912,7 @@
       timer: false,
       global: loadBTTV_global,
       channel: loadBTTV_channel,
+      channelEx: readBTTV_channel,
       socket: loadBTTV_ws_channel,
       reload: reloadBTTV
      };
@@ -7939,24 +7967,16 @@
       return true;
      }
 
-     async function load7TV_channel(chID)
+     async function read7TV_channel(chID)
      {
-      if (!thirdparty.emotes.hasOwnProperty('7tv'))
-       thirdparty.emotes['7tv'] = {};
-      if (!thirdparty.emotes.hasOwnProperty('zwe'))
-       thirdparty.emotes.zwe = {};
-      if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
-       thirdparty.emotes.zwe['7tv'] = {};
       const url = cURLs.api['7tv'].users.emotes.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest(url);
       if (r === false)
        return false;
-      if (cfg.display.extended.useZWE)
-       _removeEmoteByScope(thirdparty.emotes.zwe['7tv'], 'c');
-      _removeEmoteByScope(thirdparty.emotes['7tv'], 'c');
       const j = JSON.parse(r);
       if (!Array.isArray(j))
        return false;
+      let ret = [];
       for (let i = 0, l = j.length; i < l; i++)
       {
        if (!j[i].hasOwnProperty('name'))
@@ -7978,13 +7998,37 @@
         if (uN.includes('/' + tN + 'x'))
          t4 = uN.replaceAll('/' + tN + 'x', '/4x');
        }
-       if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80)
+       let vis = 0;
+       if ((j[i].hasOwnProperty('visibility')))
+        vis = j[i].visibility;
+       ret.push({name: j[i].name, id: j[i].id, url: t4, v: vis});
+      }
+      return ret;
+     }
+
+     async function load7TV_channel(chID)
+     {
+      if (!thirdparty.emotes.hasOwnProperty('7tv'))
+       thirdparty.emotes['7tv'] = {};
+      if (!thirdparty.emotes.hasOwnProperty('zwe'))
+       thirdparty.emotes.zwe = {};
+      if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
+       thirdparty.emotes.zwe['7tv'] = {};
+      const r = await read7TV_channel(chID);
+      if (r === false)
+       return false;
+      if (cfg.display.extended.useZWE)
+       _removeEmoteByScope(thirdparty.emotes.zwe['7tv'], 'c');
+      _removeEmoteByScope(thirdparty.emotes['7tv'], 'c');
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       if ((r[i].vis & 0x80) === 0x80)
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe['7tv'], 'c', j[i].name, j[i].id, t4, null, true);
+         _addEmote(thirdparty.emotes.zwe['7tv'], 'c', r[i].name, r[i].id, r[i].url, null, true);
         continue;
        }
-       _addEmote(thirdparty.emotes['7tv'], 'c', j[i].name, j[i].id, t4);
+       _addEmote(thirdparty.emotes['7tv'], 'c', r[i].name, r[i].id, r[i].url);
       }
       return true;
      }
@@ -8251,6 +8295,7 @@
      return {
       global: load7TV_global,
       channel: load7TV_channel,
+      channelEx: read7TV_channel,
       socket: load7TV_ws_channel
      };
     }();
