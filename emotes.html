@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.7.3 BETA
+    * v0.7.4 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -350,8 +350,8 @@
     *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     *   originEmotes  A boolean to toggle the use of the raiding streamer's channel emotes for raid kappagens.
-    *                If TRUE, raid kappagens will use channel emotes from the raider's channel (not including third-party).
-    *               If FALSE, raid kappagens will use your channel's emotes (including third-party).
+    *                If TRUE, raid kappagens will use channel emotes from the raider's channel.
+    *               If FALSE, raid kappagens will use your channel's emotes.
     *
     *  follow     A user follows the channel.
     *              If TRUE, a kappagen will occur.
@@ -364,25 +364,39 @@
     *
     *   create    Settings related to kappagens when you shout another channel out.
     *
-    *    styles   You shout another channel out. This value can be a boolean, integer, or array.
+    *    styles   You shout another channel out. This value can be a boolean or array.
     *              If TRUE, a kappagen will occur.
     *              If FALSE, no kappagen will occur.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     *   targetEmotes  A boolean to toggle the use of the target channel's emotes for shoutout kappagens.
-    *                If TRUE, shoutout kappagens will use channel emotes from the target's channel (not including third-party).
-    *               If FALSE, shoutout kappagens will use your channel's emotes (including third-party).
+    *                If TRUE, shoutout kappagens will use channel emotes from the target's channel.
+    *               If FALSE, shoutout kappagens will use your channel's emotes.
     *
     *   receive    Settings related to kappagens when another channel shouts you out.
     *
-    *    styles   You are shouted out by another channel. This value can be a boolean, integer, or array.
+    *    styles   You are shouted out by another channel. This value can be a boolean or array.
     *              If TRUE, a kappagen will occur.
     *              If FALSE, no kappagen will occur.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     *   originEmotes  A boolean to toggle the use of the source channel's emotes for shoutout kappagens.
-    *                If TRUE, shoutout kappagens will use channel emotes from the source's channel (not including third-party).
-    *               If FALSE, shoutout kappagens will use your channel's emotes (including third-party).
+    *                If TRUE, shoutout kappagens will use channel emotes from the source's channel.
+    *               If FALSE, shoutout kappagens will use your channel's emotes.
+    *
+    *  tag        Settings related to kappagens when users tag a channel you've tagged in your stream title.
+    *
+    *   styles     A user posts a message that starts with '@user'. This value can be a boolean or array.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   access    A bitwise flag representing which users can trigger this kappagen with a command.
+    *             This value will fall back to the general kappagen access value if missing or less than 0.
+    *
+    *   targetEmotes  A boolean to toggle the use of the target channel's emotes for tag kappagens.
+    *                If TRUE, tag kappagens will use channel emotes from the target's channel.
+    *               If FALSE, tag kappagens will use your channel's emotes.
     *
     *  sub        Settings related to kappagens on a subscribe event.
     *             Note: Sub event booleans can also be arrays of kappa styles. This will override the default list
@@ -938,6 +952,11 @@
        originEmotes: true
       }
      },
+     tag: {
+      styles: true,
+      access: -1,
+      targetEmotes: true
+     },
      sub: {
       useMsg: true,
       t1: {
@@ -1034,7 +1053,7 @@
     {url: 'https://cdn.frankerfacez.com/emoticon/675080/4'}
    ];
 
-   // distribution of emojis for Pyramid and SmallPyramid kappagen
+   // distribution of emotes for Pyramid and SmallPyramid kappagen
    const pyramidDist = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
 
    // treat these BTTV emotes as zero-width (overlapping) emotes
@@ -1043,7 +1062,7 @@
     'ReinDeer', 'CandyCane', 'cvMask',   'cvHazmat'
    ];
 
-   // distribution of emojis for letters in message kappagens
+   // distribution of emotes for letters in message kappagens
    const alnumDist = {
     'A': [
      [0, 1, 1, 1, 1, 1, 0, 0, 0],
@@ -1577,27 +1596,34 @@
        release: 'wss://eventsub.wss.twitch.tv/ws'
       }
      },
-     streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket',
+     streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket&token=%TOKEN%',
      streamelements: 'wss://realtime.streamelements.com/socket.io/?transport=websocket',
      bttv: 'wss://sockets.betterttv.net/ws',
      '7tv': 'wss://events.7tv.io/v3'
     },
     api: {
      twitch: {
-      users: 'https://api.twitch.tv/helix/users',
+      users: {
+       name: 'https://api.twitch.tv/helix/users?login=%USER%',
+       id: 'https://api.twitch.tv/helix/users?id=%USER_ID%',
+      },
       bits: {
-       cheermotes: 'https://api.twitch.tv/helix/bits/cheermotes'
+       cheermotes: 'https://api.twitch.tv/helix/bits/cheermotes?broadcaster_id=%CHANNEL_ID%'
       },
       channels: {
-       followers: 'https://api.twitch.tv/helix/channels/followers'
+       root: 'https://api.twitch.tv/helix/channels?broadcaster_id=%CHANNEL_ID%',
+       followers: 'https://api.twitch.tv/helix/channels/followers?user_id=%USER_ID%&broadcaster_id=%CHANNEL_ID%'
       },
       chat: {
        emotes: {
-        root: 'https://api.twitch.tv/helix/chat/emotes',
+        root: 'https://api.twitch.tv/helix/chat/emotes?broadcaster_id=%CHANNEL_ID%',
         global: 'https://api.twitch.tv/helix/chat/emotes/global'
        }
       },
-      eventSub: 'https://api.twitch.tv/helix/eventsub/subscriptions'
+      eventSub: {
+       get: 'https://api.twitch.tv/helix/eventsub/subscriptions',
+       delete: 'https://api.twitch.tv/helix/eventsub/subscriptions?id=%ID%'
+      }
      },
      ffz: {
       set: {
@@ -1638,11 +1664,11 @@
     html: {
      rr: {
       wizard: 'https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php',
-      t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
-      se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php',
-      redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php'
+      t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php?refresh=%REFRESH_TOKEN%',
+      se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php?refresh=%REFRESH_TOKEN%',
+      redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php?t=code&c=%CLIENT_ID%&r=%URL%&s=%SCOPE%&u=%ORIGIN%'
      },
-     twitch: 'https://id.twitch.tv/oauth2/authorize'
+     twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&scope=%SCOPE%&state=redirto_%ORIGIN%&force_verify=true'
     }
    };
 
@@ -2346,7 +2372,7 @@
         scene.setAttribute('height', sS);
         let cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
-        cube.setAttribute('style', 'transform: translateZ(' + nSm + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
+        cube.setAttribute('style', 'transform: translateZ(' + nSm + 'px); transition: transform linear ' + cfg.emote.time + 's;');
         let f = 'height: ' + sS + 'px;';
         f += ' width: ' + sS + 'px;';
         const lZ = zwe.length;
@@ -2515,7 +2541,7 @@
         }
         let s = 'width: ' + sS + 'px;';
         s += ' height: ' + sS + 'px;';
-        s += ' perspective: ' + sS * 3  + 'px;';
+        s += ' perspective: ' + sS * 3 + 'px;';
         s += ' transition: all ' + cfg.emote.time + 's linear;';
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, variationSize);
@@ -2951,7 +2977,7 @@
          {
           th+= c;
           if (th >= cRadius)
-           th+= cRadius;
+           th-= cRadius;
          }
          const oK = kList[shared.rnd(kList.length)];
          _sparkler(tInit, oK.url, oX, oY, sS, r, th);
@@ -3119,7 +3145,7 @@
           x = shared.rnd(lP);
          while(drawn[x] >= pyramidDist[x]);
          const oK = kList[shared.rnd(kList.length)];
-         _block(tInit,  oK.url, oX, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
+         _block(tInit, oK.url, oX, x, t, sS, sH, drawn[x] + 1, tPerB, eT + dT);
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, l = oK.zwe.length; j < l; j++)
@@ -3511,7 +3537,7 @@
         scene.setAttribute('height', sS);
         let cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
-        cube.setAttribute('style', 'transform: translateZ(' + nSm + 'px);  transition: transform linear ' + cfg.emote.time + 's;');
+        cube.setAttribute('style', 'transform: translateZ(' + nSm + 'px); transition: transform linear ' + cfg.emote.time + 's;');
         let f = 'height: ' + sS + 'px;';
         f += ' width: ' + sS + 'px;';
         const lZ = zwe.length;
@@ -4237,7 +4263,7 @@
         let sTT = cfg.emote.time;
         if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('time'))
          sTT = cfg.display.kappa.styles[kStyle.style].time;
-        if (kStyle.prefs.hasOwnProperty('time'))
+        if (kStyle.prefs.hasOwnProperty('time') && kStyle.prefs.time > 0)
          sTT = kStyle.prefs.time;
         if (kParams !== false)
         {
@@ -4515,6 +4541,7 @@
    const twitch = function()
    {
     let _rList = {};
+    let _aTagged = {};
 
     const net = function()
     {
@@ -4522,7 +4549,7 @@
      {
       if (!thirdparty.emotes.hasOwnProperty('cheer'))
        thirdparty.emotes.cheer = {};
-      const url = cURLs.api.twitch.bits.cheermotes + '?broadcaster_id=' + chID;
+      const url = cURLs.api.twitch.bits.cheermotes.replaceAll('%CHANNEL_ID%', chID);
       const h = {
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
@@ -4662,6 +4689,12 @@
         window.setTimeout(task, 100);
         return;
        }
+       if (_wsURL.length > cURLs.ws.twitch.eventSub.release.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.release.length) === cURLs.ws.twitch.eventSub.release)
+        _wsURL = cURLs.ws.twitch.eventSub.release;
+       else if (_wsURL.length > cURLs.ws.twitch.eventSub.beta.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.beta.length) === cURLs.ws.twitch.eventSub.beta)
+        _wsURL = cURLs.ws.twitch.eventSub.beta;
+       else
+        _wsURL = cURLs.ws.twitch.eventSub.release;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
@@ -4916,6 +4949,13 @@
            if (cfg.event.goal !== false && cfg.event.goal.hasOwnProperty('achieved'))
             display.kappa.show(false, cfg.event.goal.achieved, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.current_amount});
            break;
+          case 'channel.update':
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('title'))
+            return;
+           await _addToChannelTitleTags(r.payload.event.title);
+           break;
          }
          break;
         case 'session_reconnect':
@@ -4964,7 +5004,18 @@
         _tTimeout = false;
        }
        if (_ws !== null)
+       {
+        _ws.onopen = null;
+        _ws.onmessage = null;
+        _ws.onclose = null;
         _ws.close();
+       }
+       if (_wsURL.length > cURLs.ws.twitch.eventSub.release.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.release.length) === cURLs.ws.twitch.eventSub.release)
+        _wsURL = cURLs.ws.twitch.eventSub.release;
+       else if (_wsURL.length > cURLs.ws.twitch.eventSub.beta.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.beta.length) === cURLs.ws.twitch.eventSub.beta)
+        _wsURL = cURLs.ws.twitch.eventSub.beta;
+       else
+        _wsURL = cURLs.ws.twitch.eventSub.release;
        task();
       }
 
@@ -4983,7 +5034,8 @@
         {id: 'channel.prediction.end', scope: ['channel:read:predictions'], cfg: ['event.prediction.resolved']},
         {id: 'channel.goal.begin', scope: ['channel:read:goals'], cfg: ['event.goal.begin']},
         {id: 'channel.goal.end', scope: ['channel:read:goals'], cfg: ['event.goal.achieved']},
-        {id: 'channel.charity_campaign.donate', scope: ['channel:read:charity'], cfg: ['event.charity']}
+        {id: 'channel.charity_campaign.donate', scope: ['channel:read:charity'], cfg: ['event.charity']},
+        {id: 'channel.update', scope: false, cfg: ['event.tag.styles']}
        ];
        const aActive = await _unsubscribe();
        let didSomething = aActive.length > 0;
@@ -5059,7 +5111,7 @@
         'Authorization': 'Bearer ' + cfg.login.oauth,
         'Client-Id': cfg.login.client
        };
-       const r = await shared.httpRequest(cURLs.api.twitch.eventSub, h);
+       const r = await shared.httpRequest(cURLs.api.twitch.eventSub.get, h);
        const j = JSON.parse(r);
        if (!j.hasOwnProperty('data'))
         return [];
@@ -5091,9 +5143,18 @@
            continue;
           rList.push(j.data[i].type);
           break;
+         case 'authorization_revoked':
+         case 'moderator_removed':
+         case 'user_removed':
+         case 'version_removed':
          case 'websocket_disconnected':
          case 'websocket_failed_ping_pong':
-          shared.httpSend('DELETE', cURLs.api.twitch.eventSub + '?id=' + j.data[i].id, null, h);
+         case 'websocket_received_inbound_traffic':
+         case 'websocket_connection_unused':
+         case 'websocket_internal_error':
+         case 'websocket_network_timeout':
+         case 'websocket_network_error':
+          shared.httpSend('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', j.data[i].id), null, h);
           break;
         }
        }
@@ -5121,16 +5182,11 @@
         'Client-Id': cfg.login.client,
         'Content-Type': 'application/json'
        };
-       const r = await shared.httpSend('POST', cURLs.api.twitch.eventSub, JSON.stringify(d), h);
+       const r = await shared.httpSend('POST', cURLs.api.twitch.eventSub.get, JSON.stringify(d), h);
        if (r !== false)
         return true;
        switch (type)
        {
-        case 'channel.shoutout.create':
-        case 'channel.shoutout.receive':
-         if (version === '1')
-          return _subscribe(type, 'beta');
-         break;
         case 'channel.follow':
          if (version === '2')
           return _subscribe(type, 'beta');
@@ -5162,6 +5218,8 @@
 
       function _wsOpen()
       {
+       if (_ws === null)
+        return;
        _ws.onopen = null;
        _tTimeout = setTimeout(_wsTimeout, 5000);
        _ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
@@ -5177,9 +5235,12 @@
         clearTimeout(_tTimeout);
         _tTimeout = false;
        }
+       if (_ws === null)
+        return;
        _ws.onopen = null;
        _ws.onmessage = null;
        _ws.onclose = null;
+       _ws = null;
        if (twitch.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
@@ -5190,9 +5251,12 @@
 
       async function _wsMessage(ev)
       {
+       if (_ws === null)
+        return;
        if (twitch.net.dead)
        {
         _ws.close();
+        _ws = null;
         return;
        }
        _wsRetry = 0;
@@ -5245,6 +5309,8 @@
            _firstRS = false;
            await _loadEmote_channel(twitch.net.channelID);
            await _loadCheer_channel(twitch.net.channelID);
+           if (cfg.event.tag.hasOwnProperty('styles') && cfg.event.tag.styles !== false)
+            await _getChannelTitleTags(twitch.net.channelID);
            if (cfg.display.extended.useFFZ)
             thirdparty.ffz.channel(twitch.net.channelID);
            if (cfg.display.extended.useBTTV)
@@ -5324,6 +5390,8 @@
 
       function _wsTimeout()
       {
+       if (_ws === null)
+        return;
        if (twitch.net.dead === true)
         return;
        twitch.net.dead = true;
@@ -5333,6 +5401,7 @@
         _tTimeout = false;
        }
        _ws.close();
+       _ws = null;
        shared.blargIAmDead(4);
       }
 
@@ -5353,9 +5422,9 @@
 
      async function getUserInfo(u, isID = false)
      {
-      let url = cURLs.api.twitch.users + '?login=' + u;
+      let url = cURLs.api.twitch.users.name.replaceAll('%USER%', u);
       if (isID)
-       url = cURLs.api.twitch.users + '?id=' + u;
+       url = cURLs.api.twitch.users.id.replaceAll('%USER_ID%', u);
       const h = {
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
@@ -5371,9 +5440,56 @@
       return j.data[0];
      }
 
+     async function _getChannelTitleTags(chID)
+     {
+      const url = cURLs.api.twitch.channels.root.replaceAll('%CHANNEL_ID%', chID);
+      const h = {
+       'Authorization': 'Bearer ' + cfg.login.oauth,
+       'Client-Id': cfg.login.client
+      };
+      const r = await shared.httpRequest(url, h);
+      if (r === false)
+       return;
+      const j = JSON.parse(r);
+      if (!j.hasOwnProperty('data'))
+       return;
+      if (j.data.length !== 1)
+       return;
+      if (!j.data[0].hasOwnProperty('title'))
+       return;
+      await _addToChannelTitleTags(j.data[0].title);
+     }
+
+     async function _addToChannelTitleTags(title)
+     {
+      const tReg = /(?:^| )(?:@([A-Za-z0-9_]+))/g;
+      let tList = [];
+      let match = '';
+      while ((match = tReg.exec(title)) !== null)
+      {
+       tList.push(match);
+      }
+      if (tList.length < 1)
+       return;
+      _aTagged = {};
+      for (let i = 0, l = tList.length; i < l; i++)
+      {
+       if (tList[i][1].length < 1)
+        continue;
+       let u = await twitch.net.userInfo(tList[i][1]);
+       if (u === false)
+        continue;
+       if (!u.hasOwnProperty('id'))
+        continue;
+       if (!u.hasOwnProperty('login'))
+        continue;
+       _aTagged[u.login] = u.id;
+      }
+     }
+
      async function _getOAuthToken(t)
      {
-      const url = cURLs.html.rr.t + '?refresh=' + t;
+      const url = cURLs.html.rr.t.replaceAll('%REFRESH_TOKEN%', t);
       const r = await shared.httpRequest(url, {}, true, false);
       if (r === false)
        return false;
@@ -6135,17 +6251,22 @@
      {
       async function task(cmd)
       {
+       const u = _parseUser(cmd, true);
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        return;
        if (await _parseCustomReward(cmd))
         return;
        if (cmd.params.length < 2)
         return;
-       if (await _parseCommand(cmd))
+       const lv = await _level.get(cmd);
+       if (await _parseTaggedChannel(cmd, lv))
+        return;
+       if (await _parseCommand(cmd, lv))
+        return;
+       if ((lv & cfg.display.access) === 0)
         return;
        const p = _handleDuplicates(await _eListFromCmd(cmd));
        if (p.length === 0)
-        return;
-       const lv = await _level.get(cmd);
-       if ((lv & cfg.display.access) === 0)
         return;
        display.emote.addToShowList(p);
        display.emote.showEmotes();
@@ -6173,9 +6294,76 @@
        return true;
       }
 
-      async function _parseCommand(cmd)
+      async function _parseTaggedChannel(cmd, lv)
       {
-       let lv = -1;
+       if (Object.keys(_aTagged).length < 1)
+        return false;
+       if (!cfg.event.tag.hasOwnProperty('styles'))
+        return false;
+       if (cfg.event.tag.styles === false)
+        return false;
+       const m = cmd.params[1];
+       if (m.slice(0, 1) !== '@')
+        return false;
+       let uTagged = m.slice(1);
+       if (uTagged.indexOf(' ') > -1)
+        uTagged = uTagged.slice(0, uTagged.indexOf(' '));
+       uTagged = uTagged.toLowerCase();
+       if (!_aTagged.hasOwnProperty(uTagged))
+        return false;
+       const uID = _aTagged[uTagged];
+       let rq = cfg.display.kappa.access;
+       if (cfg.event.tag.hasOwnProperty('access') && cfg.event.tag.access >= 0)
+        rq = cfg.event.tag.access;
+       if ((lv & rq) === 0)
+        return false;
+       if (!cfg.event.tag.targetEmotes)
+       {
+        display.kappa.show(false, cfg.event.tag.styles, {'%USER%': uTagged});
+        return true;
+       }
+       const e = await _findEmote_channel(uID);
+       if (cfg.display.extended.useFFZ)
+       {
+        const rFFZ = await thirdparty.ffz.channelEx(uID);
+        if (rFFZ !== false)
+        {
+         for (let i = 0, l = rFFZ.length; i < l; i++)
+         {
+          e.push({url: rFFZ[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.useBTTV)
+       {
+        const rBTTV = await thirdparty.bttv.channelEx(uID);
+        if (rBTTV !== false)
+        {
+         for (let i = 0, l = rBTTV.length; i < l; i++)
+         {
+          e.push({url: rBTTV[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.use7TV)
+       {
+        const r7TV = await thirdparty['7tv'].channelEx(uID);
+        if (r7TV !== false)
+        {
+         for (let i = 0, l = r7TV.length; i < l; i++)
+         {
+          if ((r7TV[i].vis & 0x80) === 0x80)
+           continue;
+          e.push({url: r7TV[i].url});
+         }
+        }
+       }
+       display.kappa.show(e, cfg.event.tag.styles, {'%USER%': uTagged});
+       return true;
+      }
+
+      async function _parseCommand(cmd, lv)
+      {
        const kNow = new Date().getTime();
        const m = cmd.params[1].toLowerCase();
        let foundAdvCmd = false;
@@ -6204,8 +6392,6 @@
         let kAccess = cfg.display.kappa.access;
         if (k.hasOwnProperty('access'))
          kAccess = k.access;
-        if (lv === -1)
-         lv = await _level.get(cmd);
         if ((lv & kAccess) === 0)
          continue;
         foundAdvCmd = true;
@@ -6220,7 +6406,7 @@
         if (k.hasOwnProperty('erase'))
         {
          display.eraseAll();
-         return;
+         return true;
         }
         let kC = {};
         for (let kS in k.styles)
@@ -6257,8 +6443,6 @@
        }
        if (foundCmd === false)
         return foundAdvCmd;
-       if (lv === -1)
-        lv = await _level.get(cmd);
        if ((lv & cfg.display.kappa.access) === 0)
         return foundAdvCmd;
        let h = _hashCode(null);
@@ -6372,6 +6556,41 @@
        }
        const d = cmd.tags['user-id'];
        const e = await _findEmote_channel(d);
+       if (cfg.display.extended.useFFZ)
+       {
+        const rFFZ = await thirdparty.ffz.channelEx(d);
+        if (rFFZ !== false)
+        {
+         for (let i = 0, l = rFFZ.length; i < l; i++)
+         {
+          e.push({url: rFFZ[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.useBTTV)
+       {
+        const rBTTV = await thirdparty.bttv.channelEx(d);
+        if (rBTTV !== false)
+        {
+         for (let i = 0, l = rBTTV.length; i < l; i++)
+         {
+          e.push({url: rBTTV[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.use7TV)
+       {
+        const r7TV = await thirdparty['7tv'].channelEx(d);
+        if (r7TV !== false)
+        {
+         for (let i = 0, l = r7TV.length; i < l; i++)
+         {
+          if ((r7TV[i].vis & 0x80) === 0x80)
+           continue;
+          e.push({url: r7TV[i].url});
+         }
+        }
+       }
        display.kappa.show(e, r, {'%USER%': dn, '%AMOUNT%': c});
       }
 
@@ -6603,6 +6822,41 @@
         return;
        }
        const e = await _findEmote_channel(uID);
+       if (cfg.display.extended.useFFZ)
+       {
+        const rFFZ = await thirdparty.ffz.channelEx(uID);
+        if (rFFZ !== false)
+        {
+         for (let i = 0, l = rFFZ.length; i < l; i++)
+         {
+          e.push({url: rFFZ[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.useBTTV)
+       {
+        const rBTTV = await thirdparty.bttv.channelEx(uID);
+        if (rBTTV !== false)
+        {
+         for (let i = 0, l = rBTTV.length; i < l; i++)
+         {
+          e.push({url: rBTTV[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.use7TV)
+       {
+        const r7TV = await thirdparty['7tv'].channelEx(uID);
+        if (r7TV !== false)
+        {
+         for (let i = 0, l = r7TV.length; i < l; i++)
+         {
+          if ((r7TV[i].vis & 0x80) === 0x80)
+           continue;
+          e.push({url: r7TV[i].url});
+         }
+        }
+       }
        display.kappa.show(e, cfg.event.shoutout.create.styles, {'%USER%': uName});
       }
 
@@ -6614,6 +6868,41 @@
         return;
        }
        const e = await _findEmote_channel(uID);
+       if (cfg.display.extended.useFFZ)
+       {
+        const rFFZ = await thirdparty.ffz.channelEx(uID);
+        if (rFFZ !== false)
+        {
+         for (let i = 0, l = rFFZ.length; i < l; i++)
+         {
+          e.push({url: rFFZ[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.useBTTV)
+       {
+        const rBTTV = await thirdparty.bttv.channelEx(uID);
+        if (rBTTV !== false)
+        {
+         for (let i = 0, l = rBTTV.length; i < l; i++)
+         {
+          e.push({url: rBTTV[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.use7TV)
+       {
+        const r7TV = await thirdparty['7tv'].channelEx(uID);
+        if (r7TV !== false)
+        {
+         for (let i = 0, l = r7TV.length; i < l; i++)
+         {
+          if ((r7TV[i].vis & 0x80) === 0x80)
+           continue;
+          e.push({url: r7TV[i].url});
+         }
+        }
+       }
        display.kappa.show(e, cfg.event.shoutout.receive.styles, {'%USER%': uName});
       }
 
@@ -6714,7 +7003,7 @@
         if (tDif < _rFH)
          return twitch.net.fList[uID].value;
        }
-       const url = cURLs.api.twitch.channels.followers + '?user_id=' + uID + '&broadcaster_id=' + cmd.tags['room-id'];
+       const url = cURLs.api.twitch.channels.followers.replaceAll('%USER_ID%', uID).replaceAll('%CHANNEL_ID%', cmd.tags['room-id']);
        const h = {
         'Authorization': 'Bearer ' + cfg.login.oauth,
         'Client-Id': cfg.login.client
@@ -6924,47 +7213,62 @@
      };
     }();
 
-    async function _findEmote_channel(chID, n = false)
+    const _findEmote_channel = function()
     {
-     const url = cURLs.api.twitch.chat.emotes.root + '?broadcaster_id=' + chID;
-     const h = {
-      'Authorization': 'Bearer ' + cfg.login.oauth,
-      'Client-Id': cfg.login.client
-     };
-     const r = await shared.httpRequest(url, h, true);
-     if (r === false)
-      return false;
-     if (r === null)
+     const _rCH = 300000;
+     let _chList = {};
+
+     async function task(chID, n = false)
      {
-      shared.blargIAmDead(3);
-      return false;
-     }
-     const j = JSON.parse(r);
-     if (!j.hasOwnProperty('data'))
-      return false;
-     if (!Array.isArray(j.data))
-      return false;
-     let ret = [];
-     for (let i = 0, l = j.data.length; i < l; i++)
-     {
-      if (!j.data[i].hasOwnProperty('id'))
-       continue;
-      if (cfg.ignore.emotes !== false && j.data[i].hasOwnProperty('name') && cfg.ignore.emotes.includes(j.data[i].name))
-       continue;
-      const eURL = cURLs.cdn.twitch.emote.replaceAll('%EMOTE_ID%', j.data[i].id);
-      if (n !== false && j.data[i].hasOwnProperty('name'))
+      if (n === false && _chList.hasOwnProperty(chID))
       {
-       n[j.data[i].name] = {
-        scope: 'c',
-        url: eURL,
-        id: j.data[i].id,
-        users: null
-       };
+       const tDif = new Date().getTime() - _chList[chID].t;
+       if (tDif < _rCH)
+        return _chList[chID].value;
       }
-      ret.push({url: eURL});
+      const url = cURLs.api.twitch.chat.emotes.root.replaceAll('%CHANNEL_ID%', chID);
+      const h = {
+       'Authorization': 'Bearer ' + cfg.login.oauth,
+       'Client-Id': cfg.login.client
+      };
+      const r = await shared.httpRequest(url, h, true);
+      if (r === false)
+       return false;
+      if (r === null)
+      {
+       shared.blargIAmDead(3);
+       return false;
+      }
+      const j = JSON.parse(r);
+      if (!j.hasOwnProperty('data'))
+       return false;
+      if (!Array.isArray(j.data))
+       return false;
+      let ret = [];
+      for (let i = 0, l = j.data.length; i < l; i++)
+      {
+       if (!j.data[i].hasOwnProperty('id'))
+        continue;
+       if (cfg.ignore.emotes !== false && j.data[i].hasOwnProperty('name') && cfg.ignore.emotes.includes(j.data[i].name))
+        continue;
+       const eURL = cURLs.cdn.twitch.emote.replaceAll('%EMOTE_ID%', j.data[i].id);
+       if (n !== false && j.data[i].hasOwnProperty('name'))
+       {
+        n[j.data[i].name] = {
+         scope: 'c',
+         url: eURL,
+         id: j.data[i].id,
+         users: null
+        };
+       }
+       ret.push({url: eURL});
+      }
+      _chList[chID] = {t: new Date().getTime(), value: ret};
+      return ret;
      }
-     return ret;
-    }
+
+     return task;
+    }();
 
     async function findEmote_global()
     {
@@ -7096,7 +7400,7 @@
      function task()
      {
       _tPing = 0;
-      _ws = new WebSocket(cURLs.ws.streamlabs + '&token=' + cfg.streamlabs.token);
+      _ws = new WebSocket(cURLs.ws.streamlabs.replaceAll('%TOKEN%', cfg.streamlabs.token));
       _ws.onclose = _wsClose;
       _ws.onmessage = _wsMessage;
      }
@@ -7108,8 +7412,11 @@
        window.clearInterval(_tPing);
        _tPing = 0;
       }
+      if (_ws === null)
+       return;
       _ws.onmessage = null;
       _ws.onclose = null;
+      _ws = null;
       if (twitch.net.dead)
        return;
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
@@ -7120,9 +7427,12 @@
 
      async function _wsMessage(ev)
      {
+      if (_ws === null)
+       return;
       if (twitch.net.dead)
       {
        _ws.close();
+       _ws = null;
        return;
       }
       _wsRetry = 0;
@@ -7193,6 +7503,8 @@
 
      function _wsPing()
      {
+      if (_ws === null)
+       return;
       _ws.send('2');
      }
 
@@ -7261,8 +7573,11 @@
        window.clearInterval(_tPing);
        _tPing = 0;
       }
+      if (_ws === null)
+       return;
       _ws.onmessage = null;
       _ws.onclose = null;
+      _ws = null;
       if (twitch.net.dead)
        return;
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
@@ -7273,9 +7588,12 @@
 
      async function _wsMessage(ev)
      {
+      if (_ws === null)
+       return;
       if (twitch.net.dead)
       {
        _ws.close();
+       _ws = null;
        return;
       }
       _wsRetry = 0;
@@ -7339,6 +7657,8 @@
 
      function _wsPing()
      {
+      if (_ws === null)
+       return;
       _ws.send('2');
      }
 
@@ -7347,7 +7667,7 @@
 
     async function _getOAuthToken(t)
     {
-     const url = cURLs.html.rr.se + '?refresh=' + t;
+     const url = cURLs.html.rr.se.replaceAll('%REFRESH_TOKEN%', t);
      const r = await shared.httpRequest(url, {}, false, false);
      if (r === false)
       return false;
@@ -7417,7 +7737,7 @@
    {
     function _addEmote(list, scope, code, id, url, users = null, zwe = false)
     {
-     if (cfg.ignore.emotes !== false  && cfg.ignore.emotes.includes(code))
+     if (cfg.ignore.emotes !== false && cfg.ignore.emotes.includes(code))
       return;
      list[code] = {scope: scope, url: url, id: id, users: users};
      if (scope === 'c' && !zwe)
@@ -7570,10 +7890,8 @@
       return true;
      }
 
-     async function loadFFZ_channel(chID)
+     async function readFFZ_channel(chID)
      {
-      if (!thirdparty.emotes.hasOwnProperty('ffz'))
-       thirdparty.emotes.ffz = {};
       const url = cURLs.api.ffz.room.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest(url);
       if (r === false)
@@ -7581,7 +7899,7 @@
       const j = JSON.parse(r);
       if (!j.hasOwnProperty('sets'))
        return false;
-      _removeEmoteByScope(thirdparty.emotes.ffz, 'c');
+      let ret = [];
       for (const set in j.sets)
       {
        if (!j.sets[set].hasOwnProperty('emoticons'))
@@ -7593,15 +7911,31 @@
         const u = _readFFZ_URL(j.sets[set].emoticons[i]);
         if (u === false)
          continue;
-        _addEmote(thirdparty.emotes.ffz, 'c', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
+        ret.push({name: j.sets[set].emoticons[i].name, id: j.sets[set].emoticons[i].id, url: u});
        }
+      }
+      return ret;
+     }
+
+     async function loadFFZ_channel(chID)
+     {
+      if (!thirdparty.emotes.hasOwnProperty('ffz'))
+       thirdparty.emotes.ffz = {};
+      const r = await readFFZ_channel(chID);
+      if (r === false)
+       return false;
+      _removeEmoteByScope(thirdparty.emotes.ffz, 'c');
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       _addEmote(thirdparty.emotes.ffz, 'c', r[i].name, r[i].id, r[i].url);
       }
       return true;
      }
 
      return {
       global: loadFFZ_global,
-      channel: loadFFZ_channel
+      channel: loadFFZ_channel,
+      channelEx: readFFZ_channel
      };
     }();
 
@@ -7653,16 +7987,14 @@
       return true;
      }
 
-     async function loadBTTV_channel(chID)
+     async function readBTTV_channel(chID)
      {
-      if (!thirdparty.emotes.hasOwnProperty('bttv'))
-       thirdparty.emotes.bttv = {};
       const url = cURLs.api.bttv.users.twitch.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest(url);
       if (r === false)
        return false;
-      _removeEmoteByScope(thirdparty.emotes.bttv, 'c');
       const j = JSON.parse(r);
+      let ret = [];
       if (j.hasOwnProperty('channelEmotes'))
       {
        for (let i = 0, l = j.channelEmotes.length; i < l; i++)
@@ -7671,7 +8003,7 @@
          continue;
         if (!j.channelEmotes[i].hasOwnProperty('id'))
          continue;
-        _addEmote(thirdparty.emotes.bttv, 'c', j.channelEmotes[i].code, j.channelEmotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', j.channelEmotes[i].id));
+        ret.push({name: j.channelEmotes[i].code, id: j.channelEmotes[i].id, url: cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', j.channelEmotes[i].id)});
        }
       }
       if (j.hasOwnProperty('sharedEmotes'))
@@ -7682,8 +8014,23 @@
          continue;
         if (!j.sharedEmotes[i].hasOwnProperty('id'))
          continue;
-        _addEmote(thirdparty.emotes.bttv, 'c', j.sharedEmotes[i].code, j.sharedEmotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', j.sharedEmotes[i].id));
+        ret.push({name: j.sharedEmotes[i].code, id: j.sharedEmotes[i].id, url: cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', j.sharedEmotes[i].id)});
        }
+      }
+      return ret;
+     }
+
+     async function loadBTTV_channel(chID)
+     {
+      if (!thirdparty.emotes.hasOwnProperty('bttv'))
+       thirdparty.emotes.bttv = {};
+      const r = await readBTTV_channel(chID);
+      if (r === false)
+       return false;
+      _removeEmoteByScope(thirdparty.emotes.bttv, 'c');
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       _addEmote(thirdparty.emotes.bttv, 'c', r[i].name, r[i].id, r[i].url);
       }
       return true;
      }
@@ -7706,6 +8053,8 @@
 
       function _wsOpen()
       {
+       if (_ws === null)
+        return;
        _ws.onopen = null;
        _ws.send(JSON.stringify({'name': 'join_channel', 'data': {'name': 'twitch:' + _ch}}));
        _ws.send(JSON.stringify({'name': 'broadcast_me', 'data': {'name': cfg.channel, 'channel': 'twitch:' + _ch}}));
@@ -7713,9 +8062,12 @@
 
       function _wsClose()
       {
+       if (_ws === null)
+        return;
        _ws.onopen = null;
        _ws.onmessage = null;
        _ws.onclose = null;
+       _ws = null;
        if (twitch.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
@@ -7726,9 +8078,12 @@
 
       function _wsMessage(ev)
       {
+       if (_ws === null)
+        return;
        if (twitch.net.dead)
        {
         _ws.close();
+        _ws = null;
         return;
        }
        _wsRetry = 0;
@@ -7805,6 +8160,7 @@
       timer: false,
       global: loadBTTV_global,
       channel: loadBTTV_channel,
+      channelEx: readBTTV_channel,
       socket: loadBTTV_ws_channel,
       reload: reloadBTTV
      };
@@ -7859,24 +8215,16 @@
       return true;
      }
 
-     async function load7TV_channel(chID)
+     async function read7TV_channel(chID)
      {
-      if (!thirdparty.emotes.hasOwnProperty('7tv'))
-       thirdparty.emotes['7tv'] = {};
-      if (!thirdparty.emotes.hasOwnProperty('zwe'))
-       thirdparty.emotes.zwe = {};
-      if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
-       thirdparty.emotes.zwe['7tv'] = {};
       const url = cURLs.api['7tv'].users.emotes.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest(url);
       if (r === false)
        return false;
-      if (cfg.display.extended.useZWE)
-       _removeEmoteByScope(thirdparty.emotes.zwe['7tv'], 'c');
-      _removeEmoteByScope(thirdparty.emotes['7tv'], 'c');
       const j = JSON.parse(r);
       if (!Array.isArray(j))
        return false;
+      let ret = [];
       for (let i = 0, l = j.length; i < l; i++)
       {
        if (!j[i].hasOwnProperty('name'))
@@ -7898,13 +8246,37 @@
         if (uN.includes('/' + tN + 'x'))
          t4 = uN.replaceAll('/' + tN + 'x', '/4x');
        }
-       if (j[i].hasOwnProperty('visibility') && (j[i].visibility & 0x80) === 0x80)
+       let vis = 0;
+       if ((j[i].hasOwnProperty('visibility')))
+        vis = j[i].visibility;
+       ret.push({name: j[i].name, id: j[i].id, url: t4, v: vis});
+      }
+      return ret;
+     }
+
+     async function load7TV_channel(chID)
+     {
+      if (!thirdparty.emotes.hasOwnProperty('7tv'))
+       thirdparty.emotes['7tv'] = {};
+      if (!thirdparty.emotes.hasOwnProperty('zwe'))
+       thirdparty.emotes.zwe = {};
+      if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
+       thirdparty.emotes.zwe['7tv'] = {};
+      const r = await read7TV_channel(chID);
+      if (r === false)
+       return false;
+      if (cfg.display.extended.useZWE)
+       _removeEmoteByScope(thirdparty.emotes.zwe['7tv'], 'c');
+      _removeEmoteByScope(thirdparty.emotes['7tv'], 'c');
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       if ((r[i].vis & 0x80) === 0x80)
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe['7tv'], 'c', j[i].name, j[i].id, t4, null, true);
+         _addEmote(thirdparty.emotes.zwe['7tv'], 'c', r[i].name, r[i].id, r[i].url, null, true);
         continue;
        }
-       _addEmote(thirdparty.emotes['7tv'], 'c', j[i].name, j[i].id, t4);
+       _addEmote(thirdparty.emotes['7tv'], 'c', r[i].name, r[i].id, r[i].url);
       }
       return true;
      }
@@ -7950,6 +8322,8 @@
 
       function _wsOpen()
       {
+       if (_ws === null)
+        return;
        _ws.onopen = null;
        _tTimeout = setTimeout(_wsTimeout, _lTimeout);
       }
@@ -7961,9 +8335,12 @@
         clearTimeout(_tTimeout);
         _tTimeout = false;
        }
+       if (_ws === null)
+        return;
        _ws.onopen = null;
        _ws.onmessage = null;
        _ws.onclose = null;
+       _ws = null;
        if (twitch.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
@@ -7979,9 +8356,12 @@
         clearTimeout(_tTimeout);
         _tTimeout = false;
        }
+       if (_ws === null)
+        return;
        if (twitch.net.dead)
        {
         _ws.close();
+        _ws = null;
         return;
        }
        _tTimeout = setTimeout(_wsTimeout, _lTimeout);
@@ -8029,7 +8409,10 @@
           _ws.onclose = null;
           _ws.close();
           _ws = null;
-          window.setTimeout(task, _lDelay);
+          const wsRedo = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+          if (_wsRetry < 2)
+           _wsRetry += 0.2;
+          window.setTimeout(task, wsRedo);
           return;
          }
          _wsRetry = 0;
@@ -8098,8 +8481,8 @@
              _wsR_RL += 0.2;
             break;
            case 4006:
-            if (wsWait < 4 * 60 * 1000)
-             wsWait = 4 * 60 * 1000;
+            if (wsWait < 5 * 60 * 1000)
+             wsWait = 5 * 60 * 1000;
             break;
            case 4007:
             wsWait = 5 * 60 * 1000 + Math.floor(wWS ** (1 + _wsR_M) * 1000) - 5000;
@@ -8121,6 +8504,8 @@
 
       function _wsUnsub()
       {
+       if (_ws === null)
+        return;
        _ws.send(JSON.stringify({'op': 36, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
        _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
        _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
@@ -8128,6 +8513,8 @@
 
       function _wsSub()
       {
+       if (_ws === null)
+        return;
        _ws.send(JSON.stringify({'op': 35, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
        _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
        _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
@@ -8135,6 +8522,8 @@
 
       function _wsTimeout()
       {
+       if (_ws === null)
+        return;
        _lTimeout = 5000;
        if (twitch.net.dead === true)
         return;
@@ -8144,6 +8533,7 @@
         _tTimeout = false;
        }
        _ws.close();
+       _ws = null;
        task();
       }
 
@@ -8153,6 +8543,7 @@
      return {
       global: load7TV_global,
       channel: load7TV_channel,
+      channelEx: read7TV_channel,
       socket: load7TV_ws_channel
      };
     }();
@@ -8512,9 +8903,9 @@
      const o = encodeURIComponent(btoa(window.location));
      const c = encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8');
      const r = encodeURIComponent(cURLs.html.rr.wizard);
-     let u = cURLs.html.twitch + '?client_id=' + c + '&redirect_uri=' + r + '&response_type=code&scope=' + _uScope() + '&state=redirto_' + o + '&force_verify=true';
+     let u = cURLs.html.twitch.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', o);
      if (u.length > 1500)
-      u = cURLs.html.rr.redir + '?t=code&c=' + c + '&r=' + r + '&s=' + _uScope() + '&u=' + encodeURIComponent(window.location);
+      u = cURLs.html.rr.redir.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', encodeURIComponent(window.location));
      window.location = u;
     }
 
