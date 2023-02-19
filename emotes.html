@@ -384,6 +384,20 @@
     *                If TRUE, shoutout kappagens will use channel emotes from the source's channel.
     *               If FALSE, shoutout kappagens will use your channel's emotes.
     *
+    *  tag        Settings related to kappagens when users tag a channel you've tagged in your stream title.
+    *
+    *   styles     A user posts a message that starts with '@user'. This value can be a boolean or array.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   access    A bitwise flag representing which users can trigger this kappagen with a command.
+    *             This value will fall back to the general kappagen access value if missing or less than 0.
+    *
+    *   targetEmotes  A boolean to toggle the use of the target channel's emotes for tag kappagens.
+    *                If TRUE, tag kappagens will use channel emotes from the target's channel.
+    *               If FALSE, tag kappagens will use your channel's emotes.
+    *
     *  sub        Settings related to kappagens on a subscribe event.
     *             Note: Sub event booleans can also be arrays of kappa styles. This will override the default list
     *                   of kappa styles for the particular event in question.
@@ -937,6 +951,11 @@
        styles: false,
        originEmotes: true
       }
+     },
+     tag: {
+      styles: true,
+      access: -1,
+      targetEmotes: true
      },
      sub: {
       useMsg: true,
@@ -1592,6 +1611,7 @@
        cheermotes: 'https://api.twitch.tv/helix/bits/cheermotes?broadcaster_id=%CHANNEL_ID%'
       },
       channels: {
+       root: 'https://api.twitch.tv/helix/channels?broadcaster_id=%CHANNEL_ID%',
        followers: 'https://api.twitch.tv/helix/channels/followers?user_id=%USER_ID%&broadcaster_id=%CHANNEL_ID%'
       },
       chat: {
@@ -4521,6 +4541,7 @@
    const twitch = function()
    {
     let _rList = {};
+    let _aTagged = {};
 
     const net = function()
     {
@@ -4928,6 +4949,13 @@
            if (cfg.event.goal !== false && cfg.event.goal.hasOwnProperty('achieved'))
             display.kappa.show(false, cfg.event.goal.achieved, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.current_amount});
            break;
+          case 'channel.update':
+           if (!r.payload.hasOwnProperty('event'))
+            return;
+           if (!r.payload.event.hasOwnProperty('title'))
+            return;
+           await _addToChannelTitleTags(r.payload.event.title);
+           break;
          }
          break;
         case 'session_reconnect':
@@ -5006,7 +5034,8 @@
         {id: 'channel.prediction.end', scope: ['channel:read:predictions'], cfg: ['event.prediction.resolved']},
         {id: 'channel.goal.begin', scope: ['channel:read:goals'], cfg: ['event.goal.begin']},
         {id: 'channel.goal.end', scope: ['channel:read:goals'], cfg: ['event.goal.achieved']},
-        {id: 'channel.charity_campaign.donate', scope: ['channel:read:charity'], cfg: ['event.charity']}
+        {id: 'channel.charity_campaign.donate', scope: ['channel:read:charity'], cfg: ['event.charity']},
+        {id: 'channel.update', scope: false, cfg: ['event.tag.styles']}
        ];
        const aActive = await _unsubscribe();
        let didSomething = aActive.length > 0;
@@ -5280,6 +5309,8 @@
            _firstRS = false;
            await _loadEmote_channel(twitch.net.channelID);
            await _loadCheer_channel(twitch.net.channelID);
+           if (cfg.event.tag.hasOwnProperty('styles') && cfg.event.tag.styles !== false)
+            await _getChannelTitleTags(twitch.net.channelID);
            if (cfg.display.extended.useFFZ)
             thirdparty.ffz.channel(twitch.net.channelID);
            if (cfg.display.extended.useBTTV)
@@ -5407,6 +5438,53 @@
       if (j.data.length !== 1)
        return false;
       return j.data[0];
+     }
+
+     async function _getChannelTitleTags(chID)
+     {
+      const url = cURLs.api.twitch.channels.root.replaceAll('%CHANNEL_ID%', chID);
+      const h = {
+       'Authorization': 'Bearer ' + cfg.login.oauth,
+       'Client-Id': cfg.login.client
+      };
+      const r = await shared.httpRequest(url, h);
+      if (r === false)
+       return;
+      const j = JSON.parse(r);
+      if (!j.hasOwnProperty('data'))
+       return;
+      if (j.data.length !== 1)
+       return;
+      if (!j.data[0].hasOwnProperty('title'))
+       return;
+      await _addToChannelTitleTags(j.data[0].title);
+     }
+
+     async function _addToChannelTitleTags(title)
+     {
+      const tReg = /(?:^| )(?:@([A-Za-z0-9_]+))/g;
+      let tList = [];
+      let match = '';
+      while ((match = tReg.exec(title)) !== null)
+      {
+       tList.push(match);
+      }
+      if (tList.length < 1)
+       return;
+      _aTagged = {};
+      for (let i = 0, l = tList.length; i < l; i++)
+      {
+       if (tList[i][1].length < 1)
+        continue;
+       let u = await twitch.net.userInfo(tList[i][1]);
+       if (u === false)
+        continue;
+       if (!u.hasOwnProperty('id'))
+        continue;
+       if (!u.hasOwnProperty('login'))
+        continue;
+       _aTagged[u.login] = u.id;
+      }
      }
 
      async function _getOAuthToken(t)
@@ -6173,17 +6251,22 @@
      {
       async function task(cmd)
       {
+       const u = _parseUser(cmd, true);
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        return;
        if (await _parseCustomReward(cmd))
         return;
        if (cmd.params.length < 2)
         return;
-       if (await _parseCommand(cmd))
+       const lv = await _level.get(cmd);
+       if (await _parseTaggedChannel(cmd, lv))
+        return;
+       if (await _parseCommand(cmd, lv))
+        return;
+       if ((lv & cfg.display.access) === 0)
         return;
        const p = _handleDuplicates(await _eListFromCmd(cmd));
        if (p.length === 0)
-        return;
-       const lv = await _level.get(cmd);
-       if ((lv & cfg.display.access) === 0)
         return;
        display.emote.addToShowList(p);
        display.emote.showEmotes();
@@ -6211,12 +6294,76 @@
        return true;
       }
 
-      async function _parseCommand(cmd)
+      async function _parseTaggedChannel(cmd, lv)
       {
-       const u = _parseUser(cmd, true);
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
-        return;
-       let lv = -1;
+       if (Object.keys(_aTagged).length < 1)
+        return false;
+       if (!cfg.event.tag.hasOwnProperty('styles'))
+        return false;
+       if (cfg.event.tag.styles === false)
+        return false;
+       const m = cmd.params[1];
+       if (m.slice(0, 1) !== '@')
+        return false;
+       let uTagged = m.slice(1);
+       if (uTagged.indexOf(' ') > -1)
+        uTagged = uTagged.slice(0, uTagged.indexOf(' '));
+       uTagged = uTagged.toLowerCase();
+       if (!_aTagged.hasOwnProperty(uTagged))
+        return false;
+       const uID = _aTagged[uTagged];
+       let rq = cfg.display.kappa.access;
+       if (cfg.event.tag.hasOwnProperty('access') && cfg.event.tag.access >= 0)
+        rq = cfg.event.tag.access;
+       if ((lv & rq) === 0)
+        return false;
+       if (!cfg.event.tag.targetEmotes)
+       {
+        display.kappa.show(false, cfg.event.tag.styles, {'%USER%': uTagged});
+        return true;
+       }
+       const e = await _findEmote_channel(uID);
+       if (cfg.display.extended.useFFZ)
+       {
+        const rFFZ = await thirdparty.ffz.channelEx(uID);
+        if (rFFZ !== false)
+        {
+         for (let i = 0, l = rFFZ.length; i < l; i++)
+         {
+          e.push({url: rFFZ[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.useBTTV)
+       {
+        const rBTTV = await thirdparty.bttv.channelEx(uID);
+        if (rBTTV !== false)
+        {
+         for (let i = 0, l = rBTTV.length; i < l; i++)
+         {
+          e.push({url: rBTTV[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.use7TV)
+       {
+        const r7TV = await thirdparty['7tv'].channelEx(uID);
+        if (r7TV !== false)
+        {
+         for (let i = 0, l = r7TV.length; i < l; i++)
+         {
+          if ((r7TV[i].vis & 0x80) === 0x80)
+           continue;
+          e.push({url: r7TV[i].url});
+         }
+        }
+       }
+       display.kappa.show(e, cfg.event.tag.styles, {'%USER%': uTagged});
+       return true;
+      }
+
+      async function _parseCommand(cmd, lv)
+      {
        const kNow = new Date().getTime();
        const m = cmd.params[1].toLowerCase();
        let foundAdvCmd = false;
@@ -6245,8 +6392,6 @@
         let kAccess = cfg.display.kappa.access;
         if (k.hasOwnProperty('access'))
          kAccess = k.access;
-        if (lv === -1)
-         lv = await _level.get(cmd);
         if ((lv & kAccess) === 0)
          continue;
         foundAdvCmd = true;
@@ -6298,8 +6443,6 @@
        }
        if (foundCmd === false)
         return foundAdvCmd;
-       if (lv === -1)
-        lv = await _level.get(cmd);
        if ((lv & cfg.display.kappa.access) === 0)
         return foundAdvCmd;
        let h = _hashCode(null);
