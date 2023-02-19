@@ -350,8 +350,8 @@
     *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     *   originEmotes  A boolean to toggle the use of the raiding streamer's channel emotes for raid kappagens.
-    *                If TRUE, raid kappagens will use channel emotes from the raider's channel (not including third-party).
-    *               If FALSE, raid kappagens will use your channel's emotes (including third-party).
+    *                If TRUE, raid kappagens will use channel emotes from the raider's channel.
+    *               If FALSE, raid kappagens will use your channel's emotes.
     *
     *  follow     A user follows the channel.
     *              If TRUE, a kappagen will occur.
@@ -370,8 +370,8 @@
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     *   targetEmotes  A boolean to toggle the use of the target channel's emotes for shoutout kappagens.
-    *                If TRUE, shoutout kappagens will use channel emotes from the target's channel (not including third-party).
-    *               If FALSE, shoutout kappagens will use your channel's emotes (including third-party).
+    *                If TRUE, shoutout kappagens will use channel emotes from the target's channel.
+    *               If FALSE, shoutout kappagens will use your channel's emotes.
     *
     *   receive    Settings related to kappagens when another channel shouts you out.
     *
@@ -381,8 +381,8 @@
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     *   originEmotes  A boolean to toggle the use of the source channel's emotes for shoutout kappagens.
-    *                If TRUE, shoutout kappagens will use channel emotes from the source's channel (not including third-party).
-    *               If FALSE, shoutout kappagens will use your channel's emotes (including third-party).
+    *                If TRUE, shoutout kappagens will use channel emotes from the source's channel.
+    *               If FALSE, shoutout kappagens will use your channel's emotes.
     *
     *  sub        Settings related to kappagens on a subscribe event.
     *             Note: Sub event booleans can also be arrays of kappa styles. This will override the default list
@@ -6413,6 +6413,41 @@
        }
        const d = cmd.tags['user-id'];
        const e = await _findEmote_channel(d);
+       if (cfg.display.extended.useFFZ)
+       {
+        const rFFZ = await thirdparty.ffz.channelEx(d);
+        if (rFFZ !== false)
+        {
+         for (let i = 0, l = rFFZ.length; i < l; i++)
+         {
+          e.push({url: rFFZ[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.useBTTV)
+       {
+        const rBTTV = await thirdparty.bttv.channelEx(d);
+        if (rBTTV !== false)
+        {
+         for (let i = 0, l = rBTTV.length; i < l; i++)
+         {
+          e.push({url: rBTTV[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.use7TV)
+       {
+        const r7TV = await thirdparty['7tv'].channelEx(d);
+        if (r7TV !== false)
+        {
+         for (let i = 0, l = r7TV.length; i < l; i++)
+         {
+          if ((r7TV[i].vis & 0x80) === 0x80)
+           continue;
+          e.push({url: r7TV[i].url});
+         }
+        }
+       }
        display.kappa.show(e, r, {'%USER%': dn, '%AMOUNT%': c});
       }
 
@@ -6644,6 +6679,41 @@
         return;
        }
        const e = await _findEmote_channel(uID);
+       if (cfg.display.extended.useFFZ)
+       {
+        const rFFZ = await thirdparty.ffz.channelEx(uID);
+        if (rFFZ !== false)
+        {
+         for (let i = 0, l = rFFZ.length; i < l; i++)
+         {
+          e.push({url: rFFZ[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.useBTTV)
+       {
+        const rBTTV = await thirdparty.bttv.channelEx(uID);
+        if (rBTTV !== false)
+        {
+         for (let i = 0, l = rBTTV.length; i < l; i++)
+         {
+          e.push({url: rBTTV[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.use7TV)
+       {
+        const r7TV = await thirdparty['7tv'].channelEx(uID);
+        if (r7TV !== false)
+        {
+         for (let i = 0, l = r7TV.length; i < l; i++)
+         {
+          if ((r7TV[i].vis & 0x80) === 0x80)
+           continue;
+          e.push({url: r7TV[i].url});
+         }
+        }
+       }
        display.kappa.show(e, cfg.event.shoutout.create.styles, {'%USER%': uName});
       }
 
@@ -6655,6 +6725,41 @@
         return;
        }
        const e = await _findEmote_channel(uID);
+       if (cfg.display.extended.useFFZ)
+       {
+        const rFFZ = await thirdparty.ffz.channelEx(uID);
+        if (rFFZ !== false)
+        {
+         for (let i = 0, l = rFFZ.length; i < l; i++)
+         {
+          e.push({url: rFFZ[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.useBTTV)
+       {
+        const rBTTV = await thirdparty.bttv.channelEx(uID);
+        if (rBTTV !== false)
+        {
+         for (let i = 0, l = rBTTV.length; i < l; i++)
+         {
+          e.push({url: rBTTV[i].url});
+         }
+        }
+       }
+       if (cfg.display.extended.use7TV)
+       {
+        const r7TV = await thirdparty['7tv'].channelEx(uID);
+        if (r7TV !== false)
+        {
+         for (let i = 0, l = r7TV.length; i < l; i++)
+         {
+          if ((r7TV[i].vis & 0x80) === 0x80)
+           continue;
+          e.push({url: r7TV[i].url});
+         }
+        }
+       }
        display.kappa.show(e, cfg.event.shoutout.receive.styles, {'%USER%': uName});
       }
 
