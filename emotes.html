@@ -6213,6 +6213,9 @@
 
       async function _parseCommand(cmd)
       {
+       const u = _parseUser(cmd, true);
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        return;
        let lv = -1;
        const kNow = new Date().getTime();
        const m = cmd.params[1].toLowerCase();
