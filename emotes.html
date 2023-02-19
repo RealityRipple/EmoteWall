@@ -6965,47 +6965,62 @@
      };
     }();
 
-    async function _findEmote_channel(chID, n = false)
+    const _findEmote_channel = function()
     {
-     const url = cURLs.api.twitch.chat.emotes.root.replaceAll('%CHANNEL_ID%', chID);
-     const h = {
-      'Authorization': 'Bearer ' + cfg.login.oauth,
-      'Client-Id': cfg.login.client
-     };
-     const r = await shared.httpRequest(url, h, true);
-     if (r === false)
-      return false;
-     if (r === null)
+     const _rCH = 300000;
+     let _chList = {};
+
+     async function task(chID, n = false)
      {
-      shared.blargIAmDead(3);
-      return false;
-     }
-     const j = JSON.parse(r);
-     if (!j.hasOwnProperty('data'))
-      return false;
-     if (!Array.isArray(j.data))
-      return false;
-     let ret = [];
-     for (let i = 0, l = j.data.length; i < l; i++)
-     {
-      if (!j.data[i].hasOwnProperty('id'))
-       continue;
-      if (cfg.ignore.emotes !== false && j.data[i].hasOwnProperty('name') && cfg.ignore.emotes.includes(j.data[i].name))
-       continue;
-      const eURL = cURLs.cdn.twitch.emote.replaceAll('%EMOTE_ID%', j.data[i].id);
-      if (n !== false && j.data[i].hasOwnProperty('name'))
+      if (n === false && _chList.hasOwnProperty(chID))
       {
-       n[j.data[i].name] = {
-        scope: 'c',
-        url: eURL,
-        id: j.data[i].id,
-        users: null
-       };
+       const tDif = new Date().getTime() - _chList[chID].t;
+       if (tDif < _rCH)
+        return _chList[chID].value;
       }
-      ret.push({url: eURL});
+      const url = cURLs.api.twitch.chat.emotes.root.replaceAll('%CHANNEL_ID%', chID);
+      const h = {
+       'Authorization': 'Bearer ' + cfg.login.oauth,
+       'Client-Id': cfg.login.client
+      };
+      const r = await shared.httpRequest(url, h, true);
+      if (r === false)
+       return false;
+      if (r === null)
+      {
+       shared.blargIAmDead(3);
+       return false;
+      }
+      const j = JSON.parse(r);
+      if (!j.hasOwnProperty('data'))
+       return false;
+      if (!Array.isArray(j.data))
+       return false;
+      let ret = [];
+      for (let i = 0, l = j.data.length; i < l; i++)
+      {
+       if (!j.data[i].hasOwnProperty('id'))
+        continue;
+       if (cfg.ignore.emotes !== false && j.data[i].hasOwnProperty('name') && cfg.ignore.emotes.includes(j.data[i].name))
+        continue;
+       const eURL = cURLs.cdn.twitch.emote.replaceAll('%EMOTE_ID%', j.data[i].id);
+       if (n !== false && j.data[i].hasOwnProperty('name'))
+       {
+        n[j.data[i].name] = {
+         scope: 'c',
+         url: eURL,
+         id: j.data[i].id,
+         users: null
+        };
+       }
+       ret.push({url: eURL});
+      }
+      _chList[chID] = {t: new Date().getTime(), value: ret};
+      return ret;
      }
-     return ret;
-    }
+
+     return task;
+    }();
 
     async function findEmote_global()
     {
