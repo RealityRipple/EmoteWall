@@ -5183,18 +5183,7 @@
         'Content-Type': 'application/json'
        };
        const r = await shared.httpSend('POST', cURLs.api.twitch.eventSub.get, JSON.stringify(d), h);
-       if (r !== false)
-        return true;
-       switch (type)
-       {
-        case 'channel.follow':
-         if (version === '2')
-          return _subscribe(type, 'beta');
-         else if (version === 'beta')
-          return _subscribe(type, '1');
-         break;
-       }
-       return false;
+       return r !== false;
       }
 
       return task;
