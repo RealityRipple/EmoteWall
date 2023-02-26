@@ -8338,7 +8338,7 @@
         case 0:
          if (thirdparty.timer !== false)
           window.clearTimeout(thirdparty.timer);
-         thirdparty.timer = window.setTimeout(reload3rdParty, _lDelay, _ch);
+         thirdparty.timer = window.setTimeout(thirdparty.reload, _lDelay, _ch);
          break;
         case 1:
          _okCt = 0;
@@ -8521,7 +8521,7 @@
       thirdparty.ffz.channel(twitch.net.channelID);
      if (cfg.display.extended.use7TV)
       thirdparty['7tv'].channel(twitch.net.channelID);
-     thirdparty.timer = window.setTimeout(reload3rdParty, thirdparty.interval, chID);
+     thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval, chID);
     }
 
     return {
@@ -8580,7 +8580,7 @@
          url+= '&';
         else
          url+= '?';
-        url+= 'nocache=' + rnd(0xFFFFFFFF);
+        url+= 'nocache=' + shared.rnd(0xFFFFFFFF);
        }
        x.open('GET', url);
        for (const hK in hdrs)
@@ -8835,7 +8835,7 @@
      cfg.login.client = lsClient;
      cfg.login.scope = decodeURIComponent(lsScope).split(' ');
      document.title = cfg.channel + ' Emote Wall';
-     showLogoutButton();
+     login.showOut();
      return false;
     }
 
