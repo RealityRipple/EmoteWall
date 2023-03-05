@@ -4461,10 +4461,10 @@
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
       };
-      const r = await shared.httpRequest(url, h);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url, h);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('data'))
        return false;
       for (let c = 0, l = j.data.length; c < l; c++)
@@ -5018,8 +5018,10 @@
         'Authorization': 'Bearer ' + cfg.login.oauth,
         'Client-Id': cfg.login.client
        };
-       const r = await shared.httpRequest(cURLs.api.twitch.eventSub.get, h);
-       const j = JSON.parse(r);
+       const r = await shared.httpRequest('GET', cURLs.api.twitch.eventSub.get, h);
+       if (!r.success)
+        return [];
+       const j = r.json;
        if (!j.hasOwnProperty('data'))
         return [];
        if (!j.hasOwnProperty('total'))
@@ -5061,7 +5063,7 @@
          case 'websocket_internal_error':
          case 'websocket_network_timeout':
          case 'websocket_network_error':
-          shared.httpSend('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', j.data[i].id), null, h);
+          shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', j.data[i].id), h, null, false, false);
           break;
         }
        }
@@ -5089,8 +5091,8 @@
         'Client-Id': cfg.login.client,
         'Content-Type': 'application/json'
        };
-       const r = await shared.httpSend('POST', cURLs.api.twitch.eventSub.get, JSON.stringify(d), h);
-       return r !== false;
+       const r = await shared.httpRequest('POST', cURLs.api.twitch.eventSub.get, h, JSON.stringify(d), false, false);
+       return r;
       }
 
       return task;
@@ -5325,10 +5327,10 @@
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
       };
-      const r = await shared.httpRequest(url, h);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url, h);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('data'))
        return false;
       if (j.data.length !== 1)
@@ -5343,10 +5345,10 @@
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
       };
-      const r = await shared.httpRequest(url, h);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url, h);
+      if (!r.success)
        return;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('data'))
        return;
       if (j.data.length !== 1)
@@ -5386,18 +5388,19 @@
      async function _getOAuthToken(t)
      {
       const url = cURLs.html.rr.t.replaceAll('%REFRESH_TOKEN%', t);
-      const r = await shared.httpRequest(url, {}, true, false);
-      if (r === false)
-       return false;
-      if (r === null)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
       {
-       shared.blargIAmDead(1);
-       window.localStorage.removeItem(login.path() + '.oauth');
-       window.localStorage.removeItem(login.path() + '.refresh');
-       window.localStorage.removeItem(login.path() + '.refreshed');
+       if (r.code === 401)
+       {
+        shared.blargIAmDead(1);
+        window.localStorage.removeItem(login.path() + '.oauth');
+        window.localStorage.removeItem(login.path() + '.refresh');
+        window.localStorage.removeItem(login.path() + '.refreshed');
+       }
        return false;
       }
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('access_token'))
        return false;
       if (!j.hasOwnProperty('refresh_token'))
@@ -6903,10 +6906,10 @@
         'Authorization': 'Bearer ' + cfg.login.oauth,
         'Client-Id': cfg.login.client
        };
-       const r = await shared.httpRequest(url, h);
-       if (r === false)
+       const r = await shared.httpRequest('GET', url, h);
+       if (!r.success)
         return false;
-       const j = JSON.parse(r);
+       const j = r.json;
        if (j.hasOwnProperty('data') && j.data.length > 0)
        {
         twitch.net.fList[uID] = {value: true, t: new Date().getTime()};
@@ -7128,15 +7131,14 @@
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
       };
-      const r = await shared.httpRequest(url, h, true);
-      if (r === false)
-       return false;
-      if (r === null)
+      const r = await shared.httpRequest('GET', url, h);
+      if (!r.success)
       {
-       shared.blargIAmDead(3);
+       if (r.code === 401)
+        shared.blargIAmDead(3);
        return false;
       }
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('data'))
        return false;
       if (!Array.isArray(j.data))
@@ -7176,15 +7178,14 @@
       'Authorization': 'Bearer ' + cfg.login.oauth,
       'Client-Id': cfg.login.client
      };
-     const r = await shared.httpRequest(url, h, true);
-     if (r === false)
-      return false;
-     if (r === null)
+     const r = await shared.httpRequest('GET', url, h);
+     if (!r.success)
      {
-      shared.blargIAmDead(3);
+      if (r.code === 401)
+       shared.blargIAmDead(3);
       return false;
      }
-     const j = JSON.parse(r);
+     const j = r.json;
      if (!j.hasOwnProperty('data'))
       return false;
      if (!Array.isArray(j.data))
@@ -7565,10 +7566,10 @@
     async function _getOAuthToken(t)
     {
      const url = cURLs.html.rr.se.replaceAll('%REFRESH_TOKEN%', t);
-     const r = await shared.httpRequest(url, {}, false, false);
-     if (r === false)
+     const r = await shared.httpRequest('GET', url, {}, null, false);
+     if (!r.success)
       return false;
-     const j = JSON.parse(r);
+     const j = r.json;
      if (!j.hasOwnProperty('access_token'))
       return false;
      if (!j.hasOwnProperty('refresh_token'))
@@ -7726,10 +7727,10 @@
       if (!thirdparty.emotes.hasOwnProperty('ffz'))
        thirdparty.emotes.ffz = {};
       const url = cURLs.api.ffz.set.global;
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('sets'))
        return false;
       let usedSets = [];
@@ -7790,10 +7791,10 @@
      async function readFFZ_channel(chID)
      {
       const url = cURLs.api.ffz.room.replaceAll('%CHANNEL_ID%', chID);
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('sets'))
        return false;
       let ret = [];
@@ -7860,10 +7861,10 @@
       if (!thirdparty.emotes.zwe.hasOwnProperty('bttv'))
        thirdparty.emotes.zwe.bttv = {};
       const url = cURLs.api.bttv.emotes.global;
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!Array.isArray(j))
        return false;
       for (let i = 0, l = j.length; i < l; i++)
@@ -7887,10 +7888,10 @@
      async function readBTTV_channel(chID)
      {
       const url = cURLs.api.bttv.users.twitch.replaceAll('%CHANNEL_ID%', chID);
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       let ret = [];
       if (j.hasOwnProperty('channelEmotes'))
       {
@@ -8074,10 +8075,10 @@
       if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
        thirdparty.emotes.zwe['7tv'] = {};
       const url = cURLs.api['7tv'].emotes.global;
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!Array.isArray(j))
        return false;
       for (let i = 0, l = j.length; i < l; i++)
@@ -8115,10 +8116,10 @@
      async function read7TV_channel(chID)
      {
       const url = cURLs.api['7tv'].users.emotes.replaceAll('%CHANNEL_ID%', chID);
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!Array.isArray(j))
        return false;
       let ret = [];
@@ -8181,10 +8182,10 @@
      async function _load7TV_channelID(chID)
      {
       const url = cURLs.api['7tv'].users.root.replaceAll('%CHANNEL_ID%', chID);
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('id'))
        return false;
       return j.id;
@@ -8482,26 +8483,7 @@
      return Math.floor(f * m);
     }
 
-    function _httpRequest_RSC(x)
-    {
-     if (x.readyState < 2)
-      return null;
-     if (Math.floor(x.status / 100) !== 2)
-     {
-      x.onreadystatechange = null;
-      return false;
-     }
-     if (x.readyState !== 4)
-      return null;
-     if (x.responseText === '')
-      return null;
-     x.onreadystatechange = null;
-     if (x.responseText === null)
-      return false;
-     return x.responseText;
-    }
-
-    function httpRequest(url, hdrs = {}, nullOn401 = false, nocache = true)
+    function httpRequest(type, url, hdrs = {}, body = null, nocache = true, ret = true)
     {
      const p = new Promise(
       function(resolve)
@@ -8515,37 +8497,6 @@
          url+= '?';
         url+= 'nocache=' + shared.rnd(0xFFFFFFFF);
        }
-       x.open('GET', url);
-       for (const hK in hdrs)
-       {
-        if (!hdrs.hasOwnProperty(hK))
-         continue;
-        x.setRequestHeader(hK, hdrs[hK]);
-       }
-       x.onreadystatechange = function()
-       {
-        const r = _httpRequest_RSC(x);
-        if (r === null)
-         return;
-        if (r === false && nullOn401 && x.status === 401)
-        {
-         resolve(null);
-         return;
-        }
-        resolve(r);
-       };
-       x.send();
-      }
-     );
-     return p;
-    }
-
-    function httpSend(type, url, body = null, hdrs = {})
-    {
-     const p = new Promise(
-      function(resolve)
-      {
-       const x = new XMLHttpRequest();
        x.open(type, url);
        for (const hK in hdrs)
        {
@@ -8555,14 +8506,18 @@
        }
        x.onreadystatechange = function()
        {
-        const r = _httpRequest_RSC(x);
-        if (r === null)
+        if (ret === false)
         {
-         if (type === 'DELETE')
-          resolve(true);
+         if (x.readyState < 2)
+          return;
+         x.onreadystatechange = null;
+         resolve(Math.floor(x.status / 100) === 2);
          return;
         }
-        resolve(r);
+        if (x.readyState !== 4)
+         return;
+        x.onreadystatechange = null;
+        resolve({code: x.status, data: x.responseText, get success(){return Math.floor(this.code / 100) === 2;}, get json(){return JSON.parse(this.data);}});
        };
        if (body === null)
         x.send();
@@ -8658,7 +8613,6 @@
     return {
      rnd: rnd,
      httpRequest: httpRequest,
-     httpSend: httpSend,
      findInMaybeRange: findInMaybeRange,
      blargIAmDead: blargIAmDead
     };
