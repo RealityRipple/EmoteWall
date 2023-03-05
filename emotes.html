@@ -7135,7 +7135,15 @@
       if (!r.success)
       {
        if (r.code === 401)
+       {
         shared.blargIAmDead(3);
+        if (!login.inUse)
+        {
+         window.localStorage.removeItem(login.path() + '.oauth');
+         window.localStorage.removeItem(login.path() + '.refresh');
+         window.localStorage.removeItem(login.path() + '.refreshed');
+        }
+       }
        return false;
       }
       const j = r.json;
@@ -7182,7 +7190,15 @@
      if (!r.success)
      {
       if (r.code === 401)
+      {
        shared.blargIAmDead(3);
+       if (!login.inUse)
+       {
+        window.localStorage.removeItem(login.path() + '.oauth');
+        window.localStorage.removeItem(login.path() + '.refresh');
+        window.localStorage.removeItem(login.path() + '.refreshed');
+       }
+      }
       return false;
      }
      const j = r.json;
