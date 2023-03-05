@@ -5173,7 +5173,7 @@
         {
          case 'PING':
           _ws.send('PONG ' + cmd.params[0]);
-          if (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')
+          if ((login.cfgVals() & 0x02) === 0x02)
            await twitch.net.updateOAuth();
           break;
          case 'PRIVMSG':
@@ -7425,8 +7425,19 @@
      return task;
     }();
 
+    function getCfgVals()
+    {
+     if (!cfg.hasOwnProperty('streamlabs'))
+      return 0;
+     let r = 0;
+     if (cfg.streamlabs.hasOwnProperty('token') && cfg.streamlabs.channel !== false && cfg.streamlabs.channel !== null && cfg.streamlabs.channel !== 'SOCKET_TOKEN')
+      r |= 0x01;
+     return r;
+    }
+
     return {
-     socket: streamlabsWS
+     socket: streamlabsWS,
+     cfgVals: getCfgVals
     };
    }();
 
@@ -7535,9 +7546,10 @@
         if (d.slice(1, 2) === '0')
         {
          let a = '';
-         if (cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID')
+         const seCfg = streamelements.cfgVals();
+         if ((seCfg & 0x04) === 0x04)
           a = JSON.stringify(['authenticate', {'method': 'oauth2', 'token': cfg.streamelements.oauth}]);
-         else if (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN')
+         else if ((seCfg & 0x01) === 0x01)
           a = JSON.stringify(['authenticate', {'method': 'jwt', 'token': cfg.streamelements.token}]);
          _ws.send('42' + a);
          return;
@@ -7641,9 +7653,24 @@
      window.localStorage.setItem('streamelements.tips:read.refreshed', cfg.streamelements.oauth_refreshed);
     }
 
+    function getCfgVals()
+    {
+     if (!cfg.hasOwnProperty('streamelements'))
+      return 0;
+     let r = 0;
+     if (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== null && cfg.streamelements.token !== 'JWT_TOKEN')
+      r |= 0x01;
+     if (cfg.streamelements.hasOwnProperty('oauth_refresh') && cfg.streamelements.oauth_refresh !== false && cfg.streamelements.oauth_refresh !== null && cfg.streamelements.oauth_refresh !== 'OAUTH_REFRESH')
+      r |= 0x02;
+     if (cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== null && cfg.streamelements.oauth !== 'OAUTH_ID')
+      r |= 0x04;
+     return r;
+    }
+
     return {
      socket: streamelementsWS,
-     updateOAuth: updateOAuth
+     updateOAuth: updateOAuth,
+     cfgVals: getCfgVals
     };
    }();
 
@@ -8702,10 +8729,24 @@
      return 'twitch.' + _activeScope().join('+');
     }
 
+    function getCfgVals()
+    {
+     if (!cfg.hasOwnProperty('login'))
+      return 0;
+     let r = 0;
+     if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== null && cfg.channel !== 'CHANNEL_NAME')
+      r |= 0x01;
+     if (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== null && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')
+      r |= 0x02;
+     if (cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== null && cfg.login.oauth !== 'OAUTH_ID')
+      r |= 0x04;
+     return r;
+    }
+
     function shouldUseLogin()
     {
      login.inUse = false;
-     if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== 'CHANNEL_NAME' && cfg.hasOwnProperty('login') && ((cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== 'OAUTH_ID') || (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')))
+     if (login.cfgVals() > 0x01)
       return false;
      login.inUse = true;
      let lsChannel = window.localStorage.getItem(login.path() + '.channel');
@@ -8868,7 +8909,8 @@
      begin: doLogin,
      showIn: showLoginButton,
      showOut: showLogoutButton,
-     path: lsPath
+     path: lsPath,
+     cfgVals: getCfgVals
     };
    }();
 
@@ -8881,25 +8923,31 @@
     }
     if (login.use() === true)
      return;
-    if (cfg.hasOwnProperty('streamlabs') && cfg.streamlabs.hasOwnProperty('token') && cfg.streamlabs.token !== false && cfg.streamlabs.token !== 'SOCKET_TOKEN')
+    const slCfg = streamlabs.cfgVals();
+    if ((slCfg & 0x01) === 0x01)
      streamlabs.socket();
-    if (cfg.hasOwnProperty('streamelements'))
+    let seCfg = streamelements.cfgVals();
+    if (seCfg > 0)
     {
-     if (cfg.streamelements.hasOwnProperty('oauth_refresh') && cfg.streamelements.oauth_refresh !== false && cfg.streamelements.oauth_refresh !== 'OAUTH_REFRESH')
+     if ((seCfg & 0x02) === 0x02)
       await streamelements.updateOAuth();
-     if ((cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID') || (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN'))
+     seCfg = streamelements.cfgVals();
+     if ((seCfg & (0x04 | 0x01)) === (0x04 | 0x01))
       streamelements.socket();
     }
-    if (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')
+    if ((login.cfgVals() & (0x02 | 0x01)) === (0x02 | 0x01))
      await twitch.net.updateOAuth();
-    await twitch.global();
+    const tCfg = login.cfgVals();
+    if ((tCfg & (0x04 | 0x01)) === (0x04 | 0x01))
+     await twitch.global();
     if (cfg.display.extended.useFFZ)
      await thirdparty.ffz.global();
     if (cfg.display.extended.useBTTV)
      await thirdparty.bttv.global();
     if (cfg.display.extended.use7TV)
      await thirdparty['7tv'].global();
-    twitch.net.irc();
+    if ((tCfg & (0x04 | 0x01)) === (0x04 | 0x01))
+     twitch.net.irc();
    }
 
    window.addEventListener('load', startup);
