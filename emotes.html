@@ -1751,10 +1751,7 @@
        let v = y;
        if (v === false)
         v = shared.rnd(sH) - sSm;
-       let r = sW;
-       if (sH < r)
-        r = sH;
-       r = r * (shared.rnd() + 1);
+       const r = Math.min(sW, sH) * (shared.rnd() + 1);
        const cRadius = Math.PI * 2;
        let th = shared.rnd() * cRadius;
        let hD = Math.floor(h + r * Math.cos(th));
@@ -2505,10 +2502,7 @@
         scene.appendChild(cube);
         const h = shared.rnd(sW) - sSm;
         const v = shared.rnd(sH) - sSm;
-        let r = sW;
-        if (sH < r)
-         r = sH;
-        r = r * (shared.rnd() + 1);
+        const r = Math.min(sW, sH) * (shared.rnd() + 1);
         const cRadius = Math.PI * 2;
         let th = shared.rnd() * cRadius;
         let hD = Math.floor(h + r * Math.cos(th));
@@ -2625,15 +2619,7 @@
      {
       const sW = window.innerWidth;
       const sH = window.innerHeight;
-      let sS = cfg.emote.size.max;
-      if (sW < sH)
-       sS = Math.floor(sW * cfg.emote.size.ratio.normal);
-      else
-       sS = Math.floor(sH * cfg.emote.size.ratio.normal);
-      if (sS > cfg.emote.size.max)
-       sS = cfg.emote.size.max;
-      if (sS < cfg.emote.size.min)
-       sS = cfg.emote.size.min;
+      const sS = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
       const ehs = Math.ceil(sS / 2);
       const ehl = sS * 2;
       document.documentElement.style.setProperty('--height', sH + 'px');
@@ -2748,10 +2734,7 @@
          document.body.removeChild(iArr[i]);
          _eActive--;
         }
-        let r = sW;
-        if (sH < r)
-         r = sH;
-        r *= 0.66;
+        const r = Math.min(sW, sH) * 0.66;
         const inner = Math.floor(iKC / 8);
         const outer = inner;
         const core = iKC - (inner + outer);
@@ -2878,9 +2861,7 @@
          return;
         const oX = shared.rnd(sW - sS);
         const oY = shared.rnd(sH - sS);
-        let r = sW;
-        if (sH < r)
-         r = sH;
+        const r = Math.min(sW, sH);
         window.setTimeout(_init, _tStart, tInit, kList, oX, oY, sS, r, iKC);
        }
 
@@ -2890,8 +2871,7 @@
          return;
         let l = iKC / 25 + 2;
         l = l + (shared.rnd() * 4 - 2);
-        if (l < 0.1)
-         l = 0.1;
+        l = Math.max(l, 0.1);
         const cRadius = Math.PI * 2;
         const c = Math.PI * l / iKC;
         let th = shared.rnd() * cRadius;
@@ -2971,9 +2951,7 @@
          ct += pyramidDist[i];
         const eMS = cfg.emote.time * 1000;
         let eT = eMS * 0.8;
-        let tPerB = Math.floor(eT / ct);
-        if (tPerB < 50)
-         tPerB = 50;
+        const tPerB = Math.max(Math.floor(eT / ct), 50);
         eT = tPerB * ct;
         const dT = eMS * 0.2;
         let t = 0;
@@ -3048,11 +3026,7 @@
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        let sS = sW / 19;
-        if (sS > Math.floor(sW * cfg.emote.size.ratio.small))
-         sS = Math.floor(sW * cfg.emote.size.ratio.small);
-        if (sS > Math.floor(sH * cfg.emote.size.ratio.small))
-         sS = Math.floor(sH * cfg.emote.size.ratio.small);
+        const sS = Math.min(sW / 19, Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small));
         let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
         let ct = 0;
         const lP = pyramidDist.length;
@@ -3060,9 +3034,7 @@
          ct += pyramidDist[i];
         const eMS = cfg.emote.time * 1000;
         let eT = eMS * 0.8;
-        let tPerB = Math.floor(eT / ct);
-        if (tPerB < 75)
-         tPerB = 75;
+        const tPerB = Math.max(Math.floor(eT / ct), 75);
         eT = tPerB * ct;
         const dT = eMS * 0.2;
         const oX = shared.rnd(sW - sS * lP);
@@ -3659,15 +3631,9 @@
          ct += lX;
          drawn.push(0);
         }
-        let sS = Math.floor(sW / (lM + 2));
-        if (sS > Math.floor(sW * cfg.emote.size.ratio.small))
-         sS = Math.floor(sW * cfg.emote.size.ratio.small);
-        if (sS > Math.floor(sH * cfg.emote.size.ratio.small))
-         sS = Math.floor(sH * cfg.emote.size.ratio.small);
+        const sS = Math.min(Math.floor(sW / (lM + 2)), Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small));
         let eT = cfg.emote.time * 1000;
-        let tPerB = Math.floor(eT / ctT);
-        if (tPerB < 24)
-         tPerB = 24;
+        const tPerB = Math.max(Math.floor(eT / ctT), 24);
         eT = tPerB * ctT;
         const lF = msgDist[0].length;
         const lFS = sS * lF;
@@ -3708,8 +3674,7 @@
         {
          for (let i = 0, k = Object.keys(alnumDist), l = k.length; i < l; i++)
          {
-          if (_mL < alnumDist[k[i]][0].length)
-           _mL = alnumDist[k[i]][0].length;
+          _mL = Math.max(_mL, alnumDist[k[i]][0].length);
          }
         }
         for (let y = 0; y < _mL; y++)
@@ -3801,9 +3766,7 @@
       let tC = cfg.display.kappa.count;
       if (k !== false)
        tC = _getKappaCountEstimate(k);
-      let cM = cfg.emote.max;
-      if (tC > cM)
-       cM = tC;
+      let cM = Math.max(cfg.emote.max, tC);
       return _eActive + tC < cM;
      }
 
@@ -3943,15 +3906,7 @@
        case 'Conga':
         const sW = window.innerWidth;
         const sH = window.innerHeight;
-        let sS = cfg.emote.size.max;
-        if (sW < sH)
-         sS = Math.floor(sW * cfg.emote.size.ratio.normal);
-        else
-         sS = Math.floor(sH * cfg.emote.size.ratio.normal);
-        if (sS > cfg.emote.size.max)
-         sS = cfg.emote.size.max;
-        if (sS < cfg.emote.size.min)
-         sS = cfg.emote.size.min;
+        const sS = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
         const bS = Math.ceil(sS * (5/3));
         return Math.floor(sW / bS);
       }
@@ -4090,26 +4045,8 @@
        kList = bareList;
       const sW = window.innerWidth;
       const sH = window.innerHeight;
-      let sS = cfg.emote.size.max;
-      let sSm = Math.floor(sS / 2);
-      if (sW < sH)
-      {
-       sS = Math.floor(sW * cfg.emote.size.ratio.normal);
-       sSm = Math.floor(sW * cfg.emote.size.ratio.small);
-      }
-      else
-      {
-       sS = Math.floor(sH * cfg.emote.size.ratio.normal);
-       sSm = Math.floor(sH * cfg.emote.size.ratio.small);
-      }
-      if (sS > cfg.emote.size.max)
-       sS = cfg.emote.size.max;
-      if (sS < cfg.emote.size.min)
-       sS = cfg.emote.size.min;
-      if (sSm > cfg.emote.size.max)
-       sSm = cfg.emote.size.max;
-      if (sSm < cfg.emote.size.min)
-       sSm = cfg.emote.size.min;
+      const sS = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
+      const sSm = Math.max(cfg.emote.size.min, Math.min(Math.floor(cfg.emote.size.max / 2), Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small)));
       const sR = sW - sS;
       const sB = sH - sS;
       const ehs = Math.ceil(sS / 2);
@@ -4186,9 +4123,7 @@
         break;
        case 'TheCube':
         _eActive -= waitFor;
-        let cS = sW;
-        if (sW > sH)
-         cS = sH;
+        const cS = Math.min(sW, sH);
         const rC = shared.rnd(lK);
         let sCS = 8 / 10;
         if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('size'))
@@ -5821,8 +5756,8 @@
         let l = eVals.length;
         if (dup === false)
          l = 1;
-        else if (dup !== true && l > dup)
-         l = dup;
+        else if (dup !== true)
+         l = Math.min(l, dup);
         for (let c = 0; c < l; c++)
         {
          const p = parseInt(eVals[c].split('-')[0], 10);
@@ -6876,8 +6811,7 @@
          continue;
         if (!e.choices[i].hasOwnProperty('votes'))
          continue;
-        if (vPoll < e.choices[i].votes)
-         vPoll = e.choices[i].votes;
+        vPoll = Math.max(vPoll, e.choices[i].votes);
        }
        let rPoll = [];
        for (let i = 0, l = e.choices.length; i < l; i++)
@@ -8444,8 +8378,7 @@
              _wsR_RL += 0.2;
             break;
            case 4006:
-            if (wsWait < 5 * 60 * 1000)
-             wsWait = 5 * 60 * 1000;
+            wsWait = Math.max(wsWait, 5 * 60 * 1000);
             break;
            case 4007:
             wsWait = 5 * 60 * 1000 + Math.floor(wWS ** (1 + _wsR_M) * 1000) - 5000;
