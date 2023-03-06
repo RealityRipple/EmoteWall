@@ -685,7 +685,10 @@
     *  erase      If this property exists, the command will erase the screen rather than showing a style. Any 'styles'
     *             property will be ignored, regardless of the value of erase.
     *
-    *  styles     An array of styles. A kappagen of one of the listed styles will occur upon command.
+    *  styles     A kappagen of one of the listed styles will occur upon command. This value can be a boolean or array.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     * ignore      Ignore Lists
     *
@@ -6315,11 +6318,20 @@
          return true;
         }
         let kC = {};
-        for (let kS in k.styles)
+        let cStyles = k.styles;
+        if (typeof cStyles !== 'object')
         {
-         if (!k.styles.hasOwnProperty(kS))
+         if (cStyles === false)
+          return foundAdvCmd;
+         if (cfg.display.kappa.styles.length < 1)
+          return foundAdvCmd;
+         cStyles = cfg.display.kappa.styles;
+        }
+        for (let kS in cStyles)
+        {
+         if (!cStyles.hasOwnProperty(kS))
           continue;
-         kC[kS] = JSON.parse(JSON.stringify(k.styles[kS]));
+         kC[kS] = JSON.parse(JSON.stringify(cStyles[kS]));
          kC[kS].command = foundKCmd;
          if (foundKCmd.length === m.length)
           kC[kS].params = null;
