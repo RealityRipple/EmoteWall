@@ -55,3 +55,19 @@ The Bounce animation uses specific position-based drawing rather than actually b
 The Cube animation uses eight objects on screen for every image, making it a particularly resource-heavy drawing.
 
 If your computer has trouble with this emote wall, please try disabling these options.
+
+### API Limitations
+
+Use of localStorage can result in issues for OBS users with multiple different profiles. This could be solved if [each OBS profile gets its own Browser profile](https://ideas.obsproject.com/posts/2103/separate-browser-profiles-for-each-obs-profile).
+
+[Detecting if a user is a follower](https://twitch.uservoice.com/forums/310213/suggestions/44000865) on Twitch is an annoying process, requiring additional API requests.
+
+[Zero-Width Joiner support](https://twitch.uservoice.com/forums/310201/suggestions/44425005) would resolve issues with many emojis.
+
+The [wizard](https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php) requires users to select which scopes they want before authenticating. [Adding scope selection to the auth page](https://twitch.uservoice.com/forums/310213/suggestions/46215865) would streamline this greatly.
+
+The @mention in a stream title feature is nice, but it would also be nice to include mentions in the [stream's tags](https://twitch.uservoice.com/forums/310213/suggestions/46153474).
+
+Detecting giftbombs can occasionally fail, requiring a short delay in specific gift subs. This could be resolved if [gift subs mentioned they were going to be part of giftbombs](https://twitch.uservoice.com/forums/310213/suggestions/46400620).
+
+And finally, YouTube support could be achieved [if there was a reliable way to read chat](https://issuetracker.google.com/issues/271492711).
