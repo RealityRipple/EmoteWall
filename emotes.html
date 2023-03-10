@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.7.5 BETA
+    * v0.7.6 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -685,7 +685,10 @@
     *  erase      If this property exists, the command will erase the screen rather than showing a style. Any 'styles'
     *             property will be ignored, regardless of the value of erase.
     *
-    *  styles     An array of styles. A kappagen of one of the listed styles will occur upon command.
+    *  styles     A kappagen of one of the listed styles will occur upon command. This value can be a boolean or array.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
     * ignore      Ignore Lists
     *
@@ -1751,10 +1754,7 @@
        let v = y;
        if (v === false)
         v = shared.rnd(sH) - sSm;
-       let r = sW;
-       if (sH < r)
-        r = sH;
-       r = r * (shared.rnd() + 1);
+       const r = Math.min(sW, sH) * (shared.rnd() + 1);
        const cRadius = Math.PI * 2;
        let th = shared.rnd() * cRadius;
        let hD = Math.floor(h + r * Math.cos(th));
@@ -2505,10 +2505,7 @@
         scene.appendChild(cube);
         const h = shared.rnd(sW) - sSm;
         const v = shared.rnd(sH) - sSm;
-        let r = sW;
-        if (sH < r)
-         r = sH;
-        r = r * (shared.rnd() + 1);
+        const r = Math.min(sW, sH) * (shared.rnd() + 1);
         const cRadius = Math.PI * 2;
         let th = shared.rnd() * cRadius;
         let hD = Math.floor(h + r * Math.cos(th));
@@ -2625,15 +2622,7 @@
      {
       const sW = window.innerWidth;
       const sH = window.innerHeight;
-      let sS = cfg.emote.size.max;
-      if (sW < sH)
-       sS = Math.floor(sW * cfg.emote.size.ratio.normal);
-      else
-       sS = Math.floor(sH * cfg.emote.size.ratio.normal);
-      if (sS > cfg.emote.size.max)
-       sS = cfg.emote.size.max;
-      if (sS < cfg.emote.size.min)
-       sS = cfg.emote.size.min;
+      const sS = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
       const ehs = Math.ceil(sS / 2);
       const ehl = sS * 2;
       document.documentElement.style.setProperty('--height', sH + 'px');
@@ -2748,10 +2737,7 @@
          document.body.removeChild(iArr[i]);
          _eActive--;
         }
-        let r = sW;
-        if (sH < r)
-         r = sH;
-        r *= 0.66;
+        const r = Math.min(sW, sH) * 0.66;
         const inner = Math.floor(iKC / 8);
         const outer = inner;
         const core = iKC - (inner + outer);
@@ -2878,9 +2864,7 @@
          return;
         const oX = shared.rnd(sW - sS);
         const oY = shared.rnd(sH - sS);
-        let r = sW;
-        if (sH < r)
-         r = sH;
+        const r = Math.min(sW, sH);
         window.setTimeout(_init, _tStart, tInit, kList, oX, oY, sS, r, iKC);
        }
 
@@ -2890,8 +2874,7 @@
          return;
         let l = iKC / 25 + 2;
         l = l + (shared.rnd() * 4 - 2);
-        if (l < 0.1)
-         l = 0.1;
+        l = Math.max(l, 0.1);
         const cRadius = Math.PI * 2;
         const c = Math.PI * l / iKC;
         let th = shared.rnd() * cRadius;
@@ -2971,9 +2954,7 @@
          ct += pyramidDist[i];
         const eMS = cfg.emote.time * 1000;
         let eT = eMS * 0.8;
-        let tPerB = Math.floor(eT / ct);
-        if (tPerB < 50)
-         tPerB = 50;
+        const tPerB = Math.max(Math.floor(eT / ct), 50);
         eT = tPerB * ct;
         const dT = eMS * 0.2;
         let t = 0;
@@ -3048,11 +3029,7 @@
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        let sS = sW / 19;
-        if (sS > Math.floor(sW * cfg.emote.size.ratio.small))
-         sS = Math.floor(sW * cfg.emote.size.ratio.small);
-        if (sS > Math.floor(sH * cfg.emote.size.ratio.small))
-         sS = Math.floor(sH * cfg.emote.size.ratio.small);
+        const sS = Math.min(sW / 19, Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small));
         let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
         let ct = 0;
         const lP = pyramidDist.length;
@@ -3060,9 +3037,7 @@
          ct += pyramidDist[i];
         const eMS = cfg.emote.time * 1000;
         let eT = eMS * 0.8;
-        let tPerB = Math.floor(eT / ct);
-        if (tPerB < 75)
-         tPerB = 75;
+        const tPerB = Math.max(Math.floor(eT / ct), 75);
         eT = tPerB * ct;
         const dT = eMS * 0.2;
         const oX = shared.rnd(sW - sS * lP);
@@ -3659,15 +3634,9 @@
          ct += lX;
          drawn.push(0);
         }
-        let sS = Math.floor(sW / (lM + 2));
-        if (sS > Math.floor(sW * cfg.emote.size.ratio.small))
-         sS = Math.floor(sW * cfg.emote.size.ratio.small);
-        if (sS > Math.floor(sH * cfg.emote.size.ratio.small))
-         sS = Math.floor(sH * cfg.emote.size.ratio.small);
+        const sS = Math.min(Math.floor(sW / (lM + 2)), Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small));
         let eT = cfg.emote.time * 1000;
-        let tPerB = Math.floor(eT / ctT);
-        if (tPerB < 24)
-         tPerB = 24;
+        const tPerB = Math.max(Math.floor(eT / ctT), 24);
         eT = tPerB * ctT;
         const lF = msgDist[0].length;
         const lFS = sS * lF;
@@ -3708,8 +3677,7 @@
         {
          for (let i = 0, k = Object.keys(alnumDist), l = k.length; i < l; i++)
          {
-          if (_mL < alnumDist[k[i]][0].length)
-           _mL = alnumDist[k[i]][0].length;
+          _mL = Math.max(_mL, alnumDist[k[i]][0].length);
          }
         }
         for (let y = 0; y < _mL; y++)
@@ -3801,9 +3769,7 @@
       let tC = cfg.display.kappa.count;
       if (k !== false)
        tC = _getKappaCountEstimate(k);
-      let cM = cfg.emote.max;
-      if (tC > cM)
-       cM = tC;
+      let cM = Math.max(cfg.emote.max, tC);
       return _eActive + tC < cM;
      }
 
@@ -3943,15 +3909,7 @@
        case 'Conga':
         const sW = window.innerWidth;
         const sH = window.innerHeight;
-        let sS = cfg.emote.size.max;
-        if (sW < sH)
-         sS = Math.floor(sW * cfg.emote.size.ratio.normal);
-        else
-         sS = Math.floor(sH * cfg.emote.size.ratio.normal);
-        if (sS > cfg.emote.size.max)
-         sS = cfg.emote.size.max;
-        if (sS < cfg.emote.size.min)
-         sS = cfg.emote.size.min;
+        const sS = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
         const bS = Math.ceil(sS * (5/3));
         return Math.floor(sW / bS);
       }
@@ -4090,26 +4048,8 @@
        kList = bareList;
       const sW = window.innerWidth;
       const sH = window.innerHeight;
-      let sS = cfg.emote.size.max;
-      let sSm = Math.floor(sS / 2);
-      if (sW < sH)
-      {
-       sS = Math.floor(sW * cfg.emote.size.ratio.normal);
-       sSm = Math.floor(sW * cfg.emote.size.ratio.small);
-      }
-      else
-      {
-       sS = Math.floor(sH * cfg.emote.size.ratio.normal);
-       sSm = Math.floor(sH * cfg.emote.size.ratio.small);
-      }
-      if (sS > cfg.emote.size.max)
-       sS = cfg.emote.size.max;
-      if (sS < cfg.emote.size.min)
-       sS = cfg.emote.size.min;
-      if (sSm > cfg.emote.size.max)
-       sSm = cfg.emote.size.max;
-      if (sSm < cfg.emote.size.min)
-       sSm = cfg.emote.size.min;
+      const sS = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
+      const sSm = Math.max(cfg.emote.size.min, Math.min(Math.floor(cfg.emote.size.max / 2), Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small)));
       const sR = sW - sS;
       const sB = sH - sS;
       const ehs = Math.ceil(sS / 2);
@@ -4186,9 +4126,7 @@
         break;
        case 'TheCube':
         _eActive -= waitFor;
-        let cS = sW;
-        if (sW > sH)
-         cS = sH;
+        const cS = Math.min(sW, sH);
         const rC = shared.rnd(lK);
         let sCS = 8 / 10;
         if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('size'))
@@ -4526,10 +4464,10 @@
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
       };
-      const r = await shared.httpRequest(url, h);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url, h);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('data'))
        return false;
       for (let c = 0, l = j.data.length; c < l; c++)
@@ -4682,7 +4620,11 @@
        }
        if (twitch.net.dead)
        {
+        _ws.onopen = null;
+        _ws.onmessage = null;
+        _ws.onclose = null;
         _ws.close();
+        _ws = null;
         return;
        }
        _tTimeout = setTimeout(_wsTimeout, _lTimeout);
@@ -4726,6 +4668,12 @@
           _ws.onclose = null;
           _ws.close();
           _ws = null;
+          if (_wsURL === cURLs.ws.twitch.eventSub.release)
+          {
+           _wsURL = cURLs.ws.twitch.eventSub.beta;
+           window.setTimeout(task, 100);
+           return;
+          }
           return;
          }
          break;
@@ -5083,8 +5031,10 @@
         'Authorization': 'Bearer ' + cfg.login.oauth,
         'Client-Id': cfg.login.client
        };
-       const r = await shared.httpRequest(cURLs.api.twitch.eventSub.get, h);
-       const j = JSON.parse(r);
+       const r = await shared.httpRequest('GET', cURLs.api.twitch.eventSub.get, h);
+       if (!r.success)
+        return [];
+       const j = r.json;
        if (!j.hasOwnProperty('data'))
         return [];
        if (!j.hasOwnProperty('total'))
@@ -5126,7 +5076,7 @@
          case 'websocket_internal_error':
          case 'websocket_network_timeout':
          case 'websocket_network_error':
-          shared.httpSend('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', j.data[i].id), null, h);
+          shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', j.data[i].id), h, null, false, false);
           break;
         }
        }
@@ -5154,8 +5104,8 @@
         'Client-Id': cfg.login.client,
         'Content-Type': 'application/json'
        };
-       const r = await shared.httpSend('POST', cURLs.api.twitch.eventSub.get, JSON.stringify(d), h);
-       return r !== false;
+       const r = await shared.httpRequest('POST', cURLs.api.twitch.eventSub.get, h, JSON.stringify(d), false, false);
+       return r;
       }
 
       return task;
@@ -5216,6 +5166,9 @@
         return;
        if (twitch.net.dead)
        {
+        _ws.onopen = null;
+        _ws.onmessage = null;
+        _ws.onclose = null;
         _ws.close();
         _ws = null;
         return;
@@ -5236,7 +5189,7 @@
         {
          case 'PING':
           _ws.send('PONG ' + cmd.params[0]);
-          if (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')
+          if ((login.cfgVals() & 0x02) === 0x02)
            await twitch.net.updateOAuth();
           break;
          case 'PRIVMSG':
@@ -5390,10 +5343,10 @@
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
       };
-      const r = await shared.httpRequest(url, h);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url, h);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('data'))
        return false;
       if (j.data.length !== 1)
@@ -5408,10 +5361,10 @@
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
       };
-      const r = await shared.httpRequest(url, h);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url, h);
+      if (!r.success)
        return;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('data'))
        return;
       if (j.data.length !== 1)
@@ -5451,18 +5404,19 @@
      async function _getOAuthToken(t)
      {
       const url = cURLs.html.rr.t.replaceAll('%REFRESH_TOKEN%', t);
-      const r = await shared.httpRequest(url, {}, true, false);
-      if (r === false)
-       return false;
-      if (r === null)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
       {
-       shared.blargIAmDead(1);
-       window.localStorage.removeItem(login.path() + '.oauth');
-       window.localStorage.removeItem(login.path() + '.refresh');
-       window.localStorage.removeItem(login.path() + '.refreshed');
+       if (r.code === 401)
+       {
+        shared.blargIAmDead(1);
+        window.localStorage.removeItem(login.path() + '.oauth');
+        window.localStorage.removeItem(login.path() + '.refresh');
+        window.localStorage.removeItem(login.path() + '.refreshed');
+       }
        return false;
       }
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('access_token'))
        return false;
       if (!j.hasOwnProperty('refresh_token'))
@@ -5821,8 +5775,8 @@
         let l = eVals.length;
         if (dup === false)
          l = 1;
-        else if (dup !== true && l > dup)
-         l = dup;
+        else if (dup !== true)
+         l = Math.min(l, dup);
         for (let c = 0; c < l; c++)
         {
          const p = parseInt(eVals[c].split('-')[0], 10);
@@ -6370,11 +6324,20 @@
          return true;
         }
         let kC = {};
-        for (let kS in k.styles)
+        let cStyles = k.styles;
+        if (typeof cStyles !== 'object')
         {
-         if (!k.styles.hasOwnProperty(kS))
+         if (cStyles === false)
+          return foundAdvCmd;
+         if (cfg.display.kappa.styles.length < 1)
+          return foundAdvCmd;
+         cStyles = cfg.display.kappa.styles;
+        }
+        for (let kS in cStyles)
+        {
+         if (!cStyles.hasOwnProperty(kS))
           continue;
-         kC[kS] = JSON.parse(JSON.stringify(k.styles[kS]));
+         kC[kS] = JSON.parse(JSON.stringify(cStyles[kS]));
          kC[kS].command = foundKCmd;
          if (foundKCmd.length === m.length)
           kC[kS].params = null;
@@ -6433,8 +6396,6 @@
 
      const event = function()
      {
-      let bList = [];
-
       async function parseCheer(cmd)
       {
        if (!thirdparty.emotes.hasOwnProperty('cheer'))
@@ -6555,137 +6516,227 @@
        display.kappa.show(e, r, {'%USER%': dn, '%AMOUNT%': c});
       }
 
-      function _parseSubPlan(c)
+      const parseSub = function()
       {
-       if (!c.tags.hasOwnProperty('msg-param-sub-plan'))
-        return false;
-       const p = c.tags['msg-param-sub-plan'];
-       switch (p)
-       {
-        case '1000': return 't1';
-        case '2000': return 't2';
-        case '3000': return 't3';
-        case 'Prime': return 'prime';
-       }
-       return false;
-      }
+       let _bList = {
+        bombs: [],
+        bulk: [],
+        check: []
+       };
+       let _tGC = null;
 
-      async function parseSub(cmd)
-      {
-       if (!cmd.tags.hasOwnProperty('msg-id'))
-        return;
-       const subPlan = _parseSubPlan(cmd);
-       if (subPlan === false)
-        return;
-       let mpoi = false;
-       if (cmd.tags.hasOwnProperty('msg-param-origin-id'))
-        mpoi = cmd.tags['msg-param-origin-id'];
-       if (mpoi !== false && bList.includes(mpoi))
-        return;
-       let a = [];
-       if (cmd.params.length > 1)
+       async function task(cmd)
        {
-        if (cfg.event.sub.useMsg)
-         a = await _eListFromCmd(cmd, true);
-        else
-         await parseLine(cmd);
-       }
-       let mpm = 1;
-       if (cmd.tags.hasOwnProperty('msg-param-months'))
-        mpm = parseInt(cmd.tags['msg-param-months'], 10);
-       let mpcm = 1;
-       if (cmd.tags.hasOwnProperty('msg-param-cumulative-months'))
-        mpcm = parseInt(cmd.tags['msg-param-cumulative-months'], 10);
-       let mpmgc = 1;
-       if (cmd.tags.hasOwnProperty('msg-param-mass-gift-count'))
-        mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
-       const u = _parseUser(cmd, true);
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
-        return;
-       let dn = 'Anonymous';
-       if (u.hasOwnProperty('display-name'))
-        dn = u['display-name'];
-       let mprdn = 'Anonymous';
-       if (cmd.tags.hasOwnProperty('msg-param-recipient-display-name'))
-        mprdn = cmd.tags['msg-param-recipient-display-name'];
-       switch (cmd.tags['msg-id'])
-       {
-        case 'sub':
-         if (!cfg.event.sub.hasOwnProperty(subPlan))
+        if (!cmd.tags.hasOwnProperty('msg-id'))
+         return;
+        const subPlan = _parsePlan(cmd);
+        if (subPlan === false)
+         return;
+        const mID = cmd.tags['msg-id'];
+        let mpoi = false;
+        if (cmd.tags.hasOwnProperty('msg-param-origin-id'))
+         mpoi = cmd.tags['msg-param-origin-id'];
+        const usesBomb = cfg.event.sub[subPlan].gift.hasOwnProperty('bomb') && cfg.event.sub[subPlan].gift.bomb !== false;
+        if (mpoi !== false && usesBomb)
+        {
+         if (_bList.bombs.includes(mpoi))
           return;
-         if (!cfg.event.sub[subPlan].hasOwnProperty('first'))
-          return;
-         if (cfg.event.sub[subPlan].first === false)
-          return;
-         display.kappa.show(a, cfg.event.sub[subPlan].first, {'%USER%': dn});
-         break;
-        case 'resub':
-         if (!cfg.event.sub.hasOwnProperty(subPlan))
-          return;
-         if (!cfg.event.sub[subPlan].hasOwnProperty('resub'))
-          return;
-         const rs = shared.findInMaybeRange(cfg.event.sub[subPlan].resub, mpcm);
-         if (rs === false)
-          return;
-         display.kappa.show(a, rs, {'%USER%': dn, '%AMOUNT%': mpcm});
-         break;
-        case 'primepaidupgrade':
-         if (!cfg.event.sub.hasOwnProperty(subPlan))
-          return;
-         if (!cfg.event.sub[subPlan].hasOwnProperty('upgrade'))
-          return;
-         if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('prime'))
-          return;
-         display.kappa.show(a, cfg.event.sub[subPlan].upgrade.prime, {'%USER%': dn});
-         break;
-        case 'giftpaidupgrade':
-         if (!cfg.event.sub.hasOwnProperty(subPlan))
-          return;
-         if (!cfg.event.sub[subPlan].hasOwnProperty('upgrade'))
-          return;
-         if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('gift'))
-          return;
-         display.kappa.show(a, cfg.event.sub[subPlan].upgrade.gift, {'%USER%': dn});
-         break;
-        case 'subgift':
-         if (!cfg.event.sub.hasOwnProperty(subPlan))
-          return;
-         if (!cfg.event.sub[subPlan].hasOwnProperty('gift'))
-          return;
-         if (mpm === 1)
+         if (mID === 'subgift')
          {
-          if (!cfg.event.sub[subPlan].gift.hasOwnProperty('first'))
+          if (_bList.bulk.includes(mpoi))
            return;
-          if (cfg.event.sub[subPlan].gift.first === false)
+          if (_bList.check.includes(mpoi))
+          {
+           _bList.bulk.push(mpoi);
+           _bList.check.splice(_bList.check.indexOf(mpoi), 1);
+           _resetGC();
            return;
-          display.kappa.show(a, cfg.event.sub[subPlan].gift.first, {'%SENDER%': dn, '%USER%': mprdn});
+          }
+         }
+        }
+        let a = [];
+        if (cmd.params.length > 1)
+        {
+         if (cfg.event.sub.useMsg)
+          a = await _eListFromCmd(cmd, true);
+         else
+          await parseLine(cmd);
+        }
+        let mpm = 1;
+        if (cmd.tags.hasOwnProperty('msg-param-months'))
+         mpm = parseInt(cmd.tags['msg-param-months'], 10);
+        let mpcm = 1;
+        if (cmd.tags.hasOwnProperty('msg-param-cumulative-months'))
+         mpcm = parseInt(cmd.tags['msg-param-cumulative-months'], 10);
+        let mpmgc = 1;
+        if (cmd.tags.hasOwnProperty('msg-param-mass-gift-count'))
+         mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
+        const u = _parseUser(cmd, true);
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+         return;
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        let mprdn = 'Anonymous';
+        if (cmd.tags.hasOwnProperty('msg-param-recipient-display-name'))
+         mprdn = cmd.tags['msg-param-recipient-display-name'];
+        if (mpoi !== false && usesBomb)
+        {
+         if (_bList.bombs.includes(mpoi))
+          return;
+         if (mID === 'subgift')
+         {
+          if (_bList.bulk.includes(mpoi))
+           return;
+          if (_bList.check.includes(mpoi))
+          {
+           _bList.bulk.push(mpoi);
+           _bList.check.splice(_bList.check.indexOf(mpoi), 1);
+           _resetGC();
+           return;
+          }
+          if (!cmd.tags.hasOwnProperty('msg-param-sender-count') || cmd.tags['msg-param-sender-count'] === '0')
+          {
+           _bList.check.push(mpoi);
+           window.setTimeout(_show, 2000, mID, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a);
+           _resetGC();
+           return;
+          }
+         }
+        }
+        _show(mID, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a);
+       }
+
+       function _show(id, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a)
+       {
+        const usesBomb = cfg.event.sub.hasOwnProperty(subPlan) && cfg.event.sub[subPlan].hasOwnProperty('gift') && cfg.event.sub[subPlan].gift.hasOwnProperty('bomb') && cfg.event.sub[subPlan].gift.bomb !== false;
+        if (mpoi !== false && usesBomb)
+        {
+         if (_bList.bombs.includes(mpoi))
+          return;
+         if (id === 'subgift' && _bList.bulk.includes(mpoi))
+         {
+          _resetGC();
           return;
          }
-         if (!cfg.event.sub[subPlan].gift.hasOwnProperty('resub'))
-          return;
-         const gpr = shared.findInMaybeRange(cfg.event.sub[subPlan].gift.resub, mpm);
-         if (gpr === false)
-          return;
-         display.kappa.show(a, gpr, {'%SENDER%': dn, '%USER%': mprdn, '%AMOUNT%': mpm});
-         break;
-        case 'submysterygift':
-         if (!cfg.event.sub.hasOwnProperty(subPlan))
-          return;
-         if (!cfg.event.sub[subPlan].hasOwnProperty('gift'))
-          return;
-         if (!cfg.event.sub[subPlan].gift.hasOwnProperty('bomb'))
-          return;
-         if (cfg.event.sub[subPlan].gift.bomb === false)
-          return;
-         if (mpoi !== false)
-          bList.push(mpoi);
-         const gpb = shared.findInMaybeRange(cfg.event.sub[subPlan].gift.bomb, mpmgc);
-         if (gpb === false)
-          return;
-         display.kappa.show(a, gpb, {'%SENDER%': dn, '%AMOUNT%': mpmgc});
-         break;
+        }
+        switch (id)
+        {
+         case 'sub':
+          if (!cfg.event.sub.hasOwnProperty(subPlan))
+           return;
+          if (!cfg.event.sub[subPlan].hasOwnProperty('first'))
+           return;
+          if (cfg.event.sub[subPlan].first === false)
+           return;
+          display.kappa.show(a, cfg.event.sub[subPlan].first, {'%USER%': dn});
+          break;
+         case 'resub':
+          if (!cfg.event.sub.hasOwnProperty(subPlan))
+           return;
+          if (!cfg.event.sub[subPlan].hasOwnProperty('resub'))
+           return;
+          const rs = shared.findInMaybeRange(cfg.event.sub[subPlan].resub, mpcm);
+          if (rs === false)
+           return;
+          display.kappa.show(a, rs, {'%USER%': dn, '%AMOUNT%': mpcm});
+          break;
+         case 'primepaidupgrade':
+          if (!cfg.event.sub.hasOwnProperty(subPlan))
+           return;
+          if (!cfg.event.sub[subPlan].hasOwnProperty('upgrade'))
+           return;
+          if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('prime'))
+           return;
+          display.kappa.show(a, cfg.event.sub[subPlan].upgrade.prime, {'%USER%': dn});
+          break;
+         case 'giftpaidupgrade':
+          if (!cfg.event.sub.hasOwnProperty(subPlan))
+           return;
+          if (!cfg.event.sub[subPlan].hasOwnProperty('upgrade'))
+           return;
+          if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('gift'))
+           return;
+          display.kappa.show(a, cfg.event.sub[subPlan].upgrade.gift, {'%USER%': dn});
+          break;
+         case 'subgift':
+          if (!cfg.event.sub.hasOwnProperty(subPlan))
+           return;
+          if (!cfg.event.sub[subPlan].hasOwnProperty('gift'))
+           return;
+          if (mpm === 1)
+          {
+           if (!cfg.event.sub[subPlan].gift.hasOwnProperty('first'))
+            return;
+           if (cfg.event.sub[subPlan].gift.first === false)
+            return;
+           display.kappa.show(a, cfg.event.sub[subPlan].gift.first, {'%SENDER%': dn, '%USER%': mprdn});
+           return;
+          }
+          if (!cfg.event.sub[subPlan].gift.hasOwnProperty('resub'))
+           return;
+          const gpr = shared.findInMaybeRange(cfg.event.sub[subPlan].gift.resub, mpm);
+          if (gpr === false)
+           return;
+          display.kappa.show(a, gpr, {'%SENDER%': dn, '%USER%': mprdn, '%AMOUNT%': mpm});
+          break;
+         case 'submysterygift':
+          if (!usesBomb)
+           return;
+          if (mpoi !== false)
+          {
+           _bList.bombs.push(mpoi);
+           if (_bList.bulk.includes(mpoi))
+            _bList.bulk.splice(_bList.bulk.indexOf(mpoi), 1);
+           if (_bList.check.includes(mpoi))
+            _bList.check.splice(_bList.check.indexOf(mpoi), 1);
+           _resetGC();
+          }
+          const gpb = shared.findInMaybeRange(cfg.event.sub[subPlan].gift.bomb, mpmgc);
+          if (gpb === false)
+           return;
+          display.kappa.show(a, gpb, {'%SENDER%': dn, '%AMOUNT%': mpmgc});
+          break;
+        }
        }
-      }
+
+       function _parsePlan(c)
+       {
+        if (!c.tags.hasOwnProperty('msg-param-sub-plan'))
+         return false;
+        const p = c.tags['msg-param-sub-plan'];
+        switch (p)
+        {
+         case '1000': return 't1';
+         case '2000': return 't2';
+         case '3000': return 't3';
+         case 'Prime': return 'prime';
+        }
+        return false;
+       }
+
+       function _resetGC()
+       {
+        if (_tGC !== null)
+        {
+         window.clearTimeout(_tGC);
+         _tGC = null;
+        }
+        _tGC = new window.setTimeout(_tmrGC, 10000);
+       }
+
+       function _tmrGC()
+       {
+        if (_tGC === null)
+         return;
+        window.clearTimeout(_tGC);
+        _tGC = null;
+        _bList.check = [];
+        _bList.bulk = [];
+       }
+
+       return task;
+      }();
 
       function parseBadge(cmd)
       {
@@ -6876,8 +6927,7 @@
          continue;
         if (!e.choices[i].hasOwnProperty('votes'))
          continue;
-        if (vPoll < e.choices[i].votes)
-         vPoll = e.choices[i].votes;
+        vPoll = Math.max(vPoll, e.choices[i].votes);
        }
        let rPoll = [];
        for (let i = 0, l = e.choices.length; i < l; i++)
@@ -6969,10 +7019,10 @@
         'Authorization': 'Bearer ' + cfg.login.oauth,
         'Client-Id': cfg.login.client
        };
-       const r = await shared.httpRequest(url, h);
-       if (r === false)
+       const r = await shared.httpRequest('GET', url, h);
+       if (!r.success)
         return false;
-       const j = JSON.parse(r);
+       const j = r.json;
        if (j.hasOwnProperty('data') && j.data.length > 0)
        {
         twitch.net.fList[uID] = {value: true, t: new Date().getTime()};
@@ -7194,15 +7244,22 @@
        'Authorization': 'Bearer ' + cfg.login.oauth,
        'Client-Id': cfg.login.client
       };
-      const r = await shared.httpRequest(url, h, true);
-      if (r === false)
-       return false;
-      if (r === null)
+      const r = await shared.httpRequest('GET', url, h);
+      if (!r.success)
       {
-       shared.blargIAmDead(3);
+       if (r.code === 401)
+       {
+        shared.blargIAmDead(3);
+        if (!login.inUse)
+        {
+         window.localStorage.removeItem(login.path() + '.oauth');
+         window.localStorage.removeItem(login.path() + '.refresh');
+         window.localStorage.removeItem(login.path() + '.refreshed');
+        }
+       }
        return false;
       }
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('data'))
        return false;
       if (!Array.isArray(j.data))
@@ -7242,15 +7299,22 @@
       'Authorization': 'Bearer ' + cfg.login.oauth,
       'Client-Id': cfg.login.client
      };
-     const r = await shared.httpRequest(url, h, true);
-     if (r === false)
-      return false;
-     if (r === null)
+     const r = await shared.httpRequest('GET', url, h);
+     if (!r.success)
      {
-      shared.blargIAmDead(3);
+      if (r.code === 401)
+      {
+       shared.blargIAmDead(3);
+       if (!login.inUse)
+       {
+        window.localStorage.removeItem(login.path() + '.oauth');
+        window.localStorage.removeItem(login.path() + '.refresh');
+        window.localStorage.removeItem(login.path() + '.refreshed');
+       }
+      }
       return false;
      }
-     const j = JSON.parse(r);
+     const j = r.json;
      if (!j.hasOwnProperty('data'))
       return false;
      if (!Array.isArray(j.data))
@@ -7394,6 +7458,9 @@
        return;
       if (twitch.net.dead)
       {
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
        _ws.close();
        _ws = null;
        return;
@@ -7474,8 +7541,19 @@
      return task;
     }();
 
+    function getCfgVals()
+    {
+     if (!cfg.hasOwnProperty('streamlabs'))
+      return 0;
+     let r = 0;
+     if (cfg.streamlabs.hasOwnProperty('token') && cfg.streamlabs.channel !== false && cfg.streamlabs.channel !== null && cfg.streamlabs.channel !== 'SOCKET_TOKEN')
+      r |= 0x01;
+     return r;
+    }
+
     return {
-     socket: streamlabsWS
+     socket: streamlabsWS,
+     cfgVals: getCfgVals
     };
    }();
 
@@ -7555,6 +7633,9 @@
        return;
       if (twitch.net.dead)
       {
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
        _ws.close();
        _ws = null;
        return;
@@ -7584,9 +7665,10 @@
         if (d.slice(1, 2) === '0')
         {
          let a = '';
-         if (cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID')
+         const seCfg = streamelements.cfgVals();
+         if ((seCfg & 0x04) === 0x04)
           a = JSON.stringify(['authenticate', {'method': 'oauth2', 'token': cfg.streamelements.oauth}]);
-         else if (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN')
+         else if ((seCfg & 0x01) === 0x01)
           a = JSON.stringify(['authenticate', {'method': 'jwt', 'token': cfg.streamelements.token}]);
          _ws.send('42' + a);
          return;
@@ -7631,10 +7713,10 @@
     async function _getOAuthToken(t)
     {
      const url = cURLs.html.rr.se.replaceAll('%REFRESH_TOKEN%', t);
-     const r = await shared.httpRequest(url, {}, false, false);
-     if (r === false)
+     const r = await shared.httpRequest('GET', url, {}, null, false);
+     if (!r.success)
       return false;
-     const j = JSON.parse(r);
+     const j = r.json;
      if (!j.hasOwnProperty('access_token'))
       return false;
      if (!j.hasOwnProperty('refresh_token'))
@@ -7690,9 +7772,24 @@
      window.localStorage.setItem('streamelements.tips:read.refreshed', cfg.streamelements.oauth_refreshed);
     }
 
+    function getCfgVals()
+    {
+     if (!cfg.hasOwnProperty('streamelements'))
+      return 0;
+     let r = 0;
+     if (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== null && cfg.streamelements.token !== 'JWT_TOKEN')
+      r |= 0x01;
+     if (cfg.streamelements.hasOwnProperty('oauth_refresh') && cfg.streamelements.oauth_refresh !== false && cfg.streamelements.oauth_refresh !== null && cfg.streamelements.oauth_refresh !== 'OAUTH_REFRESH')
+      r |= 0x02;
+     if (cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== null && cfg.streamelements.oauth !== 'OAUTH_ID')
+      r |= 0x04;
+     return r;
+    }
+
     return {
      socket: streamelementsWS,
-     updateOAuth: updateOAuth
+     updateOAuth: updateOAuth,
+     cfgVals: getCfgVals
     };
    }();
 
@@ -7792,10 +7889,10 @@
       if (!thirdparty.emotes.hasOwnProperty('ffz'))
        thirdparty.emotes.ffz = {};
       const url = cURLs.api.ffz.set.global;
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('sets'))
        return false;
       let usedSets = [];
@@ -7856,10 +7953,10 @@
      async function readFFZ_channel(chID)
      {
       const url = cURLs.api.ffz.room.replaceAll('%CHANNEL_ID%', chID);
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('sets'))
        return false;
       let ret = [];
@@ -7926,10 +8023,10 @@
       if (!thirdparty.emotes.zwe.hasOwnProperty('bttv'))
        thirdparty.emotes.zwe.bttv = {};
       const url = cURLs.api.bttv.emotes.global;
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!Array.isArray(j))
        return false;
       for (let i = 0, l = j.length; i < l; i++)
@@ -7953,10 +8050,10 @@
      async function readBTTV_channel(chID)
      {
       const url = cURLs.api.bttv.users.twitch.replaceAll('%CHANNEL_ID%', chID);
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       let ret = [];
       if (j.hasOwnProperty('channelEmotes'))
       {
@@ -8020,7 +8117,6 @@
         return;
        _ws.onopen = null;
        _ws.send(JSON.stringify({'name': 'join_channel', 'data': {'name': 'twitch:' + _ch}}));
-       _ws.send(JSON.stringify({'name': 'broadcast_me', 'data': {'name': cfg.channel, 'channel': 'twitch:' + _ch}}));
       }
 
       function _wsClose()
@@ -8045,6 +8141,9 @@
         return;
        if (twitch.net.dead)
        {
+        _ws.onopen = null;
+        _ws.onmessage = null;
+        _ws.onclose = null;
         _ws.close();
         _ws = null;
         return;
@@ -8140,10 +8239,10 @@
       if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
        thirdparty.emotes.zwe['7tv'] = {};
       const url = cURLs.api['7tv'].emotes.global;
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!Array.isArray(j))
        return false;
       for (let i = 0, l = j.length; i < l; i++)
@@ -8181,10 +8280,10 @@
      async function read7TV_channel(chID)
      {
       const url = cURLs.api['7tv'].users.emotes.replaceAll('%CHANNEL_ID%', chID);
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!Array.isArray(j))
        return false;
       let ret = [];
@@ -8247,10 +8346,10 @@
      async function _load7TV_channelID(chID)
      {
       const url = cURLs.api['7tv'].users.root.replaceAll('%CHANNEL_ID%', chID);
-      const r = await shared.httpRequest(url);
-      if (r === false)
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
        return false;
-      const j = JSON.parse(r);
+      const j = r.json;
       if (!j.hasOwnProperty('id'))
        return false;
       return j.id;
@@ -8323,6 +8422,9 @@
         return;
        if (twitch.net.dead)
        {
+        _ws.onopen = null;
+        _ws.onmessage = null;
+        _ws.onclose = null;
         _ws.close();
         _ws = null;
         return;
@@ -8444,8 +8546,7 @@
              _wsR_RL += 0.2;
             break;
            case 4006:
-            if (wsWait < 5 * 60 * 1000)
-             wsWait = 5 * 60 * 1000;
+            wsWait = Math.max(wsWait, 5 * 60 * 1000);
             break;
            case 4007:
             wsWait = 5 * 60 * 1000 + Math.floor(wWS ** (1 + _wsR_M) * 1000) - 5000;
@@ -8549,26 +8650,7 @@
      return Math.floor(f * m);
     }
 
-    function _httpRequest_RSC(x)
-    {
-     if (x.readyState < 2)
-      return null;
-     if (Math.floor(x.status / 100) !== 2)
-     {
-      x.onreadystatechange = null;
-      return false;
-     }
-     if (x.readyState !== 4)
-      return null;
-     if (x.responseText === '')
-      return null;
-     x.onreadystatechange = null;
-     if (x.responseText === null)
-      return false;
-     return x.responseText;
-    }
-
-    function httpRequest(url, hdrs = {}, nullOn401 = false, nocache = true)
+    function httpRequest(type, url, hdrs = {}, body = null, nocache = true, ret = true)
     {
      const p = new Promise(
       function(resolve)
@@ -8582,37 +8664,6 @@
          url+= '?';
         url+= 'nocache=' + shared.rnd(0xFFFFFFFF);
        }
-       x.open('GET', url);
-       for (const hK in hdrs)
-       {
-        if (!hdrs.hasOwnProperty(hK))
-         continue;
-        x.setRequestHeader(hK, hdrs[hK]);
-       }
-       x.onreadystatechange = function()
-       {
-        const r = _httpRequest_RSC(x);
-        if (r === null)
-         return;
-        if (r === false && nullOn401 && x.status === 401)
-        {
-         resolve(null);
-         return;
-        }
-        resolve(r);
-       };
-       x.send();
-      }
-     );
-     return p;
-    }
-
-    function httpSend(type, url, body = null, hdrs = {})
-    {
-     const p = new Promise(
-      function(resolve)
-      {
-       const x = new XMLHttpRequest();
        x.open(type, url);
        for (const hK in hdrs)
        {
@@ -8622,14 +8673,18 @@
        }
        x.onreadystatechange = function()
        {
-        const r = _httpRequest_RSC(x);
-        if (r === null)
+        if (ret === false)
         {
-         if (type === 'DELETE')
-          resolve(true);
+         if (x.readyState < 2)
+          return;
+         x.onreadystatechange = null;
+         resolve(Math.floor(x.status / 100) === 2);
          return;
         }
-        resolve(r);
+        if (x.readyState !== 4)
+         return;
+        x.onreadystatechange = null;
+        resolve({code: x.status, data: x.responseText, get success(){return Math.floor(this.code / 100) === 2;}, get json(){return JSON.parse(this.data);}});
        };
        if (body === null)
         x.send();
@@ -8725,7 +8780,6 @@
     return {
      rnd: rnd,
      httpRequest: httpRequest,
-     httpSend: httpSend,
      findInMaybeRange: findInMaybeRange,
      blargIAmDead: blargIAmDead
     };
@@ -8799,10 +8853,24 @@
      return 'twitch.' + _activeScope().join('+');
     }
 
+    function getCfgVals()
+    {
+     if (!cfg.hasOwnProperty('login'))
+      return 0;
+     let r = 0;
+     if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== null && cfg.channel !== 'CHANNEL_NAME')
+      r |= 0x01;
+     if (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== null && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')
+      r |= 0x02;
+     if (cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== null && cfg.login.oauth !== 'OAUTH_ID')
+      r |= 0x04;
+     return r;
+    }
+
     function shouldUseLogin()
     {
      login.inUse = false;
-     if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== 'CHANNEL_NAME' && cfg.hasOwnProperty('login') && ((cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== 'OAUTH_ID') || (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')))
+     if (login.cfgVals() > 0x01)
       return false;
      login.inUse = true;
      let lsChannel = window.localStorage.getItem(login.path() + '.channel');
@@ -8965,7 +9033,8 @@
      begin: doLogin,
      showIn: showLoginButton,
      showOut: showLogoutButton,
-     path: lsPath
+     path: lsPath,
+     cfgVals: getCfgVals
     };
    }();
 
@@ -8978,25 +9047,31 @@
     }
     if (login.use() === true)
      return;
-    if (cfg.hasOwnProperty('streamlabs') && cfg.streamlabs.hasOwnProperty('token') && cfg.streamlabs.token !== false && cfg.streamlabs.token !== 'SOCKET_TOKEN')
+    const slCfg = streamlabs.cfgVals();
+    if ((slCfg & 0x01) === 0x01)
      streamlabs.socket();
-    if (cfg.hasOwnProperty('streamelements'))
+    let seCfg = streamelements.cfgVals();
+    if (seCfg > 0)
     {
-     if (cfg.streamelements.hasOwnProperty('oauth_refresh') && cfg.streamelements.oauth_refresh !== false && cfg.streamelements.oauth_refresh !== 'OAUTH_REFRESH')
+     if ((seCfg & 0x02) === 0x02)
       await streamelements.updateOAuth();
-     if ((cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== 'OAUTH_ID') || (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== 'JWT_TOKEN'))
+     seCfg = streamelements.cfgVals();
+     if ((seCfg & (0x04 | 0x01)) === (0x04 | 0x01))
       streamelements.socket();
     }
-    if (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')
+    if ((login.cfgVals() & (0x02 | 0x01)) === (0x02 | 0x01))
      await twitch.net.updateOAuth();
-    await twitch.global();
+    const tCfg = login.cfgVals();
+    if ((tCfg & (0x04 | 0x01)) === (0x04 | 0x01))
+     await twitch.global();
     if (cfg.display.extended.useFFZ)
      await thirdparty.ffz.global();
     if (cfg.display.extended.useBTTV)
      await thirdparty.bttv.global();
     if (cfg.display.extended.use7TV)
      await thirdparty['7tv'].global();
-    twitch.net.irc();
+    if ((tCfg & (0x04 | 0x01)) === (0x04 | 0x01))
+     twitch.net.irc();
    }
 
    window.addEventListener('load', startup);
