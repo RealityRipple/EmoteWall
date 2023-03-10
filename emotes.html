@@ -6396,8 +6396,6 @@
 
      const event = function()
      {
-      let bList = [];
-
       async function parseCheer(cmd)
       {
        if (!thirdparty.emotes.hasOwnProperty('cheer'))
@@ -6518,137 +6516,227 @@
        display.kappa.show(e, r, {'%USER%': dn, '%AMOUNT%': c});
       }
 
-      function _parseSubPlan(c)
+      const parseSub = function()
       {
-       if (!c.tags.hasOwnProperty('msg-param-sub-plan'))
-        return false;
-       const p = c.tags['msg-param-sub-plan'];
-       switch (p)
-       {
-        case '1000': return 't1';
-        case '2000': return 't2';
-        case '3000': return 't3';
-        case 'Prime': return 'prime';
-       }
-       return false;
-      }
+       let _bList = {
+        bombs: [],
+        bulk: [],
+        check: []
+       };
+       let _tGC = null;
 
-      async function parseSub(cmd)
-      {
-       if (!cmd.tags.hasOwnProperty('msg-id'))
-        return;
-       const subPlan = _parseSubPlan(cmd);
-       if (subPlan === false)
-        return;
-       let mpoi = false;
-       if (cmd.tags.hasOwnProperty('msg-param-origin-id'))
-        mpoi = cmd.tags['msg-param-origin-id'];
-       if (mpoi !== false && bList.includes(mpoi))
-        return;
-       let a = [];
-       if (cmd.params.length > 1)
+       async function task(cmd)
        {
-        if (cfg.event.sub.useMsg)
-         a = await _eListFromCmd(cmd, true);
-        else
-         await parseLine(cmd);
-       }
-       let mpm = 1;
-       if (cmd.tags.hasOwnProperty('msg-param-months'))
-        mpm = parseInt(cmd.tags['msg-param-months'], 10);
-       let mpcm = 1;
-       if (cmd.tags.hasOwnProperty('msg-param-cumulative-months'))
-        mpcm = parseInt(cmd.tags['msg-param-cumulative-months'], 10);
-       let mpmgc = 1;
-       if (cmd.tags.hasOwnProperty('msg-param-mass-gift-count'))
-        mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
-       const u = _parseUser(cmd, true);
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
-        return;
-       let dn = 'Anonymous';
-       if (u.hasOwnProperty('display-name'))
-        dn = u['display-name'];
-       let mprdn = 'Anonymous';
-       if (cmd.tags.hasOwnProperty('msg-param-recipient-display-name'))
-        mprdn = cmd.tags['msg-param-recipient-display-name'];
-       switch (cmd.tags['msg-id'])
-       {
-        case 'sub':
-         if (!cfg.event.sub.hasOwnProperty(subPlan))
+        if (!cmd.tags.hasOwnProperty('msg-id'))
+         return;
+        const subPlan = _parsePlan(cmd);
+        if (subPlan === false)
+         return;
+        const mID = cmd.tags['msg-id'];
+        let mpoi = false;
+        if (cmd.tags.hasOwnProperty('msg-param-origin-id'))
+         mpoi = cmd.tags['msg-param-origin-id'];
+        const usesBomb = cfg.event.sub[subPlan].gift.hasOwnProperty('bomb') && cfg.event.sub[subPlan].gift.bomb !== false;
+        if (mpoi !== false && usesBomb)
+        {
+         if (_bList.bombs.includes(mpoi))
           return;
-         if (!cfg.event.sub[subPlan].hasOwnProperty('first'))
-          return;
-         if (cfg.event.sub[subPlan].first === false)
-          return;
-         display.kappa.show(a, cfg.event.sub[subPlan].first, {'%USER%': dn});
-         break;
-        case 'resub':
-         if (!cfg.event.sub.hasOwnProperty(subPlan))
-          return;
-         if (!cfg.event.sub[subPlan].hasOwnProperty('resub'))
-          return;
-         const rs = shared.findInMaybeRange(cfg.event.sub[subPlan].resub, mpcm);
-         if (rs === false)
-          return;
-         display.kappa.show(a, rs, {'%USER%': dn, '%AMOUNT%': mpcm});
-         break;
-        case 'primepaidupgrade':
-         if (!cfg.event.sub.hasOwnProperty(subPlan))
-          return;
-         if (!cfg.event.sub[subPlan].hasOwnProperty('upgrade'))
-          return;
-         if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('prime'))
-          return;
-         display.kappa.show(a, cfg.event.sub[subPlan].upgrade.prime, {'%USER%': dn});
-         break;
-        case 'giftpaidupgrade':
-         if (!cfg.event.sub.hasOwnProperty(subPlan))
-          return;
-         if (!cfg.event.sub[subPlan].hasOwnProperty('upgrade'))
-          return;
-         if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('gift'))
-          return;
-         display.kappa.show(a, cfg.event.sub[subPlan].upgrade.gift, {'%USER%': dn});
-         break;
-        case 'subgift':
-         if (!cfg.event.sub.hasOwnProperty(subPlan))
-          return;
-         if (!cfg.event.sub[subPlan].hasOwnProperty('gift'))
-          return;
-         if (mpm === 1)
+         if (mID === 'subgift')
          {
-          if (!cfg.event.sub[subPlan].gift.hasOwnProperty('first'))
+          if (_bList.bulk.includes(mpoi))
            return;
-          if (cfg.event.sub[subPlan].gift.first === false)
+          if (_bList.check.includes(mpoi))
+          {
+           _bList.bulk.push(mpoi);
+           _bList.check.splice(_bList.check.indexOf(mpoi), 1);
+           _resetGC();
            return;
-          display.kappa.show(a, cfg.event.sub[subPlan].gift.first, {'%SENDER%': dn, '%USER%': mprdn});
+          }
+         }
+        }
+        let a = [];
+        if (cmd.params.length > 1)
+        {
+         if (cfg.event.sub.useMsg)
+          a = await _eListFromCmd(cmd, true);
+         else
+          await parseLine(cmd);
+        }
+        let mpm = 1;
+        if (cmd.tags.hasOwnProperty('msg-param-months'))
+         mpm = parseInt(cmd.tags['msg-param-months'], 10);
+        let mpcm = 1;
+        if (cmd.tags.hasOwnProperty('msg-param-cumulative-months'))
+         mpcm = parseInt(cmd.tags['msg-param-cumulative-months'], 10);
+        let mpmgc = 1;
+        if (cmd.tags.hasOwnProperty('msg-param-mass-gift-count'))
+         mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
+        const u = _parseUser(cmd, true);
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+         return;
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        let mprdn = 'Anonymous';
+        if (cmd.tags.hasOwnProperty('msg-param-recipient-display-name'))
+         mprdn = cmd.tags['msg-param-recipient-display-name'];
+        if (mpoi !== false && usesBomb)
+        {
+         if (_bList.bombs.includes(mpoi))
+          return;
+         if (mID === 'subgift')
+         {
+          if (_bList.bulk.includes(mpoi))
+           return;
+          if (_bList.check.includes(mpoi))
+          {
+           _bList.bulk.push(mpoi);
+           _bList.check.splice(_bList.check.indexOf(mpoi), 1);
+           _resetGC();
+           return;
+          }
+          if (!cmd.tags.hasOwnProperty('msg-param-sender-count') || cmd.tags['msg-param-sender-count'] === '0')
+          {
+           _bList.check.push(mpoi);
+           window.setTimeout(_show, 2000, mID, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a);
+           _resetGC();
+           return;
+          }
+         }
+        }
+        _show(mID, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a);
+       }
+
+       function _show(id, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a)
+       {
+        const usesBomb = cfg.event.sub.hasOwnProperty(subPlan) && cfg.event.sub[subPlan].hasOwnProperty('gift') && cfg.event.sub[subPlan].gift.hasOwnProperty('bomb') && cfg.event.sub[subPlan].gift.bomb !== false;
+        if (mpoi !== false && usesBomb)
+        {
+         if (_bList.bombs.includes(mpoi))
+          return;
+         if (id === 'subgift' && _bList.bulk.includes(mpoi))
+         {
+          _resetGC();
           return;
          }
-         if (!cfg.event.sub[subPlan].gift.hasOwnProperty('resub'))
-          return;
-         const gpr = shared.findInMaybeRange(cfg.event.sub[subPlan].gift.resub, mpm);
-         if (gpr === false)
-          return;
-         display.kappa.show(a, gpr, {'%SENDER%': dn, '%USER%': mprdn, '%AMOUNT%': mpm});
-         break;
-        case 'submysterygift':
-         if (!cfg.event.sub.hasOwnProperty(subPlan))
-          return;
-         if (!cfg.event.sub[subPlan].hasOwnProperty('gift'))
-          return;
-         if (!cfg.event.sub[subPlan].gift.hasOwnProperty('bomb'))
-          return;
-         if (cfg.event.sub[subPlan].gift.bomb === false)
-          return;
-         if (mpoi !== false)
-          bList.push(mpoi);
-         const gpb = shared.findInMaybeRange(cfg.event.sub[subPlan].gift.bomb, mpmgc);
-         if (gpb === false)
-          return;
-         display.kappa.show(a, gpb, {'%SENDER%': dn, '%AMOUNT%': mpmgc});
-         break;
+        }
+        switch (id)
+        {
+         case 'sub':
+          if (!cfg.event.sub.hasOwnProperty(subPlan))
+           return;
+          if (!cfg.event.sub[subPlan].hasOwnProperty('first'))
+           return;
+          if (cfg.event.sub[subPlan].first === false)
+           return;
+          display.kappa.show(a, cfg.event.sub[subPlan].first, {'%USER%': dn});
+          break;
+         case 'resub':
+          if (!cfg.event.sub.hasOwnProperty(subPlan))
+           return;
+          if (!cfg.event.sub[subPlan].hasOwnProperty('resub'))
+           return;
+          const rs = shared.findInMaybeRange(cfg.event.sub[subPlan].resub, mpcm);
+          if (rs === false)
+           return;
+          display.kappa.show(a, rs, {'%USER%': dn, '%AMOUNT%': mpcm});
+          break;
+         case 'primepaidupgrade':
+          if (!cfg.event.sub.hasOwnProperty(subPlan))
+           return;
+          if (!cfg.event.sub[subPlan].hasOwnProperty('upgrade'))
+           return;
+          if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('prime'))
+           return;
+          display.kappa.show(a, cfg.event.sub[subPlan].upgrade.prime, {'%USER%': dn});
+          break;
+         case 'giftpaidupgrade':
+          if (!cfg.event.sub.hasOwnProperty(subPlan))
+           return;
+          if (!cfg.event.sub[subPlan].hasOwnProperty('upgrade'))
+           return;
+          if (!cfg.event.sub[subPlan].upgrade.hasOwnProperty('gift'))
+           return;
+          display.kappa.show(a, cfg.event.sub[subPlan].upgrade.gift, {'%USER%': dn});
+          break;
+         case 'subgift':
+          if (!cfg.event.sub.hasOwnProperty(subPlan))
+           return;
+          if (!cfg.event.sub[subPlan].hasOwnProperty('gift'))
+           return;
+          if (mpm === 1)
+          {
+           if (!cfg.event.sub[subPlan].gift.hasOwnProperty('first'))
+            return;
+           if (cfg.event.sub[subPlan].gift.first === false)
+            return;
+           display.kappa.show(a, cfg.event.sub[subPlan].gift.first, {'%SENDER%': dn, '%USER%': mprdn});
+           return;
+          }
+          if (!cfg.event.sub[subPlan].gift.hasOwnProperty('resub'))
+           return;
+          const gpr = shared.findInMaybeRange(cfg.event.sub[subPlan].gift.resub, mpm);
+          if (gpr === false)
+           return;
+          display.kappa.show(a, gpr, {'%SENDER%': dn, '%USER%': mprdn, '%AMOUNT%': mpm});
+          break;
+         case 'submysterygift':
+          if (!usesBomb)
+           return;
+          if (mpoi !== false)
+          {
+           _bList.bombs.push(mpoi);
+           if (_bList.bulk.includes(mpoi))
+            _bList.bulk.splice(_bList.bulk.indexOf(mpoi), 1);
+           if (_bList.check.includes(mpoi))
+            _bList.check.splice(_bList.check.indexOf(mpoi), 1);
+           _resetGC();
+          }
+          const gpb = shared.findInMaybeRange(cfg.event.sub[subPlan].gift.bomb, mpmgc);
+          if (gpb === false)
+           return;
+          display.kappa.show(a, gpb, {'%SENDER%': dn, '%AMOUNT%': mpmgc});
+          break;
+        }
        }
-      }
+
+       function _parsePlan(c)
+       {
+        if (!c.tags.hasOwnProperty('msg-param-sub-plan'))
+         return false;
+        const p = c.tags['msg-param-sub-plan'];
+        switch (p)
+        {
+         case '1000': return 't1';
+         case '2000': return 't2';
+         case '3000': return 't3';
+         case 'Prime': return 'prime';
+        }
+        return false;
+       }
+
+       function _resetGC()
+       {
+        if (_tGC !== null)
+        {
+         window.clearTimeout(_tGC);
+         _tGC = null;
+        }
+        _tGC = new window.setTimeout(_tmrGC, 10000);
+       }
+
+       function _tmrGC()
+       {
+        if (_tGC === null)
+         return;
+        window.clearTimeout(_tGC);
+        _tGC = null;
+        _bList.check = [];
+        _bList.bulk = [];
+       }
+
+       return task;
+      }();
 
       function parseBadge(cmd)
       {
