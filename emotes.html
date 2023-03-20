@@ -6548,12 +6548,22 @@
         let mpmgc = 1;
         if (cmd.tags.hasOwnProperty('msg-param-mass-gift-count'))
          mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
-        const u = _parseUser(cmd, true);
-        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
-         return;
         let dn = 'Anonymous';
-        if (u.hasOwnProperty('display-name'))
-         dn = u['display-name'];
+        let ln = 'anonymous';
+        if (cmd.tags.hasOwnProperty('login'))
+         ln = cmd.tags.login;
+        if (cmd.tags.hasOwnProperty('display-name'))
+         dn = cmd.tags['display-name'];
+        if (ln === 'anonymous' || dn === 'Anonymous')
+        {
+         const u = _parseUser(cmd, true);
+         if (ln === 'anonymous' && u.hasOwnProperty('host'))
+          ln = u.host;
+         if (dn === 'Anonymous'  && u.hasOwnProperty('display-name'))
+          dn = u['display-name'];
+        }
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(ln))
+         return;
         let mprdn = 'Anonymous';
         if (cmd.tags.hasOwnProperty('msg-param-recipient-display-name'))
          mprdn = cmd.tags['msg-param-recipient-display-name'];
