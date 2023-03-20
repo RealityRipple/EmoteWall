@@ -1594,10 +1594,7 @@
     ws: {
      twitch: {
       irc: 'wss://irc-ws.chat.twitch.tv',
-      eventSub: {
-       beta: 'wss://eventsub-beta.wss.twitch.tv/ws',
-       release: 'wss://eventsub.wss.twitch.tv/ws'
-      }
+      eventSub: 'wss://eventsub.wss.twitch.tv/ws'
      },
      streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket&token=%TOKEN%',
      streamelements: 'wss://realtime.streamelements.com/socket.io/?transport=websocket',
@@ -4556,7 +4553,7 @@
 
      const eventSub = function()
      {
-      let _wsURL = cURLs.ws.twitch.eventSub.release;
+      let _wsURL = cURLs.ws.twitch.eventSub;
       let _wsRetry = null;
       let _ws = null;
       let _oldWS = null;
@@ -4593,18 +4590,8 @@
        _ws.onclose = null;
        if (twitch.net.dead)
         return;
-       if (_wsURL === cURLs.ws.twitch.eventSub.release)
-       {
-        _wsURL = cURLs.ws.twitch.eventSub.beta;
-        window.setTimeout(task, 100);
-        return;
-       }
-       if (_wsURL.length > cURLs.ws.twitch.eventSub.release.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.release.length) === cURLs.ws.twitch.eventSub.release)
-        _wsURL = cURLs.ws.twitch.eventSub.release;
-       else if (_wsURL.length > cURLs.ws.twitch.eventSub.beta.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.beta.length) === cURLs.ws.twitch.eventSub.beta)
-        _wsURL = cURLs.ws.twitch.eventSub.beta;
-       else
-        _wsURL = cURLs.ws.twitch.eventSub.release;
+       if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
+        _wsURL = cURLs.ws.twitch.eventSub;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
@@ -4668,12 +4655,6 @@
           _ws.onclose = null;
           _ws.close();
           _ws = null;
-          if (_wsURL === cURLs.ws.twitch.eventSub.release)
-          {
-           _wsURL = cURLs.ws.twitch.eventSub.beta;
-           window.setTimeout(task, 100);
-           return;
-          }
           return;
          }
          break;
@@ -4930,12 +4911,8 @@
         _ws.onclose = null;
         _ws.close();
        }
-       if (_wsURL.length > cURLs.ws.twitch.eventSub.release.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.release.length) === cURLs.ws.twitch.eventSub.release)
-        _wsURL = cURLs.ws.twitch.eventSub.release;
-       else if (_wsURL.length > cURLs.ws.twitch.eventSub.beta.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.beta.length) === cURLs.ws.twitch.eventSub.beta)
-        _wsURL = cURLs.ws.twitch.eventSub.beta;
-       else
-        _wsURL = cURLs.ws.twitch.eventSub.release;
+       if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
+        _wsURL = cURLs.ws.twitch.eventSub;
        task();
       }
 
