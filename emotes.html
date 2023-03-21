@@ -7956,18 +7956,19 @@
     {
      function _readFFZ_URL(entry)
      {
-      if (!entry.hasOwnProperty('urls'))
-       return false;
-      if (entry.urls.hasOwnProperty('4'))
+      let g = entry.animated ?? entry.urls ?? false;
+      if (g === false)
+       return;
+      if (g.hasOwnProperty('4'))
       {
-       let u4 = entry.urls[4];
+       let u4 = g[4];
        if (u4.slice(0, 2) === '//')
         u4 = 'https:' + u4;
        return u4;
       }
-      if (entry.urls.hasOwnProperty('2'))
+      if (g.hasOwnProperty('2'))
       {
-       let u2 = entry.urls[2];
+       let u2 = g[2];
        if (u2.slice(0, 2) === '//')
         u2 = 'https:' + u2;
        let u24 = u2;
@@ -7975,9 +7976,9 @@
         u24 = u24.slice(0, -1) + '4';
        return u24;
       }
-      if (entry.urls.hasOwnProperty('1'))
+      if (g.hasOwnProperty('1'))
       {
-       let u1 = entry.urls[1];
+       let u1 = g[1];
        if (u1.slice(0, 2) === '//')
         u1 = 'https:' + u1;
        let u14 = u1;
