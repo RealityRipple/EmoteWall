@@ -5765,46 +5765,151 @@
 
       const $3rdparty = function()
       {
-       function parseFFZ(cmd, dup = null)
+       const ffz = function()
        {
-        if (!thirdparty.emotes.hasOwnProperty('ffz'))
-         return [];
-        if (cmd.params.length < 2)
-         return [];
-        const m = cmd.params[1].split(' ');
-        if (dup === null)
-         dup = cfg.display.duplicates;
-        let ret = [];
-        let addList = {};
-        for (let i = 0, l = m.length; i < l; i++)
+        function parseFFZ(cmd, dup = null)
         {
-         if (!thirdparty.emotes.ffz.hasOwnProperty(m[i]))
-          continue;
-         if (thirdparty.emotes.ffz[m[i]].users !== null)
+         if (!thirdparty.emotes.hasOwnProperty('ffz'))
+          return [];
+         if (cmd.params.length < 2)
+          return [];
+         const m = cmd.params[1].split(' ');
+         if (dup === null)
+          dup = cfg.display.duplicates;
+         let ret = [];
+         let addList = {};
+         for (let i = 0, l = m.length; i < l; i++)
          {
-          const u = _parseUser(cmd);
-          if (!thirdparty.emotes.ffz[m[i]].users.includes(u.host))
+          if (!thirdparty.emotes.ffz.hasOwnProperty(m[i]))
            continue;
+          if (thirdparty.emotes.ffz[m[i]].users !== null)
+          {
+           const u = _parseUser(cmd);
+           if (!thirdparty.emotes.ffz[m[i]].users.includes(u.host))
+            continue;
+          }
+          if (!addList.hasOwnProperty(m[i]))
+           addList[m[i]] = 0;
+          else
+          {
+           if (dup === false)
+            continue;
+           if (dup !== true && addList[m[i]] >= dup)
+            continue;
+          }
+          addList[m[i]]++;
+          let p = 0;
+          for (let j = 0; j < i; j++)
+          {
+           p+= m[j].length + 1;
+          }
+          ret.push({svc: 'f', url: thirdparty.emotes.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.ffz[m[i]].scope});
          }
-         if (!addList.hasOwnProperty(m[i]))
-          addList[m[i]] = 0;
-         else
-         {
-          if (dup === false)
-           continue;
-          if (dup !== true && addList[m[i]] >= dup)
-           continue;
-         }
-         addList[m[i]]++;
-         let p = 0;
-         for (let j = 0; j < i; j++)
-         {
-          p+= m[j].length + 1;
-         }
-         ret.push({svc: 'f', url: thirdparty.emotes.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.ffz[m[i]].scope});
+         return ret;
         }
-        return ret;
-       }
+
+        function parseFFZZWE(l, cmd, pass, dup = null)
+        {
+         if (!cfg.display.extended.useZWE)
+          return;
+         if (!thirdparty.emotes.hasOwnProperty('zwe'))
+          return;
+         if (!thirdparty.emotes.zwe.hasOwnProperty('ffz'))
+          return;
+         if (cmd.params.length < 2)
+          return;
+         l.sort(_posSort);
+         const m = cmd.params[1].split(' ');
+         if (dup === null)
+          dup = cfg.display.duplicates;
+         let addList = {};
+         for (let i = 0, n = m.length; i < n; i++)
+         {
+          if (!thirdparty.emotes.zwe.ffz.hasOwnProperty(m[i]))
+           continue;
+          if (!addList.hasOwnProperty(m[i]))
+           addList[m[i]] = 0;
+          else
+          {
+           if (dup === false)
+            continue;
+           if (dup !== true && addList[m[i]] >= dup)
+            continue;
+          }
+          addList[m[i]]++;
+          let p = 0;
+          for (let j = 0; j < i; j++)
+          {
+           p+= m[j].length + 1;
+          }
+          let f = -1;
+          let h = -1;
+          for (let j = 0, o = l.length; j < o; j++)
+          {
+           if (l[j].pos > h)
+            h = l[j].pos;
+           else
+            continue;
+           if (l[j].pos < p)
+            f = j;
+          }
+          if (f === -1)
+          {
+           if (pass === 1)
+            l.push({svc: 'b', url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope});
+          }
+          else
+          {
+           let t = cmd.params[1].slice(l[f].pos + l[f].str.length, p);
+           let z = Object.keys(thirdparty.emotes.zwe.ffz);
+           for (let j = 0, o = z.length; j < o; j++)
+           {
+            t = t.replaceAll(z[j], '');
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('7tv'))
+           {
+            z = Object.keys(thirdparty.emotes.zwe['7tv']);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           t = t.trim();
+           if (t.length > 0)
+           {
+            if (pass === 1)
+             l.push({svc: 'b', url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope});
+           }
+           else if (pass === 2)
+           {
+            if (!l[f].hasOwnProperty('zwe'))
+             l[f].zwe = [];
+            l[f].zwe.push({svc: 'b', url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope});
+            l[f].zwe.sort(_posSort);
+            for (let j = 0, o = l.length; j < o; j++)
+            {
+             if (l[j].svc !== 'b')
+              continue;
+             if (l[j].pos !== p)
+              continue;
+             l.splice(j, 1);
+             break;
+            }
+           }
+          }
+         }
+        }
+
+        function _posSort(a, b)
+        {
+         return a.pos - b.pos;
+        }
+
+        return {
+         general: parseFFZ,
+         zwe: parseFFZZWE
+        };
+       }();
 
        const bttv = function()
        {
@@ -6126,7 +6231,7 @@
        }();
 
        return {
-        ffz: parseFFZ,
+        ffz: ffz,
         bttv: bttv,
         '7tv': $7tv
        };
@@ -6222,6 +6327,8 @@
         {
          for (let i = 0, l = rFFZ.length; i < l; i++)
          {
+          if (rFFZ[i].modifier !== false)
+           continue;
           e.push({url: rFFZ[i].url});
          }
         }
@@ -6462,6 +6569,8 @@
         {
          for (let i = 0, l = rFFZ.length; i < l; i++)
          {
+          if (rFFZ[i].modifier !== false)
+           continue;
           e.push({url: rFFZ[i].url});
          }
         }
@@ -6828,6 +6937,8 @@
         {
          for (let i = 0, l = rFFZ.length; i < l; i++)
          {
+          if (rFFZ[i].modifier !== false)
+           continue;
           e.push({url: rFFZ[i].url});
          }
         }
@@ -6874,6 +6985,8 @@
         {
          for (let i = 0, l = rFFZ.length; i < l; i++)
          {
+          if (rFFZ[i].modifier !== false)
+           continue;
           e.push({url: rFFZ[i].url});
          }
         }
@@ -7168,7 +7281,7 @@
       if (cfg.display.useEmoji)
        r = r.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
       if (cfg.display.extended.useFFZ)
-       r = r.concat(twitch.parse.content['3rdparty'].ffz(cmd, dup));
+       r = r.concat(twitch.parse.content['3rdparty'].ffz.general(cmd, dup));
       if (cfg.display.extended.useBTTV)
       {
        r = r.concat(twitch.parse.content['3rdparty'].bttv.general(cmd, dup));
@@ -7176,10 +7289,14 @@
       }
       if (cfg.display.extended.use7TV)
        r = r.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd, dup));
+      if (cfg.display.extended.useFFZ)
+       twitch.parse.content['3rdparty'].ffz.zwe(r, cmd, 1, dup);
       if (cfg.display.extended.useBTTV)
        twitch.parse.content['3rdparty'].bttv.zwe(r, cmd, 1, dup);
       if (cfg.display.extended.use7TV)
        twitch.parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
+      if (cfg.display.extended.useFFZ)
+       twitch.parse.content['3rdparty'].ffz.zwe(r, cmd, 2, dup);
       if (cfg.display.extended.useBTTV)
        twitch.parse.content['3rdparty'].bttv.zwe(r, cmd, 2, dup);
       if (cfg.display.extended.use7TV)
@@ -7875,6 +7992,10 @@
      {
       if (!thirdparty.emotes.hasOwnProperty('ffz'))
        thirdparty.emotes.ffz = {};
+      if (!thirdparty.emotes.hasOwnProperty('zwe'))
+       thirdparty.emotes.zwe = {};
+      if (!thirdparty.emotes.zwe.hasOwnProperty('ffz'))
+       thirdparty.emotes.zwe.ffz = {};
       const url = cURLs.api.ffz.set.global;
       const r = await shared.httpRequest('GET', url);
       if (!r.success)
@@ -7900,11 +8021,17 @@
        {
         if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
          continue;
-        if (j.sets[set].emoticons[i].hasOwnProperty('modifier') && j.sets[set].emoticons[i].modifier === true && j.sets[set].emoticons[i].hasOwnProperty('modifier_flags') && (j.sets[set].emoticons[i].modifier_flags & 0x01) === 0x01)
-         continue;
         const u = _readFFZ_URL(j.sets[set].emoticons[i]);
         if (u === false)
          continue;
+        if (j.sets[set].emoticons[i].hasOwnProperty('modifier') && j.sets[set].emoticons[i].modifier === true)
+        {
+         if (j.sets[set].emoticons[i].hasOwnProperty('modifier_flags') && (j.sets[set].emoticons[i].modifier_flags & 0x01) === 0x01)
+          continue;
+         if (cfg.display.extended.useZWE)
+          _addEmote(thirdparty.emotes.zwe.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, null, true);
+         continue;
+        }
         _addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u);
        }
       }
@@ -7929,11 +8056,17 @@
         {
          if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
           continue;
-         if (j.sets[set].emoticons[i].hasOwnProperty('modifier') && j.sets[set].emoticons[i].modifier === true && j.sets[set].emoticons[i].hasOwnProperty('modifier_flags') && (j.sets[set].emoticons[i].modifier_flags & 0x01) === 0x01)
-          continue;
          const u = _readFFZ_URL(j.sets[set].emoticons[i]);
          if (u === false)
           continue;
+         if (j.sets[set].emoticons[i].hasOwnProperty('modifier') && j.sets[set].emoticons[i].modifier === true)
+         {
+          if (j.sets[set].emoticons[i].hasOwnProperty('modifier_flags') && (j.sets[set].emoticons[i].modifier_flags & 0x01) === 0x01)
+           continue;
+          if (cfg.display.extended.useZWE)
+           _addEmote(thirdparty.emotes.zwe.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, null, true);
+          continue;
+         }
          _addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, aList);
         }
        }
@@ -7959,12 +8092,18 @@
        {
         if (!j.sets[set].emoticons[i].hasOwnProperty('name'))
          continue;
-        if (j.sets[set].emoticons[i].hasOwnProperty('modifier') && j.sets[set].emoticons[i].modifier === true && j.sets[set].emoticons[i].hasOwnProperty('modifier_flags') && (j.sets[set].emoticons[i].modifier_flags & 0x01) === 0x01)
-         continue;
+        let m = false;
+        if (j.sets[set].emoticons[i].hasOwnProperty('modifier') && j.sets[set].emoticons[i].modifier === true)
+        {
+         if (j.sets[set].emoticons[i].hasOwnProperty('modifier_flags'))
+          m = j.sets[set].emoticons[i].modifier_flags;
+         else
+          m = 0;
+        }
         const u = _readFFZ_URL(j.sets[set].emoticons[i]);
         if (u === false)
          continue;
-        ret.push({name: j.sets[set].emoticons[i].name, id: j.sets[set].emoticons[i].id, url: u});
+        ret.push({name: j.sets[set].emoticons[i].name, id: j.sets[set].emoticons[i].id, url: u, modifier: m});
        }
       }
       return ret;
@@ -7974,12 +8113,24 @@
      {
       if (!thirdparty.emotes.hasOwnProperty('ffz'))
        thirdparty.emotes.ffz = {};
+      if (!thirdparty.emotes.hasOwnProperty('zwe'))
+       thirdparty.emotes.zwe = {};
+      if (!thirdparty.emotes.zwe.hasOwnProperty('ffz'))
+       thirdparty.emotes.zwe.ffz = {};
       const r = await readFFZ_channel(chID);
       if (r === false)
        return false;
       _removeEmoteByScope(thirdparty.emotes.ffz, 'c');
       for (let i = 0, l = r.length; i < l; i++)
       {
+       if (r[i].modifier !== false)
+       {
+        if ((r[i].modifier & 0x01) === 0x01)
+         continue;
+        if (cfg.display.extended.useZWE)
+         _addEmote(thirdparty.emotes.zwe.ffz, 'c', r[i].name, r[i].id, r[i].url, null, true);
+        continue;
+       }
        _addEmote(thirdparty.emotes.ffz, 'c', r[i].name, r[i].id, r[i].url);
       }
       return true;
