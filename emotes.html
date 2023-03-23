@@ -1584,9 +1584,6 @@
    //////////////////////////////////////////////////////////////////////////////
    // don't mess with things below this line without knowing what you're doing //
    //////////////////////////////////////////////////////////////////////////////
-   if (typeof cfg === 'undefined')
-    throw new Error('Corrupted Configuration detected.');
-   document.title = cfg.channel + ' Emote Wall';
 
    let cList = [];
    const wWS = 5;
@@ -1671,6 +1668,82 @@
      twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&scope=%SCOPE%&state=redirto_%ORIGIN%&force_verify=true'
     }
    };
+
+   const notice = function()
+   {
+    const _tStart = 48;
+
+    function error(e)
+    {
+     const oldE = document.getElementById('error');
+     if (oldE !== null)
+     {
+      if (parseInt(oldE.dataset.code, 10) !== e)
+       window.setTimeout(notice.error, 1000, e);
+      return;
+     }
+     let n = document.createElement('div');
+     n.setAttribute('id', 'error');
+     n.setAttribute('class', 'notice');
+     n.style.opacity = 0;
+     n.setAttribute('data-code', e);
+     let h = '<h1>Emote Wall Error:</h1>';
+     switch (e)
+     {
+      case 1:
+       h += '<h2>Unable to Connect to Twitch</h2>';
+       if (typeof login !== 'undefined' && login.inUse)
+       {
+        h += 'Please Log In again to update your OAuth Refresh token.';
+        login.showOut(true);
+        window.setTimeout(function(){login.showIn();}, 15500);
+       }
+       else
+        h += 'Please update your OAuth Refresh token.';
+       break;
+      case 2:
+       h += '<h2>Corrupted Configuration</h2>';
+       h += 'Please check your browser\'s Error Console for details.';
+       break;
+      case 3:
+       h += '<h2>Unable to Access Channel Emotes</h2>';
+       if (typeof login !== 'undefined' && login.inUse)
+       {
+        h += 'Please Log In again to update your OAuth Refresh token.';
+        login.showOut(true);
+        window.setTimeout(function(){login.showIn();}, 15500);
+       }
+       else
+        h += 'Please check your OAuth Refresh token. You may need a new one.';
+       break;
+      case 4:
+       h += '<h2>The Connection to the IRC Channel was Incomplete</h2>';
+       h += 'Please verify you selected the right channel name.';
+       break;
+      case 5:
+       h = '<h1>Emote Wall Warning:</h1>';
+       h += '<h2>Your StreamElements OAuth Token is Expired</h2>';
+       h += 'Please Update your StreamElements OAuth Token';
+       break;
+     }
+     n.innerHTML = h;
+     document.body.appendChild(n);
+     window.setTimeout(function(){n.style.opacity = 1;}, _tStart);
+     window.setTimeout(function(){n.style.opacity = 0;}, 14500);
+     window.setTimeout(function(){document.body.innerHTML = '';}, 15000);
+    }
+
+    return {
+     error: error
+    };
+   }();
+
+   if (typeof cfg === 'undefined')
+   {
+    window.addEventListener('load', function(){notice.error(2);});
+    throw new Error('Corrupted Configuration detected.');
+   }
+   document.title = cfg.channel + ' Emote Wall';
 
    const display = function()
    {
@@ -5201,7 +5274,7 @@
           if (cmd.params.length > 1 && cmd.params[1] === 'Login authentication failed')
           {
            twitch.net.dead = true;
-           shared.blargIAmDead(1);
+           notice.error(1);
           }
           break;
          case 'ROOMSTATE':
@@ -5313,7 +5386,7 @@
        }
        _ws.close();
        _ws = null;
-       shared.blargIAmDead(4);
+       notice.error(4);
       }
 
       return task;
@@ -5406,7 +5479,7 @@
       {
        if (r.code === 401)
        {
-        shared.blargIAmDead(1);
+        notice.error(1);
         window.localStorage.removeItem(login.path() + '.oauth');
         window.localStorage.removeItem(login.path() + '.refresh');
         window.localStorage.removeItem(login.path() + '.refreshed');
@@ -7374,7 +7447,7 @@
       {
        if (r.code === 401)
        {
-        shared.blargIAmDead(3);
+        notice.error(3);
         if (!login.inUse)
         {
          window.localStorage.removeItem(login.path() + '.oauth');
@@ -7429,7 +7502,7 @@
      {
       if (r.code === 401)
       {
-       shared.blargIAmDead(3);
+       notice.error(3);
        if (!login.inUse)
        {
         window.localStorage.removeItem(login.path() + '.oauth');
@@ -7874,7 +7947,7 @@
        window.localStorage.removeItem('streamelements.tips:read.refresh');
        window.localStorage.removeItem('streamelements.tips:read.expires');
        window.localStorage.removeItem('streamelements.tips:read.refreshed');
-       shared.blargIAmDead(5);
+       notice.error(5);
        return;
       }
      }
@@ -8905,49 +8978,10 @@
      return false;
     }
 
-    function blargIAmDead(e)
-    {
-     let showButton = false;
-     switch (e)
-     {
-      case 1:
-       if (login.inUse)
-       {
-        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Connect to Twitch<br><br>Please Log In Again</div>';
-        showButton = true;
-        login.showOut(true);
-       }
-       else
-        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Connect to Twitch<br><br>Please Update Your OAuth Refresh Token</div>';
-       break;
-      case 2:
-       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Corrupted Configuration<br><br>Please Check Your Browser\'s Error Console</div>';
-       break;
-      case 3:
-       if (login.inUse)
-       {
-        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Emotes<br><br>Please Log In Again</div>';
-        showButton = true;
-        login.showIn();
-       }
-       else
-        document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>Unable to Access Channel Emotes<br><br>Please Check Your Client ID and OAuth Refresh Token</div>';
-       break;
-      case 4:
-       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Error:<br><br>The Connection to the IRC Channel was Incomplete<br><br>Please Check your Channel</div>';
-       break;
-      case 5:
-       document.body.innerHTML = '<div style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-color: rgba(255, 0, 0, 0.75); color: #FFFF00; text-shadow: 2px 2px 4px #000000; font-size: 300%; font-weight: bold; font-family: sans-serif; text-align: center; padding-top: 3em;">Emote Wall Warning:<br><br>Your StreamElements OAuth Token is Expired<br><br>Please Update your StreamElements OAuth Token</div>';
-       break;
-     }
-     window.setTimeout(function(){document.body.innerHTML = ''; if (showButton) login.showIn();}, 15000);
-    }
-
     return {
      rnd: rnd,
      httpRequest: httpRequest,
-     findInMaybeRange: findInMaybeRange,
-     blargIAmDead: blargIAmDead
+     findInMaybeRange: findInMaybeRange
     };
    }();
 
@@ -9206,11 +9240,6 @@
 
    async function startup()
    {
-    if (typeof cfg === 'undefined')
-    {
-     shared.blargIAmDead(2);
-     return;
-    }
     if (login.use() === true)
      return;
     const slCfg = streamlabs.cfgVals();
@@ -9232,7 +9261,7 @@
      tCfg = login.cfgVals();
      if ((tCfg & 0x04) !== 0x04)
      {
-      shared.blargIAmDead(1);
+      notice.error(1);
       return;
      }
     }
@@ -9755,6 +9784,35 @@
      margin: calc((var(--emote-height-l) - (var(--emote-height-l) * 0.1)) / 2);
      max-height: calc(var(--emote-height-l) * 0.1);
     }
+   }
+
+   .notice
+   {
+    transition: opacity linear 500ms;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    font-size: 3vmin;
+    font-weight: bold;
+    font-family: sans-serif;
+    text-align: center;
+    padding-top: 15vh;
+   }
+   .notice h1
+   {
+    font-size: 5vmin;
+   }
+   .notice h2
+   {
+    font-size: 4vmin;
+   }
+   #error
+   {
+    background-color: rgba(255, 0, 0, 0.75);
+    color: #FFFF00;
+    text-shadow: 2px 2px 4px #000000;
    }
 
    button
