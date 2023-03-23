@@ -4551,21 +4551,19 @@
       return true;
      }
 
-     const eventSub = function()
+     const _eventSub = function()
      {
       let _wsURL = cURLs.ws.twitch.eventSub;
       let _wsRetry = null;
       let _ws = null;
       let _oldWS = null;
-      let _ch = 0;
-      let _sess = null;
       let _lTimeout = 5000;
       let _tTimeout = false;
 
       function task(chID = null)
       {
        if (chID !== null)
-        _ch = chID;
+        twitch.net.eventSubCtl.channelID = chID;
        _ws = new WebSocket(_wsURL);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
@@ -4631,7 +4629,7 @@
          if (!r.payload.hasOwnProperty('session'))
           return;
          if (r.payload.session.hasOwnProperty('id'))
-          _sess = r.payload.session.id;
+          twitch.net.eventSubCtl.sessionID = r.payload.session.id;
          if (r.payload.session.hasOwnProperty('keepalive_timeout_seconds'))
          {
           _lTimeout = parseInt(r.payload.session.keepalive_timeout_seconds, 10) * 2 * 1000;
@@ -4642,7 +4640,7 @@
           }
           _tTimeout = setTimeout(_wsTimeout, _lTimeout);
          }
-         const haveSubs = await _handleSubs();
+         const haveSubs = await twitch.net.eventSubCtl.init();
          if (!haveSubs)
          {
           if (_tTimeout !== false)
@@ -4868,7 +4866,7 @@
           _tTimeout = false;
          }
          if (r.payload.session.hasOwnProperty('id'))
-          _sess = r.payload.session.id;
+          twitch.net.eventSubCtl.sessionID = r.payload.session.id;
          if (r.payload.session.hasOwnProperty('keepalive_timeout_seconds') && r.payload.session.keepalive_timeout_seconds !== null)
           _lTimeout = parseInt(r.payload.session.keepalive_timeout_seconds, 10) * 2 * 1000;
          if (r.payload.session.hasOwnProperty('reconnect_url'))
@@ -4889,7 +4887,7 @@
          let subVer = '1';
          if (r.metadata.hasOwnProperty('subscription_version'))
           subVer = r.metadata.subscription_version;
-         await _subscribe(subType, subVer);
+         await twitch.net.eventSubCtl.subscribe(subType, subVer);
          break;
        }
       }
@@ -4916,7 +4914,12 @@
        task();
       }
 
-      async function _handleSubs()
+      return task;
+     }();
+
+     const eventSubCtl = function()
+     {
+      async function init()
       {
        const aSubs = [
         {id: 'channel.follow', v: '2', scope: ['moderator:read:followers'], cfg: ['event.follow']},
@@ -4934,7 +4937,7 @@
         {id: 'channel.charity_campaign.donate', scope: ['channel:read:charity'], cfg: ['event.charity']},
         {id: 'channel.update', scope: false, cfg: ['event.tag.styles']}
        ];
-       const aActive = await _unsubscribe();
+       const aActive = await _cleanAndRecover();
        let didSomething = aActive.length > 0;
        for (let i = 0, l = aSubs.length; i < l; i++)
        {
@@ -4998,11 +5001,11 @@
        if (aActive.includes(sub.id))
         return false;
        if (!sub.hasOwnProperty('v'))
-        return _subscribe(sub.id);
-       return _subscribe(sub.id, sub.v);
+        return twitch.net.eventSubCtl.subscribe(sub.id);
+       return twitch.net.eventSubCtl.subscribe(sub.id, sub.v);
       }
 
-      async function _unsubscribe()
+      async function _getList()
       {
        const h = {
         'Authorization': 'Bearer ' + cfg.login.oauth,
@@ -5018,29 +5021,41 @@
         return [];
        if (j.total < 1)
         return [];
+       return j.data;
+      }
+
+      async function _cleanAndRecover()
+      {
+       const h = {
+        'Authorization': 'Bearer ' + cfg.login.oauth,
+        'Client-Id': cfg.login.client
+       };
+       const d = await _getList();
+       if (d.length < 1)
+        return [];
        let rList = [];
-       for (let i = 0; i < j.total; i++)
+       for (let i = 0, l = d.length; i < l; i++)
        {
-        if (!j.data[i].hasOwnProperty('id'))
+        if (!d[i].hasOwnProperty('id'))
          continue;
-        if (!j.data[i].hasOwnProperty('status'))
+        if (!d[i].hasOwnProperty('status'))
          continue;
-        switch (j.data[i].status)
+        switch (d[i].status)
         {
          case 'enabled':
-          if (!j.data[i].hasOwnProperty('type'))
+          if (!d[i].hasOwnProperty('type'))
            continue;
-          if (!j.data[i].hasOwnProperty('transport'))
+          if (!d[i].hasOwnProperty('transport'))
            continue;
-          if (!j.data[i].transport.hasOwnProperty('method'))
+          if (!d[i].transport.hasOwnProperty('method'))
            continue;
-          if (j.data[i].transport.method !== 'websocket')
+          if (d[i].transport.method !== 'websocket')
            continue;
-          if (!j.data[i].transport.hasOwnProperty('session_id'))
+          if (!d[i].transport.hasOwnProperty('session_id'))
            continue;
-          if (j.data[i].transport.session_id !== _sess)
+          if (d[i].transport.session_id !== twitch.net.eventSubCtl.sessionID)
            continue;
-          rList.push(j.data[i].type);
+          rList.push(d[i].type);
           break;
          case 'authorization_revoked':
          case 'moderator_removed':
@@ -5053,27 +5068,27 @@
          case 'websocket_internal_error':
          case 'websocket_network_timeout':
          case 'websocket_network_error':
-          shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', j.data[i].id), h, null, false, false);
+          await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', d[i].id), h, null, false, false);
           break;
         }
        }
        return rList;
       }
 
-      async function _subscribe(type, version = '1')
+      async function subscribe(type, version = '1')
       {
        let d = {
         'type': type,
         'version': version,
-        'condition': {'broadcaster_user_id': _ch},
-        'transport': {'method': 'websocket', 'session_id': _sess}
+        'condition': {'broadcaster_user_id': twitch.net.eventSubCtl.channelID},
+        'transport': {'method': 'websocket', 'session_id': twitch.net.eventSubCtl.sessionID}
        };
        switch (type)
        {
         case 'channel.follow':
         case 'channel.shoutout.create':
         case 'channel.shoutout.receive':
-         d.condition.moderator_user_id = _ch;
+         d.condition.moderator_user_id = twitch.net.eventSubCtl.channelID;
          break;
        }
        const h = {
@@ -5085,7 +5100,12 @@
        return r;
       }
 
-      return task;
+      return {
+       init: init,
+       subscribe: subscribe,
+       channelID: 0,
+       sessionID: null
+      };
      }();
 
      const irc = function()
@@ -5218,7 +5238,7 @@
             thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval, twitch.net.channelID);
            if (cfg.display.extended.useBTTV)
             thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval, twitch.net.channelID);
-           eventSub(twitch.net.channelID);
+           _eventSub(twitch.net.channelID);
           }
           break;
          case 'USERNOTICE':
@@ -5433,6 +5453,7 @@
       channelID: 0,
       fList: {},
       dead: false,
+      eventSubCtl: eventSubCtl,
       irc: irc,
       userInfo: getUserInfo,
       updateOAuth: updateOAuth
