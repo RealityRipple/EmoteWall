@@ -1587,6 +1587,7 @@
 
    let cList = [];
    const wWS = 5;
+   const oauthClient = '4umzcpmjkg6ar78b81s7302jlj33t8';
    const cURLs = {
     ws: {
      twitch: {
@@ -5260,7 +5261,11 @@
          case 'PING':
           _ws.send('PONG ' + cmd.params[0]);
           if ((login.cfgVals() & 0x02) === 0x02)
-           await twitch.net.updateOAuth();
+          {
+           await twitch.net.oAuth.update();
+           if ((login.cfgVals() & 0x04) !== 0x04)
+            notice.error(1);
+          }
           break;
          case 'PRIVMSG':
           if (document.visibilityState === 'hidden')
@@ -5273,8 +5278,19 @@
          case 'NOTICE':
           if (cmd.params.length > 1 && cmd.params[1] === 'Login authentication failed')
           {
+           _ws.onmessage = null;
+           _ws.onclose = null;
+           _ws.close();
+           _ws = null;
+           if (await twitch.net.oAuth.reinit())
+           {
+            window.setTimeout(task, 1000);
+            return;
+           }
            twitch.net.dead = true;
            notice.error(1);
+           if (!login.inUse)
+            twitch.net.oAuth.clear(true);
           }
           break;
          case 'ROOMSTATE':
@@ -5471,56 +5487,94 @@
       }
      }
 
-     async function _getOAuthToken(t)
+     const oAuth = function()
      {
-      const url = cURLs.html.rr.t.replaceAll('%REFRESH_TOKEN%', t);
-      const r = await shared.httpRequest('GET', url);
-      if (!r.success)
+      async function _getToken(t)
       {
-       if (r.code === 401)
+       const url = cURLs.html.rr.t.replaceAll('%REFRESH_TOKEN%', t);
+       const r = await shared.httpRequest('GET', url);
+       if (!r.success)
        {
-        notice.error(1);
-        window.localStorage.removeItem(login.path() + '.oauth');
-        window.localStorage.removeItem(login.path() + '.refresh');
-        window.localStorage.removeItem(login.path() + '.refreshed');
+        if (r.code === 401)
+        {
+         notice.error(1);
+         twitch.net.oAuth.clear(true);
+        }
+        return false;
+       }
+       const j = r.json;
+       if (!j.hasOwnProperty('access_token'))
+        return false;
+       if (!j.hasOwnProperty('refresh_token'))
+        return false;
+       return j;
+      }
+
+      async function update()
+      {
+       const lsOAuth = window.localStorage.getItem(login.path() + '.oauth');
+       const lsRefresh = window.localStorage.getItem(login.path() + '.refresh');
+       const lsRefreshed = window.localStorage.getItem(login.path() + '.refreshed');
+       if (lsOAuth !== null)
+        cfg.login.oauth = lsOAuth;
+       if (lsRefresh !== null)
+        cfg.login.oauth_refresh = lsRefresh;
+       if (lsRefreshed !== null)
+        cfg.login.oauth_refreshed = lsRefreshed;
+       if (cfg.login.hasOwnProperty('oauth_refreshed') && cfg.login.oauth_refreshed > 0)
+       {
+        const tokAge = Math.floor(new Date().getTime() / 1000) - cfg.login.oauth_refreshed;
+        if (tokAge < 60 * 60)
+         return;
+       }
+       const ret = await _getToken(cfg.login.oauth_refresh);
+       if (ret === false)
+        return;
+       cfg.login.oauth = ret.access_token;
+       cfg.login.oauth_refresh = ret.refresh_token;
+       cfg.login.oauth_refreshed = Math.floor(new Date().getTime() / 1000);
+       window.localStorage.setItem(login.path() + '.oauth', cfg.login.oauth);
+       window.localStorage.setItem(login.path() + '.refresh', cfg.login.oauth_refresh);
+       window.localStorage.setItem(login.path() + '.refreshed', cfg.login.oauth_refreshed);
+      }
+
+      async function reinit()
+      {
+       if ((login.cfgVals() & 0x02) === 0x02)
+       {
+        twitch.net.oAuth.clear();
+        await twitch.net.oAuth.update();
+        if ((login.cfgVals() & 0x04) === 0x04)
+         return true;
+        twitch.net.oAuth.clear(true);
        }
        return false;
       }
-      const j = r.json;
-      if (!j.hasOwnProperty('access_token'))
-       return false;
-      if (!j.hasOwnProperty('refresh_token'))
-       return false;
-      return j;
-     }
 
-     async function updateOAuth()
-     {
-      const lsOAuth = window.localStorage.getItem(login.path() + '.oauth');
-      const lsRefresh = window.localStorage.getItem(login.path() + '.refresh');
-      const lsRefreshed = window.localStorage.getItem(login.path() + '.refreshed');
-      if (lsOAuth !== null)
-       cfg.login.oauth = lsOAuth;
-      if (lsRefresh !== null)
-       cfg.login.oauth_refresh = lsRefresh;
-      if (lsRefreshed !== null)
-       cfg.login.oauth_refreshed = lsRefreshed;
-      if (cfg.login.hasOwnProperty('oauth_refreshed') && cfg.login.oauth_refreshed > 0)
+      function clear(clearRefresh = false)
       {
-       const tokAge = Math.floor(new Date().getTime() / 1000) - cfg.login.oauth_refreshed;
-       if (tokAge < 60 * 60)
+       cfg.login.oauth = 'OAUTH_ID';
+       delete cfg.login.oauth_refreshed;
+       window.localStorage.removeItem(login.path() + '.oauth');
+       window.localStorage.removeItem(login.path() + '.refreshed');
+       if (!clearRefresh)
         return;
+       cfg.channel = 'CHANNEL_NAME';
+       cfg.login.oauth_refresh = 'OAUTH_REFRESH';
+       cfg.login.client = oauthClient;
+       cfg.login.scope = [];
+       window.localStorage.removeItem(login.path() + '.channel');
+       window.localStorage.removeItem(login.path() + '.refresh');
+       window.localStorage.removeItem(login.path() + '.client');
+       window.localStorage.removeItem(login.path() + '.scope');
       }
-      const ret = await _getOAuthToken(cfg.login.oauth_refresh);
-      if (ret === false)
-       return;
-      cfg.login.oauth = ret.access_token;
-      cfg.login.oauth_refresh = ret.refresh_token;
-      cfg.login.oauth_refreshed = Math.floor(new Date().getTime() / 1000);
-      window.localStorage.setItem(login.path() + '.oauth', cfg.login.oauth);
-      window.localStorage.setItem(login.path() + '.refresh', cfg.login.oauth_refresh);
-      window.localStorage.setItem(login.path() + '.refreshed', cfg.login.oauth_refreshed);
-     }
+
+      return {
+       update: update,
+       reinit: reinit,
+       clear: clear
+      };
+     }();
 
      return {
       channelID: 0,
@@ -5529,7 +5583,7 @@
       eventSubCtl: eventSubCtl,
       irc: irc,
       userInfo: getUserInfo,
-      updateOAuth: updateOAuth
+      oAuth: oAuth
      };
     }();
 
@@ -7215,7 +7269,17 @@
        };
        const r = await shared.httpRequest('GET', url, h);
        if (!r.success)
+       {
+        if (r.code === 401)
+        {
+         if (await twitch.net.oAuth.reinit())
+          return _checkFollower(cmd);
+         notice.error(3);
+         if (!login.inUse)
+          twitch.net.oAuth.clear(true);
+        }
         return false;
+       }
        const j = r.json;
        if (j.hasOwnProperty('data') && j.data.length > 0)
        {
@@ -7447,13 +7511,11 @@
       {
        if (r.code === 401)
        {
+        if (await twitch.net.oAuth.reinit())
+         return task(chID, n);
         notice.error(3);
         if (!login.inUse)
-        {
-         window.localStorage.removeItem(login.path() + '.oauth');
-         window.localStorage.removeItem(login.path() + '.refresh');
-         window.localStorage.removeItem(login.path() + '.refreshed');
-        }
+         twitch.net.oAuth.clear(true);
        }
        return false;
       }
@@ -7502,13 +7564,11 @@
      {
       if (r.code === 401)
       {
+       if (await twitch.net.oAuth.reinit())
+        return findEmote_global();
        notice.error(3);
        if (!login.inUse)
-       {
-        window.localStorage.removeItem(login.path() + '.oauth');
-        window.localStorage.removeItem(login.path() + '.refresh');
-        window.localStorage.removeItem(login.path() + '.refreshed');
-       }
+        twitch.net.oAuth.clear(true);
       }
       return false;
      }
@@ -9126,13 +9186,9 @@
 
     function doLogin()
     {
-     window.localStorage.removeItem(login.path() + '.channel');
-     window.localStorage.removeItem(login.path() + '.oauth');
-     window.localStorage.removeItem(login.path() + '.refresh');
-     window.localStorage.removeItem(login.path() + '.client');
-     window.localStorage.removeItem(login.path() + '.scope');
+     twitch.net.oAuth.clear(true);
      const o = encodeURIComponent(btoa(window.location));
-     const c = encodeURIComponent('4umzcpmjkg6ar78b81s7302jlj33t8');
+     const c = encodeURIComponent(oauthClient);
      const r = encodeURIComponent(cURLs.html.rr.wizard);
      let u = cURLs.html.twitch.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', o);
      if (u.length > 1500)
@@ -9145,11 +9201,7 @@
      document.title = 'Log In to Access Emote Wall';
      if (document.getElementById('cmdLogout'))
       document.body.removeChild(document.getElementById('cmdLogout'));
-     window.localStorage.removeItem(login.path() + '.channel');
-     window.localStorage.removeItem(login.path() + '.oauth');
-     window.localStorage.removeItem(login.path() + '.refresh');
-     window.localStorage.removeItem(login.path() + '.client');
-     window.localStorage.removeItem(login.path() + '.scope');
+     twitch.net.oAuth.clear(true);
      let cmdLogin = document.createElement('button');
      cmdLogin.setAttribute('id', 'cmdLogin');
      cmdLogin.setAttribute('type', 'button');
@@ -9257,7 +9309,7 @@
     let tCfg = login.cfgVals();
     if ((tCfg & (0x02 | 0x01)) === (0x02 | 0x01))
     {
-     await twitch.net.updateOAuth();
+     await twitch.net.oAuth.update();
      tCfg = login.cfgVals();
      if ((tCfg & 0x04) !== 0x04)
      {
