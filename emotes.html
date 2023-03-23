@@ -9225,11 +9225,22 @@
      if ((seCfg & 0x01) === 0x01 || (seCfg & 0x04) === 0x04)
       streamelements.socket();
     }
-    if ((login.cfgVals() & (0x02 | 0x01)) === (0x02 | 0x01))
+    let tCfg = login.cfgVals();
+    if ((tCfg & (0x02 | 0x01)) === (0x02 | 0x01))
+    {
      await twitch.net.updateOAuth();
-    const tCfg = login.cfgVals();
+     tCfg = login.cfgVals();
+     if ((tCfg & 0x04) !== 0x04)
+     {
+      shared.blargIAmDead(1);
+      return;
+     }
+    }
     if ((tCfg & (0x04 | 0x01)) === (0x04 | 0x01))
-     await twitch.global();
+    {
+     if (await twitch.global() === false)
+      return;
+    }
     if (cfg.display.extended.useFFZ)
      await thirdparty.ffz.global();
     if (cfg.display.extended.useBTTV)
