@@ -1674,8 +1674,52 @@
    {
     const _tStart = 48;
 
+    function warning(w)
+    {
+     if (document.getElementById('error') !== null)
+      return;
+     const oldW = document.getElementById('warning');
+     if (oldW !== null)
+     {
+      if (parseInt(oldW.dataset.code, 10) !== w)
+       window.setTimeout(notice.warning, 1000, w);
+      return;
+     }
+     let n = document.createElement('div');
+     n.setAttribute('id', 'warning');
+     n.setAttribute('class', 'notice');
+     n.style.opacity = 0;
+     n.setAttribute('data-code', w);
+     let h = '<h1>Emote Wall Warning:</h1>';
+     switch (w)
+     {
+      case 1:
+       h += '<h2>Too Many Instances Open Simultaneously</h2>';
+       h += 'Some events may not be correctly detected.<br><br>';
+       h += 'Please use reference copies of the Emote Wall wherever possible.<br>';
+       h += 'If you\'re using different configurations, try including different OAuth Refresh Tokens for each configuration.<br>';
+       h += 'If you need to, you may <a onclick="twitch.net.eventSubCtl.erase();" href="javascript:;">Force Clear</a> the event handlers.';
+       break;
+      case 2:
+       h += '<h2>Your StreamElements OAuth Token is Expired</h2>';
+       h += 'Please Update your StreamElements OAuth Token';
+       break;
+     }
+     n.innerHTML = h;
+     document.body.appendChild(n);
+     window.setTimeout(function(){n.style.opacity = 1;}, _tStart);
+     window.setTimeout(function(){n.style.opacity = 0;}, 19500);
+     window.setTimeout(function(){n.remove();}, 20000);
+    }
+
     function error(e)
     {
+     const oldW = document.getElementById('warning');
+     if (oldW !== null)
+     {
+      oldW.style.opacity = 0;
+      window.setTimeout(function(){oldW.remove();}, 500);
+     }
      const oldE = document.getElementById('error');
      if (oldE !== null)
      {
@@ -1721,11 +1765,6 @@
        h += '<h2>The Connection to the IRC Channel was Incomplete</h2>';
        h += 'Please verify you selected the right channel name.';
        break;
-      case 5:
-       h = '<h1>Emote Wall Warning:</h1>';
-       h += '<h2>Your StreamElements OAuth Token is Expired</h2>';
-       h += 'Please Update your StreamElements OAuth Token';
-       break;
      }
      n.innerHTML = h;
      document.body.appendChild(n);
@@ -1735,6 +1774,7 @@
     }
 
     return {
+     warning: warning,
      error: error
     };
    }();
@@ -5098,6 +5138,24 @@
        return j.data;
       }
 
+      async function erase()
+      {
+       const h = {
+        'Authorization': 'Bearer ' + cfg.login.oauth,
+        'Client-Id': cfg.login.client
+       };
+       const d = await _getList();
+       if (d.length < 1)
+        return;
+       for (let i = 0, l = d.length; i < l; i++)
+       {
+        if (!d[i].hasOwnProperty('id'))
+         continue;
+        await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', d[i].id), h, null, false, false);
+       }
+       window.location.reload();
+      }
+
       async function _cleanAndRecover()
       {
        const h = {
@@ -5170,13 +5228,18 @@
         'Client-Id': cfg.login.client,
         'Content-Type': 'application/json'
        };
-       const r = await shared.httpRequest('POST', cURLs.api.twitch.eventSub.get, h, JSON.stringify(d), false, false);
-       return r;
+       const r = await shared.httpRequest('POST', cURLs.api.twitch.eventSub.get, h, JSON.stringify(d), false, true);
+       if (r.success)
+        return true;
+       if (r.code === 429)
+        notice.warning(1);
+       return false;
       }
 
       return {
        init: init,
        subscribe: subscribe,
+       erase: erase,
        channelID: 0,
        sessionID: null
       };
@@ -8007,7 +8070,7 @@
        window.localStorage.removeItem('streamelements.tips:read.refresh');
        window.localStorage.removeItem('streamelements.tips:read.expires');
        window.localStorage.removeItem('streamelements.tips:read.refreshed');
-       notice.error(5);
+       notice.warning(2);
        return;
       }
      }
@@ -9859,6 +9922,12 @@
    .notice h2
    {
     font-size: 4vmin;
+   }
+   #warning
+   {
+    background-color: rgba(255, 192, 0, 0.5);
+    color: #000000;
+    text-shadow: 2px 2px 4px #FFFFFF;
    }
    #error
    {
