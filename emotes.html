@@ -5265,6 +5265,8 @@
       {
        if (_ws === null)
         return;
+       if (_ws.readyState !== 1)
+        return;
        _ws.onopen = null;
        _tTimeout = setTimeout(_wsTimeout, 5000);
        _ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
@@ -5322,7 +5324,8 @@
         switch(cmd.command)
         {
          case 'PING':
-          _ws.send('PONG ' + cmd.params[0]);
+          if (_ws.readyState === 1)
+           _ws.send('PONG ' + cmd.params[0]);
           if ((login.cfgVals() & 0x02) === 0x02)
           {
            await twitch.net.oAuth.update();
@@ -7856,6 +7859,8 @@
      {
       if (_ws === null)
        return;
+      if (_ws.readyState !== 1)
+       return;
       _ws.send('2');
      }
 
@@ -7991,7 +7996,8 @@
           a = JSON.stringify(['authenticate', {'method': 'oauth2', 'token': cfg.streamelements.oauth}]);
          else if ((seCfg & 0x01) === 0x01)
           a = JSON.stringify(['authenticate', {'method': 'jwt', 'token': cfg.streamelements.token}]);
-         _ws.send('42' + a);
+         if (_ws.readyState === 1)
+          _ws.send('42' + a);
          return;
         }
         if (document.visibilityState === 'hidden')
@@ -8024,6 +8030,8 @@
      function _wsPing()
      {
       if (_ws === null)
+       return;
+      if (_ws.readyState !== 1)
        return;
       _ws.send('2');
      }
@@ -8477,6 +8485,8 @@
       {
        if (_ws === null)
         return;
+       if (_ws.readyState !== 1)
+        return;
        _ws.onopen = null;
        _ws.send(JSON.stringify({'name': 'join_channel', 'data': {'name': 'twitch:' + _ch}}));
       }
@@ -8748,6 +8758,8 @@
       {
        if (_ws === null)
         return;
+       if (_ws.readyState !== 1)
+        return;
        _ws.onopen = null;
        _tTimeout = setTimeout(_wsTimeout, _lTimeout);
       }
@@ -8807,7 +8819,10 @@
         case 1:
          _okCt = 0;
          if (_sess !== null)
-          _ws.send(JSON.stringify({'op': 34, 'd': {'session_id': _sess}}));
+         {
+          if (_ws.readyState === 1)
+           _ws.send(JSON.stringify({'op': 34, 'd': {'session_id': _sess}}));
+         }
          else
           _wsSub();
          if (d.d.hasOwnProperty('session_id'))
@@ -8932,6 +8947,8 @@
       {
        if (_ws === null)
         return;
+       if (_ws.readyState !== 1)
+        return;
        _ws.send(JSON.stringify({'op': 36, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
        _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
        _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
@@ -8940,6 +8957,8 @@
       function _wsSub()
       {
        if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
         return;
        _ws.send(JSON.stringify({'op': 35, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
        _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
