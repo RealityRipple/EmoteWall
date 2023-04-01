@@ -1664,7 +1664,7 @@
       wizard: 'https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php',
       t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php?refresh=%REFRESH_TOKEN%',
       se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php?refresh=%REFRESH_TOKEN%',
-      redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php?t=code&c=%CLIENT_ID%&r=%URL%&s=%SCOPE%&u=%ORIGIN%'
+      redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php?t=code&v=%SERVICE%&c=%CLIENT_ID%&r=%URL%&s=%SCOPE%&u=%ORIGIN%'
      },
      twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&scope=%SCOPE%&state=redirto_%ORIGIN%&force_verify=true'
     }
@@ -9269,7 +9269,7 @@
      const r = encodeURIComponent(cURLs.html.rr.wizard);
      let u = cURLs.html.twitch.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', o);
      if (u.length > 1500)
-      u = cURLs.html.rr.redir.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', encodeURIComponent(window.location));
+      u = cURLs.html.rr.redir.replaceAll('%SERVICE%', 'twitch').replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', encodeURIComponent(window.location));
      window.location = u;
     }
 
