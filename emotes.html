@@ -1791,6 +1791,7 @@
     let _eActive = 0;
     let _iTitanic = 0;
     const _tStart = 48;
+    const _cRadius = Math.PI * 2;
     const _tAnim = {
      fade: {
       in: 8,
@@ -1866,8 +1867,7 @@
        if (v === false)
         v = shared.rnd(sH) - sSm;
        const r = Math.min(sW, sH) * (shared.rnd() + 1);
-       const cRadius = Math.PI * 2;
-       let th = shared.rnd() * cRadius;
+       let th = shared.rnd() * _cRadius;
        let hD = Math.floor(h + r * Math.cos(th));
        let vD = Math.floor(v + r * Math.sin(th));
        if (!x && !y)
@@ -1876,7 +1876,7 @@
         const sB = sH - sS - sSm;
         while ((h < sSm && hD < sSm) || (v < sSm && vD < sSm) || (h > sR && hD > sR) || (v > sB && vD > sB))
         {
-         th = shared.rnd() * cRadius;
+         th = shared.rnd() * _cRadius;
          hD = Math.floor(h + r * Math.cos(th));
          vD = Math.floor(v + r * Math.sin(th));
         }
@@ -2617,15 +2617,14 @@
         const h = shared.rnd(sW) - sSm;
         const v = shared.rnd(sH) - sSm;
         const r = Math.min(sW, sH) * (shared.rnd() + 1);
-        const cRadius = Math.PI * 2;
-        let th = shared.rnd() * cRadius;
+        let th = shared.rnd() * _cRadius;
         let hD = Math.floor(h + r * Math.cos(th));
         let vD = Math.floor(v + r * Math.sin(th));
         const sR = sW - sS - sSm;
         const sB = sH - sS - sSm;
         while ((h < sSm && hD < sSm) || (v < sSm && vD < sSm) || (h > sR && hD > sR) || (v > sB && vD > sB))
         {
-         th = shared.rnd() * cRadius;
+         th = shared.rnd() * _cRadius;
          hD = Math.floor(h + r * Math.cos(th));
          vD = Math.floor(v + r * Math.sin(th));
         }
@@ -2917,8 +2916,7 @@
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
         _setImgSrc(img, url);
-        const cRadius = Math.PI * 2;
-        const th = a * cRadius;
+        const th = a * _cRadius;
         const hD = Math.floor(cX + r * Math.cos(th));
         const vD = Math.floor(cY + r * Math.sin(th));
         let s = 'height: ' + sS + 'px;';
@@ -2986,9 +2984,8 @@
         let l = iKC / 25 + 2;
         l = l + (shared.rnd() * 4 - 2);
         l = Math.max(l, 0.1);
-        const cRadius = Math.PI * 2;
         const c = Math.PI * l / iKC;
-        let th = shared.rnd() * cRadius;
+        let th = shared.rnd() * _cRadius;
         const o = shared.rnd(2) === 0;
         for (let i = 0; i < iKC; i++)
         {
@@ -2998,13 +2995,13 @@
          {
           th-= c;
           if (th <= 0)
-           th+= cRadius;
+           th+= _cRadius;
          }
          else
          {
           th+= c;
-          if (th >= cRadius)
-           th-= cRadius;
+          if (th >= _cRadius)
+           th-= _cRadius;
          }
          const oK = kList[shared.rnd(kList.length)];
          _sparkler(tInit, oK.url, oX, oY, sS, r, th);
