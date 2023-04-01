@@ -1674,7 +1674,7 @@
    {
     const _tStart = 48;
 
-    function warning(w)
+    function $warning(w)
     {
      if (document.getElementById('error') !== null)
       return;
@@ -1712,7 +1712,7 @@
      window.setTimeout(function(){n.remove();}, 20000);
     }
 
-    function error(e)
+    function $error(e)
     {
      const oldW = document.getElementById('warning');
      if (oldW !== null)
@@ -1774,8 +1774,8 @@
     }
 
     return {
-     warning: warning,
-     error: error
+     warning: $warning,
+     error: $error
     };
    }();
 
@@ -1802,15 +1802,15 @@
      }
     };
 
-    const emote = function()
+    const $emote = function()
     {
      let _toShow = [];
 
      let _tEmote = false;
 
-     const list = function()
+     const $list = function()
      {
-      function Still(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+      function $Still(url, zwe, sW, sH, sS, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -1841,7 +1841,7 @@
        }
       }
 
-      function StraightLine(url, zwe, sW, sH, sS, x = false, y = false, canV = true, tInit = 0)
+      function $StraightLine(url, zwe, sW, sH, sS, x = false, y = false, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -1893,7 +1893,7 @@
        }
       }
 
-      function Rise(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+      function $Rise(url, zwe, sW, sH, sS, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -1951,7 +1951,7 @@
        }
       }
 
-      const Bounce = function()
+      const $Bounce = function()
       {
        const _ms = 20;
 
@@ -2022,7 +2022,7 @@
        return task;
       }();
 
-      function Speed(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+      function $Speed(url, zwe, sW, sH, sS, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2076,7 +2076,7 @@
        }
       }
 
-      function Drop(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+      function $Drop(url, zwe, sW, sH, sS, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2127,7 +2127,7 @@
        }
       }
 
-      const Crazy = function()
+      const $Crazy = function()
       {
        /* LAYOUT SHIFTS
         * =============
@@ -2285,7 +2285,7 @@
        return task;
       }();
 
-      function Confetti(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+      function $Confetti(url, zwe, sW, sH, sS, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2339,7 +2339,7 @@
        }
       }
 
-      const Throw = function()
+      const $Throw = function()
       {
        function task(url, zwe, sW, sH, sS, canV = true, tInit = 0)
        {
@@ -2456,7 +2456,7 @@
        return task;
       }();
 
-      const TheCube = function()
+      const $TheCube = function()
       {
        function task(url, zwe, sW, sH, sS, canV = true, tInit = 0)
        {
@@ -2661,7 +2661,7 @@
        return task;
       }();
 
-      function Fountain(url, zwe, sW, sH, sS, fX, fY, canV = true, tInit = 0)
+      function $Fountain(url, zwe, sW, sH, sS, fX, fY, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2715,17 +2715,17 @@
       }
 
       return {
-       Still: Still,
-       StraightLine: StraightLine,
-       Rise: Rise,
-       Bounce: Bounce,
-       Speed: Speed,
-       Drop: Drop,
-       Crazy: Crazy,
-       Confetti: Confetti,
-       Throw: Throw,
-       TheCube: TheCube,
-       Fountain: Fountain
+       Still: $Still,
+       StraightLine: $StraightLine,
+       Rise: $Rise,
+       Bounce: $Bounce,
+       Speed: $Speed,
+       Drop: $Drop,
+       Crazy: $Crazy,
+       Confetti: $Confetti,
+       Throw: $Throw,
+       TheCube: $TheCube,
+       Fountain: $Fountain
       };
      }();
 
@@ -2744,10 +2744,10 @@
       let style = cfg.display.styles[shared.rnd(cfg.display.styles.length)];
       if (style === undefined)
        return;
-      list[style](url, zwe, sW, sH, sS);
+      display.emote.list[style](url, zwe, sW, sH, sS);
      }
 
-     function showEmotes()
+     function $showEmotes()
      {
       if (_tEmote !== false)
       {
@@ -2756,7 +2756,7 @@
       }
       if (cfg.emote.max > 0 && _eActive >= cfg.emote.max)
       {
-       _tEmote = window.setTimeout(showEmotes, 500);
+       _tEmote = window.setTimeout(display.emote.showEmotes, 500);
        return;
       }
       let e = null;
@@ -2767,25 +2767,25 @@
        {
         if (cfg.emote.queue > 0 && _toShow.length > cfg.emote.queue)
          _toShow.splice(0, _toShow.length - cfg.emote.queue);
-        _tEmote = window.setTimeout(showEmotes, 500);
+        _tEmote = window.setTimeout(display.emote.showEmotes, 500);
         return;
        }
       }
      }
 
-     function addToShowList(p)
+     function $addToShowList(p)
      {
       _toShow = _toShow.concat(p);
      }
 
      return {
-      showEmotes: showEmotes,
-      addToShowList: addToShowList,
-      list: list
+      showEmotes: $showEmotes,
+      addToShowList: $addToShowList,
+      list: $list
      };
     }();
 
-    const kappa = function()
+    const $kappa = function()
     {
      let _toKappa = [];
      let _conga = [];
@@ -2795,7 +2795,7 @@
 
      const _list = function()
      {
-      const Fireworks = function()
+      const $Fireworks = function()
       {
        const _smallBurst = 0.5;
        const _largeBurst = 1.5;
@@ -2966,7 +2966,7 @@
        return task;
       }();
 
-      const Spiral = function()
+      const $Spiral = function()
       {
        function task(kList, sW, sH, sS, iKC)
        {
@@ -3050,7 +3050,7 @@
        return task;
       }();
 
-      const Pyramid = function()
+      const $Pyramid = function()
       {
        function task(kList, sW, sH)
        {
@@ -3133,7 +3133,7 @@
        return task;
       }();
 
-      const SmallPyramid = function()
+      const $SmallPyramid = function()
       {
        function task(kList, sW, sH)
        {
@@ -3217,7 +3217,7 @@
        return task;
       }();
 
-      const Stampede = function()
+      const $Stampede = function()
       {
        const _speed = 2000;
 
@@ -3332,7 +3332,7 @@
        return task;
       }();
 
-      const Conga = function()
+      const $Conga = function()
       {
        const _longWait = cfg.emote.time * 2;
 
@@ -3534,7 +3534,7 @@
        return task;
       }();
 
-      const TheCube = function()
+      const $TheCube = function()
       {
        function task(url, zwe, sW, sH, sS, bC, iR)
        {
@@ -3720,7 +3720,7 @@
        return task;
       }();
 
-      const Text = function()
+      const $Text = function()
       {
        let _mL = 0;
 
@@ -3860,14 +3860,14 @@
       }();
 
       return {
-       Fireworks: Fireworks,
-       Spiral: Spiral,
-       Pyramid: Pyramid,
-       SmallPyramid: SmallPyramid,
-       Stampede: Stampede,
-       Conga: Conga,
-       TheCube: TheCube,
-       Text: Text
+       Fireworks: $Fireworks,
+       Spiral: $Spiral,
+       Pyramid: $Pyramid,
+       SmallPyramid: $SmallPyramid,
+       Stampede: $Stampede,
+       Conga: $Conga,
+       TheCube: $TheCube,
+       Text: $Text
       };
      }();
 
@@ -3907,7 +3907,7 @@
        nK = false;
        let a = {};
        a[e.style] = e.prefs;
-       showKappa(e.list, a, e.params);
+       display.kappa.show(e.list, a, e.params);
        if (_toKappa.length < 1)
         return;
        nK = _getNextKappa(_toKappa[0]);
@@ -4124,7 +4124,7 @@
       return r;
      }
 
-     async function showKappa(kList, kStyles = false, kParams = false)
+     async function $show(kList, kStyles = false, kParams = false)
      {
       const kStyle = _getNextKappaEx(kStyles, kParams);
       if (kStyle === false)
@@ -4312,7 +4312,7 @@
       }
      }
 
-     function hideKappa()
+     function $hide()
      {
       if (_tKappa !== false)
       {
@@ -4324,8 +4324,8 @@
      }
 
      return {
-      show: showKappa,
-      hide: hideKappa
+      show: $show,
+      hide: $hide
      };
     }();
 
@@ -4372,7 +4372,7 @@
        _tGC = window.setTimeout(_doGC, 500);
      }
 
-     function gcEmote(img, space = true, decActive = true, t = false)
+     function $hook(img, space = true, decActive = true, t = false)
      {
       if (t === false)
        t = cfg.emote.time * 1000;
@@ -4387,7 +4387,7 @@
      }
 
      return {
-      hook: gcEmote
+      hook: $hook
      };
     }();
 
@@ -4539,7 +4539,7 @@
      return _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
     }
 
-    function eraseAll()
+    function $eraseAll()
     {
      _iTitanic = new Date().getTime();
      display.kappa.hide();
@@ -4553,9 +4553,9 @@
     }
 
     return {
-     emote: emote,
-     kappa: kappa,
-     eraseAll: eraseAll
+     emote: $emote,
+     kappa: $kappa,
+     eraseAll: $eraseAll
     };
    }();
 
@@ -4564,7 +4564,7 @@
     let _rList = {};
     let _aTagged = {};
 
-    const net = function()
+    const $net = function()
     {
      async function _loadCheer_channel(chID)
      {
@@ -4707,7 +4707,7 @@
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(task, wsWait);
+       window.setTimeout(_eventSub, wsWait);
       }
 
       async function _wsMessage(ev)
@@ -4992,7 +4992,7 @@
          const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
          if (_wsRetry < 2)
           _wsRetry += 0.2;
-         window.setTimeout(task, wsWait);
+         window.setTimeout(_eventSub, wsWait);
          break;
         case 'revocation':
          if (!r.metadata.hasOwnProperty('subscription_type'))
@@ -5025,15 +5025,15 @@
        }
        if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
         _wsURL = cURLs.ws.twitch.eventSub;
-       task();
+       _eventSub();
       }
 
       return task;
      }();
 
-     const eventSubCtl = function()
+     const $eventSubCtl = function()
      {
-      async function init()
+      async function $init()
       {
        const aSubs = [
         {id: 'channel.follow', v: '2', scope: ['moderator:read:followers'], cfg: ['event.follow']},
@@ -5138,7 +5138,7 @@
        return j.data;
       }
 
-      async function erase()
+      async function $erase()
       {
        const h = {
         'Authorization': 'Bearer ' + cfg.login.oauth,
@@ -5207,7 +5207,7 @@
        return rList;
       }
 
-      async function subscribe(type, version = '1')
+      async function $subscribe(type, version = '1')
       {
        let d = {
         'type': type,
@@ -5237,15 +5237,15 @@
       }
 
       return {
-       init: init,
-       subscribe: subscribe,
-       erase: erase,
+       init: $init,
+       subscribe: $subscribe,
+       erase: $erase,
        channelID: 0,
        sessionID: null
       };
      }();
 
-     const irc = function()
+     const $irc = function()
      {
       let _wsRetry = 0;
       let _firstRS = true;
@@ -5293,7 +5293,7 @@
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(task, wsWait);
+       window.setTimeout(twitch.net.irc, wsWait);
       }
 
       async function _wsMessage(ev)
@@ -5350,7 +5350,7 @@
            _ws = null;
            if (await twitch.net.oAuth.reinit())
            {
-            window.setTimeout(task, 1000);
+            window.setTimeout(twitch.net.irc, 1000);
             return;
            }
            twitch.net.dead = true;
@@ -5486,7 +5486,7 @@
       return true;
      }
 
-     async function getUserInfo(u, isID = false)
+     async function $userInfo(u, isID = false)
      {
       let url = cURLs.api.twitch.users.name.replaceAll('%USER%', u);
       if (isID)
@@ -5553,7 +5553,7 @@
       }
      }
 
-     const oAuth = function()
+     const $oAuth = function()
      {
       async function _getToken(t)
       {
@@ -5576,7 +5576,7 @@
        return j;
       }
 
-      async function update()
+      async function $update()
       {
        const lsOAuth = window.localStorage.getItem(login.path() + '.oauth');
        const lsRefresh = window.localStorage.getItem(login.path() + '.refresh');
@@ -5604,7 +5604,7 @@
        window.localStorage.setItem(login.path() + '.refreshed', cfg.login.oauth_refreshed);
       }
 
-      async function reinit()
+      async function $reinit()
       {
        if ((login.cfgVals() & 0x02) === 0x02)
        {
@@ -5617,7 +5617,7 @@
        return false;
       }
 
-      function clear(clearRefresh = false)
+      function $clear(clearRefresh = false)
       {
        cfg.login.oauth = 'OAUTH_ID';
        delete cfg.login.oauth_refreshed;
@@ -5636,9 +5636,9 @@
       }
 
       return {
-       update: update,
-       reinit: reinit,
-       clear: clear
+       update: $update,
+       reinit: $reinit,
+       clear: $clear
       };
      }();
 
@@ -5646,14 +5646,14 @@
       channelID: 0,
       fList: {},
       dead: false,
-      eventSubCtl: eventSubCtl,
-      irc: irc,
-      userInfo: getUserInfo,
-      oAuth: oAuth
+      eventSubCtl: $eventSubCtl,
+      irc: $irc,
+      userInfo: $userInfo,
+      oAuth: $oAuth
      };
     }();
 
-    const parse = function()
+    const $parse = function()
     {
      let _aLast = {};
 
@@ -5682,7 +5682,7 @@
       return ret;
      }
 
-     function parseMsg(line)
+     function $message(line)
      {
       let cmd = {};
       if (line.slice(0, 1) === '@')
@@ -5739,9 +5739,9 @@
       return cmd;
      }
 
-     const content = function()
+     const $content = function()
      {
-      const emoji = function()
+      const $emoji = function()
       {
        let _uList = {};
 
@@ -5778,7 +5778,7 @@
         let ret = [];
         const uri = cURLs.cdn.ffz.emoji.replaceAll('%SET_ID%', set);
         let addList = {};
-        function showEmoji(c, p)
+        function __showEmoji(c, p)
         {
          if (c.slice(-5) === '-fe0f' && !c.match(/-200d-264[0|2]-/) && !c.match(/-200d-26a7/) && !c.match(/-200d-2620/))
           c = c.slice(0, -5);
@@ -5795,7 +5795,7 @@
          ret.push({svc: 'e', url: uri + c + '.png', str: c, pos: p});
          return true;
         }
-        function showCrew(p)
+        function __showCrew(p)
         {
          if (!addList.hasOwnProperty('0d9e'))
           addList['0d9e'] = 0;
@@ -5863,7 +5863,7 @@
           let s = cpList[0];
           if (s === '0d9e')
           {
-           showCrew(emList[i].index);
+           __showCrew(emList[i].index);
            continue;
           }
           let tU;
@@ -5879,7 +5879,7 @@
           found = await _checkURL(tU);
           if (found)
           {
-           showEmoji(s, emList[i].index);
+           __showEmoji(s, emList[i].index);
            continue;
           }
           while (s.includes('-'))
@@ -5892,7 +5892,7 @@
            found = await _checkURL(tU);
            if (found)
            {
-            showEmoji(s, emList[i].index);
+            __showEmoji(s, emList[i].index);
             break;
            }
           }
@@ -5904,7 +5904,7 @@
           p += cpList[j].replaceAll(/[^\-]/g, '').length + 1;
           found = await _checkURL(uri + cpList[j] + '.png');
           if (found)
-           showEmoji(cpList[j], p);
+           __showEmoji(cpList[j], p);
          }
         }
         return ret;
@@ -5940,7 +5940,7 @@
        return task;
       }();
 
-      function parseT(cmd, dup = null)
+      function $twitch(cmd, dup = null)
       {
        if (!cmd.hasOwnProperty('tags'))
         return [];
@@ -5979,9 +5979,9 @@
 
       const $3rdparty = function()
       {
-       const ffz = function()
+       const $ffz = function()
        {
-        function parseFFZ(cmd, dup = null)
+        function $general(cmd, dup = null)
         {
          if (!thirdparty.emotes.hasOwnProperty('ffz'))
           return [];
@@ -6022,7 +6022,7 @@
          return ret;
         }
 
-        function parseFFZZWE(l, cmd, pass, dup = null)
+        function $zwe(l, cmd, pass, dup = null)
         {
          if (!cfg.display.extended.useZWE)
           return;
@@ -6120,14 +6120,14 @@
         }
 
         return {
-         general: parseFFZ,
-         zwe: parseFFZZWE
+         general: $general,
+         zwe: $zwe
         };
        }();
 
-       const bttv = function()
+       const $bttv = function()
        {
-        function parseBTTV(cmd, dup = null)
+        function $general(cmd, dup = null)
         {
          if (!thirdparty.emotes.hasOwnProperty('bttv'))
           return [];
@@ -6162,7 +6162,7 @@
          return ret;
         }
 
-        function parseBTTVZWE(l, cmd, pass, dup = null)
+        function $zwe(l, cmd, pass, dup = null)
         {
          if (!cfg.display.extended.useZWE)
           return;
@@ -6254,7 +6254,7 @@
          }
         }
 
-        function parseBTTVU(cmd, dup = null)
+        function $user(cmd, dup = null)
         {
          if (!thirdparty.emotes.hasOwnProperty('bttvU'))
           return [];
@@ -6298,15 +6298,15 @@
         }
 
         return {
-         general: parseBTTV,
-         zwe: parseBTTVZWE,
-         user: parseBTTVU
+         general: $general,
+         zwe: $zwe,
+         user: $user
         };
        }();
 
        const $7tv = function()
        {
-        function parse7TV(cmd, dup = null)
+        function $general(cmd, dup = null)
         {
          if (!thirdparty.emotes.hasOwnProperty('7tv'))
           return [];
@@ -6341,7 +6341,7 @@
          return ret;
         }
 
-        function parse7TVZWE(l, cmd, pass, dup = null)
+        function $zwe(l, cmd, pass, dup = null)
         {
          if (!cfg.display.extended.useZWE)
           return;
@@ -6439,26 +6439,26 @@
         }
 
         return {
-         general: parse7TV,
-         zwe: parse7TVZWE
+         general: $general,
+         zwe: $zwe
         };
        }();
 
        return {
-        ffz: ffz,
-        bttv: bttv,
+        ffz: $ffz,
+        bttv: $bttv,
         '7tv': $7tv
        };
       }();
 
       return {
-       emoji: emoji,
-       twitch: parseT,
+       emoji: $emoji,
+       twitch: $twitch,
        '3rdparty': $3rdparty
       };
      }();
 
-     const parseLine = function()
+     const $line = function()
      {
       async function task(cmd)
       {
@@ -6469,7 +6469,7 @@
         return;
        if (cmd.params.length < 2)
         return;
-       const lv = await _level.get(cmd);
+       const lv = await _level(cmd);
        if (await _parseTaggedChannel(cmd, lv))
         return;
        if (await _parseCommand(cmd, lv))
@@ -6692,9 +6692,9 @@
       return task;
      }();
 
-     const event = function()
+     const $event = function()
      {
-      async function parseCheer(cmd)
+      async function $cheer(cmd)
       {
        if (!thirdparty.emotes.hasOwnProperty('cheer'))
         return false;
@@ -6734,7 +6734,7 @@
         p = p.concat(a);
        }
        else
-        await parseLine(cmd);
+        await twitch.parse.line(cmd);
        p = _handleDuplicates(p);
        if (p.length === 0)
         return false;
@@ -6755,7 +6755,7 @@
        return true;
       }
 
-      async function parseRaid(cmd)
+      async function $raid(cmd)
       {
        if (!cmd.tags.hasOwnProperty('msg-param-viewerCount'))
         return;
@@ -6816,7 +6816,7 @@
        display.kappa.show(e, r, {'%USER%': dn, '%AMOUNT%': c});
       }
 
-      const parseSub = function()
+      const $sub = function()
       {
        let _bList = {
         bombs: [],
@@ -6860,7 +6860,7 @@
          if (cfg.event.sub.useMsg)
           a = await _eListFromCmd(cmd, true);
          else
-          await parseLine(cmd);
+          await twitch.parse.line(cmd);
         }
         let mpm = 1;
         if (cmd.tags.hasOwnProperty('msg-param-months'))
@@ -7048,7 +7048,7 @@
        return task;
       }();
 
-      function parseBadge(cmd)
+      function $badge(cmd)
       {
        if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
         return;
@@ -7084,7 +7084,7 @@
        display.kappa.show(false, cfg.event.badge[closest], {'%USER%': dn, '%AMOUNT%': c});
       }
 
-      async function parseRedeem(title, cmd)
+      async function $redeem(title, cmd)
       {
        for (const k of cfg.commands)
        {
@@ -7104,7 +7104,7 @@
        }
       }
 
-      async function parseBan(cmd)
+      async function $ban(cmd)
       {
        let dn = cmd.params[1];
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
@@ -7118,7 +7118,7 @@
        display.kappa.show(false, cfg.event.ban, {'%USER%': dn});
       }
 
-      async function parseTimeout(cmd)
+      async function $timeout(cmd)
       {
        let dn = cmd.params[1];
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
@@ -7136,7 +7136,7 @@
        display.kappa.show(false, r, {'%USER%': dn, '%AMOUNT%': dDur});
       }
 
-      async function parseShoutoutCreate(uID, uName)
+      async function $shoutoutCreate(uID, uName)
       {
        if (!cfg.event.shoutout.create.targetEmotes)
        {
@@ -7184,7 +7184,7 @@
        display.kappa.show(e, cfg.event.shoutout.create.styles, {'%USER%': uName});
       }
 
-      async function parseShoutoutReceive(uID, uName)
+      async function $shoutoutReceive(uID, uName)
       {
        if (!cfg.event.shoutout.receive.originEmotes)
        {
@@ -7232,7 +7232,7 @@
        display.kappa.show(e, cfg.event.shoutout.receive.styles, {'%USER%': uName});
       }
 
-      function parsePollEnd(e)
+      function $pollEnd(e)
       {
        let vPoll = 0;
        for (let i = 0, l = e.choices.length; i < l; i++)
@@ -7260,7 +7260,7 @@
         display.kappa.show(false, cfg.event.poll.end, {'%TITLE%': e.title, '%RESULT%': sPoll});
       }
 
-      function parsePredictionEnd(e)
+      function $predictionEnd(e)
       {
        let sPrediction = 'None';
        for (let i = 0, l = e.outcomes.length; i < l; i++)
@@ -7279,17 +7279,17 @@
       }
 
       return {
-       cheer: parseCheer,
-       raid: parseRaid,
-       sub: parseSub,
-       badge: parseBadge,
-       redeem: parseRedeem,
-       ban: parseBan,
-       timeout: parseTimeout,
-       shoutoutCreate: parseShoutoutCreate,
-       shoutoutReceive: parseShoutoutReceive,
-       pollEnd: parsePollEnd,
-       predictionEnd: parsePredictionEnd
+       cheer: $cheer,
+       raid: $raid,
+       sub: $sub,
+       badge: $badge,
+       redeem: $redeem,
+       ban: $ban,
+       timeout: $timeout,
+       shoutoutCreate: $shoutoutCreate,
+       shoutoutReceive: $shoutoutReceive,
+       pollEnd: $pollEnd,
+       predictionEnd: $predictionEnd
       };
      }();
 
@@ -7297,66 +7297,7 @@
      {
       const _rFH = 3600000;
 
-      function _jSplit(s, sep, limit)
-      {
-       let arr = [];
-       let v = '';
-       for (let i = 0, l = s.length; i < l; i++)
-       {
-        if (arr.length < limit - 1)
-        {
-         if (s[i] === sep)
-         {
-          arr.push(v);
-          v = '';
-          continue;
-         }
-        }
-        v += s[i];
-       }
-       if (v.length > 0)
-        arr.push(v);
-       return arr;
-      }
-
-      async function _checkFollower(cmd)
-      {
-       const uID = cmd.tags['user-id'];
-       if (twitch.net.fList.hasOwnProperty(uID))
-       {
-        const tDif = new Date().getTime() - twitch.net.fList[uID].t;
-        if (tDif < _rFH)
-         return twitch.net.fList[uID].value;
-       }
-       const url = cURLs.api.twitch.channels.followers.replaceAll('%USER_ID%', uID).replaceAll('%CHANNEL_ID%', cmd.tags['room-id']);
-       const h = {
-        'Authorization': 'Bearer ' + cfg.login.oauth,
-        'Client-Id': cfg.login.client
-       };
-       const r = await shared.httpRequest('GET', url, h);
-       if (!r.success)
-       {
-        if (r.code === 401)
-        {
-         if (await twitch.net.oAuth.reinit())
-          return _checkFollower(cmd);
-         notice.error(3);
-         if (!login.inUse)
-          twitch.net.oAuth.clear(true);
-        }
-        return false;
-       }
-       const j = r.json;
-       if (j.hasOwnProperty('data') && j.data.length > 0)
-       {
-        twitch.net.fList[uID] = {value: true, t: new Date().getTime()};
-        return true;
-       }
-       twitch.net.fList[uID] = {value: false, t: new Date().getTime()};
-       return false;
-      }
-
-      async function parseLevel(cmd)
+      async function task(cmd)
       {
        let r = 0x001;
        if (cmd.tags.hasOwnProperty('mod') && cmd.tags.mod === '1')
@@ -7433,9 +7374,66 @@
        return r;
       }
 
-      return {
-       get: parseLevel
-      };
+      async function _checkFollower(cmd)
+      {
+       const uID = cmd.tags['user-id'];
+       if (twitch.net.fList.hasOwnProperty(uID))
+       {
+        const tDif = new Date().getTime() - twitch.net.fList[uID].t;
+        if (tDif < _rFH)
+         return twitch.net.fList[uID].value;
+       }
+       const url = cURLs.api.twitch.channels.followers.replaceAll('%USER_ID%', uID).replaceAll('%CHANNEL_ID%', cmd.tags['room-id']);
+       const h = {
+        'Authorization': 'Bearer ' + cfg.login.oauth,
+        'Client-Id': cfg.login.client
+       };
+       const r = await shared.httpRequest('GET', url, h);
+       if (!r.success)
+       {
+        if (r.code === 401)
+        {
+         if (await twitch.net.oAuth.reinit())
+          return _checkFollower(cmd);
+         notice.error(3);
+         if (!login.inUse)
+          twitch.net.oAuth.clear(true);
+        }
+        return false;
+       }
+       const j = r.json;
+       if (j.hasOwnProperty('data') && j.data.length > 0)
+       {
+        twitch.net.fList[uID] = {value: true, t: new Date().getTime()};
+        return true;
+       }
+       twitch.net.fList[uID] = {value: false, t: new Date().getTime()};
+       return false;
+      }
+
+      function _jSplit(s, sep, limit)
+      {
+       let arr = [];
+       let v = '';
+       for (let i = 0, l = s.length; i < l; i++)
+       {
+        if (arr.length < limit - 1)
+        {
+         if (s[i] === sep)
+         {
+          arr.push(v);
+          v = '';
+          continue;
+         }
+        }
+        v += s[i];
+       }
+       if (v.length > 0)
+        arr.push(v);
+       return arr;
+      }
+
+      return task;
      }();
 
      function _handleDuplicates(a)
@@ -7539,17 +7537,17 @@
       return r;
      }
 
-     function clearCooldowns()
+     function $clearCooldowns()
      {
       _aLast = {};
      }
 
      return {
-      message: parseMsg,
-      content: content,
-      line: parseLine,
-      event: event,
-      clearCooldowns: clearCooldowns,
+      message: $message,
+      content: $content,
+      line: $line,
+      event: $event,
+      clearCooldowns: $clearCooldowns,
       uReg: /[^A-Za-z0-9_]/
      };
     }();
@@ -7578,7 +7576,7 @@
        if (r.code === 401)
        {
         if (await twitch.net.oAuth.reinit())
-         return task(chID, n);
+         return _findEmote_channel(chID, n);
         notice.error(3);
         if (!login.inUse)
          twitch.net.oAuth.clear(true);
@@ -7616,7 +7614,7 @@
      return task;
     }();
 
-    async function findEmote_global()
+    async function $global()
     {
      if (!thirdparty.emotes.hasOwnProperty('twitch'))
       thirdparty.emotes.twitch = {};
@@ -7631,7 +7629,7 @@
       if (r.code === 401)
       {
        if (await twitch.net.oAuth.reinit())
-        return findEmote_global();
+        return twitch.global();
        notice.error(3);
        if (!login.inUse)
         twitch.net.oAuth.clear(true);
@@ -7660,9 +7658,9 @@
     }
 
     return {
-     net: net,
-     parse: parse,
-     global: findEmote_global
+     net: $net,
+     parse: $parse,
+     global: $global
     };
    }();
 
@@ -7742,7 +7740,7 @@
      }
     }
 
-    const streamlabsWS = function()
+    const $socket = function()
     {
      let _wsRetry = 0;
      let _tPing = false;
@@ -7773,7 +7771,7 @@
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
        _wsRetry += 0.2;
-      window.setTimeout(task, wsWait);
+      window.setTimeout(streamlabs.socket, wsWait);
      }
 
      async function _wsMessage(ev)
@@ -7867,7 +7865,7 @@
      return task;
     }();
 
-    function getCfgVals()
+    function $cfgVals()
     {
      if (!cfg.hasOwnProperty('streamlabs'))
       return 0;
@@ -7878,8 +7876,8 @@
     }
 
     return {
-     socket: streamlabsWS,
-     cfgVals: getCfgVals
+     socket: $socket,
+     cfgVals: $cfgVals
     };
    }();
 
@@ -7919,7 +7917,7 @@
      display.kappa.show(p, r, {'%USER%': dName, '%AMOUNT%': s});
     }
 
-    const streamelementsWS = function()
+    const $socket = function()
     {
      let _wsRetry = 0;
      let _tPing = 0;
@@ -7950,7 +7948,7 @@
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
        _wsRetry += 0.2;
-      window.setTimeout(task, wsWait);
+      window.setTimeout(streamelements.socket, wsWait);
      }
 
      async function _wsMessage(ev)
@@ -8055,7 +8053,7 @@
      return j;
     }
 
-    async function updateOAuth()
+    async function $updateOAuth()
     {
      const lsOAuth = window.localStorage.getItem('streamelements.tips:read.oauth');
      const lsRefresh = window.localStorage.getItem('streamelements.tips:read.refresh');
@@ -8101,7 +8099,7 @@
      window.localStorage.setItem('streamelements.tips:read.refreshed', cfg.streamelements.oauth_refreshed);
     }
 
-    function getCfgVals()
+    function $cfgVals()
     {
      if (!cfg.hasOwnProperty('streamelements'))
       return 0;
@@ -8116,9 +8114,9 @@
     }
 
     return {
-     socket: streamelementsWS,
-     updateOAuth: updateOAuth,
-     cfgVals: getCfgVals
+     socket: $socket,
+     updateOAuth: $updateOAuth,
+     cfgVals: $cfgVals
     };
    }();
 
@@ -8177,7 +8175,7 @@
      }
     }
 
-    const ffz = function()
+    const $ffz = function()
     {
      function _readFFZ_URL(entry)
      {
@@ -8214,7 +8212,7 @@
       return false;
      }
 
-     async function loadFFZ_global()
+     async function $global()
      {
       if (!thirdparty.emotes.hasOwnProperty('ffz'))
        thirdparty.emotes.ffz = {};
@@ -8300,7 +8298,7 @@
       return true;
      }
 
-     async function readFFZ_channel(chID)
+     async function $channelEx(chID)
      {
       const url = cURLs.api.ffz.room.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest('GET', url);
@@ -8335,7 +8333,7 @@
       return ret;
      }
 
-     async function loadFFZ_channel(chID)
+     async function $channel(chID)
      {
       if (!thirdparty.emotes.hasOwnProperty('ffz'))
        thirdparty.emotes.ffz = {};
@@ -8343,7 +8341,7 @@
        thirdparty.emotes.zwe = {};
       if (!thirdparty.emotes.zwe.hasOwnProperty('ffz'))
        thirdparty.emotes.zwe.ffz = {};
-      const r = await readFFZ_channel(chID);
+      const r = await thirdparty.ffz.channelEx(chID);
       if (r === false)
        return false;
       _removeEmoteByScope(thirdparty.emotes.ffz, 'c');
@@ -8363,28 +8361,28 @@
      }
 
      return {
-      global: loadFFZ_global,
-      channel: loadFFZ_channel,
-      channelEx: readFFZ_channel
+      global: $global,
+      channel: $channel,
+      channelEx: $channelEx
      };
     }();
 
-    const bttv = function()
+    const $bttv = function()
     {
      const _rBE = 600000;
 
-     function reloadBTTV(chID)
+     function $reload(chID)
      {
       if (thirdparty.bttv.timer === false)
        return;
       window.clearTimeout(thirdparty.bttv.timer);
       thirdparty.bttv.timer = false;
       if (cfg.display.extended.useBTTV)
-       loadBTTV_channel(twitch.net.channelID);
-      thirdparty.bttv.timer = window.setTimeout(reloadBTTV, thirdparty.interval, chID);
+       thirdparty.bttv.channel(twitch.net.channelID);
+      thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval, chID);
      }
 
-     async function loadBTTV_global()
+     async function $global()
      {
       if (!thirdparty.emotes.hasOwnProperty('bttv'))
        thirdparty.emotes.bttv = {};
@@ -8417,7 +8415,7 @@
       return true;
      }
 
-     async function readBTTV_channel(chID)
+     async function $channelEx(chID)
      {
       const url = cURLs.api.bttv.users.twitch.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest('GET', url);
@@ -8450,11 +8448,11 @@
       return ret;
      }
 
-     async function loadBTTV_channel(chID)
+     async function $channel(chID)
      {
       if (!thirdparty.emotes.hasOwnProperty('bttv'))
        thirdparty.emotes.bttv = {};
-      const r = await readBTTV_channel(chID);
+      const r = await thirdparty.bttv.channelEx(chID);
       if (r === false)
        return false;
       _removeEmoteByScope(thirdparty.emotes.bttv, 'c');
@@ -8465,7 +8463,7 @@
       return true;
      }
 
-     const loadBTTV_ws_channel = function()
+     const $socket = function()
      {
       let _wsRetry = 0;
       let _ch = 0;
@@ -8504,7 +8502,7 @@
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(task, wsWait);
+       window.setTimeout(thirdparty.bttv.socket, wsWait);
       }
 
       function _wsMessage(ev)
@@ -8557,7 +8555,7 @@
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
          _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id));
-         thirdparty.bttv.timer = window.setTimeout(reloadBTTV, _rBE, _ch);
+         thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE, _ch);
          break;
         case 'emote_delete':
          if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + _ch)
@@ -8567,7 +8565,7 @@
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
          _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emoteId);
-         thirdparty.bttv.timer = window.setTimeout(reloadBTTV, _rBE, _ch);
+         thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE, _ch);
          break;
         case 'emote_update':
          if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + _ch)
@@ -8582,7 +8580,7 @@
           window.clearTimeout(thirdparty.bttv.timer);
          _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emote.id);
          _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id));
-         thirdparty.bttv.timer = window.setTimeout(reloadBTTV, _rBE, _ch);
+         thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE, _ch);
          break;
        }
       }
@@ -8592,17 +8590,17 @@
 
      return {
       timer: false,
-      global: loadBTTV_global,
-      channel: loadBTTV_channel,
-      channelEx: readBTTV_channel,
-      socket: loadBTTV_ws_channel,
-      reload: reloadBTTV
+      global: $global,
+      channel: $channel,
+      channelEx: $channelEx,
+      socket: $socket,
+      reload: $reload
      };
     }();
 
     const $7tv = function()
     {
-     async function load7TV_global()
+     async function $global()
      {
       if (!thirdparty.emotes.hasOwnProperty('7tv'))
        thirdparty.emotes['7tv'] = {};
@@ -8649,7 +8647,7 @@
       return true;
      }
 
-     async function read7TV_channel(chID)
+     async function $channelEx(chID)
      {
       const url = cURLs.api['7tv'].users.emotes.replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest('GET', url);
@@ -8688,7 +8686,7 @@
       return ret;
      }
 
-     async function load7TV_channel(chID)
+     async function $channel(chID)
      {
       if (!thirdparty.emotes.hasOwnProperty('7tv'))
        thirdparty.emotes['7tv'] = {};
@@ -8696,7 +8694,7 @@
        thirdparty.emotes.zwe = {};
       if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
        thirdparty.emotes.zwe['7tv'] = {};
-      const r = await read7TV_channel(chID);
+      const r = await thirdparty['7tv'].channelEx(chID);
       if (r === false)
        return false;
       if (cfg.display.extended.useZWE)
@@ -8727,7 +8725,7 @@
       return j.id;
      }
 
-     const load7TV_ws_channel = function()
+     const $socket = function()
      {
       const _lDelay = 500;
       let _wsRetry = 0;
@@ -8782,7 +8780,7 @@
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(task, wsWait);
+       window.setTimeout(thirdparty['7tv'].socket, wsWait);
       }
 
       function _wsMessage(ev)
@@ -8854,7 +8852,7 @@
           const wsRedo = Math.floor(wWS ** (1 + _wsRetry) * 1000);
           if (_wsRetry < 2)
            _wsRetry += 0.2;
-          window.setTimeout(task, wsRedo);
+          window.setTimeout(thirdparty['7tv'].socket, wsRedo);
           return;
          }
          _wsRetry = 0;
@@ -8938,7 +8936,7 @@
             break;
           }
          }
-         window.setTimeout(task, wsWait);
+         window.setTimeout(thirdparty['7tv'].socket, wsWait);
          break;
        }
       }
@@ -8979,21 +8977,21 @@
        }
        _ws.close();
        _ws = null;
-       task();
+       thirdparty['7tv'].socket();
       }
 
       return task;
      }();
 
      return {
-      global: load7TV_global,
-      channel: load7TV_channel,
-      channelEx: read7TV_channel,
-      socket: load7TV_ws_channel
+      global: $global,
+      channel: $channel,
+      channelEx: $channelEx,
+      socket: $socket
      };
     }();
 
-    function reload3rdParty(chID)
+    function $reload(chID)
     {
      if (thirdparty.timer === false)
       return;
@@ -9010,16 +9008,16 @@
      emotes: {},
      timer: false,
      interval: 60000,
-     ffz: ffz,
-     bttv: bttv,
+     ffz: $ffz,
+     bttv: $bttv,
      '7tv': $7tv,
-     reload: reload3rdParty
+     reload: $reload
     };
    }();
 
    const shared = function()
    {
-    function rnd(m)
+    function $rnd(m)
     {
      let r = new Uint32Array(1);
      window.crypto.getRandomValues(r);
@@ -9031,7 +9029,7 @@
      return Math.floor(f * m);
     }
 
-    function httpRequest(type, url, hdrs = {}, body = null, nocache = true, ret = true)
+    function $httpRequest(type, url, hdrs = {}, body = null, nocache = true, ret = true)
     {
      const p = new Promise(
       function(resolve)
@@ -9076,7 +9074,7 @@
      return p;
     }
 
-    function findInMaybeRange(r, v)
+    function $findInMaybeRange(r, v)
     {
      const t = typeof r;
      switch (t)
@@ -9121,9 +9119,9 @@
     }
 
     return {
-     rnd: rnd,
-     httpRequest: httpRequest,
-     findInMaybeRange: findInMaybeRange
+     rnd: $rnd,
+     httpRequest: $httpRequest,
+     findInMaybeRange: $findInMaybeRange
     };
    }();
 
@@ -9190,12 +9188,12 @@
      return encodeURIComponent(_activeScope().join(' '));
     }
 
-    function lsPath()
+    function $path()
     {
      return 'twitch.' + _activeScope().join('+');
     }
 
-    function getCfgVals()
+    function $cfgVals()
     {
      if (!cfg.hasOwnProperty('login'))
       return 0;
@@ -9209,7 +9207,7 @@
      return r;
     }
 
-    function shouldUseLogin()
+    function $use()
     {
      login.inUse = false;
      if (login.cfgVals() > 0x01)
@@ -9266,7 +9264,7 @@
      return hashParams;
     }
 
-    function doLogin()
+    function $begin()
     {
      twitch.net.oAuth.clear(true);
      const o = encodeURIComponent(btoa(window.location));
@@ -9278,7 +9276,7 @@
      window.location = u;
     }
 
-    function showLoginButton()
+    function $showIn()
     {
      document.title = 'Log In to Access Emote Wall';
      if (document.getElementById('cmdLogout'))
@@ -9300,7 +9298,7 @@
      document.body.appendChild(cmdLogin);
     }
 
-    function showLogoutButton(v = false)
+    function $showOut(v = false)
     {
      if (document.getElementById('cmdLogout'))
       document.body.removeChild(document.getElementById('cmdLogout'));
@@ -9363,12 +9361,12 @@
 
     return {
      inUse: false,
-     use: shouldUseLogin,
-     begin: doLogin,
-     showIn: showLoginButton,
-     showOut: showLogoutButton,
-     path: lsPath,
-     cfgVals: getCfgVals
+     use: $use,
+     begin: $begin,
+     showIn: $showIn,
+     showOut: $showOut,
+     path: $path,
+     cfgVals: $cfgVals
     };
    }();
 
