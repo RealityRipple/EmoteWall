@@ -8066,28 +8066,31 @@
       cfg.streamelements.oauth_expires = lsExpires;
      if (lsRefreshed !== null)
       cfg.streamelements.oauth_refreshed = lsRefreshed;
-     if (cfg.streamelements.hasOwnProperty('oauth_expires') && cfg.streamelements.oauth_expires > 0)
-     {
-      const expTime = cfg.streamelements.oauth_expires - Math.floor(new Date().getTime() / 1000);
-      if (expTime < 0)
-      {
-       window.localStorage.removeItem('streamelements.tips:read.oauth');
-       window.localStorage.removeItem('streamelements.tips:read.refresh');
-       window.localStorage.removeItem('streamelements.tips:read.expires');
-       window.localStorage.removeItem('streamelements.tips:read.refreshed');
-       notice.warning(2);
-       return;
-      }
-     }
+     let mustR = true;
      if (cfg.streamelements.hasOwnProperty('oauth_refreshed') && cfg.streamelements.oauth_refreshed > 0)
      {
       const tokAge = Math.floor(new Date().getTime() / 1000) - cfg.streamelements.oauth_refreshed;
       if (tokAge < 24 * 60 * 60)
-       return;
+       mustR = false;
      }
+     if (cfg.streamelements.hasOwnProperty('oauth_expires') && cfg.streamelements.oauth_expires > 0)
+     {
+      const expTime = cfg.streamelements.oauth_expires - Math.floor(new Date().getTime() / 1000);
+      if (expTime < 0)
+       mustR = true;
+     }
+     if (!mustR)
+      return;
      const ret = await _getOAuthToken(cfg.streamelements.oauth_refresh);
      if (ret === false)
+     {
+      window.localStorage.removeItem('streamelements.tips:read.oauth');
+      window.localStorage.removeItem('streamelements.tips:read.refresh');
+      window.localStorage.removeItem('streamelements.tips:read.expires');
+      window.localStorage.removeItem('streamelements.tips:read.refreshed');
+      notice.warning(2);
       return;
+     }
      cfg.streamelements.oauth = ret.access_token;
      cfg.streamelements.oauth_refresh = ret.refresh_token;
      cfg.streamelements.oauth_expires = Math.floor(new Date().getTime() / 1000) + ret.expires_in;
