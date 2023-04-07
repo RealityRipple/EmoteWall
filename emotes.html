@@ -1708,7 +1708,7 @@
      n.innerHTML = h;
      document.body.appendChild(n);
      window.setTimeout(function(){n.style.opacity = 1;}, _tStart);
-     window.setTimeout(function(){n.style.opacity = 0;}, 19500);
+     window.setTimeout(function(){n.style.opacity = 0; n.classList.add('hiding');}, 19500);
      window.setTimeout(function(){n.remove();}, 20000);
     }
 
@@ -1769,7 +1769,7 @@
      n.innerHTML = h;
      document.body.appendChild(n);
      window.setTimeout(function(){n.style.opacity = 1;}, _tStart);
-     window.setTimeout(function(){n.style.opacity = 0;}, 14500);
+     window.setTimeout(function(){n.style.opacity = 0; n.classList.add('hiding');}, 14500);
      window.setTimeout(function(){document.body.innerHTML = '';}, 15000);
     }
 
@@ -9972,6 +9972,15 @@
     width: 13em;
     font-size: 3vw;
     padding: 0.5em;
+   }
+   .notice + button.login
+   {
+    top: calc(100% - 10vw);
+   }
+   .notice.hiding + button.login
+   {
+    transition: top 500ms ease-out;
+    top: calc(50% - 1em - 1.25em);
    }
 
    button.logout
