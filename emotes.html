@@ -1706,6 +1706,11 @@
        h += '<h2>Your StreamElements OAuth Token is Expired</h2>';
        h += 'Please Update your StreamElements OAuth Token';
        break;
+      case 3:
+       h += '<h2>OBS Not Detected</h2>';
+       h += 'If you are testing this Emote Wall in your browser, or using it in another capacity, then no worries.<br><br>';
+       h += 'But if you intend to use this Emote Wall for streaming with OBS Studio, please see <a href="https://www.twitch.tv/videos/1784099954" target="_blank" title="Adding Emote Wall to OBS">this &quot;How to&quot; video</a>.';
+       break;
      }
      n.innerHTML = h;
      document.body.appendChild(n);
@@ -9358,6 +9363,11 @@
 
    async function startup()
    {
+    if (!window.hasOwnProperty('obsstudio') && !window.localStorage.getItem('emotewall.obs_notfound'))
+    {
+     window.localStorage.setItem('emotewall.obs_notfound', '1');
+     notice.warning(3);
+    }
     if (login.use() === true)
      return;
     const slCfg = streamlabs.cfgVals();
