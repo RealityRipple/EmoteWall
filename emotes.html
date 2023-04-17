@@ -1662,8 +1662,8 @@
     html: {
      rr: {
       wizard: 'https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php',
-      t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php?refresh=%REFRESH_TOKEN%',
-      se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php?refresh=%REFRESH_TOKEN%',
+      t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
+      se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php',
       redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php?t=code&v=%SERVICE%&c=%CLIENT_ID%&r=%URL%&s=%SCOPE%&u=%ORIGIN%'
      },
      twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&scope=%SCOPE%&state=redirto_%ORIGIN%&force_verify=true'
@@ -5561,8 +5561,10 @@
      {
       async function _getToken(t)
       {
-       const url = cURLs.html.rr.t.replaceAll('%REFRESH_TOKEN%', t);
-       const r = await shared.httpRequest('GET', url);
+       const url = cURLs.html.rr.t;
+       const h = {'Content-Type': 'application/x-www-form-urlencoded'};
+       const b = 'refresh=' + encodeURIComponent(t);
+       const r = await shared.httpRequest('POST', url, h, b, false);
        if (!r.success)
        {
         if (r.code === 401)
@@ -8043,8 +8045,10 @@
 
     async function _getOAuthToken(t)
     {
-     const url = cURLs.html.rr.se.replaceAll('%REFRESH_TOKEN%', t);
-     const r = await shared.httpRequest('GET', url, {}, null, false);
+     const url = cURLs.html.rr.se;
+     const h = {'Content-Type': 'application/x-www-form-urlencoded'};
+     const b = 'refresh=' + encodeURIComponent(t);
+     const r = await shared.httpRequest('POST', url, h, b, false);
      if (!r.success)
       return false;
      const j = r.json;
