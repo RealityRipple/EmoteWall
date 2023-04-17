@@ -1664,7 +1664,7 @@
       wizard: 'https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php',
       t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
       se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php',
-      redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php?t=code&v=%SERVICE%&c=%CLIENT_ID%&r=%URL%&s=%SCOPE%&u=%ORIGIN%'
+      redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php'
      },
      twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&scope=%SCOPE%&state=redirto_%ORIGIN%&force_verify=true'
     }
@@ -9294,10 +9294,47 @@
      const o = encodeURIComponent(btoa(window.location));
      const c = encodeURIComponent(oauthClient);
      const r = encodeURIComponent(cURLs.html.rr.wizard);
-     let u = cURLs.html.twitch.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', o);
-     if (u.length > 1500)
-      u = cURLs.html.rr.redir.replaceAll('%SERVICE%', 'twitch').replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', encodeURIComponent(window.location));
-     window.location = u;
+     const u = cURLs.html.twitch.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', o);
+     if (u.length < 1500)
+     {
+      window.location = u;
+      return;
+     }
+     const f = document.createElement('form');
+     f.setAttribute('method', 'POST');
+     f.setAttribute('action', cURLs.html.rr.redir);
+     const ft = document.createElement('input');
+     ft.setAttribute('type', 'hidden');
+     ft.setAttribute('name', 't');
+     ft.setAttribute('value', 'code');
+     f.appendChild(ft);
+     const fv = document.createElement('input');
+     fv.setAttribute('type', 'hidden');
+     fv.setAttribute('name', 'v');
+     fv.setAttribute('value', 'twitch');
+     f.appendChild(fv);
+     const fc = document.createElement('input');
+     fc.setAttribute('type', 'hidden');
+     fc.setAttribute('name', 'c');
+     fc.setAttribute('value', oauthClient);
+     f.appendChild(fc);
+     const fr = document.createElement('input');
+     fr.setAttribute('type', 'hidden');
+     fr.setAttribute('name', 'r');
+     fr.setAttribute('value', cURLs.html.rr.wizard);
+     f.appendChild(fr);
+     const fs = document.createElement('input');
+     fs.setAttribute('type', 'hidden');
+     fs.setAttribute('name', 's');
+     fs.setAttribute('value', _activeScope().join(' '));
+     f.appendChild(fs);
+     const fu = document.createElement('input');
+     fu.setAttribute('type', 'hidden');
+     fu.setAttribute('name', 'u');
+     fu.setAttribute('value', window.location);
+     f.appendChild(fu);
+     document.body.appendChild(f);
+     f.submit();
     }
 
     function $showIn()
