@@ -9125,10 +9125,23 @@
      return false;
     }
 
+    function $clearAddr()
+    {
+     const o = window.location.toString();
+     let u = o;
+     if (u.indexOf('#') > -1)
+      u = u.slice(0, u.indexOf('#'));
+     if (u.indexOf('?') > -1)
+      u = u.slice(0, u.indexOf('?'));
+     if (u !== o)
+      window.history.replaceState(null, '', u);
+    }
+
     return {
      rnd: $rnd,
      httpRequest: $httpRequest,
-     findInMaybeRange: $findInMaybeRange
+     findInMaybeRange: $findInMaybeRange,
+     clearAddr: $clearAddr
     };
    }();
 
@@ -9370,6 +9383,7 @@
     }
     if (login.use() === true)
      return;
+    shared.clearAddr();
     const slCfg = streamlabs.cfgVals();
     if ((slCfg & 0x01) === 0x01)
      streamlabs.socket();
