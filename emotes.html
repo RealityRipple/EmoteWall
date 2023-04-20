@@ -4397,7 +4397,7 @@
 
     function _sleep(ms)
     {
-     return new Promise(function(resolve){setTimeout(resolve, ms);});
+     return new Promise(function(resolve){window.setTimeout(resolve, ms);});
     }
 
     function _addEmoteToDoc(tInit, uri, s, r = false, oGC = {}, oT = false)
@@ -4691,14 +4691,14 @@
       function _wsOpen()
       {
        _ws.onopen = null;
-       _tTimeout = setTimeout(_wsTimeout, _lTimeout);
+       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
       }
 
       function _wsClose()
       {
        if (_tTimeout !== false)
        {
-        clearTimeout(_tTimeout);
+        window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
        _ws.onopen = null;
@@ -4718,7 +4718,7 @@
       {
        if (_tTimeout !== false)
        {
-        clearTimeout(_tTimeout);
+        window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
        if (twitch.net.dead)
@@ -4730,7 +4730,7 @@
         _ws = null;
         return;
        }
-       _tTimeout = setTimeout(_wsTimeout, _lTimeout);
+       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
        const r = JSON.parse(ev.data);
        if (!r.hasOwnProperty('metadata'))
         return;
@@ -4753,17 +4753,17 @@
           _lTimeout = parseInt(r.payload.session.keepalive_timeout_seconds, 10) * 2 * 1000;
           if (_tTimeout !== false)
           {
-           clearTimeout(_tTimeout);
+           window.clearTimeout(_tTimeout);
            _tTimeout = false;
           }
-          _tTimeout = setTimeout(_wsTimeout, _lTimeout);
+          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
          }
          const haveSubs = await twitch.net.eventSubCtl.init();
          if (!haveSubs)
          {
           if (_tTimeout !== false)
           {
-           clearTimeout(_tTimeout);
+           window.clearTimeout(_tTimeout);
            _tTimeout = false;
           }
           _ws.onopen = null;
@@ -4980,7 +4980,7 @@
           return;
          if (_tTimeout !== false)
          {
-          clearTimeout(_tTimeout);
+          window.clearTimeout(_tTimeout);
           _tTimeout = false;
          }
          if (r.payload.session.hasOwnProperty('id'))
@@ -5017,7 +5017,7 @@
         return;
        if (_tTimeout !== false)
        {
-        clearTimeout(_tTimeout);
+        window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
        if (_ws !== null)
@@ -5272,7 +5272,7 @@
        if (_ws.readyState !== 1)
         return;
        _ws.onopen = null;
-       _tTimeout = setTimeout(_wsTimeout, 5000);
+       _tTimeout = window.setTimeout(_wsTimeout, 5000);
        _ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
        _ws.send('PASS oauth:' + cfg.login.oauth);
        _ws.send('NICK ' + cfg.channel);
@@ -5283,7 +5283,7 @@
       {
        if (_tTimeout !== false)
        {
-        clearTimeout(_tTimeout);
+        window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
        if (_ws === null)
@@ -5373,7 +5373,7 @@
           {
            if (_tTimeout !== false)
            {
-            clearTimeout(_tTimeout);
+            window.clearTimeout(_tTimeout);
             _tTimeout = false;
            }
            _firstRS = false;
@@ -5467,7 +5467,7 @@
        twitch.net.dead = true;
        if (_tTimeout !== false)
        {
-        clearTimeout(_tTimeout);
+        window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
        _ws.close();
@@ -8770,14 +8770,14 @@
        if (_ws.readyState !== 1)
         return;
        _ws.onopen = null;
-       _tTimeout = setTimeout(_wsTimeout, _lTimeout);
+       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
       }
 
       function _wsClose()
       {
        if (_tTimeout !== false)
        {
-        clearTimeout(_tTimeout);
+        window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
        if (_ws === null)
@@ -8798,7 +8798,7 @@
       {
        if (_tTimeout !== false)
        {
-        clearTimeout(_tTimeout);
+        window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
        if (_ws === null)
@@ -8812,7 +8812,7 @@
         _ws = null;
         return;
        }
-       _tTimeout = setTimeout(_wsTimeout, _lTimeout);
+       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
        const d = JSON.parse(ev.data);
        if (!d.hasOwnProperty('op'))
         return;
@@ -8841,10 +8841,10 @@
           _lTimeout = parseInt(d.d.heartbeat_interval, 10) * 3;
           if (_tTimeout !== false)
           {
-           clearTimeout(_tTimeout);
+           window.clearTimeout(_tTimeout);
            _tTimeout = false;
           }
-          _tTimeout = setTimeout(_wsTimeout, _lTimeout);
+          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
          }
          break;
         case 2:
@@ -8852,7 +8852,7 @@
          {
           if (_tTimeout !== false)
           {
-           clearTimeout(_tTimeout);
+           window.clearTimeout(_tTimeout);
            _tTimeout = false;
           }
           _ws.onopen = null;
@@ -8904,7 +8904,7 @@
         case 7:
          if (_tTimeout !== false)
          {
-          clearTimeout(_tTimeout);
+          window.clearTimeout(_tTimeout);
           _tTimeout = false;
          }
          _ws.onopen = null;
@@ -8983,7 +8983,7 @@
         return;
        if (_tTimeout !== false)
        {
-        clearTimeout(_tTimeout);
+        window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
        _ws.close();
@@ -9291,7 +9291,7 @@
     function $begin()
     {
      twitch.net.oAuth.clear(true);
-     const o = encodeURIComponent(btoa(window.location));
+     const o = encodeURIComponent(window.btoa(window.location));
      const c = encodeURIComponent(oauthClient);
      const r = encodeURIComponent(cURLs.html.rr.wizard);
      const u = cURLs.html.twitch.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', o);
