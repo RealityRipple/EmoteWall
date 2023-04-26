@@ -1957,8 +1957,6 @@
 
       const $Bounce = function()
       {
-       const _ms = 20;
-
        function task(url, zwe, sW, sH, sS, canV = true, tInit = 0)
        {
         if (tInit === 0)
@@ -1997,30 +1995,41 @@
         {
          iArr.push(_addEmoteToDoc(tInit, zwe[i].url, s, true));
         }
-        window.setTimeout(_tLoop, _ms, tInit, iArr, bX, bY, velH, velY, sH, sS);
+        window.requestAnimationFrame(function(ts){_tLoop(tInit, iArr, bX, bY, velH, velY, sH, sS, ts, ts);});
        }
 
-       function _tLoop(tInit, iArr, bX, bY, velH, velY, sH, sS)
+       function _tLoop(tInit, iArr, bX, bY, velH, velY, sH, sS, myT, ts)
        {
         if (_iTitanic > tInit)
          return;
         if (iArr[0].parentElement === null)
          return;
-        bX += velH;
-        bY += velY;
-        velY += 1;
-        const sB = sH - sS;
-        if (bY >= sB)
+        let steps = 1;
+        if (myT === 0)
+         myT = ts;
+        else
         {
-         bY = sB;
-         velY *= -0.7;
-         velY = Math.floor(velY);
+         steps = Math.max(1, Math.floor((ts - myT) / 16));
+         myT = ts;
+        }
+        for (let i = 0; i < steps; i++)
+        {
+         bX += velH;
+         bY += velY;
+         velY += 1;
+         const sB = sH - sS;
+         if (bY >= sB)
+         {
+          bY = sB;
+          velY *= -0.7;
+          velY = Math.floor(velY);
+         }
         }
         for (let i = 0, l = iArr.length; i < l; i++)
         {
          iArr[i].style.transform = 'translate(' + bX + 'px, ' + bY + 'px)';
         }
-        window.setTimeout(_tLoop, _ms, tInit, iArr, bX, bY, velH, velY, sH, sS);
+        window.requestAnimationFrame(function(fTS){_tLoop(tInit, iArr, bX, bY, velH, velY, sH, sS, myT, fTS);});
        }
 
        return task;
