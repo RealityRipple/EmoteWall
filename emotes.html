@@ -4386,6 +4386,17 @@
       );
      }
 
+     function _kAcTime(ct, t = false)
+     {
+      if (t === false)
+       t = cfg.emote.time * 1000;
+      const f = Math.floor(t / shared.mspf.value);
+      const r = f / ct;
+      if (r > 1)
+       return {f: Math.ceil(r), ct: 1};
+      return {f: 1, ct: Math.ceil(1 / r)};
+     }
+
      return {
       show: $show,
       hide: $hide
