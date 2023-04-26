@@ -2966,6 +2966,10 @@
         const c = Math.PI * l / iKC;
         let th = shared.rnd() * _cRadius;
         const o = shared.rnd(2) === 0;
+        const kTime = Math.floor(cfg.emote.time * 1000 * 0.75);
+        let sA = _kAcTime(iKC, kTime);
+        if (sA.ct > 8)
+         sA.ct = 8;
         for (let i = 0; i < iKC; i++)
         {
          if (_iTitanic > tInit)
@@ -2992,7 +2996,8 @@
            _sparkler(tInit, oK.zwe[j].url, oX, oY, sS, r, th);
           }
          }
-         await _sleep(10);
+         if (i % sA.ct === sA.ct - 1)
+          await _fPause(sA.f);
         }
        }
 
@@ -3000,27 +3005,15 @@
        {
         if (_iTitanic > tInit)
          return;
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        _setImgSrc(img, url);
         const hD = Math.floor(oX + r * Math.cos(th));
         const vD = Math.floor(oY + r * Math.sin(th));
         let s = 'height: ' + sS + 'px;';
         s += ' width: ' + sS + 'px;';
         s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
         s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
+        s += ' opacity: 0;';
         s += _styleEmote([], [], [], [], [], [], true, false, true, false);
-        img.setAttribute('style', s);
-        document.body.appendChild(img);
-        _gc.hook(img, true, true);
-        shared.doNextFrame(_tMove, tInit, img, hD, vD);
-       }
-
-       function _tMove(tInit, img, hD, vD)
-       {
-        if (_iTitanic > tInit)
-         return;
-        img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+        _addEmoteToDoc(tInit, url, s, false, {space: false}, {x: hD, y: vD});
        }
 
        return task;
