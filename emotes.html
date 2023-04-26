@@ -1080,7 +1080,7 @@
        max: 0.2
       },
       time: 1,
-      velocity: {    /* pixels per 60th of a second */
+      velocity: {    /* pixels per 300th of display time */
        h: {
         min: 3,
         max: 9
@@ -1090,7 +1090,8 @@
         max: 7
        },
        loss: 0.3     /* velocity percentage lost per bounce */
-      }
+      },
+      gravity: 1     /* pixels added to vertical velocity per increment */
      },
      'Speed': {
       origin: {      /* percentages of the screen height */
@@ -2212,28 +2213,28 @@
         const sWm = Math.ceil(sW / 2);
         const h = Math.floor(shared.rnd(sW) - sSm);
         const v = Math.floor(sH * _rndFromRange(timing.display.Bounce.origin));
+        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Bounce.time);
+        const vMS = (tMS / 300 / (16 + 2 / 3));
         let velH = _rndFromRange(timing.display.Bounce.velocity.h);
         const velV = _rndFromRange(timing.display.Bounce.velocity.v);
         if (h + sSm > sWm)
          velH = -1 * velH;
         let s = 'height: ' + sS + 'px;';
         s += ' width: ' + sS + 'px;';
-        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Bounce.time);
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, variationSize, tMS);
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         let bX = h;
         let bY = v;
-        let velY = velV;
         let iArr = [];
         iArr.push(_addEmoteToDoc(tInit, url, s, true, {time: tMS}));
         for (let i = 0, l = zwe.length; i < l; i++)
         {
          iArr.push(_addEmoteToDoc(tInit, zwe[i].url, s, true, {time: tMS}));
         }
-        window.requestAnimationFrame(function(ts){_tLoop(tInit, iArr, bX, bY, velH, velY, sH, sS, ts, ts);});
+        window.requestAnimationFrame(function(ts){_tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, sS, ts, ts);});
        }
 
-       function _tLoop(tInit, iArr, bX, bY, velH, velY, sH, sS, myT, ts)
+       function _tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, sS, myT, ts)
        {
         if (_iTitanic > tInit)
          return;
@@ -2249,22 +2250,22 @@
         }
         for (let i = 0; i < steps; i++)
         {
-         bX += velH;
-         bY += velY;
-         velY += 1;
+         bX += velH / vMS;
+         bY += velV / vMS;
+         velV += timing.display.Bounce.gravity / vMS;
          const sB = sH - sS;
          if (bY >= sB)
          {
           bY = sB;
-          velY *= -1 * (1 - timing.display.Bounce.velocity.loss);
-          velY = Math.floor(velY);
+          velV *= -1 * (1 - timing.display.Bounce.velocity.loss);
+          velV = Math.floor(velV);
          }
         }
         for (let i = 0, l = iArr.length; i < l; i++)
         {
          iArr[i].style.transform = 'translate(' + bX + 'px, ' + bY + 'px)';
         }
-        window.requestAnimationFrame(function(fTS){_tLoop(tInit, iArr, bX, bY, velH, velY, sH, sS, myT, fTS);});
+        window.requestAnimationFrame(function(fTS){_tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, sS, myT, fTS);});
        }
 
        return task;
