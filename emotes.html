@@ -4049,32 +4049,13 @@
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('twitch') && thirdparty.emotes.twitch.hasOwnProperty(s[i]))
+       if (thirdparty.emotes.hasOwnProperty('twitch') && thirdparty.emotes.twitch.hasOwnProperty(s[i]) && thirdparty.emotes.twitch[s[i]].scope === 'c')
        {
         v.svc = 't';
         v.url = thirdparty.emotes.twitch[s[i]].url;
         v.scope = thirdparty.emotes.twitch[s[i]].scope;
         r.push(v);
         continue;
-       }
-       if (cfg.display.useEmoji !== false)
-       {
-        const cmd = {params: [null, s[i]]};
-        const eMoji = await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true);
-        if (eMoji.length > 0)
-        {
-         v.svc = 'e';
-         v.scope = 'g';
-         const vStart = v.pos;
-         for (let j = 0, m = eMoji.length; j < m; j++)
-         {
-          v.url = eMoji[j].url;
-          v.str = eMoji[j].str;
-          v.pos = vStart + eMoji[j].pos;
-          r.push(v);
-         }
-         continue;
-        }
        }
        if (thirdparty.emotes.hasOwnProperty('ffz') && thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope === 'c')
        {
@@ -4100,7 +4081,15 @@
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('ffz') && thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope !== 'c')
+       if (thirdparty.emotes.hasOwnProperty('twitch') && thirdparty.emotes.twitch.hasOwnProperty(s[i]) && thirdparty.emotes.twitch[s[i]].scope === 'g')
+       {
+        v.svc = 't';
+        v.url = thirdparty.emotes.twitch[s[i]].url;
+        v.scope = thirdparty.emotes.twitch[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.hasOwnProperty('ffz') && thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope === 'g')
        {
         v.svc = 'f';
         v.url = thirdparty.emotes.ffz[s[i]].url;
@@ -4108,7 +4097,7 @@
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('bttv') && thirdparty.emotes.bttv.hasOwnProperty(s[i]) && thirdparty.emotes.bttv[s[i]].scope !== 'c')
+       if (thirdparty.emotes.hasOwnProperty('bttv') && thirdparty.emotes.bttv.hasOwnProperty(s[i]) && thirdparty.emotes.bttv[s[i]].scope === 'g')
        {
         v.svc = 'b';
         v.url = thirdparty.emotes.bttv[s[i]].url;
@@ -4116,13 +4105,32 @@
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('7tv') && thirdparty.emotes['7tv'].hasOwnProperty(s[i]) && thirdparty.emotes['7tv'][s[i]].scope !== 'c')
+       if (thirdparty.emotes.hasOwnProperty('7tv') && thirdparty.emotes['7tv'].hasOwnProperty(s[i]) && thirdparty.emotes['7tv'][s[i]].scope === 'g')
        {
         v.svc = '7';
         v.url = thirdparty.emotes['7tv'][s[i]].url;
         v.scope = thirdparty.emotes['7tv'][s[i]].scope;
         r.push(v);
         continue;
+       }
+       if (cfg.display.useEmoji !== false)
+       {
+        const cmd = {params: [null, s[i]]};
+        const eMoji = await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true);
+        if (eMoji.length > 0)
+        {
+         v.svc = 'e';
+         v.scope = 'g';
+         const vStart = v.pos;
+         for (let j = 0, m = eMoji.length; j < m; j++)
+         {
+          v.url = eMoji[j].url;
+          v.str = eMoji[j].str;
+          v.pos = vStart + eMoji[j].pos;
+          r.push(v);
+         }
+         continue;
+        }
        }
       }
       return r;
@@ -7815,53 +7823,69 @@
       let r = [];
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope === 'u')
+       if (a[i].svc === 'c')
         r.push(a[i]);
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === 't' || a[i].svc === 'c' || a[i].svc === 'e')
-        r.push(a[i]);
+       if (a[i].scope === 'u')
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === 't' && a[i].scope === 'c')
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
       }
       for (let i = 0; i < lA; i++)
       {
        if (a[i].scope === 'c' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
        {
-        let f = false;
-        for (let j = 0, l = r.length; j < l; j++)
-        {
-         if (r[j].str === a[i].str)
-         {
-          f = true;
-          if (r[j].svc === a[i].svc)
-           r.push(a[i]);
-          break;
-         }
-        }
-        if (!f)
+        if (_notDupe(a[i], r))
          r.push(a[i]);
        }
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope !== 'c' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
+       if (a[i].svc === 't' && a[i].scope === 'g')
        {
-        let f = false;
-        for (let j = 0, l = r.length; j < l; j++)
-        {
-         if (r[j].str === a[i].str)
-         {
-          f = true;
-          if (r[j].svc === a[i].svc)
-           r.push(a[i]);
-          break;
-         }
-        }
-        if (!f)
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].scope === 'g' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === 'e')
+       {
+        if (_notDupe(a[i], r))
          r.push(a[i]);
        }
       }
       return r;
+     }
+
+     function _notDupe(add, pend)
+     {
+      let f = false;
+      for (let i = 0, l = pend.length; i < l; i++)
+      {
+       if (pend[i].str === add.str)
+        return (pend[i].svc === add.svc);
+      }
+      return true;
      }
 
      async function _eListFromCmd(cmd, dup = null)
