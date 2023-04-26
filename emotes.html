@@ -4332,6 +4332,37 @@
       _conga.length = 0;
      }
 
+     function _sleep(ms)
+     {
+      return new Promise(
+       function(resolve)
+       {
+        let n = 0;
+        function _next(ts)
+        {
+         if (n === 0)
+         {
+          if (ms <= shared.mspf.value)
+          {
+           resolve(true);
+           return;
+          }
+          n = ts;
+          window.requestAnimationFrame(_next);
+          return;
+         }
+         else if (ts - n < ms)
+         {
+          window.requestAnimationFrame(_next);
+          return;
+         }
+         resolve(true);
+        }
+        window.requestAnimationFrame(_next);
+       }
+      );
+     }
+
      return {
       show: $show,
       hide: $hide
@@ -4399,11 +4430,6 @@
       hook: $hook
      };
     }();
-
-    function _sleep(ms)
-    {
-     return new Promise(function(resolve){window.setTimeout(resolve, ms);});
-    }
 
     function _addEmoteToDoc(tInit, uri, s, r = false, oGC = {}, oT = false)
     {
@@ -9593,12 +9619,46 @@
      window.requestAnimationFrame(_next);
     }
 
+    const $mspf = function()
+    {
+     let _init = 0;
+     let _avg = [];
+
+     function $init()
+     {
+      if (shared.mspf.value !== 0)
+       return;
+      window.requestAnimationFrame(_test);
+     }
+
+     function _test(ms)
+     {
+      if (_init !== 0)
+       _avg.push(ms - _init);
+      if (_avg.length > 2)
+       shared.mspf.value = _avg.reduce((a,b) => (a+b)) / _avg.length;
+      if (_avg.length > 300)
+      {
+       shared.mspf.value = Math.round(shared.mspf.value * 1000) / 1000;
+       return;
+      }
+      _init = ms;
+      window.requestAnimationFrame(_test);
+     }
+
+     return {
+      init: $init,
+      value: 0
+     };
+    }();
+
     return {
      rnd: $rnd,
      httpRequest: $httpRequest,
      findInMaybeRange: $findInMaybeRange,
      clearAddr: $clearAddr,
-     doNextFrame: $doNextFrame
+     doNextFrame: $doNextFrame,
+     mspf: $mspf
     };
    }();
 
@@ -9870,6 +9930,7 @@
 
    async function startup()
    {
+    shared.mspf.init();
     if (!window.hasOwnProperty('obsstudio') && !window.localStorage.getItem('emotewall.obs_notfound'))
     {
      window.localStorage.setItem('emotewall.obs_notfound', '1');
