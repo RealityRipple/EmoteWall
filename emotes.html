@@ -2860,75 +2860,74 @@
          document.body.removeChild(iArr[i]);
          _eActive--;
         }
+        const kTime = 100;
+        const fA = _kAcTime(iKC, kTime);
         const r = Math.min(sW, sH) * 0.66;
-        const inner = Math.floor(iKC / 8);
+        const inner = Math.max(3, Math.floor(iKC / 8));
         const outer = inner;
         const core = iKC - (inner + outer);
-        let t = 0;
         const lK = kList.length;
+        const sR = r * _smallBurst;
         for (let v = 0; v < inner; v++)
         {
          if (_iTitanic > tInit)
           return;
          const sK = kList[shared.rnd(lK)];
          const sA = shared.rnd();
-         _sparkler(tInit, sK.url, cX, cY, sS, r * _smallBurst, t, sA);
+         _sparkler(tInit, sK.url, cX, cY, sS, sR, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, r * _smallBurst, t, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, sR, sA);
           }
          }
-         if (v % Math.floor(outer / 3) === 0)
-          await _fPause();
+         if (v % fA.ct === fA.ct - 1)
+          await _fPause(fA.f);
         }
-        t += 0.5;
+        await _sleep(400);
         for (let v = 0; v < core; v++)
         {
          if (_iTitanic > tInit)
           return;
          const sK = kList[shared.rnd(lK)];
          const sA = shared.rnd();
-         _sparkler(tInit, sK.url, cX, cY, sS, r, t, sA);
+         _sparkler(tInit, sK.url, cX, cY, sS, r, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, r, t, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, r, sA);
           }
          }
-         t += 0.005;
-         if (v % Math.floor(outer / 9) === 0)
+         if (v % Math.ceil(fA.ct / 4) === Math.ceil(fA.ct / 4) - 1)
           await _fPause();
         }
-        t += 0.25;
+        await _sleep(300);
+        const lR = r * _largeBurst;
         for (let v = 0; v < outer; v++)
         {
          if (_iTitanic > tInit)
           return;
          const sK = kList[shared.rnd(lK)];
          const sA = shared.rnd();
-         _sparkler(tInit, sK.url, cX, cY, sS, r * _largeBurst, t, sA);
+         _sparkler(tInit, sK.url, cX, cY, sS, lR, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, r * _largeBurst, t, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, lR, sA);
           }
          }
-         if (v % Math.floor(outer / 3) === 0)
-          await _fPause();
+         if (v % fA.ct === fA.ct - 1)
+          await _fPause(fA.f);
         }
        }
 
-       function _sparkler(tInit, url, cX, cY, sS, r, d, a)
+       function _sparkler(tInit, url, cX, cY, sS, r, a)
        {
         if (_iTitanic > tInit)
          return;
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        _setImgSrc(img, url);
         const th = a * _cRadius;
         const hD = Math.floor(cX + r * Math.cos(th));
         const vD = Math.floor(cY + r * Math.sin(th));
@@ -2937,41 +2936,8 @@
         s += ' transition: transform ' + cfg.emote.time + 's ease-out;';
         s += ' transform: translate(' + cX + 'px, ' + cY + 'px);';
         s += ' opacity: 0;';
-        const dMS = d * 1000;
-        const tMS = cfg.emote.time * 1000;
-        const tFI = _tAnim.fade.in / 100;
-        const tFO = _tAnim.fade.out / 100;
-        let aNames = [];
-        let aDelays = [];
-        let aDurs = [];
-        let aTimings = [];
-        let aFills = [];
-        let aIters = [];
-        aNames.push('fadeIn');
-        aDelays.push(dMS + 'ms');
-        aDurs.push(Math.floor(tMS * tFI) + 'ms');
-        aTimings.push('linear');
-        aFills.push('forwards');
-        aIters.push('1');
-        aNames.push('fadeOut');
-        aDelays.push(dMS + Math.floor(tMS - tMS * tFO) + 'ms');
-        aDurs.push(Math.floor(tMS * tFO) + 'ms');
-        aTimings.push('ease-out');
-        aFills.push('forwards');
-        aIters.push('1');
-        s += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters);
-        img.setAttribute('style', s);
-        document.body.appendChild(img);
-        _gc.hook(img, true, true, dMS + tMS);
-        window.setTimeout(_tMove, dMS, tInit, img, hD, vD);
-       }
-
-       function _tMove(tInit, img, hD, vD)
-       {
-        if (_iTitanic > tInit)
-         return;
-        img.style.opacity = 1;
-        img.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
+        s += _styleEmote([], [], [], [], [], [], true, false, true, false);
+        _addEmoteToDoc(tInit, url, s, false, {space: false}, {x: hD, y: vD});
        }
 
        return task;
