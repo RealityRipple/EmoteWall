@@ -4281,6 +4281,7 @@
        default:
         if (typeof display.emote.list[kStyle.style] === 'undefined')
          return;
+        const kA = _kAcTime(kStyle.count, cfg.emote.time * 1000 * 2);
         for (let i = 0; i < kStyle.count; i++)
         {
          if (_iTitanic > tInit)
@@ -4291,7 +4292,8 @@
           display.emote.list.StraightLine(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, false, false, tInit);
          else
           display.emote.list[kStyle.style](kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, tInit);
-         await _sleep(100);
+         if (i % kA.ct === kA.ct - 1)
+          await _fPause(kA.f);
         }
       }
      }
