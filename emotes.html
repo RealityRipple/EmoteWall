@@ -2872,7 +2872,7 @@
           }
          }
          if (v % Math.floor(outer / 3) === 0)
-          await _sleep(1);
+          await _fPause();
         }
         t += 0.5;
         for (let v = 0; v < core; v++)
@@ -2891,7 +2891,7 @@
          }
          t += 0.005;
          if (v % Math.floor(outer / 9) === 0)
-          await _sleep(1);
+          await _fPause();
         }
         t += 0.25;
         for (let v = 0; v < outer; v++)
@@ -2909,7 +2909,7 @@
           }
          }
          if (v % Math.floor(outer / 3) === 0)
-          await _sleep(1);
+          await _fPause();
         }
        }
 
@@ -4334,6 +4334,8 @@
 
      function _sleep(ms)
      {
+      if (ms < shared.mspf.value)
+       return _fPause();
       return new Promise(
        function(resolve)
        {
@@ -4342,16 +4344,37 @@
         {
          if (n === 0)
          {
-          if (ms <= shared.mspf.value)
-          {
-           resolve(true);
-           return;
-          }
           n = ts;
           window.requestAnimationFrame(_next);
           return;
          }
          else if (ts - n < ms)
+         {
+          window.requestAnimationFrame(_next);
+          return;
+         }
+         resolve(true);
+        }
+        window.requestAnimationFrame(_next);
+       }
+      );
+     }
+
+     function _fPause(frames = 1)
+     {
+      return new Promise(
+       function(resolve)
+       {
+        if (frames < 1)
+        {
+         resolve(false);
+         return;
+        }
+        let n = 0;
+        function _next()
+        {
+         n++;
+         if (n < frames)
          {
           window.requestAnimationFrame(_next);
           return;
