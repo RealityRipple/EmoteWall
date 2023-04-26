@@ -3202,20 +3202,24 @@
         const b2 = shared.rnd(8 - b1) + b1;
         const b4 = shared.rnd(4);
         const hasB4 = b4 > 0;
-        await _stampede(tInit, kList, b1, _speed * 0.8, bandTop, bandHeight, d, sW, sS);
+        await _stampede(tInit, kList, b1, _speed * 0.8, false, bandTop, bandHeight, d, sW, sS);
         if (_iTitanic > tInit)
          return;
-        await _stampede(tInit, kList, b2, _speed * 0.4, bandTop, bandHeight, d, sW, sS);
+        await _stampede(tInit, kList, b2, _speed * 0.4, false, bandTop, bandHeight, d, sW, sS);
         if (_iTitanic > tInit)
          return;
-        await _stampede(tInit, kList, iKC, hasB4, bandTop, bandHeight, d, sW, sS);
+        const kTime = Math.floor(cfg.emote.time * 1000);
+        let sA = _kAcTime(iKC, kTime);
+        if (sA.ct > 6)
+         sA.ct = 6;
+        await _stampede(tInit, kList, iKC, hasB4, sA, bandTop, bandHeight, d, sW, sS);
         if (_iTitanic > tInit)
          return;
         if (hasB4)
-         await _stampede(tInit, kList, b4, false, bandTop, bandHeight, d, sW, sS);
+         await _stampede(tInit, kList, b4, false, false, bandTop, bandHeight, d, sW, sS);
        }
 
-       async function _stampede(tInit, kList, ct, pause, bandTop, bandHeight, d, sW, sS)
+       async function _stampede(tInit, kList, ct, pause, sA, bandTop, bandHeight, d, sW, sS)
        {
         if (_iTitanic > tInit)
          return;
@@ -3234,7 +3238,13 @@
            _run(tInit, oK.zwe[j].url, y, d, sW, sS);
           }
          }
-         await _sleep(shared.rnd(90) + 10);
+         if (sA === false)
+          await _sleep(shared.rnd(90) + 10);
+         else
+         {
+          if (i % sA.ct === sA.ct - 1)
+           await _fPause(sA.f);
+         }
         }
         if (pause === false)
          return;
@@ -3260,41 +3270,32 @@
        {
         if (_iTitanic > tInit)
          return;
-        let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
-        _setImgSrc(img, url);
         const h = -2 * sS;
-        let s = 'top: 0px;';
-        s += ' left: 0px;';
-        s += ' height: ' + sS + 'px;';
+        let s = 'height: ' + sS + 'px;';
         s += ' width: ' + sS + 'px;';
         s += ' transition: all ' + _speed + 'ms linear;';
         if (d)
          s += ' transform: translate(' + sW + 'px, ' + v + 'px);';
         else
          s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-        img.setAttribute('style', s);
-        document.body.appendChild(img);
-        window.setTimeout(_tMark, _speed, tInit, img);
-        shared.doNextFrame(_tMove, tInit, img, d, h, sW + sS, v);
-        return img;
-       }
-
-       function _tMove(tInit, img, d, h1, h2, v)
-       {
-        if (_iTitanic > tInit)
-         return;
-        let h = h2;
+        s += _styleEmoteString([], [], [], [], [], []);
+        let img;
         if (d)
-         h = h1;
-        img.style.transform = 'translate(' + h + 'px, ' + v + 'px)';
+         img = _addEmoteToDoc(tInit, url, s, true, {space: false}, {x: h, y: v});
+        else
+         img = _addEmoteToDoc(tInit, url, s, true, {space: false}, {x: sW + sS, y: v});
+        window.setTimeout(_tMark, _speed, tInit, img);
+        return img;
        }
 
        function _tMark(tInit, img)
        {
         if (_iTitanic > tInit)
          return;
-        document.body.removeChild(img);
+        if (img === null)
+         return;
+        if (img.parentNode !== null)
+         document.body.removeChild(img);
         img.setAttribute('deleted', true);
        }
 
