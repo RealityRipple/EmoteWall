@@ -1105,6 +1105,7 @@
      },
      'Crazy': {
       time: 1,
+      distance: 7000,  /* max pixels to travel */
       squash: {
        width: 2,     /* squashed wide dimension */
        height: 0.7,  /* squashed tall dimension */
@@ -2412,39 +2413,43 @@
         s += ' height: ' + sS + 'px;';
         s += ' width: ' + sS + 'px;';
         let dests = [];
+        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Crazy.time);
+        const rate = Math.sqrt(timing.display.Crazy.distance ** 2 / 2) / tMS;
         let traj = {x: 0, y: 0};
-        traj.x = shared.rnd() * 11 - 5;
-        traj.y = shared.rnd() * 11 - 5;
+        while (traj.x === 0 && traj.y === 0)
+        {
+         traj.x = shared.rnd() * (rate * 2) - rate;
+         traj.y = shared.rnd() * (rate * 2) - rate;
+        }
         let pos = {x: h, y: v, t: 0};
         let lastT = 0;
         let bCt = 0;
-        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Crazy.time);
         const sqTime = Math.floor(tMS * timing.display.Crazy.squash.time * 2);
         while(bCt * sqTime + pos.t < tMS)
         {
          pos.x += traj.x;
          pos.y += traj.y;
-         pos.t += 5;
+         pos.t += 1;
          let wall = false;
-         if (pos.x < 0)
+         if (pos.x <= 0)
          {
           pos.x = 0;
           traj.x *= -1;
           wall = 1;
          }
-         else if (pos.x > sR)
+         else if (pos.x >= sR)
          {
           pos.x = sR;
           traj.x *= -1;
           wall = 3;
          }
-         if (pos.y < 0)
+         if (pos.y <= 0)
          {
           pos.y = 0;
           traj.y *= -1;
           wall = 2;
          }
-         else if (pos.y > sB)
+         else if (pos.y >= sB)
          {
           pos.y = sB;
           traj.y *= -1;
