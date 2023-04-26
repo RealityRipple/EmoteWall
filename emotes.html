@@ -1672,8 +1672,6 @@
 
    const notice = function()
    {
-    const _tStart = 48;
-
     function $warning(w)
     {
      if (document.getElementById('error') !== null)
@@ -1714,7 +1712,7 @@
      }
      n.innerHTML = h;
      document.body.appendChild(n);
-     window.setTimeout(function(){n.style.opacity = 1;}, _tStart);
+     shared.doNextFrame(function(){n.style.opacity = 1;});
      window.setTimeout(function(){n.style.opacity = 0; n.classList.add('hiding');}, 19500);
      window.setTimeout(function(){n.remove();}, 20000);
     }
@@ -1775,7 +1773,7 @@
      }
      n.innerHTML = h;
      document.body.appendChild(n);
-     window.setTimeout(function(){n.style.opacity = 1;}, _tStart);
+     shared.doNextFrame(function(){n.style.opacity = 1;});
      window.setTimeout(function(){n.style.opacity = 0; n.classList.add('hiding');}, 14500);
      window.setTimeout(function(){document.body.innerHTML = '';}, 15000);
     }
@@ -1797,7 +1795,6 @@
    {
     let _eActive = 0;
     let _iTitanic = 0;
-    const _tStart = 48;
     const _cRadius = Math.PI * 2;
     const _tAnim = {
      fade: {
@@ -2226,7 +2223,7 @@
         let d = 0;
         const lA = iArr.length;
         const lD = dests.length;
-        window.setTimeout(_tLoop, _tStart, tInit, lA, iArr, lD, dests, d);
+        shared.doNextFrame(_tLoop, tInit, lA, iArr, lD, dests, d);
        }
 
        function _tLoop(tInit, lA, iArr, lD, dests, d)
@@ -2436,7 +2433,7 @@
         {
          iArr.push(_addEmoteToDoc(tInit, zwe[i].url, s, true, {space: false}));
         }
-        window.setTimeout(_tMove, _tStart, tInit, iArr, hD, vD);
+        shared.doNextFrame(_tMove, tInit, iArr, hD, vD);
         window.setTimeout(_tDrop, t2, tInit, iArr, s2);
        }
 
@@ -2645,7 +2642,7 @@
         _eActive++;
         document.body.appendChild(scene);
         _gc.hook(scene);
-        window.setTimeout(_tMove, _tStart, tInit, cube, scene, hD, vD, sS);
+        shared.doNextFrame(_tMove, tInit, cube, scene, hD, vD, sS);
        }
 
        function _tMove(tInit, cube, scene, hD, vD, sS)
@@ -2957,7 +2954,7 @@
         img.setAttribute('style', s);
         document.body.appendChild(img);
         _gc.hook(img, true, true, dMS + tMS);
-        window.setTimeout(_tMove, dMS + _tStart, tInit, img, hD, vD);
+        window.setTimeout(_tMove, dMS, tInit, img, hD, vD);
        }
 
        function _tMove(tInit, img, hD, vD)
@@ -2981,7 +2978,7 @@
         const oX = shared.rnd(sW - sS);
         const oY = shared.rnd(sH - sS);
         const r = Math.min(sW, sH);
-        window.setTimeout(_init, _tStart, tInit, kList, oX, oY, sS, r, iKC);
+        shared.doNextFrame(_init, tInit, kList, oX, oY, sS, r, iKC);
        }
 
        async function _init(tInit, kList, oX, oY, sS, r, iKC)
@@ -3041,7 +3038,7 @@
         img.setAttribute('style', s);
         document.body.appendChild(img);
         _gc.hook(img, true, true);
-        window.setTimeout(_tMove, _tStart, tInit, img, hD, vD);
+        shared.doNextFrame(_tMove, tInit, img, hD, vD);
        }
 
        function _tMove(tInit, img, hD, vD)
@@ -3311,7 +3308,7 @@
         img.setAttribute('style', s);
         document.body.appendChild(img);
         window.setTimeout(_tMark, _speed, tInit, img);
-        window.setTimeout(_tMove, _tStart, tInit, img, d, h, sW + sS, v);
+        shared.doNextFrame(_tMove, tInit, img, d, h, sW + sS, v);
         return img;
        }
 
@@ -3501,7 +3498,7 @@
         _eActive++;
         box.appendChild(img);
         document.body.appendChild(box);
-        window.setTimeout(_tMove, _tStart, tInit, box, sE, v);
+        shared.doNextFrame(_tMove, tInit, box, sE, v);
         return box;
        }
 
@@ -3525,7 +3522,7 @@
         s += ' transform: translate(' + sB + 'px, ' + v + 'px);';
         box.setAttribute('style', s);
         _gc.hook(box, true, true, _longWait * 1000 * 1.25);
-        window.setTimeout(_tMove, _tStart, tInit, box, sE, v);
+        shared.doNextFrame(_tMove, tInit, box, sE, v);
        }
 
        function _tMove(tInit, box, sE, v)
@@ -3703,7 +3700,7 @@
         _eActive++;
         document.body.appendChild(scene);
         _gc.hook(scene, false);
-        window.setTimeout(_tMove, _tStart, tInit, cube, iR, sS);
+        shared.doNextFrame(_tMove, tInit, cube, iR, sS);
        }
 
        function _tMove(tInit, cube, iR, sS)
@@ -4441,7 +4438,7 @@
       else if (oT.hasOwnProperty('y'))
        sTF = 'translateX(' + oT.y + 'px)';
       if (sTF !== null)
-       window.setTimeout(_tMoveOnDock, _tStart, tInit, img, sTF);
+       shared.doNextFrame(_tMoveOnDock, tInit, img, sTF);
      }
      if (r)
       return img;
@@ -7879,7 +7876,6 @@
 
      function _notDupe(add, pend)
      {
-      let f = false;
       for (let i = 0, l = pend.length; i < l; i++)
       {
        if (pend[i].str === add.str)
@@ -9576,11 +9572,33 @@
       window.history.replaceState(null, '', u);
     }
 
+    function $doNextFrame(cb)
+    {
+     let a = [];
+     for (let i = 1, l = arguments.length; i < l; i++)
+     {
+      a.push(arguments[i]);
+     }
+     let n = false;
+     function _next()
+     {
+      if (n === false)
+      {
+       n = true;
+       window.requestAnimationFrame(_next);
+       return;
+      }
+      cb(...a);
+     }
+     window.requestAnimationFrame(_next);
+    }
+
     return {
      rnd: $rnd,
      httpRequest: $httpRequest,
      findInMaybeRange: $findInMaybeRange,
-     clearAddr: $clearAddr
+     clearAddr: $clearAddr,
+     doNextFrame: $doNextFrame
     };
    }();
 
