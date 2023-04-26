@@ -4253,6 +4253,7 @@
        case 'Fountain':
         const fX = Math.floor(shared.rnd() * fR + fR);
         const fY = shared.rnd(25) + 15;
+        const fA = _kAcTime(kStyle.count);
         for (let i = 0; i < kStyle.count; i++)
         {
          if (_iTitanic > tInit)
@@ -4260,7 +4261,8 @@
          const rF = shared.rnd(lK);
          _eActive--;
          display.emote.list.Fountain(kList[rF].url, kList[rF].zwe ?? [], sW, sH, sS, fX, fY, false, tInit);
-         await _sleep(50);
+         if (i % fA.ct === fA.ct - 1)
+          await _fPause(fA.f);
         }
         break;
        case 'Confetti':
