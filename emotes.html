@@ -1929,7 +1929,7 @@
      let h = '<h1>Emote Wall Warning:</h1>';
      switch (w)
      {
-      case 1:
+      case 0x01:
        h += '<h2>Too Many Instances Open Simultaneously</h2>';
        h += 'Some events may not be correctly detected.<br><br>';
        h += 'Please use reference copies of the Emote Wall wherever possible.<br>';
@@ -1938,14 +1938,14 @@
        if (window.hasOwnProperty('obsstudio'))
         h += '<br><br>To click the link above, please right-click this browser source and choose &quot;Interact&quot; in the context menu.';
        break;
-      case 2:
-       h += '<h2>Your StreamElements OAuth Token is Expired</h2>';
-       h += 'Please Update your StreamElements OAuth Token';
-       break;
-      case 3:
+      case 0x09:
        h += '<h2>OBS Not Detected</h2>';
        h += 'If you are testing this Emote Wall in your browser, or using it in another capacity, then no worries.<br><br>';
        h += 'But if you intend to use this Emote Wall for streaming with OBS Studio, please see <a href="https://www.twitch.tv/videos/1784099954" target="_blank" title="Adding Emote Wall to OBS">this &quot;How to&quot; video</a>.';
+       break;
+      case 0x72:
+       h += '<h2>Your StreamElements OAuth Token is Expired</h2>';
+       h += 'Please Update your StreamElements OAuth Token';
        break;
      }
      n.innerHTML = h;
@@ -1978,7 +1978,11 @@
      let h = '<h1>Emote Wall Error:</h1>';
      switch (e)
      {
-      case 1:
+      case 0x01:
+       h += '<h2>Corrupted Configuration</h2>';
+       h += 'Please check your browser\'s Error Console for details.';
+       break;
+      case 0x11:
        h += '<h2>Unable to Connect to Twitch</h2>';
        if (typeof login !== 'undefined' && login.inUse)
        {
@@ -1989,11 +1993,11 @@
        else
         h += 'Please update your OAuth Refresh token.';
        break;
-      case 2:
-       h += '<h2>Corrupted Configuration</h2>';
-       h += 'Please check your browser\'s Error Console for details.';
+      case 0x12:
+       h += '<h2>The Connection to the IRC Channel was Incomplete</h2>';
+       h += 'Please verify you selected the right channel name.';
        break;
-      case 3:
+      case 0x13:
        h += '<h2>Unable to Access Channel Emotes</h2>';
        if (typeof login !== 'undefined' && login.inUse)
        {
@@ -2003,10 +2007,6 @@
        }
        else
         h += 'Please check your OAuth Refresh token. You may need a new one.';
-       break;
-      case 4:
-       h += '<h2>The Connection to the IRC Channel was Incomplete</h2>';
-       h += 'Please verify you selected the right channel name.';
        break;
      }
      n.innerHTML = h;
@@ -2024,7 +2024,7 @@
 
    if (typeof cfg === 'undefined')
    {
-    window.addEventListener('load', function(){notice.error(2);});
+    window.addEventListener('load', function(){notice.error(0x01);});
     throw new Error('Corrupted Configuration detected.');
    }
    document.title = cfg.channel + ' Emote Wall';
@@ -5541,7 +5541,7 @@
        if (r.success)
         return true;
        if (r.code === 429)
-        notice.warning(1);
+        notice.warning(0x01);
        return false;
       }
 
@@ -5639,7 +5639,7 @@
           {
            await twitch.net.oAuth.update();
            if ((login.cfgVals() & 0x04) !== 0x04)
-            notice.error(1);
+            notice.error(0x11);
           }
           break;
          case 'PRIVMSG':
@@ -5663,7 +5663,7 @@
             return;
            }
            twitch.net.dead = true;
-           notice.error(1);
+           notice.error(0x11);
            if (!login.inUse)
             twitch.net.oAuth.clear(true);
           }
@@ -5777,7 +5777,7 @@
        }
        _ws.close();
        _ws = null;
-       notice.error(4);
+       notice.error(0x12);
       }
 
       return task;
@@ -5874,7 +5874,7 @@
        {
         if (r.code === 401)
         {
-         notice.error(1);
+         notice.error(0x11);
          twitch.net.oAuth.clear(true);
         }
         return false;
@@ -8071,7 +8071,7 @@
         {
          if (await twitch.net.oAuth.reinit())
           return _checkFollower(cmd);
-         notice.error(3);
+         notice.error(0x13);
          if (!login.inUse)
           twitch.net.oAuth.clear(true);
         }
@@ -8283,7 +8283,7 @@
        {
         if (await twitch.net.oAuth.reinit())
          return _findEmote_channel(chID, n);
-        notice.error(3);
+        notice.error(0x13);
         if (!login.inUse)
          twitch.net.oAuth.clear(true);
        }
@@ -8335,7 +8335,7 @@
       {
        if (await twitch.net.oAuth.reinit())
         return twitch.global();
-       notice.error(3);
+       notice.error(0x13);
        if (!login.inUse)
         twitch.net.oAuth.clear(true);
       }
@@ -8795,7 +8795,7 @@
       window.localStorage.removeItem('streamelements.tips:read.refresh');
       window.localStorage.removeItem('streamelements.tips:read.expires');
       window.localStorage.removeItem('streamelements.tips:read.refreshed');
-      notice.warning(2);
+      notice.warning(0x72);
       return;
      }
      cfg.streamelements.oauth = ret.access_token;
@@ -10211,7 +10211,7 @@
     if (!window.hasOwnProperty('obsstudio') && !window.localStorage.getItem('emotewall.obs_notfound'))
     {
      window.localStorage.setItem('emotewall.obs_notfound', '1');
-     notice.warning(3);
+     notice.warning(0x09);
     }
     if (login.use() === true)
      return;
@@ -10235,7 +10235,7 @@
      tCfg = login.cfgVals();
      if ((tCfg & 0x04) !== 0x04)
      {
-      notice.error(1);
+      notice.error(0x11);
       return;
      }
     }
