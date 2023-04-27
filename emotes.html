@@ -10072,7 +10072,10 @@
     function $begin()
     {
      twitch.net.oAuth.clear(true);
-     const o = encodeURIComponent(window.btoa(window.location));
+     let loc = window.location.toString();
+     if (window.location.hash.length > 1)
+      loc = loc.slice(0, -1 * window.location.hash.length);
+     const o = encodeURIComponent(window.btoa(loc));
      const c = encodeURIComponent(oauthClient);
      const r = encodeURIComponent(cURLs.html.rr.wizard);
      const u = cURLs.html.twitch.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', o);
@@ -10112,7 +10115,7 @@
      const fu = document.createElement('input');
      fu.setAttribute('type', 'hidden');
      fu.setAttribute('name', 'u');
-     fu.setAttribute('value', window.location);
+     fu.setAttribute('value', loc);
      f.appendChild(fu);
      document.body.appendChild(f);
      f.submit();
