@@ -1883,6 +1883,12 @@
        root: 'https://api.7tv.app/v2/users/%CHANNEL_ID%',
        emotes: 'https://api.7tv.app/v2/users/%CHANNEL_ID%/emotes'
       }
+     },
+     rr: {
+      refresh: {
+       t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
+       se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php'
+      }
      }
     },
     cdn: {
@@ -1899,9 +1905,7 @@
     },
     html: {
      rr: {
-      wizard: 'https://realityripple.com/Tools/Twitch/EmoteWall/wizard.php',
-      t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
-      se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php',
+      auth: 'https://realityripple.com/Tools/Twitch/EmoteWall/twitch.php',
       redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php'
      },
      twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&scope=%SCOPE%&state=redirto_%ORIGIN%&force_verify=true'
@@ -5866,7 +5870,7 @@
      {
       async function _getToken(t)
       {
-       const url = cURLs.html.rr.t;
+       const url = cURLs.api.rr.refresh.t;
        const h = {'Content-Type': 'application/x-www-form-urlencoded'};
        const b = 'refresh=' + encodeURIComponent(t);
        const r = await shared.httpRequest('POST', url, h, b, false);
@@ -8741,7 +8745,7 @@
 
     async function _getOAuthToken(t)
     {
-     const url = cURLs.html.rr.se;
+     const url = cURLs.api.rr.refresh.se;
      const h = {'Content-Type': 'application/x-www-form-urlencoded'};
      const b = 'refresh=' + encodeURIComponent(t);
      const r = await shared.httpRequest('POST', url, h, b, false);
@@ -10081,7 +10085,7 @@
       loc = loc.slice(0, -1 * window.location.hash.length);
      const o = encodeURIComponent(window.btoa(loc));
      const c = encodeURIComponent(oauthClient);
-     const r = encodeURIComponent(cURLs.html.rr.wizard);
+     const r = encodeURIComponent(cURLs.html.rr.auth);
      const u = cURLs.html.twitch.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', o);
      if (u.length < 1500)
      {
@@ -10109,7 +10113,7 @@
      const fr = document.createElement('input');
      fr.setAttribute('type', 'hidden');
      fr.setAttribute('name', 'r');
-     fr.setAttribute('value', cURLs.html.rr.wizard);
+     fr.setAttribute('value', cURLs.html.rr.auth);
      f.appendChild(fr);
      const fs = document.createElement('input');
      fs.setAttribute('type', 'hidden');
