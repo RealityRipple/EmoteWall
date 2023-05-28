@@ -8630,13 +8630,26 @@
      let _wsRetry = 0;
      let _tPing = 0;
      let _ws = null;
+     let _lTimeout = 5000;
+     let _tTimeout = false;
 
      function task()
      {
       _tPing = 0;
       _ws = new WebSocket(cURLs.ws.streamelements);
+      _ws.onopen = _wsOpen;
       _ws.onclose = _wsClose;
       _ws.onmessage = _wsMessage;
+     }
+
+     function _wsOpen()
+     {
+      if (_ws === null)
+       return;
+      if (_ws.readyState !== 1)
+       return;
+      _ws.onopen = null;
+      _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
      }
 
      function _wsClose()
@@ -8648,6 +8661,7 @@
       }
       if (_ws === null)
        return;
+      _ws.onopen = null;
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
@@ -8661,16 +8675,23 @@
 
      async function _wsMessage(ev)
      {
+      if (_tTimeout !== false)
+      {
+       window.clearTimeout(_tTimeout);
+       _tTimeout = false;
+      }
       if (_ws === null)
        return;
       if (twitch.net.dead)
       {
+       _ws.onopen = null;
        _ws.onmessage = null;
        _ws.onclose = null;
        _ws.close();
        _ws = null;
        return;
       }
+      _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
       _wsRetry = 0;
       const d = ev.data;
       if (d.length < 1)
@@ -8678,13 +8699,23 @@
       switch (d.slice(0, 1))
       {
        case '0':
-        let t = 20000;
+        let t = 25000;
+        let u = 20000;
         if (d.length > 1)
         {
          const c = JSON.parse(d.slice(1));
          if (c.hasOwnProperty('pingInterval'))
           t = c.pingInterval;
+         if (c.hasOwnProperty('pingTimeout'))
+          u = c.pingTimeout;
         }
+        _lTimeout = t + u;
+        if (_tTimeout !== false)
+        {
+         window.clearTimeout(_tTimeout);
+         _tTimeout = false;
+        }
+        _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
         if (_tPing !== 0)
         {
          window.clearInterval(_tPing);
@@ -8739,6 +8770,23 @@
       if (_ws.readyState !== 1)
        return;
       _ws.send('2');
+     }
+
+     function _wsTimeout()
+     {
+      if (_ws === null)
+       return;
+      _lTimeout = 5000;
+      if (twitch.net.dead === true)
+       return;
+      if (_tTimeout !== false)
+      {
+       window.clearTimeout(_tTimeout);
+       _tTimeout = false;
+      }
+      _ws.close();
+      _ws = null;
+      streamelements.socket();
      }
 
      return task;
