@@ -5564,7 +5564,7 @@
       let _wsRetry = 0;
       let _firstRS = true;
       let _ws = null;
-      let _tTimeout = false;
+      let _tExpire = false;
 
       function task()
       {
@@ -5582,7 +5582,7 @@
        if (_ws.readyState !== 1)
         return;
        _ws.onopen = null;
-       _tTimeout = window.setTimeout(_wsTimeout, 5000);
+       _tExpire = window.setTimeout(_wsExpire, 5000);
        _ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
        _ws.send('PASS oauth:' + cfg.login.oauth);
        _ws.send('NICK ' + cfg.channel);
@@ -5591,10 +5591,10 @@
 
       function _wsClose()
       {
-       if (_tTimeout !== false)
+       if (_tExpire !== false)
        {
-        window.clearTimeout(_tTimeout);
-        _tTimeout = false;
+        window.clearTimeout(_tExpire);
+        _tExpire = false;
        }
        if (_ws === null)
         return;
@@ -5681,10 +5681,10 @@
           twitch.net.channelID = cmd.tags['room-id'];
           if (_firstRS)
           {
-           if (_tTimeout !== false)
+           if (_tExpire !== false)
            {
-            window.clearTimeout(_tTimeout);
-            _tTimeout = false;
+            window.clearTimeout(_tExpire);
+            _tExpire = false;
            }
            _firstRS = false;
            await _loadEmote_channel(twitch.net.channelID);
@@ -5768,17 +5768,17 @@
        }
       }
 
-      function _wsTimeout()
+      function _wsExpire()
       {
        if (_ws === null)
         return;
        if (twitch.net.dead === true)
         return;
        twitch.net.dead = true;
-       if (_tTimeout !== false)
+       if (_tExpire !== false)
        {
-        window.clearTimeout(_tTimeout);
-        _tTimeout = false;
+        window.clearTimeout(_tExpire);
+        _tExpire = false;
        }
        _ws.close();
        _ws = null;
