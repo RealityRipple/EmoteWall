@@ -5564,13 +5564,16 @@
       let _wsRetry = 0;
       let _firstRS = true;
       let _ws = null;
-      const _lTimeout = 330000;
+      const _lPing = 30000;
+      const _lTimeout = 35000;
       const _lExpire = 5000;
       let _tTimeout = false;
       let _tExpire = false;
+      let _tPing = 0;
 
       function task()
       {
+       _tPing = 0;
        _firstRS = true;
        _ws = new WebSocket(cURLs.ws.twitch.irc);
        _ws.onopen = _wsOpen;
@@ -5594,6 +5597,11 @@
 
       function _wsClose()
       {
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
+       }
        if (_tExpire !== false)
        {
         window.clearTimeout(_tExpire);
@@ -5625,6 +5633,12 @@
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
+       }
+       _tPing = window.setInterval(_wsPing, _lPing);
        if (_ws === null)
         return;
        if (twitch.net.dead)
@@ -5797,6 +5811,15 @@
        _ws.close();
        _ws = null;
        notice.error(0x12);
+      }
+
+      function _wsPing()
+      {
+       if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
+        return;
+       _ws.send('PING');
       }
 
       function _wsTimeout()
