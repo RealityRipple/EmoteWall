@@ -5323,22 +5323,22 @@
       function _wsTimeout()
       {
        _lTimeout = 5000;
-       if (twitch.net.dead === true)
-        return;
+       if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
+        _wsURL = cURLs.ws.twitch.eventSub;
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
-       if (_ws !== null)
-       {
-        _ws.onopen = null;
-        _ws.onmessage = null;
-        _ws.onclose = null;
-        _ws.close();
-       }
-       if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
-        _wsURL = cURLs.ws.twitch.eventSub;
+       if (_ws === null)
+        return;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
+       _ws.close();
+       _ws = null;
+       if (twitch.net.dead === true)
+        return;
        _eventSub();
       }
 
@@ -5824,17 +5824,20 @@
 
       function _wsTimeout()
       {
-       if (_ws === null)
-        return;
-       if (twitch.net.dead === true)
-        return;
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
+       if (_ws === null)
+        return;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
        _ws.close();
        _ws = null;
+       if (twitch.net.dead === true)
+        return;
        twitch.net.irc();
       }
 
@@ -8656,18 +8659,21 @@
 
      function _wsTimeout()
      {
-      if (_ws === null)
-       return;
       _lTimeout = 5000;
-      if (twitch.net.dead === true)
-       return;
       if (_tTimeout !== false)
       {
        window.clearTimeout(_tTimeout);
        _tTimeout = false;
       }
+      if (_ws === null)
+       return;
+      _ws.onopen = null;
+      _ws.onmessage = null;
+      _ws.onclose = null;
       _ws.close();
       _ws = null;
+      if (twitch.net.dead === true)
+       return;
       streamlabs.socket();
      }
 
@@ -8875,18 +8881,21 @@
 
      function _wsTimeout()
      {
-      if (_ws === null)
-       return;
       _lTimeout = 5000;
-      if (twitch.net.dead === true)
-       return;
       if (_tTimeout !== false)
       {
        window.clearTimeout(_tTimeout);
        _tTimeout = false;
       }
+      if (_ws === null)
+       return;
+      _ws.onopen = null;
+      _ws.onmessage = null;
+      _ws.onclose = null;
       _ws.close();
       _ws = null;
+      if (twitch.net.dead === true)
+       return;
       streamelements.socket();
      }
 
@@ -9859,21 +9868,21 @@
 
       function _wsTimeout()
       {
-       if (_ws === null)
-        return;
        _lTimeout = 5000;
-       _ws.onopen = null;
-       _ws.onmessage = null;
-       _ws.onclose = null;
-       if (twitch.net.dead === true)
-        return;
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
+       if (_ws === null)
+        return;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
        _ws.close();
        _ws = null;
+       if (twitch.net.dead === true)
+        return;
        thirdparty['7tv'].socket();
       }
 
