@@ -10367,54 +10367,98 @@
     };
    }();
 
-   async function startup()
+   const startup = function()
    {
-    shared.mspf.init();
-    if (!window.hasOwnProperty('obsstudio') && !window.localStorage.getItem('emotewall.obs_notfound'))
+    async function task()
     {
-     window.localStorage.setItem('emotewall.obs_notfound', '1');
-     notice.warning(0x09);
+     shared.mspf.init();
+     if (!window.hasOwnProperty('obsstudio') && !window.localStorage.getItem('emotewall.obs_notfound'))
+     {
+      window.localStorage.setItem('emotewall.obs_notfound', '1');
+      notice.warning(0x09);
+     }
+     if (login.use() === true)
+      return;
+     shared.clearAddr();
+     _streamlabs();
+     await _streamelements();
+     await _bttv();
+     await _7tv();
+     if (login.cfgVals() > 0x01)
+     {
+      if (await _twitch() === false)
+       twitch.net.dead = true;
+     }
+     else
+      twitch.net.dead = true;
     }
-    if (login.use() === true)
-     return;
-    shared.clearAddr();
-    const slCfg = streamlabs.cfgVals();
-    if ((slCfg & 0x01) === 0x01)
-     streamlabs.socket();
-    let seCfg = streamelements.cfgVals();
-    if (seCfg > 0)
+
+    async function _twitch()
     {
+     let tCfg = login.cfgVals();
+     if ((tCfg & (0x02 | 0x01)) === (0x02 | 0x01))
+     {
+      await twitch.net.oAuth.update();
+      tCfg = login.cfgVals();
+      if ((tCfg & 0x04) !== 0x04)
+      {
+       notice.error(0x11);
+       return false;
+      }
+     }
+     if ((tCfg & (0x04 | 0x01)) !== (0x04 | 0x01))
+      return false;
+     if (await twitch.global() === false)
+      return false;
+     await _ffz();
+     twitch.net.irc();
+     return true;
+    }
+
+    function _streamlabs()
+    {
+     const slCfg = streamlabs.cfgVals();
+     if ((slCfg & 0x01) !== 0x01)
+      return;
+     streamlabs.socket();
+    }
+
+    async function _streamelements()
+    {
+     let seCfg = streamelements.cfgVals();
+     if (seCfg === 0)
+      return;
      if ((seCfg & 0x02) === 0x02)
       await streamelements.updateOAuth();
      seCfg = streamelements.cfgVals();
-     if ((seCfg & 0x01) === 0x01 || (seCfg & 0x04) === 0x04)
-      streamelements.socket();
-    }
-    let tCfg = login.cfgVals();
-    if ((tCfg & (0x02 | 0x01)) === (0x02 | 0x01))
-    {
-     await twitch.net.oAuth.update();
-     tCfg = login.cfgVals();
-     if ((tCfg & 0x04) !== 0x04)
-     {
-      notice.error(0x11);
+     if ((seCfg & 0x01) !== 0x01 && (seCfg & 0x04) !== 0x04)
       return;
-     }
+     streamelements.socket();
     }
-    if ((tCfg & (0x04 | 0x01)) === (0x04 | 0x01))
+
+    async function _ffz()
     {
-     if (await twitch.global() === false)
+     if (!cfg.display.extended.useFFZ)
       return;
-    }
-    if (cfg.display.extended.useFFZ)
      await thirdparty.ffz.global();
-    if (cfg.display.extended.useBTTV)
+    }
+
+    async function _bttv()
+    {
+     if (!cfg.display.extended.useBTTV)
+      return;
      await thirdparty.bttv.global();
-    if (cfg.display.extended.use7TV)
+    }
+
+    async function _7tv()
+    {
+     if (!cfg.display.extended.use7TV)
+      return;
      await thirdparty['7tv'].global();
-    if ((tCfg & (0x04 | 0x01)) === (0x04 | 0x01))
-     twitch.net.irc();
-   }
+    }
+
+    return task;
+   }();
 
    window.addEventListener('load', startup);
   </script>
