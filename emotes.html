@@ -3262,12 +3262,15 @@
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        const sS = sW / 19;
-        let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+        let drawn = [];
         let ct = 0;
         const lP = pyramidDist.length;
+        const sS = sW / lP;
         for (let i = 0; i < lP; i++)
+        {
+         drawn.push(0);
          ct += pyramidDist[i];
+        }
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time);
         const sT = tMS * timing.kappa.Pyramid.show.total;
         const tPerB = Math.max(Math.floor(sT / ct), timing.kappa.Pyramid.show.min);
@@ -3308,32 +3311,32 @@
         const v = -1 * sS;
         const vD = sH - sS * dX;
         let s = 'top: 0px;';
-        s += ' left: 0px;';
+        s += ' left: ' + h + 'px;';
         s += ' height: ' + sS + 'px;';
         s += ' width: ' + sS + 'px;';
-        s += ' transition: all ' + tPerB + 'ms ease-in;';
-        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+        s += ' transition: transform ' + tPerB + 'ms ease-in;';
+        s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, h, sH);
-        window.setTimeout(_tMove, t, tInit, img, h, vD);
+        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, sH);
+        window.setTimeout(_tMove, t, tInit, img, vD);
        }
 
-       function _tMove(tInit, img, h, vD)
+       function _tMove(tInit, img, vD)
        {
         if (_iTitanic > tInit)
          return;
-        img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
+        img.style.transform = 'translateY(' + vD + 'px)';
        }
 
-       function _tDrop(tInit, img, h, sH)
+       function _tDrop(tInit, img, sH)
        {
         if (_iTitanic > tInit)
          return;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time);
         const pT = Math.floor(tMS * timing.kappa.Pyramid.hide);
         img.style.transitionDuration = pT + 'ms';
-        img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
+        img.style.transform = 'translateY(' + sH + 'px)';
         _gc.hook(img, false, true, pT);
        }
 
@@ -3347,12 +3350,15 @@
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        const sS = Math.min(sW / 19, Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small));
-        let drawn = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+        let drawn = [];
         let ct = 0;
         const lP = pyramidDist.length;
+        const sS = Math.min(sW / lP, Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small));
         for (let i = 0; i < lP; i++)
+        {
+         drawn.push(0);
          ct += pyramidDist[i];
+        }
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time);
         const sT = tMS * timing.kappa.SmallPyramid.show.total;
         const tPerB = Math.max(Math.floor(sT / ct), timing.kappa.SmallPyramid.show.min);
@@ -3394,31 +3400,31 @@
         const v = -1 * sS;
         const vD = sH - sS * dX;
         let s = 'top: 0px;';
-        s += ' left: 0px;';
+        s += ' left: ' + h + 'px;';
         s += ' height: ' + sS + 'px;';
         s += ' width: ' + sS + 'px;';
-        s += ' transition: all ' + tPerB + 'ms ease-in;';
-        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+        s += ' transition: transform ' + tPerB + 'ms ease-in;';
+        s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, h, sH);
-        window.setTimeout(_tMove, t, tInit, img, h, vD);
+        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, sH);
+        window.setTimeout(_tMove, t, tInit, img, vD);
        }
 
-       function _tMove(tInit, img, h, vD)
+       function _tMove(tInit, img, vD)
        {
         if (_iTitanic > tInit)
          return;
-        img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
+        img.style.transform = 'translateY(' + vD + 'px)';
        }
 
-       function _tDrop(tInit, img, h, sH)
+       function _tDrop(tInit, img, sH)
        {
         if (_iTitanic > tInit)
          return;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time);
         const pT = Math.floor(tMS * timing.kappa.SmallPyramid.hide);
-        img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
+        img.style.transform = 'translateY(' + sH + 'px)';
         img.style.transitionDuration = pT + 'ms';
         _gc.hook(img, false, true, pT);
        }
