@@ -4051,31 +4051,31 @@
         const v = -1 * sS;
         const vD = vH - sS * dX;
         let s = 'top: 0px;';
-        s += ' left: 0px;';
+        s += ' left: ' + h + 'px;';
         s += ' height: ' + sS + 'px;';
         s += ' width: ' + sS + 'px;';
-        s += ' transition: all ' + tPerB + 'ms ease-in;';
-        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+        s += ' transition: transform ' + tPerB + 'ms ease-in;';
+        s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
         const tMS = Math.floor(iTime * 1000 * timing.kappa.Text.time);
-        window.setTimeout(_tDrop, Math.floor(eT + tMS + t / 10), tInit, img, h, sH, tMS);
-        window.setTimeout(_tMove, t, tInit, img, h, vD);
+        window.setTimeout(_tDrop, Math.floor(eT + tMS + t / 10), tInit, img, sH, tMS);
+        window.setTimeout(_tMove, t, tInit, img, vD);
        }
 
-       function _tMove(tInit, img, h, vD)
+       function _tMove(tInit, img, vD)
        {
         if (_iTitanic > tInit)
          return;
-        img.style.transform = 'translate(' + h + 'px, ' + vD + 'px)';
+        img.style.transform = 'translateY(' + vD + 'px)';
        }
 
-       function _tDrop(tInit, img, h, sH, tMS)
+       function _tDrop(tInit, img, sH, tMS)
        {
         if (_iTitanic > tInit)
          return;
         const pT = Math.floor(tMS * timing.kappa.Text.hide);
-        img.style.transform = 'translate(' + h + 'px, ' + sH + 'px)';
+        img.style.transform = 'translateY(' + sH + 'px)';
         img.style.transitionDuration = pT + 'ms';
         _gc.hook(img, false, true, pT);
        }
