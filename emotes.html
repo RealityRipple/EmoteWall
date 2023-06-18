@@ -1261,7 +1261,10 @@
       time: 1
      },
      'Conga': {
-      time: 2,
+      time: {
+       show: 2,
+       hide: 2
+      },
       size: 5/3,      /* height of animation space for row in emote heights */
       height: 5/6,    /* height of each row of dancers in emote heights (padding) */
       avoidMiddle: 6  /* rows to use when avoiding the middle (half top, half bottom; please use even numbers) */
@@ -3627,7 +3630,7 @@
          }
          zimgs.push(oZ);
         }
-        const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time);
+        const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.show);
         await _sleep(tMS);
         let full = false;
         if (_conga.length === sht)
@@ -3705,19 +3708,19 @@
          sE = bS * (ct - 1 - col) + xtra;
          sB = sE + sW;
         }
-        const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time);
-        s = 'top: 0px;';
+        const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.hide);
+        s = 'top: ' + v + 'px;';
         s += ' left: 0px;';
         s += ' width: ' + bS + 'px;';
         s += ' height: ' + bS + 'px;';
         s += ' z-index: ' + v + ';';
-        s += ' transition: all ' + tMS + 'ms linear;';
-        s += ' transform: translate(' + sB + 'px, ' + v + 'px);';
+        s += ' transition: transform ' + tMS + 'ms linear;';
+        s += ' transform: translateX(' + sB + 'px);';
         box.setAttribute('style', s);
         _eActive++;
         box.appendChild(img);
         document.body.appendChild(box);
-        shared.doNextFrame(_tMove, tInit, box, sE, v);
+        shared.doNextFrame(_tMove, tInit, box, sE);
         return box;
        }
 
@@ -3732,24 +3735,17 @@
          sB = bS * (ct - 1 - col) + xtra;
          sE = sB - sW;
         }
-        const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time);
-        let s = 'top: 0px;';
-        s += ' left: 0px;';
-        s += ' width: ' + bS + 'px;';
-        s += ' height: ' + bS + 'px;';
-        s += ' z-index: ' + v + ';';
-        s += ' transition: all ' + tMS + 'ms ease-in;';
-        s += ' transform: translate(' + sB + 'px, ' + v + 'px);';
-        box.setAttribute('style', s);
+        const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.hide);
+        box.style.transitionTimingFunction = 'ease-in';
         _gc.hook(box, true, true, Math.ceil(tMS * 1.25));
-        shared.doNextFrame(_tMove, tInit, box, sE, v);
+        shared.doNextFrame(_tMove, tInit, box, sE);
        }
 
-       function _tMove(tInit, box, sE, v)
+       function _tMove(tInit, box, sE)
        {
         if (_iTitanic > tInit)
          return;
-        box.style.transform = 'translate(' + sE + 'px, ' + v + 'px)';
+        box.style.transform = 'translateX(' + sE + 'px)';
        }
 
        return task;
