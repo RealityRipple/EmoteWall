@@ -206,6 +206,10 @@
     *                   timing is required for accurate overlay.
     *                   CHAOS MAY ENSUE.
     *
+    *   fillZWE   Toggles the fill style of Zero-Width (overlapping) emotes.
+    *             If TRUE, ZWEs will be stretched or squashed to fit non-square emotes.
+    *             If FALSE, ZWEs will be placed in the center of non-square emotes.
+    *
     *  kappa      Settings related to emote-splosions and the !kappagen command.
     *
     *   count     The number of emotes to display per kappagen. This value should be less than the "emote max" value
@@ -873,7 +877,8 @@
       useFFZ: true,
       useBTTV: true,
       use7TV: true,
-      useZWE: true
+      useZWE: true,
+      fillZWE: false
      },
      kappa: {
       count: 150,
@@ -2078,12 +2083,15 @@
         eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
         eH = eH * 2;
-       const h = shared.rnd(sW - eH);
+       let eW = eH;
+       if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+        eW = eInf.width / eInf.height * eH;
+       const h = shared.rnd(sW - eW);
        const v = shared.rnd(sH - eH);
        let s = 'top: ' + v + 'px;';
        s += ' left: ' + h + 'px;';
-       s += ' height: ' + eH + 'px;';
-       s += ' width: ' + eH + 'px;';
+       s += ' --emote-height: ' + eH + 'px;';
+       s += ' --emote-width: ' + eW + 'px;';
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Still.time);
        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
        _addEmoteToDoc(tInit, eInf.url, variationSize, {style: s}, false, {space: false, time: tMS});
@@ -2113,10 +2121,14 @@
         eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
         eH = eH * 2;
+       let eW = eH;
+       if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+        eW = eInf.width / eInf.height * eH;
        const eHh = Math.ceil(eH / 2);
+       const eWh = Math.ceil(eW / 2);
        let h = x;
        if (h === false)
-        h = shared.rnd(sW) - eHh;
+        h = shared.rnd(sW) - eWh;
        let v = y;
        if (v === false)
         v = shared.rnd(sH) - eHh;
@@ -2125,15 +2137,16 @@
        if (!x && !y)
        {
         const nH = eH * -1;
-        while (!_safePoints(h, v, th, r, nH, nH, sW, sH))
+        const nW = eW * -1;
+        while (!_safePoints(h, v, th, r, nW, nH, sW, sH))
         {
          th = shared.rnd() * _cRadius;
         }
        }
        let hD = Math.floor(h + r * Math.cos(th));
        let vD = Math.floor(v + r * Math.sin(th));
-       let s = 'height: ' + eH + 'px;';
-       s += ' width: ' + eH + 'px;';
+       let s = '--emote-height: ' + eH + 'px;';
+       s += ' --emote-width: ' + eW + 'px;';
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time);
        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
@@ -2164,12 +2177,15 @@
         eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
         eH = eH * 2;
-       const eHh = Math.ceil(eH / 2);
-       const h = shared.rnd(sW) - eHh;
+       let eW = eH;
+       if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+        eW = eInf.width / eInf.height * eH;
+       const eWh = Math.ceil(eW / 2);
+       const h = shared.rnd(sW) - eWh;
        const v = Math.floor(sH * _rndFromRange(timing.display.Rise.origin));
        let s = 'left: ' + h + 'px;';
-       s += ' height: ' + eH + 'px;';
-       s += ' width: ' + eH + 'px;';
+       s += ' --emote-height: ' + eH + 'px;';
+       s += ' --emote-width: ' + eW + 'px;';
        if (cfg.emote.out.fade || cfg.emote.out.zoom)
         s += ' offset-path: path("M 0 ' + v + ' L 0 ' + Math.floor(v * 0.05) + '") ;';
        else
@@ -2228,18 +2244,21 @@
          eH = Math.ceil(eH / 2);
         else if (variationSize === 2)
          eH = eH * 2;
-        const eHh = Math.ceil(eH / 2);
+        let eW = eH;
+        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+         eW = eInf.width / eInf.height * eH;
+        const eWh = Math.ceil(eW / 2);
         const sWm = Math.ceil(sW / 2);
-        const h = Math.floor(shared.rnd(sW) - eHh);
+        const h = Math.floor(shared.rnd(sW) - eWh);
         const v = Math.floor(sH * _rndFromRange(timing.display.Bounce.origin));
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Bounce.time);
         const vMS = (tMS / 300 / (16 + 2 / 3));
         let velH = _rndFromRange(timing.display.Bounce.velocity.h);
         const velV = _rndFromRange(timing.display.Bounce.velocity.v);
-        if (h + eHh > sWm)
+        if (h + eWh > sWm)
          velH = -1 * velH;
-        let s = 'height: ' + eH + 'px;';
-        s += ' width: ' + eH + 'px;';
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eW + 'px;';
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         let bX = h;
@@ -2310,14 +2329,17 @@
         eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
         eH = eH * 2;
-       const eHh = Math.ceil(eH / 2);
+       let eW = eH;
+       if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+        eW = eInf.width / eInf.height * eH;
+       const eWh = Math.ceil(eW / 2);
        const sWm = Math.ceil(sW / 2);
-       const h = shared.rnd(sW) - eHh;
+       const h = shared.rnd(sW) - eWh;
        const v = Math.floor(sH * _rndFromRange(timing.display.Speed.origin));
        let s = 'top: ' + v + 'px;';
        s += ' left: ' + h + 'px;';
-       s += ' height: ' + eH + 'px;';
-       s += ' width: ' + eH + 'px;';
+       s += ' --emote-height: ' + eH + 'px;';
+       s += ' --emote-width: ' + eW + 'px;';
        let aNames = [];
        let aDelays = [];
        let aDurs = [];
@@ -2325,7 +2347,7 @@
        let aFills = [];
        let aIters = [];
        let dsO = {};
-       if (h + eHh > sWm)
+       if (h + eWh > sWm)
        {
         dsO.origin = 'right';
         aNames.push('speedL');
@@ -2370,11 +2392,14 @@
         eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
         eH = eH * 2;
-       const eHh = Math.ceil(eH / 2);
-       const h = shared.rnd(sW) - eHh;
+       let eW = eH;
+       if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+        eW = eInf.width / eInf.height * eH;
+       const eWh = Math.ceil(eW / 2);
+       const h = shared.rnd(sW) - eWh;
        let s = 'left: ' + h + 'px;';
-       s += ' height: ' + eH + 'px;';
-       s += ' width: ' + eH + 'px;';
+       s += ' --emote-height: ' + eH + 'px;';
+       s += ' --emote-width: ' + eW + 'px;';
        let aNames = [];
        let aDelays = [];
        let aDurs = [];
@@ -2435,14 +2460,17 @@
          eH = Math.ceil(eH / 2);
         else if (variationSize === 2)
          eH = eH * 2;
-        const sR = sW - eH;
+        let eW = eH;
+        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+         eW = eInf.width / eInf.height * eH;
+        const sR = sW - eW;
         const sB = sH - eH;
         const h = shared.rnd(sR - 5) + 10;
         const v = shared.rnd(sB - 5) + 10;
         let s = 'top: ' + v + 'px;';
         s += ' left: ' + h + 'px;';
-        s += ' height: ' + eH + 'px;';
-        s += ' width: ' + eH + 'px;';
+        s += ' --emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eW + 'px;';
         let dests = [];
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Crazy.time);
         const rate = Math.sqrt(timing.display.Crazy.distance ** 2 / 2) / tMS;
@@ -2591,11 +2619,14 @@
         eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
         eH = eH * 2;
-       const eHh = Math.ceil(eH / 2);
-       const h = shared.rnd(sW) - eHh;
+       let eW = eH;
+       if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+        eW = eInf.width / eInf.height * eH;
+       const eWh = Math.ceil(eW / 2);
+       const h = shared.rnd(sW) - eWh;
        let s = 'left: ' + h + 'px;';
-       s += ' height: ' + eH + 'px;';
-       s += ' width: ' + eH + 'px;';
+       s += ' --emote-height: ' + eH + 'px;';
+       s += ' --emote-width: ' + eW + 'px;';
        let aNames = [];
        let aDelays = [];
        let aDurs = [];
@@ -2650,9 +2681,12 @@
          eH = Math.ceil(eH / 2);
         else if (variationSize === 2)
          eH = eH * 2;
-        const sR = sW - eH;
+        let eW = eH;
+        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+         eW = eInf.width / eInf.height * eH;
+        const sR = sW - eW;
         const sB = sH - eH;
-        const h = shared.rnd(2) === 0 ? eH * -1 : sW;
+        const h = shared.rnd(2) === 0 ? eW * -1 : sW;
         const v = shared.rnd(sH + eH) - eH;
         const hD = Math.floor(sR * _rndFromRange(timing.display.Throw.dest.h));
         const vD = Math.floor(sB * _rndFromRange(timing.display.Throw.dest.v));
@@ -2660,11 +2694,11 @@
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time);
         const t2 = Math.floor(tMS * timing.display.Throw.toss);
         const t3 = Math.floor(tMS * timing.display.Throw.drop);
-        let s = 'height: ' + eH + 'px;';
-        s += ' width: ' + eH + 'px;';
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eW + 'px;';
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-        let s2 = 'height: ' + eH + 'px;';
-        s2 += ' width: ' + eH + 'px;';
+        let s2 = '--emote-height: ' + eH + 'px;';
+        s2 += ' --emote-width: ' + eW + 'px;';
         let r = '360';
         if (h > 0)
          r = '-360';
@@ -2753,7 +2787,7 @@
         if (_iTitanic > tInit)
          return;
         let scene = document.createElement('div');
-        scene.setAttribute('class', 'scene cube');
+        scene.setAttribute('class', 'scene fit cube');
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
         {
@@ -2767,45 +2801,35 @@
          eH = eH * 2;
         const eHh = Math.ceil(eH / 2);
         const nHh = eHh * -1;
-        scene.setAttribute('width', eH);
-        scene.setAttribute('height', eH);
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time);
         let cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
         cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
-        let f = 'height: ' + eH + 'px;';
-        f += ' width: ' + eH + 'px;';
         if (!eInf.hasOwnProperty('zwe') || eInf.zwe.length === 0)
         {
          let cubeF = document.createElement('img');
          _setImgSrc(cubeF, eInf.url);
          cubeF.dataset.face = 'front';
-         cubeF.setAttribute('style', f);
          cube.appendChild(cubeF);
          let cubeB = document.createElement('img');
          _setImgSrc(cubeB, eInf.url);
          cubeB.dataset.face = 'back';
-         cubeB.setAttribute('style', f);
          cube.appendChild(cubeB);
          let cubeR = document.createElement('img');
          _setImgSrc(cubeR, eInf.url);
          cubeR.dataset.face = 'right';
-         cubeR.setAttribute('style', f);
          cube.appendChild(cubeR);
          let cubeL = document.createElement('img');
          _setImgSrc(cubeL, eInf.url);
          cubeL.dataset.face = 'left';
-         cubeL.setAttribute('style', f);
          cube.appendChild(cubeL);
          let cubeT = document.createElement('img');
          _setImgSrc(cubeT, eInf.url);
          cubeT.dataset.face = 'top';
-         cubeT.setAttribute('style', f);
          cube.appendChild(cubeT);
          let cubeU = document.createElement('img');
          _setImgSrc(cubeU, eInf.url);
          cubeU.dataset.face = 'bottom';
-         cubeU.setAttribute('style', f);
          cube.appendChild(cubeU);
         }
         else
@@ -2813,91 +2837,73 @@
          const lZ = eInf.zwe.length;
          let cubeF = document.createElement('div');
          cubeF.dataset.face = 'front';
-         cubeF.setAttribute('style', f);
          let pctF = document.createElement('img');
          _setImgSrc(pctF, eInf.url);
-         pctF.setAttribute('style', f);
          cubeF.appendChild(pctF);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.setAttribute('style', f);
           cubeF.appendChild(pctZ);
          }
          cube.appendChild(cubeF);
          let cubeB = document.createElement('div');
          cubeB.dataset.face = 'back';
-         cubeB.setAttribute('style', f);
          let pctB = document.createElement('img');
          _setImgSrc(pctB, eInf.url);
-         pctB.setAttribute('style', f);
          cubeB.appendChild(pctB);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.setAttribute('style', f);
           cubeB.appendChild(pctZ);
          }
          cube.appendChild(cubeB);
          let cubeR = document.createElement('div');
          cubeR.dataset.face = 'right';
-         cubeR.setAttribute('style', f);
          let pctR = document.createElement('img');
          _setImgSrc(pctR, eInf.url);
-         pctR.setAttribute('style', f);
          cubeR.appendChild(pctR);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.setAttribute('style', f);
           cubeR.appendChild(pctZ);
          }
          cube.appendChild(cubeR);
          let cubeL = document.createElement('div');
          cubeL.dataset.face = 'left';
-         cubeL.setAttribute('style', f);
          let pctL = document.createElement('img');
          _setImgSrc(pctL, eInf.url);
-         pctL.setAttribute('style', f);
          cubeL.appendChild(pctL);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.setAttribute('style', f);
           cubeL.appendChild(pctZ);
          }
          cube.appendChild(cubeL);
          let cubeT = document.createElement('div');
          cubeT.dataset.face = 'top';
-         cubeT.setAttribute('style', f);
          let pctT = document.createElement('img');
          _setImgSrc(pctT, eInf.url);
-         pctT.setAttribute('style', f);
          cubeT.appendChild(pctT);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.setAttribute('style', f);
           cubeT.appendChild(pctZ);
          }
          cube.appendChild(cubeT);
          let cubeU = document.createElement('div');
          cubeU.dataset.face = 'bottom';
-         cubeU.setAttribute('style', f);
          let pctU = document.createElement('img');
          _setImgSrc(pctU, eInf.url);
-         pctU.setAttribute('style', f);
          cubeU.appendChild(pctU);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.setAttribute('style', f);
           cubeU.appendChild(pctZ);
          }
          cube.appendChild(cubeU);
@@ -2914,8 +2920,8 @@
         }
         let hD = Math.floor(h + r * Math.cos(th));
         let vD = Math.floor(v + r * Math.sin(th));
-        let s = 'width: ' + eH + 'px;';
-        s += ' height: ' + eH + 'px;';
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eH + 'px;';
         s += ' --cube-depth: ' + eHh + 'px;';
         s += ' perspective: ' + eH * 3 + 'px;';
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
@@ -2964,8 +2970,11 @@
         eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
         eH = eH * 2;
+       let eW = eH;
+       if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+        eW = eInf.width / eInf.height * eH;
        const sR = sW - eH;
-       const sB = sH - eH;
+       const sB = sH - eW;
        let h = fX;
        if (h === false)
         h = Math.floor(shared.rnd() * (sR * 0.33) + sR * 0.33);
@@ -2974,8 +2983,8 @@
         hD = h - shared.rnd(sR * 0.2);
        else
         hD = h + shared.rnd(sR * 0.2);
-       let s = 'height: ' + eH + 'px;';
-       s += ' width: ' + eH + 'px;';
+       let s = '--emote-height: ' + eH + 'px;';
+       s += ' --emote-width: ' + eW + 'px;';
        s += ' transform: translateX(' + h + 'px);';
        s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY * sH + shared.rnd(sB / 2)) + ' L 0 ' + (sH + eH) + '");';
        let aNames = [];
@@ -3023,7 +3032,6 @@
       const eH = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
       document.documentElement.style.setProperty('--height', sH + 'px');
       document.documentElement.style.setProperty('--width', sW + 'px');
-      document.documentElement.style.setProperty('--emote-height', eH + 'px');
       let style = cfg.display.styles[shared.rnd(cfg.display.styles.length)];
       if (style === undefined)
        return;
@@ -3085,25 +3093,28 @@
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        const eHh = Math.ceil(eH / 2);
-        const oX = sW * timing.kappa.Fireworks.origin.x[shared.rnd(timing.kappa.Fireworks.origin.x.length)] - eHh;
+        const oK = kList[shared.rnd(kList.length)];
+        let eW = eH;
+        if (oK.hasOwnProperty('width') && oK.hasOwnProperty('height'))
+         eW = oK.width / oK.height * eH;
+        const eWh = Math.ceil(eW / 2);
+        const oX = sW * timing.kappa.Fireworks.origin.x[shared.rnd(timing.kappa.Fireworks.origin.x.length)] - eWh;
         const oY = sH * timing.kappa.Fireworks.origin.y[shared.rnd(timing.kappa.Fireworks.origin.y.length)];
-        const cX = sW * timing.kappa.Fireworks.dest.x[shared.rnd(timing.kappa.Fireworks.dest.x.length)] - eHh;
+        const cX = sW * timing.kappa.Fireworks.dest.x[shared.rnd(timing.kappa.Fireworks.dest.x.length)];
         const cY = sH * timing.kappa.Fireworks.dest.y[shared.rnd(timing.kappa.Fireworks.dest.y.length)];
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time);
         const sendUp = Math.floor(tMS * timing.kappa.Fireworks.speed.rocket);
-        let s = 'height: ' + eH + 'px;';
-        s += ' width: ' + eH + 'px;';
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eW + 'px;';
         s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
-        const oK = kList[shared.rnd(kList.length)];
         let iArr = [];
-        iArr.push(_addEmoteToDoc(tInit, oK.url, 1, {style: s, classes: ['ktFireworkRocket']}, true, false, {x: cX, y: cY}));
+        iArr.push(_addEmoteToDoc(tInit, oK.url, 1, {style: s, classes: ['ktFireworkRocket']}, true, false, {x: cX - eWh, y: cY}));
         if (oK.hasOwnProperty('zwe'))
         {
          for (let i = 0, l = oK.zwe.length; i < l; i++)
          {
           _eActive++;
-          iArr.push(_addEmoteToDoc(tInit, oK.zwe[i].url, 1, {style: s, classes: ['ktFireworkRocket']}, true, false, {x: cX, y: cY}));
+          iArr.push(_addEmoteToDoc(tInit, oK.zwe[i].url, 1, {style: s, classes: ['ktFireworkRocket']}, true, false, {x: cX - eWh, y: cY}));
          }
         }
         window.setTimeout(_explode, sendUp, tInit, kList, iArr, cX, cY, eH, sW, sH, iKC);
@@ -3132,13 +3143,16 @@
          if (_iTitanic > tInit)
           return;
          const sK = kList[shared.rnd(lK)];
+         let eW = eH;
+         if (sK.hasOwnProperty('width') && sK.hasOwnProperty('height'))
+          eW = sK.width / sK.height * eH;
          const sA = shared.rnd();
-         _sparkler(tInit, sK.url, cX, cY, eH, sR, sA);
+         _sparkler(tInit, sK.url, cX, cY, eW, eH, sR, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(tInit, sK.zwe[i].url, cX, cY, eH, sR, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, eW, eH, sR, sA);
           }
          }
          if (v % fA.ct === fA.ct - 1)
@@ -3152,13 +3166,16 @@
          if (_iTitanic > tInit)
           return;
          const sK = kList[shared.rnd(lK)];
+         let eW = eH;
+         if (sK.hasOwnProperty('width') && sK.hasOwnProperty('height'))
+          eW = sK.width / sK.height * eH;
          const sA = shared.rnd();
-         _sparkler(tInit, sK.url, cX, cY, eH, mR, sA);
+         _sparkler(tInit, sK.url, cX, cY, eW, eH, mR, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(tInit, sK.zwe[i].url, cX, cY, eH, mR, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, eW, eH, mR, sA);
           }
          }
          if (v % dT === dT - 1)
@@ -3171,13 +3188,16 @@
          if (_iTitanic > tInit)
           return;
          const sK = kList[shared.rnd(lK)];
+         let eW = eH;
+         if (sK.hasOwnProperty('width') && sK.hasOwnProperty('height'))
+          eW = sK.width / sK.height * eH;
          const sA = shared.rnd();
-         _sparkler(tInit, sK.url, cX, cY, eH, lR, sA);
+         _sparkler(tInit, sK.url, cX, cY, eW, eH, lR, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(tInit, sK.zwe[i].url, cX, cY, eH, lR, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, eW, eH, lR, sA);
           }
          }
          if (v % fA.ct === fA.ct - 1)
@@ -3185,17 +3205,19 @@
         }
        }
 
-       function _sparkler(tInit, url, cX, cY, eH, r, a)
+       function _sparkler(tInit, url, cX, cY, eW, eH, r, a)
        {
         if (_iTitanic > tInit)
          return;
         const th = a * _cRadius;
-        const hD = Math.floor(cX + r * Math.cos(th));
+        const eWh = Math.ceil(eW / 2);
+        const eX = cX - eWh;
+        const hD = Math.floor(eX + r * Math.cos(th));
         const vD = Math.floor(cY + r * Math.sin(th));
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time);
-        let s = 'height: ' + eH + 'px;';
-        s += ' width: ' + eH + 'px;';
-        s += ' transform: translate(' + cX + 'px, ' + cY + 'px);';
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eW + 'px;';
+        s += ' transform: translate(' + eX + 'px, ' + cY + 'px);';
         s += _styleEmote([], [], [], [], [], [], true, false, true, false, tMS);
         _addEmoteToDoc(tInit, url, 1, {style: s, classes: ['ktFireworkSparkler']}, false, {space: false, time: tMS}, {x: hD, y: vD});
        }
@@ -3210,7 +3232,7 @@
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        const oX = shared.rnd(sW - eH);
+        const oX = shared.rnd() * sW;
         const oY = shared.rnd(sH - eH);
         const r = Math.min(sW, sH);
         shared.doNextFrame(_init, tInit, kList, oX, oY, eH, r, iKC);
@@ -3244,13 +3266,17 @@
            th-= _cRadius;
          }
          const oK = kList[shared.rnd(kList.length)];
-         _sparkler(tInit, oK.url, oX, oY, eH, r, th);
+         let eW = eH;
+         if (oK.hasOwnProperty('width') && oK.hasOwnProperty('height'))
+          eW = oK.width / oK.height * eH;
+         const eWh = Math.ceil(eW / 2);
+         _sparkler(tInit, oK.url, oX - eWh, oY, eW, eH, r, th);
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, m = oK.zwe.length; j < m; j++)
           {
            _eActive++;
-           _sparkler(tInit, oK.zwe[j].url, oX, oY, eH, r, th);
+           _sparkler(tInit, oK.zwe[j].url, oX - eWh, oY, eW, eH, r, th);
           }
          }
          if (i % sA.ct === sA.ct - 1)
@@ -3258,15 +3284,15 @@
         }
        }
 
-       function _sparkler(tInit, url, oX, oY, eH, r, th)
+       function _sparkler(tInit, url, oX, oY, eW, eH, r, th)
        {
         if (_iTitanic > tInit)
          return;
         const hD = Math.floor(oX + r * Math.cos(th));
         const vD = Math.floor(oY + r * Math.sin(th));
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time);
-        let s = 'height: ' + eH + 'px;';
-        s += ' width: ' + eH + 'px;';
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eW + 'px;';
         s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
         s += _styleEmote([], [], [], [], [], [], true, false, true, false, tMS);
         _addEmoteToDoc(tInit, url, 1, {style: s, classes: ['ktSpiral']}, false, {space: false, time: tMS}, {x: hD, y: vD});
@@ -3325,15 +3351,15 @@
         if (_iTitanic > tInit)
          return;
         let img = document.createElement('img');
-        img.setAttribute('class', 'emote ktPyramid');
+        img.setAttribute('class', 'emote fit ktPyramid');
         _setImgSrc(img, url);
         const h = Math.floor(eH * x);
         const v = -1 * eH;
         const vD = sH - eH * dX;
         let s = 'top: 0px;';
         s += ' left: ' + h + 'px;';
-        s += ' height: ' + eH + 'px;';
-        s += ' width: ' + eH + 'px;';
+        s += ' --emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eH + 'px;';
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
@@ -3413,15 +3439,15 @@
         if (_iTitanic > tInit)
          return;
         let img = document.createElement('img');
-        img.setAttribute('class', 'emote ktSmallPyramid');
+        img.setAttribute('class', 'emote fit ktSmallPyramid');
         _setImgSrc(img, url);
         const h = oX + eH * x;
         const v = -1 * eH;
         const vD = sH - eH * dX;
         let s = 'top: 0px;';
         s += ' left: ' + h + 'px;';
-        s += ' height: ' + eH + 'px;';
-        s += ' width: ' + eH + 'px;';
+        s += ' --emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eH + 'px;';
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
@@ -3467,24 +3493,33 @@
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time);
         const tSpeed = Math.floor(tMS * timing.kappa.Stampede.speed);
         const t1 = Math.floor(tSpeed * timing.kappa.Stampede.pause['1']);
-        await _stampede(tInit, kList, b1, t1, false, bandTop, bandHeight, d, sW, eH);
+        let maxW = 0;
+        for (let i = 0; i < kList.length; i++)
+        {
+         let eW = eH;
+         if (kList[i].hasOwnProperty('width') && kList[i].hasOwnProperty('height'))
+          eW = kList[i].width / kList[i].height * eH;
+         if (eW > maxW)
+          maxW = eW;
+        }
+        await _stampede(tInit, kList, b1, t1, false, bandTop, bandHeight, d, sW, eH, maxW);
         if (_iTitanic > tInit)
          return;
         const t2 = Math.floor(tSpeed * timing.kappa.Stampede.pause['2']);
-        await _stampede(tInit, kList, b2, t2, false, bandTop, bandHeight, d, sW, eH);
+        await _stampede(tInit, kList, b2, t2, false, bandTop, bandHeight, d, sW, eH, maxW);
         if (_iTitanic > tInit)
          return;
         let sA = _kAcTime(iKC, tMS);
         if (sA.ct > timing.kappa.Stampede.maxdensity)
          sA.ct = timing.kappa.Stampede.maxdensity;
-        await _stampede(tInit, kList, iKC, hasB4, sA, bandTop, bandHeight, d, sW, eH);
+        await _stampede(tInit, kList, iKC, hasB4, sA, bandTop, bandHeight, d, sW, eH, maxW);
         if (_iTitanic > tInit)
          return;
         if (hasB4)
-         await _stampede(tInit, kList, b4, false, false, bandTop, bandHeight, d, sW, eH);
+         await _stampede(tInit, kList, b4, false, false, bandTop, bandHeight, d, sW, eH, maxW);
        }
 
-       async function _stampede(tInit, kList, ct, pause, sA, bandTop, bandHeight, d, sW, eH)
+       async function _stampede(tInit, kList, ct, pause, sA, bandTop, bandHeight, d, sW, eH, maxW)
        {
         if (_iTitanic > tInit)
          return;
@@ -3494,13 +3529,16 @@
          if (_iTitanic > tInit)
           return;
          const oK = kList[shared.rnd(kList.length)];
+         let eW = eH;
+         if (oK.hasOwnProperty('width') && oK.hasOwnProperty('height'))
+          eW = oK.width / oK.height * eH;
          const y = bandTop + shared.rnd(bandHeight);
-         imgs.push(_run(tInit, oK.url, y, d, sW, eH));
+         imgs.push(_run(tInit, oK.url, y, d, sW, eW, eH, maxW));
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, l = oK.zwe.length; j < l; j++)
           {
-           _run(tInit, oK.zwe[j].url, y, d, sW, eH);
+           _run(tInit, oK.zwe[j].url, y, d, sW, eW, eH, maxW);
           }
          }
          if (sA === false)
@@ -3539,15 +3577,15 @@
         } while (imgs.length > 0);
        }
 
-       function _run(tInit, url, v, d, sW, eH)
+       function _run(tInit, url, v, d, sW, eW, eH, maxW)
        {
         if (_iTitanic > tInit)
          return;
-        const h = -2 * eH;
+        const h = -2 * maxW;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time);
         const tSpeed = Math.floor(tMS * timing.kappa.Stampede.speed);
-        let s = 'height: ' + eH + 'px;';
-        s += ' width: ' + eH + 'px;';
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eW + 'px;';
         if (d)
          s += ' transform: translate(' + sW + 'px, ' + v + 'px);';
         else
@@ -3557,7 +3595,7 @@
         if (d)
          img = _addEmoteToDoc(tInit, url, 1, {style: s, classes: ['ktStampede']}, true, {space: false, time: tSpeed}, {x: h, y: v});
         else
-         img = _addEmoteToDoc(tInit, url, 1, {style: s, classes: ['ktStampede']}, true, {space: false, time: tSpeed}, {x: sW + eH, y: v});
+         img = _addEmoteToDoc(tInit, url, 1, {style: s, classes: ['ktStampede']}, true, {space: false, time: tSpeed}, {x: sW, y: v});
         window.setTimeout(_tMark, tSpeed, tInit, img);
         return img;
        }
@@ -3718,10 +3756,10 @@
         let box = document.createElement('div');
         box.setAttribute('class', 'scene ktCongaIn');
         let img = document.createElement('img');
-        img.setAttribute('class', 'dancer');
+        img.setAttribute('class', 'dancer fit');
         _setImgSrc(img, url);
-        let s = 'width: ' + eH + 'px;';
-        s += ' height: ' + eH + 'px;';
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eH + 'px;';
         img.setAttribute('style', s);
         let sE = bS * col + xtra;
         let sB = sE - sW;
@@ -3733,8 +3771,8 @@
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.hide);
         s = 'top: ' + v + 'px;';
         s += ' left: 0px;';
-        s += ' width: ' + bS + 'px;';
         s += ' height: ' + bS + 'px;';
+        s += ' width: ' + bS + 'px;';
         s += ' z-index: ' + v + ';';
         s += ' transform: translateX(' + sB + 'px);';
         box.setAttribute('style', s);
@@ -3784,46 +3822,36 @@
         const sWm = Math.ceil(sW / 2);
         const sHm = Math.ceil(sH / 2);
         let scene = document.createElement('div');
-        scene.setAttribute('class', 'scene cube kappa');
-        scene.setAttribute('width', eH);
-        scene.setAttribute('height', eH);
+        scene.setAttribute('class', 'scene fit cube kappa');
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.TheCube.time);
         let cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
         cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
-        let f = 'height: ' + eH + 'px;';
-        f += ' width: ' + eH + 'px;';
         if (!eInf.hasOwnProperty('zwe') || eInf.zwe.length === 0)
         {
          let cubeF = document.createElement('img');
          _setImgSrc(cubeF, eInf.url);
          cubeF.dataset.face = 'front';
-         cubeF.setAttribute('style', f);
          cube.appendChild(cubeF);
          let cubeB = document.createElement('img');
          _setImgSrc(cubeB, eInf.url);
          cubeB.dataset.face = 'back';
-         cubeB.setAttribute('style', f);
          cube.appendChild(cubeB);
          let cubeR = document.createElement('img');
          _setImgSrc(cubeR, eInf.url);
          cubeR.dataset.face = 'right';
-         cubeR.setAttribute('style', f);
          cube.appendChild(cubeR);
          let cubeL = document.createElement('img');
          _setImgSrc(cubeL, eInf.url);
          cubeL.dataset.face = 'left';
-         cubeL.setAttribute('style', f);
          cube.appendChild(cubeL);
          let cubeT = document.createElement('img');
          _setImgSrc(cubeT, eInf.url);
          cubeT.dataset.face = 'top';
-         cubeT.setAttribute('style', f);
          cube.appendChild(cubeT);
          let cubeU = document.createElement('img');
          _setImgSrc(cubeU, eInf.url);
          cubeU.dataset.face = 'bottom';
-         cubeU.setAttribute('style', f);
          cube.appendChild(cubeU);
         }
         else
@@ -3831,91 +3859,73 @@
          const lZ = eInf.zwe.length;
          let cubeF = document.createElement('div');
          cubeF.dataset.face = 'front';
-         cubeF.setAttribute('style', f);
          let pctF = document.createElement('img');
          _setImgSrc(pctF, eInf.url);
-         pctF.setAttribute('style', f);
          cubeF.appendChild(pctF);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.setAttribute('style', f);
           cubeF.appendChild(pctZ);
          }
          cube.appendChild(cubeF);
          let cubeB = document.createElement('div');
          cubeB.dataset.face = 'back';
-         cubeB.setAttribute('style', f);
          let pctB = document.createElement('img');
          _setImgSrc(pctB, eInf.url);
-         pctB.setAttribute('style', f);
          cubeB.appendChild(pctB);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.setAttribute('style', f);
           cubeB.appendChild(pctZ);
          }
          cube.appendChild(cubeB);
          let cubeR = document.createElement('div');
          cubeR.dataset.face = 'right';
-         cubeR.setAttribute('style', f);
          let pctR = document.createElement('img');
          _setImgSrc(pctR, eInf.url);
-         pctR.setAttribute('style', f);
          cubeR.appendChild(pctR);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.setAttribute('style', f);
           cubeR.appendChild(pctZ);
          }
          cube.appendChild(cubeR);
          let cubeL = document.createElement('div');
          cubeL.dataset.face = 'left';
-         cubeL.setAttribute('style', f);
          let pctL = document.createElement('img');
          _setImgSrc(pctL, eInf.url);
-         pctL.setAttribute('style', f);
          cubeL.appendChild(pctL);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.setAttribute('style', f);
           cubeL.appendChild(pctZ);
          }
          cube.appendChild(cubeL);
          let cubeT = document.createElement('div');
          cubeT.dataset.face = 'top';
-         cubeT.setAttribute('style', f);
          let pctT = document.createElement('img');
          _setImgSrc(pctT, eInf.url);
-         pctT.setAttribute('style', f);
          cubeT.appendChild(pctT);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.setAttribute('style', f);
           cubeT.appendChild(pctZ);
          }
          cube.appendChild(cubeT);
          let cubeU = document.createElement('div');
          cubeU.dataset.face = 'bottom';
-         cubeU.setAttribute('style', f);
          let pctU = document.createElement('img');
          _setImgSrc(pctU, eInf.url);
-         pctU.setAttribute('style', f);
          cubeU.appendChild(pctU);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.setAttribute('style', f);
           cubeU.appendChild(pctZ);
          }
          cube.appendChild(cubeU);
@@ -3928,8 +3938,8 @@
          h = Math.floor(sWm - eHh);
          v = Math.floor(sHm - eHh);
         }
-        let s = 'width: ' + eH + 'px;';
-        s += ' height: ' + eH + 'px;';
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eH + 'px;';
         s += ' --cube-depth: ' + eHh + 'px;';
         s += ' perspective: ' + eH * 3 + 'px;';
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
@@ -4062,15 +4072,15 @@
         if (_iTitanic > tInit)
          return;
         let img = document.createElement('img');
-        img.setAttribute('class', 'emote');
+        img.setAttribute('class', 'emote fit');
         _setImgSrc(img, url);
         const h = oX + eH * x;
         const v = -1 * eH;
         const vD = vH - eH * dX;
         let s = 'top: 0px;';
         s += ' left: ' + h + 'px;';
-        s += ' height: ' + eH + 'px;';
-        s += ' width: ' + eH + 'px;';
+        s += ' --emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eH + 'px;';
         s += ' transition: transform ' + tPerB + 'ms ease-in;';
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
@@ -4422,11 +4432,9 @@
       const sH = window.innerHeight;
       const eH = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
       const eHh = Math.max(cfg.emote.size.min, Math.min(Math.floor(cfg.emote.size.max / 2), Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small)));
-      const sR = sW - eH;
       const sB = sH - eH;
       document.documentElement.style.setProperty('--height', sH + 'px');
       document.documentElement.style.setProperty('--width', sW + 'px');
-      document.documentElement.style.setProperty('--emote-height', eH + 'px');
       const waitFor = _getKappaCountEstimate(kStyle);
       if (!_canShowKappa(kStyle))
       {
@@ -4518,7 +4526,7 @@
         _list.TheCube(kList[rC], sW, sH, Math.floor(cS * sCS), sCC, sCR);
         break;
        case 'Burst':
-        const oH = _rndFromRange(timing.kappa[kStyle.style].left) * sR;
+        const oH = _rndFromRange(timing.kappa[kStyle.style].left);
         const oV = _rndFromRange(timing.kappa[kStyle.style].top) * sB;
         const bA = _kAcTime(kStyle.count, estMS);
         for (let i = 0; i < kStyle.count; i++)
@@ -4527,13 +4535,17 @@
           return;
          const rB = shared.rnd(lK);
          _eActive--;
-         display.emote.list.StraightLine(kList[rB], sW, sH, eH, oH, oV, false, tInit);
+         let eWb = eH;
+         if (kList[rB].hasOwnProperty('width') && kList[rB].hasOwnProperty('height'))
+          eWb = kList[rB].width / kList[rB].height * eH;
+         const sRb = sW - Math.ceil(eWb / 2);
+         display.emote.list.StraightLine(kList[rB], sW, sH, eH, oH * sRb, oV, false, tInit);
          if (i % bA.ct === bA.ct - 1)
           await _fPause(bA.f);
         }
         break;
        case 'Fountain':
-        const fX = _rndFromRange(timing.kappa[kStyle.style].left) * sR;
+        const fX = _rndFromRange(timing.kappa[kStyle.style].left) * sW;
         const fY = _rndFromRange(timing.kappa[kStyle.style].top);
         const fA = _kAcTime(kStyle.count, estMS);
         for (let i = 0; i < kStyle.count; i++)
@@ -10579,6 +10591,28 @@
      a += '    transform: scale(' + timing.display.Crazy.squash.height + ', ' + timing.display.Crazy.squash.width + ');\n';
      a += '   }\n';
      h = h.replace('   [data-squash="no"]\n', a + '   [data-squash="no"]\n');
+     if (cfg.display.extended.useZWE && cfg.display.extended.hasOwnProperty('fillZWE') && cfg.display.extended.fillZWE)
+     {
+      h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.1)) / 2);');
+      h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.8)) / 2);');
+      h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.95)) / 2);');
+      h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.1)) / 2);');
+      let z = '   img.fit,\n';
+      z += '   .fit img\n';
+      z += '   {\n';
+      z += '    object-fit: contain;\n';
+      z += '    object-position: 50% 50%;\n';
+      z += '   }\n';
+      h = h.replace('   img\n   {\n', z + '   img\n   {\n');
+     }
+     else
+     {
+      let z = '   img\n';
+      z += '   {\n';
+      z += '    object-fit: contain;\n';
+      z += '    object-position: 50% 50%;\n';
+      h = h.replace('   img\n   {\n', z);
+     }
      let t = '   .etStraightLine\n';
      t += '   {\n';
      t += '    transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time) + 'ms;\n';
@@ -10670,7 +10704,9 @@
     --height: 0px;
     --width: 0px;
     --emote-height: 0px;
+    --emote-width: 0px;
     --zoom-height: var(--emote-height);
+    --zoom-width: var(--emote-width);
    }
    body
    {
@@ -10679,13 +10715,13 @@
    }
    img
    {
-    object-fit: contain;
-    object-position: 50% 50%;
+    box-sizing: border-box;
+    height: var(--emote-height);
+    width: var(--emote-width);
    }
    img.emote
    {
     position: fixed;
-    height: 100%;
     border: 0;
     margin: 0;
     padding: 0;
@@ -10699,12 +10735,27 @@
     margin: 0;
     padding: 0;
    }
+   div.scene.cube
+   {
+    height: var(--emote-height);
+    width: var(--emote-width);
+   }
    div.scene div.cube
    {
     width: 100%;
     height: 100%;
     position: relative;
     transform-style: preserve-3d;
+   }
+   div.scene div.cube div[data-face]
+   {
+    height: var(--emote-height);
+    width: var(--emote-width);
+   }
+   div.scene div.cube div[data-face] img
+   {
+    position: absolute;
+    transform: translateZ(var(--cube-depth));
    }
    div.scene div.cube [data-face]
    {
@@ -10734,11 +10785,6 @@
    div.scene div.cube [data-face="bottom"]
    {
     transform: rotateX(-90deg) translateZ(var(--cube-depth));
-   }
-   div.scene div.cube div[data-face] img
-   {
-    position: absolute;
-    transform: translateZ(var(--cube-depth));
    }
 
    div.scene img.dancer
@@ -11001,22 +11047,25 @@
     }
    }
 
-   [data-squash="no"]
-   {
-    transform: scale(1, 1);
-   }
-
    .eNorm
    {
     --zoom-height: var(--emote-height);
+    --zoom-width: var(--emote-width);
    }
    .eHalf
    {
     --zoom-height: calc(var(--emote-height) / 2);
+    --zoom-width: calc(var(--emote-width) / 2);
    }
    .eDouble
    {
     --zoom-height: calc(var(--emote-height) * 2);
+    --zoom-width: calc(var(--emote-width) * 2);
+   }
+
+   [data-squash="no"]
+   {
+    transform: scale(1, 1);
    }
 
    [data-origin="center"]
@@ -11088,45 +11137,27 @@
    {
     0%
     {
-     margin: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2);
-     height: calc(var(--zoom-height) * 0.1);
-     width: calc(var(--zoom-height) * 0.1);
+     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;
     }
     24% /* 4% */
     {
-     margin: calc((var(--zoom-height) - (var(--zoom-height) * 1.2)) / 2);
-     height: calc(var(--zoom-height) * 1.2);
-     width: calc(var(--zoom-height) * 1.2);
-    }
-    35% /* 6% */
-    {
-     margin: 0;
-     height: var(--zoom-height);
-     width: var(--zoom-height);
+     padding: 0;
     }
     47% /* 8% */
     {
-     margin: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2);
-     height: calc(var(--zoom-height) * 0.8);
-     width: calc(var(--zoom-height) * 0.8);
+     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) 0;
     }
     71% /* 12% */
     {
-     margin: 0;
-     height: var(--zoom-height);
-     width: var(--zoom-height);
+     padding: 0;
     }
     88% /* 15% */
     {
-     margin: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2);
-     height: calc(var(--zoom-height) * 0.95);
-     width: calc(var(--zoom-height) * 0.95);
+     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) 0;
     }
     100% /* 17% */
     {
-     margin: 0;
-     height: var(--zoom-height);
-     width: var(--zoom-height);
+     padding: 0;
     }
    }
 
@@ -11134,15 +11165,11 @@
    {
     0% /* 95% */
     {
-     margin: 0;
-     height: var(--zoom-height);
-     width: var(--zoom-height);
+     padding: 0;
     }
     100%
     {
-     margin: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2);
-     height: calc(var(--zoom-height) * 0.1);
-     width: calc(var(--zoom-height) * 0.1);
+     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;
     }
    }
 
