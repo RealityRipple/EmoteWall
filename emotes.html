@@ -2061,7 +2061,7 @@
 
      const $list = function()
      {
-      function $Still(eInf, sW, sH, sS, canV = true, tInit = 0)
+      function $Still(eInf, sW, sH, eH, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2075,15 +2075,15 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS / 2);
+        eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
-        sS = sS * 2;
-       const h = shared.rnd(sW - sS);
-       const v = shared.rnd(sH - sS);
+        eH = eH * 2;
+       const h = shared.rnd(sW - eH);
+       const v = shared.rnd(sH - eH);
        let s = 'top: ' + v + 'px;';
        s += ' left: ' + h + 'px;';
-       s += ' height: ' + sS + 'px;';
-       s += ' width: ' + sS + 'px;';
+       s += ' height: ' + eH + 'px;';
+       s += ' width: ' + eH + 'px;';
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Still.time);
        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
        _addEmoteToDoc(tInit, eInf.url, variationSize, {style: s}, false, {space: false, time: tMS});
@@ -2096,7 +2096,7 @@
        }
       }
 
-      function $StraightLine(eInf, sW, sH, sS, x = false, y = false, canV = true, tInit = 0)
+      function $StraightLine(eInf, sW, sH, eH, x = false, y = false, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2110,30 +2110,30 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS / 2);
+        eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
-        sS = sS * 2;
-       const sSm = Math.ceil(sS / 2);
+        eH = eH * 2;
+       const eHh = Math.ceil(eH / 2);
        let h = x;
        if (h === false)
-        h = shared.rnd(sW) - sSm;
+        h = shared.rnd(sW) - eHh;
        let v = y;
        if (v === false)
-        v = shared.rnd(sH) - sSm;
+        v = shared.rnd(sH) - eHh;
        const r = Math.min(sW, sH) * (shared.rnd() + 1);
        let th = shared.rnd() * _cRadius;
        if (!x && !y)
        {
-        const nS = sS * -1;
-        while (!_safePoints(h, v, th, r, nS, nS, sW, sH))
+        const nH = eH * -1;
+        while (!_safePoints(h, v, th, r, nH, nH, sW, sH))
         {
          th = shared.rnd() * _cRadius;
         }
        }
        let hD = Math.floor(h + r * Math.cos(th));
        let vD = Math.floor(v + r * Math.sin(th));
-       let s = 'height: ' + sS + 'px;';
-       s += ' width: ' + sS + 'px;';
+       let s = 'height: ' + eH + 'px;';
+       s += ' width: ' + eH + 'px;';
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time);
        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
@@ -2147,7 +2147,7 @@
        }
       }
 
-      function $Rise(eInf, sW, sH, sS, canV = true, tInit = 0)
+      function $Rise(eInf, sW, sH, eH, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2161,19 +2161,19 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS / 2);
+        eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
-        sS = sS * 2;
-       const sSm = Math.ceil(sS / 2);
-       const h = shared.rnd(sW) - sSm;
+        eH = eH * 2;
+       const eHh = Math.ceil(eH / 2);
+       const h = shared.rnd(sW) - eHh;
        const v = Math.floor(sH * _rndFromRange(timing.display.Rise.origin));
        let s = 'left: ' + h + 'px;';
-       s += ' height: ' + sS + 'px;';
-       s += ' width: ' + sS + 'px;';
+       s += ' height: ' + eH + 'px;';
+       s += ' width: ' + eH + 'px;';
        if (cfg.emote.out.fade || cfg.emote.out.zoom)
         s += ' offset-path: path("M 0 ' + v + ' L 0 ' + Math.floor(v * 0.05) + '") ;';
        else
-        s += ' offset-path: path("M 0 ' + v + ' L 0 -' + sS + '") ;';
+        s += ' offset-path: path("M 0 ' + v + ' L 0 -' + eH + '") ;';
        let aNames = [];
        let aDelays = [];
        let aDurs = [];
@@ -2211,7 +2211,7 @@
 
       const $Bounce = function()
       {
-       function task(eInf, sW, sH, sS, canV = true, tInit = 0)
+       function task(eInf, sW, sH, eH, canV = true, tInit = 0)
        {
         if (tInit === 0)
          tInit = new Date().getTime();
@@ -2225,21 +2225,21 @@
           variationSize = 1;
         }
         if (variationSize === 0)
-         sS = Math.ceil(sS / 2);
+         eH = Math.ceil(eH / 2);
         else if (variationSize === 2)
-         sS = sS * 2;
-        const sSm = Math.ceil(sS / 2);
+         eH = eH * 2;
+        const eHh = Math.ceil(eH / 2);
         const sWm = Math.ceil(sW / 2);
-        const h = Math.floor(shared.rnd(sW) - sSm);
+        const h = Math.floor(shared.rnd(sW) - eHh);
         const v = Math.floor(sH * _rndFromRange(timing.display.Bounce.origin));
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Bounce.time);
         const vMS = (tMS / 300 / (16 + 2 / 3));
         let velH = _rndFromRange(timing.display.Bounce.velocity.h);
         const velV = _rndFromRange(timing.display.Bounce.velocity.v);
-        if (h + sSm > sWm)
+        if (h + eHh > sWm)
          velH = -1 * velH;
-        let s = 'height: ' + sS + 'px;';
-        s += ' width: ' + sS + 'px;';
+        let s = 'height: ' + eH + 'px;';
+        s += ' width: ' + eH + 'px;';
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         let bX = h;
@@ -2253,10 +2253,10 @@
           iArr.push(_addEmoteToDoc(tInit, eInf.zwe[i].url, variationSize, {style: s}, true, {time: tMS}));
          }
         }
-        window.requestAnimationFrame(function(ts){_tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, sS, ts, ts);});
+        window.requestAnimationFrame(function(ts){_tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, eH, ts, ts);});
        }
 
-       function _tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, sS, myT, ts)
+       function _tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, eH, myT, ts)
        {
         if (_iTitanic > tInit)
          return;
@@ -2275,7 +2275,7 @@
          bX += velH / vMS;
          bY += velV / vMS;
          velV += timing.display.Bounce.gravity / vMS;
-         const sB = sH - sS;
+         const sB = sH - eH;
          if (bY >= sB)
          {
           bY = sB;
@@ -2287,13 +2287,13 @@
         {
          iArr[i].style.transform = 'translate(' + bX + 'px, ' + bY + 'px)';
         }
-        window.requestAnimationFrame(function(fTS){_tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, sS, myT, fTS);});
+        window.requestAnimationFrame(function(fTS){_tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, eH, myT, fTS);});
        }
 
        return task;
       }();
 
-      function $Speed(eInf, sW, sH, sS, canV = true, tInit = 0)
+      function $Speed(eInf, sW, sH, eH, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2307,17 +2307,17 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS / 2);
+        eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
-        sS = sS * 2;
-       const sSm = Math.ceil(sS / 2);
+        eH = eH * 2;
+       const eHh = Math.ceil(eH / 2);
        const sWm = Math.ceil(sW / 2);
-       const h = shared.rnd(sW) - sSm;
+       const h = shared.rnd(sW) - eHh;
        const v = Math.floor(sH * _rndFromRange(timing.display.Speed.origin));
        let s = 'top: ' + v + 'px;';
        s += ' left: ' + h + 'px;';
-       s += ' height: ' + sS + 'px;';
-       s += ' width: ' + sS + 'px;';
+       s += ' height: ' + eH + 'px;';
+       s += ' width: ' + eH + 'px;';
        let aNames = [];
        let aDelays = [];
        let aDurs = [];
@@ -2325,7 +2325,7 @@
        let aFills = [];
        let aIters = [];
        let dsO = {};
-       if (h + sSm > sWm)
+       if (h + eHh > sWm)
        {
         dsO.origin = 'right';
         aNames.push('speedL');
@@ -2353,7 +2353,7 @@
        }
       }
 
-      function $Drop(eInf, sW, sH, sS, canV = true, tInit = 0)
+      function $Drop(eInf, sW, sH, eH, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2367,14 +2367,14 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS / 2);
+        eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
-        sS = sS * 2;
-       const sSm = Math.ceil(sS / 2);
-       const h = shared.rnd(sW) - sSm;
+        eH = eH * 2;
+       const eHh = Math.ceil(eH / 2);
+       const h = shared.rnd(sW) - eHh;
        let s = 'left: ' + h + 'px;';
-       s += ' height: ' + sS + 'px;';
-       s += ' width: ' + sS + 'px;';
+       s += ' height: ' + eH + 'px;';
+       s += ' width: ' + eH + 'px;';
        let aNames = [];
        let aDelays = [];
        let aDurs = [];
@@ -2418,7 +2418,7 @@
         * due to transform-origin changes during squash
         */
 
-       function task(eInf, sW, sH, sS, canV = true, tInit = 0)
+       function task(eInf, sW, sH, eH, canV = true, tInit = 0)
        {
         if (tInit === 0)
          tInit = new Date().getTime();
@@ -2432,17 +2432,17 @@
           variationSize = 1;
         }
         if (variationSize === 0)
-         sS = Math.ceil(sS / 2);
+         eH = Math.ceil(eH / 2);
         else if (variationSize === 2)
-         sS = sS * 2;
-        const sR = sW - sS;
-        const sB = sH - sS;
+         eH = eH * 2;
+        const sR = sW - eH;
+        const sB = sH - eH;
         const h = shared.rnd(sR - 5) + 10;
         const v = shared.rnd(sB - 5) + 10;
         let s = 'top: ' + v + 'px;';
         s += ' left: ' + h + 'px;';
-        s += ' height: ' + sS + 'px;';
-        s += ' width: ' + sS + 'px;';
+        s += ' height: ' + eH + 'px;';
+        s += ' width: ' + eH + 'px;';
         let dests = [];
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Crazy.time);
         const rate = Math.sqrt(timing.display.Crazy.distance ** 2 / 2) / tMS;
@@ -2574,7 +2574,7 @@
        return task;
       }();
 
-      function $Confetti(eInf, sW, sH, sS, canV = true, tInit = 0)
+      function $Confetti(eInf, sW, sH, eH, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2588,14 +2588,14 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS / 2);
+        eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
-        sS = sS * 2;
-       const sSm = Math.ceil(sS / 2);
-       const h = shared.rnd(sW) - sSm;
+        eH = eH * 2;
+       const eHh = Math.ceil(eH / 2);
+       const h = shared.rnd(sW) - eHh;
        let s = 'left: ' + h + 'px;';
-       s += ' height: ' + sS + 'px;';
-       s += ' width: ' + sS + 'px;';
+       s += ' height: ' + eH + 'px;';
+       s += ' width: ' + eH + 'px;';
        let aNames = [];
        let aDelays = [];
        let aDurs = [];
@@ -2633,7 +2633,7 @@
 
       const $Throw = function()
       {
-       function task(eInf, sW, sH, sS, canV = true, tInit = 0)
+       function task(eInf, sW, sH, eH, canV = true, tInit = 0)
        {
         if (tInit === 0)
          tInit = new Date().getTime();
@@ -2647,24 +2647,24 @@
           variationSize = 1;
         }
         if (variationSize === 0)
-         sS = Math.ceil(sS / 2);
+         eH = Math.ceil(eH / 2);
         else if (variationSize === 2)
-         sS = sS * 2;
-        const sR = sW - sS;
-        const sB = sH - sS;
-        const h = shared.rnd(2) === 0 ? sS * -1 : sW;
-        const v = shared.rnd(sH + sS) - sS;
+         eH = eH * 2;
+        const sR = sW - eH;
+        const sB = sH - eH;
+        const h = shared.rnd(2) === 0 ? eH * -1 : sW;
+        const v = shared.rnd(sH + eH) - eH;
         const hD = Math.floor(sR * _rndFromRange(timing.display.Throw.dest.h));
         const vD = Math.floor(sB * _rndFromRange(timing.display.Throw.dest.v));
-        const dH = shared.rnd() * sS;
+        const dH = shared.rnd() * eH;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time);
         const t2 = Math.floor(tMS * timing.display.Throw.toss);
         const t3 = Math.floor(tMS * timing.display.Throw.drop);
-        let s = 'height: ' + sS + 'px;';
-        s += ' width: ' + sS + 'px;';
+        let s = 'height: ' + eH + 'px;';
+        s += ' width: ' + eH + 'px;';
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-        let s2 = 'height: ' + sS + 'px;';
-        s2 += ' width: ' + sS + 'px;';
+        let s2 = 'height: ' + eH + 'px;';
+        s2 += ' width: ' + eH + 'px;';
         let r = '360';
         if (h > 0)
          r = '-360';
@@ -2746,7 +2746,7 @@
 
       const $TheCube = function()
       {
-       function task(eInf, sW, sH, sS, canV = true, tInit = 0)
+       function task(eInf, sW, sH, eH, canV = true, tInit = 0)
        {
         if (tInit === 0)
          tInit = new Date().getTime();
@@ -2762,19 +2762,19 @@
           variationSize = 1;
         }
         if (variationSize === 0)
-         sS = Math.ceil(sS / 2);
+         eH = Math.ceil(eH / 2);
         else if (variationSize === 2)
-         sS = sS * 2;
-        const sSm = Math.ceil(sS / 2);
-        const nSm = sSm * -1;
-        scene.setAttribute('width', sS);
-        scene.setAttribute('height', sS);
+         eH = eH * 2;
+        const eHh = Math.ceil(eH / 2);
+        const nHh = eHh * -1;
+        scene.setAttribute('width', eH);
+        scene.setAttribute('height', eH);
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time);
         let cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
-        cube.setAttribute('style', 'transform: translateZ(' + nSm + 'px);');
-        let f = 'height: ' + sS + 'px;';
-        f += ' width: ' + sS + 'px;';
+        cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
+        let f = 'height: ' + eH + 'px;';
+        f += ' width: ' + eH + 'px;';
         if (!eInf.hasOwnProperty('zwe') || eInf.zwe.length === 0)
         {
          let cubeF = document.createElement('img');
@@ -2903,35 +2903,35 @@
          cube.appendChild(cubeU);
         }
         scene.appendChild(cube);
-        const h = shared.rnd(sW) - sSm;
-        const v = shared.rnd(sH) - sSm;
+        const h = shared.rnd(sW) - eHh;
+        const v = shared.rnd(sH) - eHh;
         const r = Math.min(sW, sH) * (shared.rnd() + 1);
         let th = shared.rnd() * _cRadius;
-        const nS = sS * -1;
-        while (!_safePoints(h, v, th, r, nS, nS, sW, sH))
+        const nH = eH * -1;
+        while (!_safePoints(h, v, th, r, nH, nH, sW, sH))
         {
          th = shared.rnd() * _cRadius;
         }
         let hD = Math.floor(h + r * Math.cos(th));
         let vD = Math.floor(v + r * Math.sin(th));
-        let s = 'width: ' + sS + 'px;';
-        s += ' height: ' + sS + 'px;';
-        s += ' --cube-depth: ' + sSm + 'px;';
-        s += ' perspective: ' + sS * 3 + 'px;';
+        let s = 'width: ' + eH + 'px;';
+        s += ' height: ' + eH + 'px;';
+        s += ' --cube-depth: ' + eHh + 'px;';
+        s += ' perspective: ' + eH * 3 + 'px;';
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, tMS);
         scene.setAttribute('style', s);
         _eActive++;
         document.body.appendChild(scene);
         _gc.hook(scene, true, true, tMS);
-        shared.doNextFrame(_tMove, tInit, cube, scene, hD, vD, sS);
+        shared.doNextFrame(_tMove, tInit, cube, scene, hD, vD, eH);
        }
 
-       function _tMove(tInit, cube, scene, hD, vD, sS)
+       function _tMove(tInit, cube, scene, hD, vD, eH)
        {
         if (_iTitanic > tInit)
          return;
-        const nSm = Math.ceil(sS / 2) * -1;
+        const nHh = Math.ceil(eH / 2) * -1;
         let rX = 0;
         let rY = 0;
         while (Math.abs(rX) + Math.abs(rY) < 45)
@@ -2939,14 +2939,14 @@
          rX = (360 - shared.rnd() * 720) * cfg.emote.cube.rotations;
          rY = (360 - shared.rnd() * 720) * cfg.emote.cube.rotations;
         }
-        cube.style.transform = 'translateZ(' + nSm + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
+        cube.style.transform = 'translateZ(' + nHh + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
         scene.style.transform = 'translate(' + hD + 'px, ' + vD + 'px)';
        }
 
        return task;
       }();
 
-      function $Fountain(eInf, sW, sH, sS, fX, fY, canV = true, tInit = 0)
+      function $Fountain(eInf, sW, sH, eH, fX, fY, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2961,11 +2961,11 @@
          variationSize = 1;
        }
        if (variationSize === 0)
-        sS = Math.ceil(sS / 2);
+        eH = Math.ceil(eH / 2);
        else if (variationSize === 2)
-        sS = sS * 2;
-       const sR = sW - sS;
-       const sB = sH - sS;
+        eH = eH * 2;
+       const sR = sW - eH;
+       const sB = sH - eH;
        let h = fX;
        if (h === false)
         h = Math.floor(shared.rnd() * (sR * 0.33) + sR * 0.33);
@@ -2974,10 +2974,10 @@
         hD = h - shared.rnd(sR * 0.2);
        else
         hD = h + shared.rnd(sR * 0.2);
-       let s = 'height: ' + sS + 'px;';
-       s += ' width: ' + sS + 'px;';
+       let s = 'height: ' + eH + 'px;';
+       s += ' width: ' + eH + 'px;';
        s += ' transform: translateX(' + h + 'px);';
-       s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY * sH + shared.rnd(sB / 2)) + ' L 0 ' + (sH + sS) + '");';
+       s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY * sH + shared.rnd(sB / 2)) + ' L 0 ' + (sH + eH) + '");';
        let aNames = [];
        let aDelays = [];
        let aDurs = [];
@@ -3020,14 +3020,14 @@
      {
       const sW = window.innerWidth;
       const sH = window.innerHeight;
-      const sS = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
+      const eH = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
       document.documentElement.style.setProperty('--height', sH + 'px');
       document.documentElement.style.setProperty('--width', sW + 'px');
-      document.documentElement.style.setProperty('--emote-height', sS + 'px');
+      document.documentElement.style.setProperty('--emote-height', eH + 'px');
       let style = cfg.display.styles[shared.rnd(cfg.display.styles.length)];
       if (style === undefined)
        return;
-      display.emote.list[style](e, sW, sH, sS);
+      display.emote.list[style](e, sW, sH, eH);
      }
 
      function $showEmotes()
@@ -3080,20 +3080,20 @@
      {
       const $Fireworks = function()
       {
-       function task(kList, sW, sH, sS, iKC)
+       function task(kList, sW, sH, eH, iKC)
        {
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        const sSm = Math.ceil(sS / 2);
-        const oX = sW * timing.kappa.Fireworks.origin.x[shared.rnd(timing.kappa.Fireworks.origin.x.length)] - sSm;
+        const eHh = Math.ceil(eH / 2);
+        const oX = sW * timing.kappa.Fireworks.origin.x[shared.rnd(timing.kappa.Fireworks.origin.x.length)] - eHh;
         const oY = sH * timing.kappa.Fireworks.origin.y[shared.rnd(timing.kappa.Fireworks.origin.y.length)];
-        const cX = sW * timing.kappa.Fireworks.dest.x[shared.rnd(timing.kappa.Fireworks.dest.x.length)] - sSm;
+        const cX = sW * timing.kappa.Fireworks.dest.x[shared.rnd(timing.kappa.Fireworks.dest.x.length)] - eHh;
         const cY = sH * timing.kappa.Fireworks.dest.y[shared.rnd(timing.kappa.Fireworks.dest.y.length)];
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time);
         const sendUp = Math.floor(tMS * timing.kappa.Fireworks.speed.rocket);
-        let s = 'height: ' + sS + 'px;';
-        s += ' width: ' + sS + 'px;';
+        let s = 'height: ' + eH + 'px;';
+        s += ' width: ' + eH + 'px;';
         s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
         const oK = kList[shared.rnd(kList.length)];
         let iArr = [];
@@ -3106,10 +3106,10 @@
           iArr.push(_addEmoteToDoc(tInit, oK.zwe[i].url, 1, {style: s, classes: ['ktFireworkRocket']}, true, false, {x: cX, y: cY}));
          }
         }
-        window.setTimeout(_explode, sendUp, tInit, kList, iArr, cX, cY, sS, sW, sH, iKC);
+        window.setTimeout(_explode, sendUp, tInit, kList, iArr, cX, cY, eH, sW, sH, iKC);
        }
 
-       async function _explode(tInit, kList, iArr, cX, cY, sS, sW, sH, iKC)
+       async function _explode(tInit, kList, iArr, cX, cY, eH, sW, sH, iKC)
        {
         if (_iTitanic > tInit)
          return;
@@ -3133,12 +3133,12 @@
           return;
          const sK = kList[shared.rnd(lK)];
          const sA = shared.rnd();
-         _sparkler(tInit, sK.url, cX, cY, sS, sR, sA);
+         _sparkler(tInit, sK.url, cX, cY, eH, sR, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, sR, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, eH, sR, sA);
           }
          }
          if (v % fA.ct === fA.ct - 1)
@@ -3153,12 +3153,12 @@
           return;
          const sK = kList[shared.rnd(lK)];
          const sA = shared.rnd();
-         _sparkler(tInit, sK.url, cX, cY, sS, mR, sA);
+         _sparkler(tInit, sK.url, cX, cY, eH, mR, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, mR, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, eH, mR, sA);
           }
          }
          if (v % dT === dT - 1)
@@ -3172,12 +3172,12 @@
           return;
          const sK = kList[shared.rnd(lK)];
          const sA = shared.rnd();
-         _sparkler(tInit, sK.url, cX, cY, sS, lR, sA);
+         _sparkler(tInit, sK.url, cX, cY, eH, lR, sA);
          if (sK.hasOwnProperty('zwe'))
          {
           for (let i = 0, l = sK.zwe.length; i < l; i++)
           {
-           _sparkler(tInit, sK.zwe[i].url, cX, cY, sS, lR, sA);
+           _sparkler(tInit, sK.zwe[i].url, cX, cY, eH, lR, sA);
           }
          }
          if (v % fA.ct === fA.ct - 1)
@@ -3185,7 +3185,7 @@
         }
        }
 
-       function _sparkler(tInit, url, cX, cY, sS, r, a)
+       function _sparkler(tInit, url, cX, cY, eH, r, a)
        {
         if (_iTitanic > tInit)
          return;
@@ -3193,8 +3193,8 @@
         const hD = Math.floor(cX + r * Math.cos(th));
         const vD = Math.floor(cY + r * Math.sin(th));
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time);
-        let s = 'height: ' + sS + 'px;';
-        s += ' width: ' + sS + 'px;';
+        let s = 'height: ' + eH + 'px;';
+        s += ' width: ' + eH + 'px;';
         s += ' transform: translate(' + cX + 'px, ' + cY + 'px);';
         s += _styleEmote([], [], [], [], [], [], true, false, true, false, tMS);
         _addEmoteToDoc(tInit, url, 1, {style: s, classes: ['ktFireworkSparkler']}, false, {space: false, time: tMS}, {x: hD, y: vD});
@@ -3205,18 +3205,18 @@
 
       const $Spiral = function()
       {
-       function task(kList, sW, sH, sS, iKC)
+       function task(kList, sW, sH, eH, iKC)
        {
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        const oX = shared.rnd(sW - sS);
-        const oY = shared.rnd(sH - sS);
+        const oX = shared.rnd(sW - eH);
+        const oY = shared.rnd(sH - eH);
         const r = Math.min(sW, sH);
-        shared.doNextFrame(_init, tInit, kList, oX, oY, sS, r, iKC);
+        shared.doNextFrame(_init, tInit, kList, oX, oY, eH, r, iKC);
        }
 
-       async function _init(tInit, kList, oX, oY, sS, r, iKC)
+       async function _init(tInit, kList, oX, oY, eH, r, iKC)
        {
         if (_iTitanic > tInit)
          return;
@@ -3244,13 +3244,13 @@
            th-= _cRadius;
          }
          const oK = kList[shared.rnd(kList.length)];
-         _sparkler(tInit, oK.url, oX, oY, sS, r, th);
+         _sparkler(tInit, oK.url, oX, oY, eH, r, th);
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, m = oK.zwe.length; j < m; j++)
           {
            _eActive++;
-           _sparkler(tInit, oK.zwe[j].url, oX, oY, sS, r, th);
+           _sparkler(tInit, oK.zwe[j].url, oX, oY, eH, r, th);
           }
          }
          if (i % sA.ct === sA.ct - 1)
@@ -3258,15 +3258,15 @@
         }
        }
 
-       function _sparkler(tInit, url, oX, oY, sS, r, th)
+       function _sparkler(tInit, url, oX, oY, eH, r, th)
        {
         if (_iTitanic > tInit)
          return;
         const hD = Math.floor(oX + r * Math.cos(th));
         const vD = Math.floor(oY + r * Math.sin(th));
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time);
-        let s = 'height: ' + sS + 'px;';
-        s += ' width: ' + sS + 'px;';
+        let s = 'height: ' + eH + 'px;';
+        s += ' width: ' + eH + 'px;';
         s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
         s += _styleEmote([], [], [], [], [], [], true, false, true, false, tMS);
         _addEmoteToDoc(tInit, url, 1, {style: s, classes: ['ktSpiral']}, false, {space: false, time: tMS}, {x: hD, y: vD});
@@ -3285,7 +3285,7 @@
         let drawn = [];
         let ct = 0;
         const lP = pyramidDist.length;
-        const sS = sW / lP;
+        const eH = sW / lP;
         for (let i = 0; i < lP; i++)
         {
          drawn.push(0);
@@ -3306,13 +3306,13 @@
           x = shared.rnd(lP);
          while (drawn[x] >= pyramidDist[x]);
          const oK = kList[shared.rnd(kList.length)];
-         _block(tInit, oK.url, x, t, sS, sH, drawn[x] + 1, eT + dT);
+         _block(tInit, oK.url, x, t, eH, sH, drawn[x] + 1, eT + dT);
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, l = oK.zwe.length; j < l; j++)
           {
            _eActive++;
-           _block(tInit, oK.zwe[j].url, x, t, sS, sH, drawn[x] + 1, eT + dT);
+           _block(tInit, oK.zwe[j].url, x, t, eH, sH, drawn[x] + 1, eT + dT);
           }
          }
          drawn[x]++;
@@ -3320,20 +3320,20 @@
         }
        }
 
-       function _block(tInit, url, x, t, sS, sH, dX, aT)
+       function _block(tInit, url, x, t, eH, sH, dX, aT)
        {
         if (_iTitanic > tInit)
          return;
         let img = document.createElement('img');
         img.setAttribute('class', 'emote ktPyramid');
         _setImgSrc(img, url);
-        const h = Math.floor(sS * x);
-        const v = -1 * sS;
-        const vD = sH - sS * dX;
+        const h = Math.floor(eH * x);
+        const v = -1 * eH;
+        const vD = sH - eH * dX;
         let s = 'top: 0px;';
         s += ' left: ' + h + 'px;';
-        s += ' height: ' + sS + 'px;';
-        s += ' width: ' + sS + 'px;';
+        s += ' height: ' + eH + 'px;';
+        s += ' width: ' + eH + 'px;';
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
@@ -3372,7 +3372,7 @@
         let drawn = [];
         let ct = 0;
         const lP = pyramidDist.length;
-        const sS = Math.min(sW / lP, Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small));
+        const eH = Math.min(sW / lP, Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small));
         for (let i = 0; i < lP; i++)
         {
          drawn.push(0);
@@ -3383,7 +3383,7 @@
         const tPerB = Math.max(Math.floor(sT / ct), timing.kappa.SmallPyramid.show.min);
         const eT = tPerB * ct;
         const dT = Math.floor(tMS * timing.kappa.SmallPyramid.pause);
-        const oX = shared.rnd(sW - sS * lP);
+        const oX = shared.rnd(sW - eH * lP);
         let t = 0;
         for (let i = 0; i < ct; i++)
         {
@@ -3394,13 +3394,13 @@
           x = shared.rnd(lP);
          while (drawn[x] >= pyramidDist[x]);
          const oK = kList[shared.rnd(kList.length)];
-         _block(tInit, oK.url, oX, x, t, sS, sH, drawn[x] + 1, eT + dT);
+         _block(tInit, oK.url, oX, x, t, eH, sH, drawn[x] + 1, eT + dT);
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, l = oK.zwe.length; j < l; j++)
           {
            _eActive++;
-           _block(tInit, oK.zwe[j].url, oX, x, t, sS, sH, drawn[x] + 1, eT + dT);
+           _block(tInit, oK.zwe[j].url, oX, x, t, eH, sH, drawn[x] + 1, eT + dT);
           }
          }
          drawn[x]++;
@@ -3408,20 +3408,20 @@
         }
        }
 
-       function _block(tInit, url, oX, x, t, sS, sH, dX, aT)
+       function _block(tInit, url, oX, x, t, eH, sH, dX, aT)
        {
         if (_iTitanic > tInit)
          return;
         let img = document.createElement('img');
         img.setAttribute('class', 'emote ktSmallPyramid');
         _setImgSrc(img, url);
-        const h = oX + sS * x;
-        const v = -1 * sS;
-        const vD = sH - sS * dX;
+        const h = oX + eH * x;
+        const v = -1 * eH;
+        const vD = sH - eH * dX;
         let s = 'top: 0px;';
         s += ' left: ' + h + 'px;';
-        s += ' height: ' + sS + 'px;';
-        s += ' width: ' + sS + 'px;';
+        s += ' height: ' + eH + 'px;';
+        s += ' width: ' + eH + 'px;';
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
@@ -3452,14 +3452,14 @@
 
       const $Stampede = function()
       {
-       async function task(kList, sW, sH, sS, iKC)
+       async function task(kList, sW, sH, eH, iKC)
        {
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        const bandHeight = sS * timing.kappa.Stampede.height;
+        const bandHeight = eH * timing.kappa.Stampede.height;
         const d = shared.rnd(2) === 0;
-        const bandTop = shared.rnd(sH - bandHeight + (sS * timing.kappa.Stampede.top.min) + (sS * timing.kappa.Stampede.top.max)) + (sS * (-1 * timing.kappa.Stampede.top.min));
+        const bandTop = shared.rnd(sH - bandHeight + (eH * timing.kappa.Stampede.top.min) + (eH * timing.kappa.Stampede.top.max)) + (eH * (-1 * timing.kappa.Stampede.top.min));
         const b1 = _rndFromRange(timing.kappa.Stampede.bunch[1]);
         const b2 = shared.rnd(timing.kappa.Stampede.bunch[2] - b1) + b1;
         const b4 = _rndFromRange(timing.kappa.Stampede.bunch[4]);
@@ -3467,24 +3467,24 @@
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time);
         const tSpeed = Math.floor(tMS * timing.kappa.Stampede.speed);
         const t1 = Math.floor(tSpeed * timing.kappa.Stampede.pause['1']);
-        await _stampede(tInit, kList, b1, t1, false, bandTop, bandHeight, d, sW, sS);
+        await _stampede(tInit, kList, b1, t1, false, bandTop, bandHeight, d, sW, eH);
         if (_iTitanic > tInit)
          return;
         const t2 = Math.floor(tSpeed * timing.kappa.Stampede.pause['2']);
-        await _stampede(tInit, kList, b2, t2, false, bandTop, bandHeight, d, sW, sS);
+        await _stampede(tInit, kList, b2, t2, false, bandTop, bandHeight, d, sW, eH);
         if (_iTitanic > tInit)
          return;
         let sA = _kAcTime(iKC, tMS);
         if (sA.ct > timing.kappa.Stampede.maxdensity)
          sA.ct = timing.kappa.Stampede.maxdensity;
-        await _stampede(tInit, kList, iKC, hasB4, sA, bandTop, bandHeight, d, sW, sS);
+        await _stampede(tInit, kList, iKC, hasB4, sA, bandTop, bandHeight, d, sW, eH);
         if (_iTitanic > tInit)
          return;
         if (hasB4)
-         await _stampede(tInit, kList, b4, false, false, bandTop, bandHeight, d, sW, sS);
+         await _stampede(tInit, kList, b4, false, false, bandTop, bandHeight, d, sW, eH);
        }
 
-       async function _stampede(tInit, kList, ct, pause, sA, bandTop, bandHeight, d, sW, sS)
+       async function _stampede(tInit, kList, ct, pause, sA, bandTop, bandHeight, d, sW, eH)
        {
         if (_iTitanic > tInit)
          return;
@@ -3495,12 +3495,12 @@
           return;
          const oK = kList[shared.rnd(kList.length)];
          const y = bandTop + shared.rnd(bandHeight);
-         imgs.push(_run(tInit, oK.url, y, d, sW, sS));
+         imgs.push(_run(tInit, oK.url, y, d, sW, eH));
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, l = oK.zwe.length; j < l; j++)
           {
-           _run(tInit, oK.zwe[j].url, y, d, sW, sS);
+           _run(tInit, oK.zwe[j].url, y, d, sW, eH);
           }
          }
          if (sA === false)
@@ -3539,15 +3539,15 @@
         } while (imgs.length > 0);
        }
 
-       function _run(tInit, url, v, d, sW, sS)
+       function _run(tInit, url, v, d, sW, eH)
        {
         if (_iTitanic > tInit)
          return;
-        const h = -2 * sS;
+        const h = -2 * eH;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time);
         const tSpeed = Math.floor(tMS * timing.kappa.Stampede.speed);
-        let s = 'height: ' + sS + 'px;';
-        s += ' width: ' + sS + 'px;';
+        let s = 'height: ' + eH + 'px;';
+        s += ' width: ' + eH + 'px;';
         if (d)
          s += ' transform: translate(' + sW + 'px, ' + v + 'px);';
         else
@@ -3557,7 +3557,7 @@
         if (d)
          img = _addEmoteToDoc(tInit, url, 1, {style: s, classes: ['ktStampede']}, true, {space: false, time: tSpeed}, {x: h, y: v});
         else
-         img = _addEmoteToDoc(tInit, url, 1, {style: s, classes: ['ktStampede']}, true, {space: false, time: tSpeed}, {x: sW + sS, y: v});
+         img = _addEmoteToDoc(tInit, url, 1, {style: s, classes: ['ktStampede']}, true, {space: false, time: tSpeed}, {x: sW + eH, y: v});
         window.setTimeout(_tMark, tSpeed, tInit, img);
         return img;
        }
@@ -3578,15 +3578,15 @@
 
       const $Conga = function()
       {
-       async function task(kList, sW, sH, sS, nM)
+       async function task(kList, sW, sH, eH, nM)
        {
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
         let v = 0;
         let unique = false;
-        const bS = Math.ceil(sS * timing.kappa.Conga.size);
-        const seg = Math.floor(sS * timing.kappa.Conga.height);
+        const bS = Math.ceil(eH * timing.kappa.Conga.size);
+        const seg = Math.floor(eH * timing.kappa.Conga.height);
         const sht = Math.floor(sH / seg);
         let lns = sht;
         if (nM)
@@ -3644,11 +3644,11 @@
         let zimgs = [];
         for (let i = 0; i < ct; i++)
         {
-         imgs.push(_dance(tInit, urls[i], i, sW, v, sS, bS, ct, d, xtra));
+         imgs.push(_dance(tInit, urls[i], i, sW, v, eH, bS, ct, d, xtra));
          let oZ = [];
          for (let j = 0, l = zurls[i].length; j < l; j++)
          {
-          oZ.push(_dance(tInit, zurls[i][j], i, sW, v, sS, bS, ct, d, xtra));
+          oZ.push(_dance(tInit, zurls[i][j], i, sW, v, eH, bS, ct, d, xtra));
          }
          zimgs.push(oZ);
         }
@@ -3695,10 +3695,10 @@
         }
         for (let i = 0, l = imgs.length; i < l; i++)
         {
-         _endDance(tInit, imgs[i], i, sW, v, sS, bS, ct, d, xtra);
+         _endDance(tInit, imgs[i], i, sW, v, eH, bS, ct, d, xtra);
          for (let j = 0, m = zimgs[i].length; j < m; j++)
          {
-          _endDance(tInit, zimgs[i][j], i, sW, v, sS, bS, ct, d, xtra);
+          _endDance(tInit, zimgs[i][j], i, sW, v, eH, bS, ct, d, xtra);
          }
         }
         await _sleep(tMS);
@@ -3711,7 +3711,7 @@
         }
        }
 
-       function _dance(tInit, url, col, sW, v, sS, bS, ct, d, xtra)
+       function _dance(tInit, url, col, sW, v, eH, bS, ct, d, xtra)
        {
         if (_iTitanic > tInit)
          return;
@@ -3720,8 +3720,8 @@
         let img = document.createElement('img');
         img.setAttribute('class', 'dancer');
         _setImgSrc(img, url);
-        let s = 'width: ' + sS + 'px;';
-        s += ' height: ' + sS + 'px;';
+        let s = 'width: ' + eH + 'px;';
+        s += ' height: ' + eH + 'px;';
         img.setAttribute('style', s);
         let sE = bS * col + xtra;
         let sB = sE - sW;
@@ -3745,7 +3745,7 @@
         return box;
        }
 
-       function _endDance(tInit, box, col, sW, v, sS, bS, ct, d, xtra)
+       function _endDance(tInit, box, col, sW, v, eH, bS, ct, d, xtra)
        {
         if (_iTitanic > tInit)
          return;
@@ -3774,25 +3774,25 @@
 
       const $TheCube = function()
       {
-       function task(eInf, sW, sH, sS, bC, iR)
+       function task(eInf, sW, sH, eH, bC, iR)
        {
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        const sSm = Math.ceil(sS / 2);
-        const nSm = sSm * -1;
+        const eHh = Math.ceil(eH / 2);
+        const nHh = eHh * -1;
         const sWm = Math.ceil(sW / 2);
         const sHm = Math.ceil(sH / 2);
         let scene = document.createElement('div');
         scene.setAttribute('class', 'scene cube kappa');
-        scene.setAttribute('width', sS);
-        scene.setAttribute('height', sS);
+        scene.setAttribute('width', eH);
+        scene.setAttribute('height', eH);
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.TheCube.time);
         let cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
-        cube.setAttribute('style', 'transform: translateZ(' + nSm + 'px);');
-        let f = 'height: ' + sS + 'px;';
-        f += ' width: ' + sS + 'px;';
+        cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
+        let f = 'height: ' + eH + 'px;';
+        f += ' width: ' + eH + 'px;';
         if (!eInf.hasOwnProperty('zwe') || eInf.zwe.length === 0)
         {
          let cubeF = document.createElement('img');
@@ -3921,31 +3921,31 @@
          cube.appendChild(cubeU);
         }
         scene.appendChild(cube);
-        let h = shared.rnd(sW - sS);
-        let v = shared.rnd(sH - sS);
+        let h = shared.rnd(sW - eH);
+        let v = shared.rnd(sH - eH);
         if (bC)
         {
-         h = Math.floor(sWm - sSm);
-         v = Math.floor(sHm - sSm);
+         h = Math.floor(sWm - eHh);
+         v = Math.floor(sHm - eHh);
         }
-        let s = 'width: ' + sS + 'px;';
-        s += ' height: ' + sS + 'px;';
-        s += ' --cube-depth: ' + sSm + 'px;';
-        s += ' perspective: ' + sS * 3 + 'px;';
+        let s = 'width: ' + eH + 'px;';
+        s += ' height: ' + eH + 'px;';
+        s += ' --cube-depth: ' + eHh + 'px;';
+        s += ' perspective: ' + eH * 3 + 'px;';
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, tMS);
         scene.setAttribute('style', s);
         _eActive++;
         document.body.appendChild(scene);
         _gc.hook(scene, false, true, tMS);
-        shared.doNextFrame(_tMove, tInit, cube, iR, sS);
+        shared.doNextFrame(_tMove, tInit, cube, iR, eH);
        }
 
-       function _tMove(tInit, cube, iR, sS)
+       function _tMove(tInit, cube, iR, eH)
        {
         if (_iTitanic > tInit)
          return;
-        const nSm = Math.ceil(sS / 2) * -1;
+        const nHh = Math.ceil(eH / 2) * -1;
         let rX = 0;
         let rY = 0;
         while (Math.abs(rX) + Math.abs(rY) < 45)
@@ -3953,7 +3953,7 @@
          rX = (360 - shared.rnd() * 720) * iR;
          rY = (360 - shared.rnd() * 720) * iR;
         }
-        cube.style.transform = 'translateZ(' + nSm + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
+        cube.style.transform = 'translateZ(' + nHh + 'px) rotateX(' + rX + 'deg) rotateY(' + rY + 'deg)';
        }
 
        return task;
@@ -3984,15 +3984,15 @@
          ct += lX;
          drawn.push(0);
         }
-        const sS = Math.min(Math.floor(sW / (lM + 2)), Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small));
+        const eH = Math.min(Math.floor(sW / (lM + 2)), Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small));
         const tMS = Math.floor(iTime * 1000 * timing.kappa.Text.time);
         const sT = tMS * timing.kappa.Text.show.total;
         const tPerB = Math.max(Math.floor(sT / ct), timing.kappa.Text.show.min);
         const eT = tPerB * ctT;
         const lF = msgDist[0].length;
-        const lFS = sS * lF;
+        const lFS = eH * lF;
         const vH = shared.rnd(sH - lFS) + lFS;
-        const oX = shared.rnd(sW - sS * lM);
+        const oX = shared.rnd(sW - eH * lM);
         let t = 0;
         for (let i = 0; i < ct; i++)
         {
@@ -4005,13 +4005,13 @@
          if (msgDist[x][drawn[x]] !== 0)
          {
           const oK = kList[shared.rnd(kList.length)];
-          _block(tInit, oK.url, vH, oX, drawn[x] + 1, tPerB, eT, iTime, x, t, sH, sS);
+          _block(tInit, oK.url, vH, oX, drawn[x] + 1, tPerB, eT, iTime, x, t, sH, eH);
           if (oK.hasOwnProperty('zwe'))
           {
            for (let j = 0, l = oK.zwe.length; j < l; j++)
            {
             _eActive++;
-            _block(tInit, oK.zwe[j].url, vH, oX, drawn[x] + 1, tPerB, eT, iTime, x, t, sH, sS);
+            _block(tInit, oK.zwe[j].url, vH, oX, drawn[x] + 1, tPerB, eT, iTime, x, t, sH, eH);
            }
           }
           t += tPerB;
@@ -4057,20 +4057,20 @@
         return o;
        }
 
-       function _block(tInit, url, vH, oX, dX, tPerB, eT, iTime, x, t, sH, sS)
+       function _block(tInit, url, vH, oX, dX, tPerB, eT, iTime, x, t, sH, eH)
        {
         if (_iTitanic > tInit)
          return;
         let img = document.createElement('img');
         img.setAttribute('class', 'emote');
         _setImgSrc(img, url);
-        const h = oX + sS * x;
-        const v = -1 * sS;
-        const vD = vH - sS * dX;
+        const h = oX + eH * x;
+        const v = -1 * eH;
+        const vD = vH - eH * dX;
         let s = 'top: 0px;';
         s += ' left: ' + h + 'px;';
-        s += ' height: ' + sS + 'px;';
-        s += ' width: ' + sS + 'px;';
+        s += ' height: ' + eH + 'px;';
+        s += ' width: ' + eH + 'px;';
         s += ' transition: transform ' + tPerB + 'ms ease-in;';
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
@@ -4261,8 +4261,8 @@
        case 'Conga':
         const sW = window.innerWidth;
         const sH = window.innerHeight;
-        const sS = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
-        const bS = Math.ceil(sS * (5/3));
+        const eH = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
+        const bS = Math.ceil(eH * (5/3));
         return Math.floor(sW / bS);
       }
       return k.count;
@@ -4420,13 +4420,13 @@
        kList = bareList;
       const sW = window.innerWidth;
       const sH = window.innerHeight;
-      const sS = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
-      const sSm = Math.max(cfg.emote.size.min, Math.min(Math.floor(cfg.emote.size.max / 2), Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small)));
-      const sR = sW - sS;
-      const sB = sH - sS;
+      const eH = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
+      const eHh = Math.max(cfg.emote.size.min, Math.min(Math.floor(cfg.emote.size.max / 2), Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small)));
+      const sR = sW - eH;
+      const sB = sH - eH;
       document.documentElement.style.setProperty('--height', sH + 'px');
       document.documentElement.style.setProperty('--width', sW + 'px');
-      document.documentElement.style.setProperty('--emote-height', sS + 'px');
+      document.documentElement.style.setProperty('--emote-height', eH + 'px');
       const waitFor = _getKappaCountEstimate(kStyle);
       if (!_canShowKappa(kStyle))
       {
@@ -4450,14 +4450,14 @@
       switch (kStyle.style)
       {
        case 'Stampede':
-        await _list.Stampede(kList, sW, sH, sS, kStyle.count);
+        await _list.Stampede(kList, sW, sH, eH, kStyle.count);
         _eActive -= kStyle.count;
         break;
        case 'Fireworks':
-        _list.Fireworks(kList, sW, sH, sSm, kStyle.count);
+        _list.Fireworks(kList, sW, sH, eHh, kStyle.count);
         break;
        case 'Spiral':
-        _list.Spiral(kList, sW, sH, sSm, kStyle.count);
+        _list.Spiral(kList, sW, sH, eHh, kStyle.count);
         break;
        case 'Pyramid':
         _list.Pyramid(kList, sW, sH);
@@ -4472,7 +4472,7 @@
          avoidMiddle = true;
         if (kStyle.prefs.hasOwnProperty('avoidMiddle') && kStyle.prefs.avoidMiddle === true)
          avoidMiddle = true;
-        _list.Conga(kList, sW, sH, sS, avoidMiddle);
+        _list.Conga(kList, sW, sH, eH, avoidMiddle);
         break;
        case 'Text':
         _eActive -= waitFor;
@@ -4527,7 +4527,7 @@
           return;
          const rB = shared.rnd(lK);
          _eActive--;
-         display.emote.list.StraightLine(kList[rB], sW, sH, sS, oH, oV, false, tInit);
+         display.emote.list.StraightLine(kList[rB], sW, sH, eH, oH, oV, false, tInit);
          if (i % bA.ct === bA.ct - 1)
           await _fPause(bA.f);
         }
@@ -4542,7 +4542,7 @@
           return;
          const rF = shared.rnd(lK);
          _eActive--;
-         display.emote.list.Fountain(kList[rF], sW, sH, sS, fX, fY, false, tInit);
+         display.emote.list.Fountain(kList[rF], sW, sH, eH, fX, fY, false, tInit);
          if (i % fA.ct === fA.ct - 1)
           await _fPause(fA.f);
         }
@@ -4555,7 +4555,7 @@
           return;
          const rN = shared.rnd(lK);
          _eActive--;
-         display.emote.list.Confetti(kList[rN], sW, sH, sSm, false, tInit);
+         display.emote.list.Confetti(kList[rN], sW, sH, eHh, false, tInit);
          if (i % cA.ct === cA.ct - 1)
           await _fPause(cA.f);
         }
@@ -4571,9 +4571,9 @@
          const r = shared.rnd(lK);
          _eActive--;
          if (kStyle.style === 'StraightLine')
-          display.emote.list.StraightLine(kList[r], sW, sH, sS, false, false, false, tInit);
+          display.emote.list.StraightLine(kList[r], sW, sH, eH, false, false, false, tInit);
          else
-          display.emote.list[kStyle.style](kList[r], sW, sH, sS, false, tInit);
+          display.emote.list[kStyle.style](kList[r], sW, sH, eH, false, tInit);
          if (i % kA.ct === kA.ct - 1)
           await _fPause(kA.f);
         }
