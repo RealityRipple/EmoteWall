@@ -2132,13 +2132,12 @@
        let s = 'height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time);
-       s += ' transition: transform ' + tMS + 'ms linear;';
        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-       _addEmoteToDoc(tInit, url, variationSize, {style: s}, false, {time: tMS}, {x: hD, y: vD});
+       _addEmoteToDoc(tInit, url, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s}, false, {time: tMS}, {x: hD, y: vD});
+        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
        }
       }
 
@@ -2635,16 +2634,13 @@
         const vD = Math.floor(sB * _rndFromRange(timing.display.Throw.dest.v));
         const dH = shared.rnd() * sS;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time);
-        const t1 = Math.floor(tMS * timing.display.Throw.twist);
         const t2 = Math.floor(tMS * timing.display.Throw.toss);
         const t3 = Math.floor(tMS * timing.display.Throw.drop);
         let s = 'height: ' + sS + 'px;';
         s += ' width: ' + sS + 'px;';
-        s += ' transition: transform ' + t1 + 'ms cubic-bezier(0.32, 0, 0.67, 0);';
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         let s2 = 'height: ' + sS + 'px;';
         s2 += ' width: ' + sS + 'px;';
-        s2 += ' transition: transform ' + t3 + 'ms cubic-bezier(0.5, 0, 0.75, 0);';
         let r = '360';
         if (h > 0)
          r = '-360';
@@ -2688,10 +2684,10 @@
         }
         s2 += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
         let iArr = [];
-        iArr.push(_addEmoteToDoc(tInit, url, variationSize, {style: s}, true, {space: false, time: tMS}));
+        iArr.push(_addEmoteToDoc(tInit, url, variationSize, {style: s, classes: ['etThrowTwist']}, true, {space: false, time: tMS}));
         for (let i = 0, l = zwe.length; i < l; i++)
         {
-         iArr.push(_addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s}, true, {space: false, time: tMS}));
+         iArr.push(_addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s, classes: ['etThrowTwist']}, true, {space: false, time: tMS}));
         }
         shared.doNextFrame(_tMove, tInit, iArr, hD, vD);
         window.setTimeout(_tDrop, t2, tInit, iArr, s2);
@@ -2713,6 +2709,7 @@
          return;
         for (let i = 0, l = iArr.length; i < l; i++)
         {
+         iArr[i].classList.replace('etThrowTwist', 'etThrowDrop');
          iArr[i].setAttribute('style', s2);
         }
        }
@@ -2729,7 +2726,7 @@
         if (_iTitanic > tInit)
          return;
         let scene = document.createElement('div');
-        scene.setAttribute('class', 'scene');
+        scene.setAttribute('class', 'scene cube');
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
         {
@@ -2748,7 +2745,7 @@
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time);
         let cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
-        cube.setAttribute('style', 'transform: translateZ(' + nSm + 'px); transition: transform linear ' + tMS + 'ms;');
+        cube.setAttribute('style', 'transform: translateZ(' + nSm + 'px);');
         let f = 'height: ' + sS + 'px;';
         f += ' width: ' + sS + 'px;';
         const lZ = zwe.length;
@@ -2893,7 +2890,6 @@
         let s = 'width: ' + sS + 'px;';
         s += ' height: ' + sS + 'px;';
         s += ' perspective: ' + sS * 3 + 'px;';
-        s += ' transition: all ' + tMS + 'ms linear;';
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, tMS);
         scene.setAttribute('style', s);
@@ -2952,7 +2948,6 @@
         hD = h + shared.rnd(sR * 0.2);
        let s = 'height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
-       s += ' transition: transform ' + tMS + 'ms cubic-bezier(0, 0, 0.58, 1);';
        s += ' transform: translateX(' + h + 'px);';
        s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY * sH + shared.rnd(sB / 2)) + ' L 0 ' + (sH + sS) + '");';
        let aNames = [];
@@ -2968,10 +2963,10 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
-       _addEmoteToDoc(tInit, url, variationSize, {style: s}, false, {time: tMS}, {x: hD});
+       _addEmoteToDoc(tInit, url, variationSize, {style: s, classes: ['etFountain']}, false, {time: tMS, space: false}, {x: hD});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s}, false, {time: tMS}, {x: hD});
+        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s, classes: ['etFountain']}, false, {time: tMS, space: false}, {x: hD});
        }
       }
 
@@ -3757,7 +3752,7 @@
         const sWm = Math.ceil(sW / 2);
         const sHm = Math.ceil(sH / 2);
         let scene = document.createElement('div');
-        scene.setAttribute('class', 'scene');
+        scene.setAttribute('class', 'scene cube');
         scene.setAttribute('width', sS);
         scene.setAttribute('height', sS);
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.TheCube.time);
@@ -10491,6 +10486,28 @@
      a += '    transform: scale(' + timing.display.Crazy.squash.height + ', ' + timing.display.Crazy.squash.width + ');\n';
      a += '   }\n';
      h = h.replace('   [data-squash="no"]\n', a + '   [data-squash="no"]\n');
+     let t = '   .etStraightLine\n';
+     t += '   {\n';
+     t += '    transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time) + 'ms;\n';
+     t += '   }\n';
+     t += '   .etThrowTwist\n';
+     t += '   {\n';
+     t += '    transition: transform cubic-bezier(0.32, 0, 0.67, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.twist) + 'ms;\n';
+     t += '   }\n';
+     t += '   .etThrowDrop\n';
+     t += '   {\n';
+     t += '    transition: transform cubic-bezier(0.5, 0, 0.75, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.drop) + 'ms;\n';
+     t += '   }\n';
+     t += '   .etFountain\n';
+     t += '   {\n';
+     t += '    transition: transform cubic-bezier(0, 0, 0.58, 1) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Fountain.time) + 'ms;\n';
+     t += '   }\n';
+     t += '   div.scene.cube:not(.kappa),\n';
+     t += '   div.scene.cube:not(.kappa) div.cube\n';
+     t += '   {\n';
+     t += '    transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time) + 'ms;\n';
+     t += '   }\n';
+     h = h.replace('   [data-squash="vertical"]\n', t + '\n   [data-squash="vertical"]\n');
      css.innerHTML = h;
     }
 
