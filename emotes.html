@@ -2367,14 +2367,15 @@
        let aTimings = [];
        let aFills = [];
        let aIters = [];
+       let dsO = {};
        if (shared.rnd(2) === 0)
        {
-        s += ' transform-origin: top left;';
+        dsO.origin = 'topleft';
         aNames.push('dropL');
        }
        else
        {
-        s += ' transform-origin: top right;';
+        dsO.origin = 'topright';
         aNames.push('dropR');
        }
        aDelays.push('0s');
@@ -2384,10 +2385,10 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-       _addEmoteToDoc(tInit, url, variationSize, {style: s}, false, {space: false, time: tMS});
+       _addEmoteToDoc(tInit, url, variationSize, {style: s, dataset: dsO}, false, {space: false, time: tMS});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s}, false, {space: false, time: tMS});
+        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s, dataset: dsO}, false, {space: false, time: tMS});
        }
       }
 
@@ -10864,6 +10865,14 @@
    [data-origin="center"]
    {
     transform-origin: center center;
+   }
+   [data-origin="topleft"]
+   {
+    transform-origin: left top;
+   }
+   [data-origin="topright"]
+   {
+    transform-origin: right top;
    }
    [data-origin="top"]
    {
