@@ -21,8 +21,8 @@ You can grab the latest release from the [Official Web Site](//realityripple.com
 
 To update this emote wall, simply use the Wizard to import and download it.
  1) Visit the [official page](//realityripple.com/Tools/Twitch/EmoteWall/).
- 2) Under "Config Wizard", click "Authorize on Twitch".
- 3) Import your previous HTML file by clicking Import.
+ 2) Click "Download Emote Wall" and choose "Use the Wizard".
+ 3) Import your previous HTML file by clicking "Import from File".
  4) Make any changes you need to make on each page.
  5) At the end of your configuration, hit "Download".
 
