@@ -2313,14 +2313,15 @@
        let aTimings = [];
        let aFills = [];
        let aIters = [];
+       let dsO = {};
        if (h + sSm > sWm)
        {
-        s += ' transform-origin: center right;';
+        dsO.origin = 'right';
         aNames.push('speedL');
        }
        else
        {
-        s += ' transform-origin: center left;';
+        dsO.origin = 'left';
         aNames.push('speedR');
        }
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Speed.time);
@@ -2331,10 +2332,10 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-       _addEmoteToDoc(tInit, url, variationSize, {style: s}, false, {time: tMS});
+       _addEmoteToDoc(tInit, url, variationSize, {style: s, dataset: dsO}, false, {time: tMS});
        for (let i = 0, l = zwe.length; i < l; i++)
        {
-        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s}, false, {time: tMS});
+        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s, dataset: dsO}, false, {time: tMS});
        }
       }
 
