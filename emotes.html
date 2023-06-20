@@ -1896,6 +1896,9 @@
       refresh: {
        t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
        se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php'
+      },
+      feedback: {
+       eventsub: 'https://realityripple.com/Tools/Twitch/EmoteWall/dangling-eventsub.php'
       }
      }
     },
@@ -5154,11 +5157,15 @@
           _ws = null;
           return;
          }
+         if (r.payload.session.hasOwnProperty('id'))
+          await shared.httpRequest('POST', cURLs.api.rr.feedback.eventsub, {'Content-Type': 'application/x-www-form-urlencoded'}, 'type=new&id=' + encodeURIComponent(twitch.net.eventSubCtl.sessionID), false, false);
          break;
         case 'session_keepalive':
          _wsRetry = 0;
+         await shared.httpRequest('POST', cURLs.api.rr.feedback.eventsub, {'Content-Type': 'application/x-www-form-urlencoded'}, 'type=recv&id=' + encodeURIComponent(twitch.net.eventSubCtl.sessionID), false, false);
          break;
         case 'notification':
+         await shared.httpRequest('POST', cURLs.api.rr.feedback.eventsub, {'Content-Type': 'application/x-www-form-urlencoded'}, 'type=recv&id=' + encodeURIComponent(twitch.net.eventSubCtl.sessionID), false, false);
          if (!r.metadata.hasOwnProperty('subscription_type'))
           return;
          switch (r.metadata.subscription_type)
@@ -5525,10 +5532,6 @@
 
       async function $erase()
       {
-       const h = {
-        'Authorization': 'Bearer ' + cfg.login.oauth,
-        'Client-Id': cfg.login.client
-       };
        const d = await _getList();
        if (d.length < 1)
         return;
@@ -5536,17 +5539,17 @@
        {
         if (!d[i].hasOwnProperty('id'))
          continue;
-        await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', d[i].id), h, null, false, false);
+        if (!d[i].hasOwnProperty('transport'))
+         continue;
+        if (!d[i].transport.hasOwnProperty('session_id'))
+         continue;
+        await _unsubscribe(d[i].id, d[i].transport.session_id);
        }
        window.location.reload();
       }
 
       async function _cleanAndRecover()
       {
-       const h = {
-        'Authorization': 'Bearer ' + cfg.login.oauth,
-        'Client-Id': cfg.login.client
-       };
        const d = await _getList();
        if (d.length < 1)
         return [];
@@ -5585,7 +5588,11 @@
          case 'websocket_internal_error':
          case 'websocket_network_timeout':
          case 'websocket_network_error':
-          await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', d[i].id), h, null, false, false);
+          if (!d[i].hasOwnProperty('transport'))
+           continue;
+          if (!d[i].transport.hasOwnProperty('session_id'))
+           continue;
+          await _unsubscribe(d[i].id, d[i].transport.session_id);
           break;
         }
        }
@@ -5617,8 +5624,79 @@
        if (r.success)
         return true;
        if (r.code === 429)
-        notice.warning(0x01);
+       {
+        const eNote = document.getElementById('warning');
+        if (!eNote || eNote.dataset.code !== '1')
+        {
+         if (!await _handleDanglingEventSubs())
+          notice.warning(0x01);
+        }
+       }
        return false;
+      }
+
+      async function _handleDanglingEventSubs()
+      {
+       const d = await _getList();
+       if (d.length < 1)
+        return false;
+       let ids = [];
+       for (let i = 0, l = d.length; i < l; i++)
+       {
+        if (!d[i].hasOwnProperty('status'))
+         continue;
+        if (d[i].status !== 'enabled')
+         continue;
+        if (!d[i].hasOwnProperty('transport'))
+         continue;
+        if (!d[i].transport.hasOwnProperty('method'))
+         continue;
+        if (d[i].transport.method !== 'websocket')
+         continue;
+        if (!d[i].transport.hasOwnProperty('session_id'))
+         continue;
+        if (!ids.includes(d[i].transport.session_id))
+         ids.push(d[i].transport.session_id);
+       }
+       if (ids.length < 1)
+        return false;
+       const b = 'type=check&ids=' + encodeURIComponent(ids.join(' '));
+       const r = await shared.httpRequest('POST', cURLs.api.rr.feedback.eventsub, {'Content-Type': 'application/x-www-form-urlencoded'}, b, false);
+       if (!r.success)
+        return false;
+       const j = r.json;
+       if (j.length < 1)
+        return false;
+       console.log(j);
+       for (let i = 0, l = d.length; i < l; i++)
+       {
+        if (!d[i].hasOwnProperty('transport'))
+         continue;
+        if (!d[i].transport.hasOwnProperty('session_id'))
+         continue;
+        if (!j.includes(d[i].transport.session_id))
+         continue;
+        console.log('server gives permission to delete', d[i].id);
+        await _unsubscribe(d[i].id, d[i].transport.session_id);
+       }
+       return true;
+      }
+
+      async function _unsubscribe(id = false, sessID = false)
+      {
+       if (id !== false)
+       {
+        const h = {
+         'Authorization': 'Bearer ' + cfg.login.oauth,
+         'Client-Id': cfg.login.client
+        };
+        const r = await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', id), h, null, false);
+        if (!r.success)
+         return false;
+       }
+       if (sessID !== false)
+        await shared.httpRequest('POST', cURLs.api.rr.feedback.eventsub, {'Content-Type': 'application/x-www-form-urlencoded'}, 'type=close&id=' + sessID, false, false);
+       return true;
       }
 
       return {
