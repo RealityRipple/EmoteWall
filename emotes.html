@@ -2882,16 +2882,13 @@
         const v = shared.rnd(sH) - sSm;
         const r = Math.min(sW, sH) * (shared.rnd() + 1);
         let th = shared.rnd() * _cRadius;
-        let hD = Math.floor(h + r * Math.cos(th));
-        let vD = Math.floor(v + r * Math.sin(th));
-        const sR = sW - sS - sSm;
-        const sB = sH - sS - sSm;
-        while ((h < sSm && hD < sSm) || (v < sSm && vD < sSm) || (h > sR && hD > sR) || (v > sB && vD > sB))
+        const nS = sS * -1;
+        while (!_safePoints(h, v, th, r, nS, nS, sW, sH))
         {
          th = shared.rnd() * _cRadius;
-         hD = Math.floor(h + r * Math.cos(th));
-         vD = Math.floor(v + r * Math.sin(th));
         }
+        let hD = Math.floor(h + r * Math.cos(th));
+        let vD = Math.floor(v + r * Math.sin(th));
         let s = 'width: ' + sS + 'px;';
         s += ' height: ' + sS + 'px;';
         s += ' perspective: ' + sS * 3 + 'px;';
