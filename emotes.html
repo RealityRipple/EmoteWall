@@ -2119,19 +2119,16 @@
         v = shared.rnd(sH) - sSm;
        const r = Math.min(sW, sH) * (shared.rnd() + 1);
        let th = shared.rnd() * _cRadius;
-       let hD = Math.floor(h + r * Math.cos(th));
-       let vD = Math.floor(v + r * Math.sin(th));
        if (!x && !y)
        {
-        const sR = sW - sS - sSm;
-        const sB = sH - sS - sSm;
-        while ((h < sSm && hD < sSm) || (v < sSm && vD < sSm) || (h > sR && hD > sR) || (v > sB && vD > sB))
+        const nS = sS * -1;
+        while (!_safePoints(h, v, th, r, nS, nS, sW, sH))
         {
          th = shared.rnd() * _cRadius;
-         hD = Math.floor(h + r * Math.cos(th));
-         vD = Math.floor(v + r * Math.sin(th));
         }
        }
+       let hD = Math.floor(h + r * Math.cos(th));
+       let vD = Math.floor(v + r * Math.sin(th));
        let s = 'height: ' + sS + 'px;';
        s += ' width: ' + sS + 'px;';
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time);
@@ -4693,6 +4690,35 @@
     function _rndFromRange(range)
     {
      return shared.rnd(range.max - range.min) + range.min;
+    }
+
+    function _safePoints(h, v, th, r, fL, fT, fR, fB)
+    {
+     const hD = Math.floor(h + r * Math.cos(th));
+     const vD = Math.floor(v + r * Math.sin(th));
+     const slope = Math.tan(th);
+     let hL = Number.MAX_SAFE_INTEGER;
+     let hU = 0;
+     let vL = Number.MAX_SAFE_INTEGER;
+     let vU = 0;
+     if (hD < fL)
+      hL = h - (hU = fL);
+     else if (hD > fR)
+      hL = (hU = fR) - h;
+     if (vD < fT)
+      vL = v - (vU = fT);
+     else if (vD > fB)
+      vL = (vU = fB) - v;
+     if (vU === 0 && hU === 0)
+      return true;
+     let vT = vU;
+     let hT = hU;
+     if (hL > vL)
+      hT = Math.floor((vT - v) / slope + h);
+     else
+      vT = Math.floor((hT - h) * slope + v);
+     const l = Math.sqrt(Math.abs(h - hT) ** 2 + Math.abs(v - vT) ** 2);
+     return (l > Math.ceil(r / 2));
     }
 
     function _addEmoteToDoc(tInit, uri, variationSize, attrs = {}, r = false, oGC = {}, oT = false)
