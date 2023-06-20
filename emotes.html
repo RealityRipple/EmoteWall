@@ -369,6 +369,8 @@
     *                If TRUE, raid kappagens will use channel emotes from the raider's channel.
     *               If FALSE, raid kappagens will use your channel's emotes.
     *
+    *   originExtendedEmotes  A boolean to toggle third-party emotes, if originEmotes is enabled.
+    *
     *  follow     A user follows the channel.
     *              If TRUE, a kappagen will occur.
     *              If FALSE, no kappagen will occur.
@@ -389,6 +391,8 @@
     *                If TRUE, shoutout kappagens will use channel emotes from the target's channel.
     *               If FALSE, shoutout kappagens will use your channel's emotes.
     *
+    *   targetExtendedEmotes  A boolean to toggle third-party emotes, if targetEmotes is enabled.
+    *
     *   receive    Settings related to kappagens when another channel shouts you out.
     *
     *    styles   You are shouted out by another channel. This value can be a boolean or array.
@@ -399,6 +403,8 @@
     *   originEmotes  A boolean to toggle the use of the source channel's emotes for shoutout kappagens.
     *                If TRUE, shoutout kappagens will use channel emotes from the source's channel.
     *               If FALSE, shoutout kappagens will use your channel's emotes.
+    *
+    *   originExtendedEmotes  A boolean to toggle third-party emotes, if originEmotes is enabled.
     *
     *  tag        Settings related to kappagens when users tag a channel you've tagged in your stream title.
     *
@@ -413,6 +419,8 @@
     *   targetEmotes  A boolean to toggle the use of the target channel's emotes for tag kappagens.
     *                If TRUE, tag kappagens will use channel emotes from the target's channel.
     *               If FALSE, tag kappagens will use your channel's emotes.
+    *
+    *   targetExtendedEmotes  A boolean to toggle third-party emotes, if targetEmotes is enabled.
     *
     *  sub        Settings related to kappagens on a subscribe event.
     *             Note: Sub event booleans can also be arrays of kappa styles. This will override the default list
@@ -974,23 +982,27 @@
      clear: true,
      raid: {
       raiders: 2,
-      originEmotes: true
+      originEmotes: true,
+      originExtendedEmotes: false
      },
      follow: true,
      shoutout: {
       create: {
        styles: false,
-       targetEmotes: true
+       targetEmotes: true,
+       targetExtendedEmotes: false
       },
       receive: {
        styles: false,
-       originEmotes: true
+       originEmotes: true,
+       originExtendedEmotes: false
       }
      },
      tag: {
       styles: true,
       access: -1,
-      targetEmotes: true
+      targetEmotes: true,
+      targetExtendedEmotes: false
      },
      sub: {
       useMsg: true,
@@ -7458,40 +7470,43 @@
         return true;
        }
        const e = await _findEmote_channel(uID);
-       if (cfg.display.extended.useFFZ)
+       if (cfg.event.tag.targetExtendedEmotes)
        {
-        const rFFZ = await thirdparty.ffz.channelEx(uID);
-        if (rFFZ !== false)
+        if (cfg.display.extended.useFFZ)
         {
-         for (let i = 0, l = rFFZ.length; i < l; i++)
+         const rFFZ = await thirdparty.ffz.channelEx(uID);
+         if (rFFZ !== false)
          {
-          if (rFFZ[i].modifier !== false)
-           continue;
-          e.push({url: rFFZ[i].url, width: rFFZ[i].width, height: rFFZ[i].height});
+          for (let i = 0, l = rFFZ.length; i < l; i++)
+          {
+           if (rFFZ[i].modifier !== false)
+            continue;
+           e.push({url: rFFZ[i].url, width: rFFZ[i].width, height: rFFZ[i].height});
+          }
          }
         }
-       }
-       if (cfg.display.extended.useBTTV)
-       {
-        const rBTTV = await thirdparty.bttv.channelEx(uID);
-        if (rBTTV !== false)
+        if (cfg.display.extended.useBTTV)
         {
-         for (let i = 0, l = rBTTV.length; i < l; i++)
+         const rBTTV = await thirdparty.bttv.channelEx(uID);
+         if (rBTTV !== false)
          {
-          e.push({url: rBTTV[i].url, width: rBTTV[i].width, height: rBTTV[i].height});
+          for (let i = 0, l = rBTTV.length; i < l; i++)
+          {
+           e.push({url: rBTTV[i].url, width: rBTTV[i].width, height: rBTTV[i].height});
+          }
          }
         }
-       }
-       if (cfg.display.extended.use7TV)
-       {
-        const r7TV = await thirdparty['7tv'].channelEx(uID);
-        if (r7TV !== false)
+        if (cfg.display.extended.use7TV)
         {
-         for (let i = 0, l = r7TV.length; i < l; i++)
+         const r7TV = await thirdparty['7tv'].channelEx(uID);
+         if (r7TV !== false)
          {
-          if ((r7TV[i].vis & 0x80) === 0x80)
-           continue;
-          e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
+          for (let i = 0, l = r7TV.length; i < l; i++)
+          {
+           if ((r7TV[i].vis & 0x80) === 0x80)
+            continue;
+           e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
+          }
          }
         }
        }
@@ -7719,40 +7734,43 @@
        }
        const d = cmd.tags['user-id'];
        const e = await _findEmote_channel(d);
-       if (cfg.display.extended.useFFZ)
+       if (cfg.event.raid.originExtendedEmotes)
        {
-        const rFFZ = await thirdparty.ffz.channelEx(d);
-        if (rFFZ !== false)
+        if (cfg.display.extended.useFFZ)
         {
-         for (let i = 0, l = rFFZ.length; i < l; i++)
+         const rFFZ = await thirdparty.ffz.channelEx(d);
+         if (rFFZ !== false)
          {
-          if (rFFZ[i].modifier !== false)
-           continue;
-          e.push({url: rFFZ[i].url, width: rFFZ[i].width, height: rFFZ[i].height});
+          for (let i = 0, l = rFFZ.length; i < l; i++)
+          {
+           if (rFFZ[i].modifier !== false)
+            continue;
+           e.push({url: rFFZ[i].url, width: rFFZ[i].width, height: rFFZ[i].height});
+          }
          }
         }
-       }
-       if (cfg.display.extended.useBTTV)
-       {
-        const rBTTV = await thirdparty.bttv.channelEx(d);
-        if (rBTTV !== false)
+        if (cfg.display.extended.useBTTV)
         {
-         for (let i = 0, l = rBTTV.length; i < l; i++)
+         const rBTTV = await thirdparty.bttv.channelEx(d);
+         if (rBTTV !== false)
          {
-          e.push({url: rBTTV[i].url, width: rBTTV[i].width, height: rBTTV[i].height});
+          for (let i = 0, l = rBTTV.length; i < l; i++)
+          {
+           e.push({url: rBTTV[i].url, width: rBTTV[i].width, height: rBTTV[i].height});
+          }
          }
         }
-       }
-       if (cfg.display.extended.use7TV)
-       {
-        const r7TV = await thirdparty['7tv'].channelEx(d);
-        if (r7TV !== false)
+        if (cfg.display.extended.use7TV)
         {
-         for (let i = 0, l = r7TV.length; i < l; i++)
+         const r7TV = await thirdparty['7tv'].channelEx(d);
+         if (r7TV !== false)
          {
-          if ((r7TV[i].vis & 0x80) === 0x80)
-           continue;
-          e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
+          for (let i = 0, l = r7TV.length; i < l; i++)
+          {
+           if ((r7TV[i].vis & 0x80) === 0x80)
+            continue;
+           e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
+          }
          }
         }
        }
@@ -8087,40 +8105,43 @@
         return;
        }
        const e = await _findEmote_channel(uID);
-       if (cfg.display.extended.useFFZ)
+       if (cfg.event.shoutout.create.targetExtendedEmotes)
        {
-        const rFFZ = await thirdparty.ffz.channelEx(uID);
-        if (rFFZ !== false)
+        if (cfg.display.extended.useFFZ)
         {
-         for (let i = 0, l = rFFZ.length; i < l; i++)
+         const rFFZ = await thirdparty.ffz.channelEx(uID);
+         if (rFFZ !== false)
          {
-          if (rFFZ[i].modifier !== false)
-           continue;
-          e.push({url: rFFZ[i].url, width: rFFZ[i].width, height: rFFZ[i].height});
+          for (let i = 0, l = rFFZ.length; i < l; i++)
+          {
+           if (rFFZ[i].modifier !== false)
+            continue;
+           e.push({url: rFFZ[i].url, width: rFFZ[i].width, height: rFFZ[i].height});
+          }
          }
         }
-       }
-       if (cfg.display.extended.useBTTV)
-       {
-        const rBTTV = await thirdparty.bttv.channelEx(uID);
-        if (rBTTV !== false)
+        if (cfg.display.extended.useBTTV)
         {
-         for (let i = 0, l = rBTTV.length; i < l; i++)
+         const rBTTV = await thirdparty.bttv.channelEx(uID);
+         if (rBTTV !== false)
          {
-          e.push({url: rBTTV[i].url, width: rBTTV[i].width, height: rBTTV[i].height});
+          for (let i = 0, l = rBTTV.length; i < l; i++)
+          {
+           e.push({url: rBTTV[i].url, width: rBTTV[i].width, height: rBTTV[i].height});
+          }
          }
         }
-       }
-       if (cfg.display.extended.use7TV)
-       {
-        const r7TV = await thirdparty['7tv'].channelEx(uID);
-        if (r7TV !== false)
+        if (cfg.display.extended.use7TV)
         {
-         for (let i = 0, l = r7TV.length; i < l; i++)
+         const r7TV = await thirdparty['7tv'].channelEx(uID);
+         if (r7TV !== false)
          {
-          if ((r7TV[i].vis & 0x80) === 0x80)
-           continue;
-          e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
+          for (let i = 0, l = r7TV.length; i < l; i++)
+          {
+           if ((r7TV[i].vis & 0x80) === 0x80)
+            continue;
+           e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
+          }
          }
         }
        }
@@ -8135,40 +8156,43 @@
         return;
        }
        const e = await _findEmote_channel(uID);
-       if (cfg.display.extended.useFFZ)
+       if (cfg.event.shoutout.receive.originExtendedEmotes)
        {
-        const rFFZ = await thirdparty.ffz.channelEx(uID);
-        if (rFFZ !== false)
+        if (cfg.display.extended.useFFZ)
         {
-         for (let i = 0, l = rFFZ.length; i < l; i++)
+         const rFFZ = await thirdparty.ffz.channelEx(uID);
+         if (rFFZ !== false)
          {
-          if (rFFZ[i].modifier !== false)
-           continue;
-          e.push({url: rFFZ[i].url, width: rFFZ[i].width, height: rFFZ[i].height});
+          for (let i = 0, l = rFFZ.length; i < l; i++)
+          {
+           if (rFFZ[i].modifier !== false)
+            continue;
+           e.push({url: rFFZ[i].url, width: rFFZ[i].width, height: rFFZ[i].height});
+          }
          }
         }
-       }
-       if (cfg.display.extended.useBTTV)
-       {
-        const rBTTV = await thirdparty.bttv.channelEx(uID);
-        if (rBTTV !== false)
+        if (cfg.display.extended.useBTTV)
         {
-         for (let i = 0, l = rBTTV.length; i < l; i++)
+         const rBTTV = await thirdparty.bttv.channelEx(uID);
+         if (rBTTV !== false)
          {
-          e.push({url: rBTTV[i].url, width: rBTTV[i].width, height: rBTTV[i].height});
+          for (let i = 0, l = rBTTV.length; i < l; i++)
+          {
+           e.push({url: rBTTV[i].url, width: rBTTV[i].width, height: rBTTV[i].height});
+          }
          }
         }
-       }
-       if (cfg.display.extended.use7TV)
-       {
-        const r7TV = await thirdparty['7tv'].channelEx(uID);
-        if (r7TV !== false)
+        if (cfg.display.extended.use7TV)
         {
-         for (let i = 0, l = r7TV.length; i < l; i++)
+         const r7TV = await thirdparty['7tv'].channelEx(uID);
+         if (r7TV !== false)
          {
-          if ((r7TV[i].vis & 0x80) === 0x80)
-           continue;
-          e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
+          for (let i = 0, l = r7TV.length; i < l; i++)
+          {
+           if ((r7TV[i].vis & 0x80) === 0x80)
+            continue;
+           e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
+          }
          }
         }
        }
