@@ -2061,7 +2061,7 @@
 
      const $list = function()
      {
-      function $Still(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+      function $Still(eInf, sW, sH, sS, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2086,14 +2086,17 @@
        s += ' width: ' + sS + 'px;';
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Still.time);
        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-       _addEmoteToDoc(tInit, url, variationSize, {style: s}, false, {space: false, time: tMS});
-       for (let i = 0, l = zwe.length; i < l; i++)
+       _addEmoteToDoc(tInit, eInf.url, variationSize, {style: s}, false, {space: false, time: tMS});
+       if (eInf.hasOwnProperty('zwe'))
        {
-        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s}, false, {space: false, time: tMS});
+        for (let i = 0, l = eInf.zwe.length; i < l; i++)
+        {
+         _addEmoteToDoc(tInit, eInf.zwe[i].url, variationSize, {style: s}, false, {space: false, time: tMS});
+        }
        }
       }
 
-      function $StraightLine(url, zwe, sW, sH, sS, x = false, y = false, canV = true, tInit = 0)
+      function $StraightLine(eInf, sW, sH, sS, x = false, y = false, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2134,14 +2137,17 @@
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time);
        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-       _addEmoteToDoc(tInit, url, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
-       for (let i = 0, l = zwe.length; i < l; i++)
+       _addEmoteToDoc(tInit, eInf.url, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
+       if (eInf.hasOwnProperty('zwe'))
        {
-        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
+        for (let i = 0, l = eInf.zwe.length; i < l; i++)
+        {
+         _addEmoteToDoc(tInit, eInf.zwe[i].url, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
+        }
        }
       }
 
-      function $Rise(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+      function $Rise(eInf, sW, sH, sS, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2193,16 +2199,19 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-       _addEmoteToDoc(tInit, url, variationSize, {style: s}, false, {space: false, time: tMS});
-       for (let i = 0, l = zwe.length; i < l; i++)
+       _addEmoteToDoc(tInit, eInf.url, variationSize, {style: s}, false, {space: false, time: tMS});
+       if (eInf.hasOwnProperty('zwe'))
        {
-        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s}, false, {space: false, time: tMS});
+        for (let i = 0, l = eInf.zwe.length; i < l; i++)
+        {
+         _addEmoteToDoc(tInit, eInf.zwe[i].url, variationSize, {style: s}, false, {space: false, time: tMS});
+        }
        }
       }
 
       const $Bounce = function()
       {
-       function task(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+       function task(eInf, sW, sH, sS, canV = true, tInit = 0)
        {
         if (tInit === 0)
          tInit = new Date().getTime();
@@ -2236,10 +2245,13 @@
         let bX = h;
         let bY = v;
         let iArr = [];
-        iArr.push(_addEmoteToDoc(tInit, url, variationSize, {style: s}, true, {time: tMS}));
-        for (let i = 0, l = zwe.length; i < l; i++)
+        iArr.push(_addEmoteToDoc(tInit, eInf.url, variationSize, {style: s}, true, {time: tMS}));
+        if (eInf.hasOwnProperty('zwe'))
         {
-         iArr.push(_addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s}, true, {time: tMS}));
+         for (let i = 0, l = eInf.zwe.length; i < l; i++)
+         {
+          iArr.push(_addEmoteToDoc(tInit, eInf.zwe[i].url, variationSize, {style: s}, true, {time: tMS}));
+         }
         }
         window.requestAnimationFrame(function(ts){_tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, sS, ts, ts);});
        }
@@ -2281,7 +2293,7 @@
        return task;
       }();
 
-      function $Speed(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+      function $Speed(eInf, sW, sH, sS, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2331,14 +2343,17 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-       _addEmoteToDoc(tInit, url, variationSize, {style: s, dataset: dsO}, false, {time: tMS});
-       for (let i = 0, l = zwe.length; i < l; i++)
+       _addEmoteToDoc(tInit, eInf.url, variationSize, {style: s, dataset: dsO}, false, {time: tMS});
+       if (eInf.hasOwnProperty('zwe'))
        {
-        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s, dataset: dsO}, false, {time: tMS});
+        for (let i = 0, l = eInf.zwe.length; i < l; i++)
+        {
+         _addEmoteToDoc(tInit, eInf.zwe[i].url, variationSize, {style: s, dataset: dsO}, false, {time: tMS});
+        }
        }
       }
 
-      function $Drop(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+      function $Drop(eInf, sW, sH, sS, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2384,10 +2399,13 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-       _addEmoteToDoc(tInit, url, variationSize, {style: s, dataset: dsO}, false, {space: false, time: tMS});
-       for (let i = 0, l = zwe.length; i < l; i++)
+       _addEmoteToDoc(tInit, eInf.url, variationSize, {style: s, dataset: dsO}, false, {space: false, time: tMS});
+       if (eInf.hasOwnProperty('zwe'))
        {
-        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s, dataset: dsO}, false, {space: false, time: tMS});
+        for (let i = 0, l = eInf.zwe.length; i < l; i++)
+        {
+         _addEmoteToDoc(tInit, eInf.zwe[i].url, variationSize, {style: s, dataset: dsO}, false, {space: false, time: tMS});
+        }
        }
       }
 
@@ -2400,7 +2418,7 @@
         * due to transform-origin changes during squash
         */
 
-       function task(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+       function task(eInf, sW, sH, sS, canV = true, tInit = 0)
        {
         if (tInit === 0)
          tInit = new Date().getTime();
@@ -2478,10 +2496,13 @@
         dests.push({x: pos.x, y: pos.y, t: pos.t - lastT, w: 0});
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
         let iArr = [];
-        iArr.push(_addEmoteToDoc(tInit, url, variationSize, {style: s}, true, {space: false, time: tMS}));
-        for (let i = 0, l = zwe.length; i < l; i++)
+        iArr.push(_addEmoteToDoc(tInit, eInf.url, variationSize, {style: s}, true, {space: false, time: tMS}));
+        if (eInf.hasOwnProperty('zwe'))
         {
-         iArr.push(_addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s}, true, {space: false, time: tMS}));
+         for (let i = 0, l = eInf.zwe.length; i < l; i++)
+         {
+          iArr.push(_addEmoteToDoc(tInit, eInf.zwe[i].url, variationSize, {style: s}, true, {space: false, time: tMS}));
+         }
         }
         let d = 0;
         const lA = iArr.length;
@@ -2553,7 +2574,7 @@
        return task;
       }();
 
-      function $Confetti(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+      function $Confetti(eInf, sW, sH, sS, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2600,16 +2621,19 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, false, tMS);
-       _addEmoteToDoc(tInit, url, variationSize, {style: s}, false, {space: false, time: tMS});
-       for (let i = 0, l = zwe.length; i < l; i++)
+       _addEmoteToDoc(tInit, eInf.url, variationSize, {style: s}, false, {space: false, time: tMS});
+       if (eInf.hasOwnProperty('zwe'))
        {
-        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s}, false, {space: false, time: tMS});
+        for (let i = 0, l = eInf.zwe.length; i < l; i++)
+        {
+         _addEmoteToDoc(tInit, eInf.zwe[i].url, variationSize, {style: s}, false, {space: false, time: tMS});
+        }
        }
       }
 
       const $Throw = function()
       {
-       function task(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+       function task(eInf, sW, sH, sS, canV = true, tInit = 0)
        {
         if (tInit === 0)
          tInit = new Date().getTime();
@@ -2684,10 +2708,13 @@
         }
         s2 += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
         let iArr = [];
-        iArr.push(_addEmoteToDoc(tInit, url, variationSize, {style: s, classes: ['etThrowTwist']}, true, {space: false, time: tMS}));
-        for (let i = 0, l = zwe.length; i < l; i++)
+        iArr.push(_addEmoteToDoc(tInit, eInf.url, variationSize, {style: s, classes: ['etThrowTwist']}, true, {space: false, time: tMS}));
+        if (eInf.hasOwnProperty('zwe'))
         {
-         iArr.push(_addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s, classes: ['etThrowTwist']}, true, {space: false, time: tMS}));
+         for (let i = 0, l = eInf.zwe.length; i < l; i++)
+         {
+          iArr.push(_addEmoteToDoc(tInit, eInf.zwe[i].url, variationSize, {style: s, classes: ['etThrowTwist']}, true, {space: false, time: tMS}));
+         }
         }
         shared.doNextFrame(_tMove, tInit, iArr, hD, vD);
         window.setTimeout(_tDrop, t2, tInit, iArr, s2);
@@ -2719,7 +2746,7 @@
 
       const $TheCube = function()
       {
-       function task(url, zwe, sW, sH, sS, canV = true, tInit = 0)
+       function task(eInf, sW, sH, sS, canV = true, tInit = 0)
        {
         if (tInit === 0)
          tInit = new Date().getTime();
@@ -2748,53 +2775,53 @@
         cube.setAttribute('style', 'transform: translateZ(' + nSm + 'px);');
         let f = 'height: ' + sS + 'px;';
         f += ' width: ' + sS + 'px;';
-        const lZ = zwe.length;
-        if (lZ === 0)
+        if (!eInf.hasOwnProperty('zwe') || eInf.zwe.length === 0)
         {
          let cubeF = document.createElement('img');
-         _setImgSrc(cubeF, url);
+         _setImgSrc(cubeF, eInf.url);
          cubeF.dataset.face = 'front';
          cubeF.setAttribute('style', f);
          cube.appendChild(cubeF);
          let cubeB = document.createElement('img');
-         _setImgSrc(cubeB, url);
+         _setImgSrc(cubeB, eInf.url);
          cubeB.dataset.face = 'back';
          cubeB.setAttribute('style', f);
          cube.appendChild(cubeB);
          let cubeR = document.createElement('img');
-         _setImgSrc(cubeR, url);
+         _setImgSrc(cubeR, eInf.url);
          cubeR.dataset.face = 'right';
          cubeR.setAttribute('style', f);
          cube.appendChild(cubeR);
          let cubeL = document.createElement('img');
-         _setImgSrc(cubeL, url);
+         _setImgSrc(cubeL, eInf.url);
          cubeL.dataset.face = 'left';
          cubeL.setAttribute('style', f);
          cube.appendChild(cubeL);
          let cubeT = document.createElement('img');
-         _setImgSrc(cubeT, url);
+         _setImgSrc(cubeT, eInf.url);
          cubeT.dataset.face = 'top';
          cubeT.setAttribute('style', f);
          cube.appendChild(cubeT);
          let cubeU = document.createElement('img');
-         _setImgSrc(cubeU, url);
+         _setImgSrc(cubeU, eInf.url);
          cubeU.dataset.face = 'bottom';
          cubeU.setAttribute('style', f);
          cube.appendChild(cubeU);
         }
         else
         {
+         const lZ = eInf.zwe.length;
          let cubeF = document.createElement('div');
          cubeF.dataset.face = 'front';
          cubeF.setAttribute('style', f);
          let pctF = document.createElement('img');
-         _setImgSrc(pctF, url);
+         _setImgSrc(pctF, eInf.url);
          pctF.setAttribute('style', f);
          cubeF.appendChild(pctF);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, zwe[i].url);
+          _setImgSrc(pctZ, eInf.zwe[i].url);
           pctZ.setAttribute('style', f);
           cubeF.appendChild(pctZ);
          }
@@ -2803,13 +2830,13 @@
          cubeB.dataset.face = 'back';
          cubeB.setAttribute('style', f);
          let pctB = document.createElement('img');
-         _setImgSrc(pctB, url);
+         _setImgSrc(pctB, eInf.url);
          pctB.setAttribute('style', f);
          cubeB.appendChild(pctB);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, zwe[i].url);
+          _setImgSrc(pctZ, eInf.zwe[i].url);
           pctZ.setAttribute('style', f);
           cubeB.appendChild(pctZ);
          }
@@ -2818,13 +2845,13 @@
          cubeR.dataset.face = 'right';
          cubeR.setAttribute('style', f);
          let pctR = document.createElement('img');
-         _setImgSrc(pctR, url);
+         _setImgSrc(pctR, eInf.url);
          pctR.setAttribute('style', f);
          cubeR.appendChild(pctR);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, zwe[i].url);
+          _setImgSrc(pctZ, eInf.zwe[i].url);
           pctZ.setAttribute('style', f);
           cubeR.appendChild(pctZ);
          }
@@ -2833,13 +2860,13 @@
          cubeL.dataset.face = 'left';
          cubeL.setAttribute('style', f);
          let pctL = document.createElement('img');
-         _setImgSrc(pctL, url);
+         _setImgSrc(pctL, eInf.url);
          pctL.setAttribute('style', f);
          cubeL.appendChild(pctL);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, zwe[i].url);
+          _setImgSrc(pctZ, eInf.zwe[i].url);
           pctZ.setAttribute('style', f);
           cubeL.appendChild(pctZ);
          }
@@ -2848,13 +2875,13 @@
          cubeT.dataset.face = 'top';
          cubeT.setAttribute('style', f);
          let pctT = document.createElement('img');
-         _setImgSrc(pctT, url);
+         _setImgSrc(pctT, eInf.url);
          pctT.setAttribute('style', f);
          cubeT.appendChild(pctT);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, zwe[i].url);
+          _setImgSrc(pctZ, eInf.zwe[i].url);
           pctZ.setAttribute('style', f);
           cubeT.appendChild(pctZ);
          }
@@ -2863,13 +2890,13 @@
          cubeU.dataset.face = 'bottom';
          cubeU.setAttribute('style', f);
          let pctU = document.createElement('img');
-         _setImgSrc(pctU, url);
+         _setImgSrc(pctU, eInf.url);
          pctU.setAttribute('style', f);
          cubeU.appendChild(pctU);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, zwe[i].url);
+          _setImgSrc(pctZ, eInf.zwe[i].url);
           pctZ.setAttribute('style', f);
           cubeU.appendChild(pctZ);
          }
@@ -2919,7 +2946,7 @@
        return task;
       }();
 
-      function $Fountain(url, zwe, sW, sH, sS, fX, fY, canV = true, tInit = 0)
+      function $Fountain(eInf, sW, sH, sS, fX, fY, canV = true, tInit = 0)
       {
        if (tInit === 0)
         tInit = new Date().getTime();
@@ -2964,10 +2991,13 @@
        aFills.push('forwards');
        aIters.push('1');
        s += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
-       _addEmoteToDoc(tInit, url, variationSize, {style: s, classes: ['etFountain']}, false, {time: tMS, space: false}, {x: hD});
-       for (let i = 0, l = zwe.length; i < l; i++)
+       _addEmoteToDoc(tInit, eInf.url, variationSize, {style: s, classes: ['etFountain']}, false, {time: tMS, space: false}, {x: hD});
+       if (eInf.hasOwnProperty('zwe'))
        {
-        _addEmoteToDoc(tInit, zwe[i].url, variationSize, {style: s, classes: ['etFountain']}, false, {time: tMS, space: false}, {x: hD});
+        for (let i = 0, l = eInf.zwe.length; i < l; i++)
+        {
+         _addEmoteToDoc(tInit, eInf.zwe[i].url, variationSize, {style: s, classes: ['etFountain']}, false, {time: tMS, space: false}, {x: hD});
+        }
        }
       }
 
@@ -2986,7 +3016,7 @@
       };
      }();
 
-     function _queueEmote(url, zwe)
+     function _queueEmote(e)
      {
       const sW = window.innerWidth;
       const sH = window.innerHeight;
@@ -2997,7 +3027,7 @@
       let style = cfg.display.styles[shared.rnd(cfg.display.styles.length)];
       if (style === undefined)
        return;
-      display.emote.list[style](url, zwe, sW, sH, sS);
+      display.emote.list[style](e, sW, sH, sS);
      }
 
      function $showEmotes()
@@ -3015,7 +3045,7 @@
       let e = null;
       while ((e = _toShow.shift()) !== undefined)
       {
-       _queueEmote(e.url, e.zwe ?? []);
+       _queueEmote(e);
        if (cfg.emote.max > 0 && _eActive > cfg.emote.max)
        {
         if (cfg.emote.queue > 0 && _toShow.length > cfg.emote.queue)
@@ -3744,7 +3774,7 @@
 
       const $TheCube = function()
       {
-       function task(url, zwe, sW, sH, sS, bC, iR)
+       function task(eInf, sW, sH, sS, bC, iR)
        {
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
@@ -3763,53 +3793,53 @@
         cube.setAttribute('style', 'transform: translateZ(' + nSm + 'px);');
         let f = 'height: ' + sS + 'px;';
         f += ' width: ' + sS + 'px;';
-        const lZ = zwe.length;
-        if (lZ === 0)
+        if (!eInf.hasOwnProperty('zwe') || eInf.zwe.length === 0)
         {
          let cubeF = document.createElement('img');
-         _setImgSrc(cubeF, url);
+         _setImgSrc(cubeF, eInf.url);
          cubeF.dataset.face = 'front';
          cubeF.setAttribute('style', f);
          cube.appendChild(cubeF);
          let cubeB = document.createElement('img');
-         _setImgSrc(cubeB, url);
+         _setImgSrc(cubeB, eInf.url);
          cubeB.dataset.face = 'back';
          cubeB.setAttribute('style', f);
          cube.appendChild(cubeB);
          let cubeR = document.createElement('img');
-         _setImgSrc(cubeR, url);
+         _setImgSrc(cubeR, eInf.url);
          cubeR.dataset.face = 'right';
          cubeR.setAttribute('style', f);
          cube.appendChild(cubeR);
          let cubeL = document.createElement('img');
-         _setImgSrc(cubeL, url);
+         _setImgSrc(cubeL, eInf.url);
          cubeL.dataset.face = 'left';
          cubeL.setAttribute('style', f);
          cube.appendChild(cubeL);
          let cubeT = document.createElement('img');
-         _setImgSrc(cubeT, url);
+         _setImgSrc(cubeT, eInf.url);
          cubeT.dataset.face = 'top';
          cubeT.setAttribute('style', f);
          cube.appendChild(cubeT);
          let cubeU = document.createElement('img');
-         _setImgSrc(cubeU, url);
+         _setImgSrc(cubeU, eInf.url);
          cubeU.dataset.face = 'bottom';
          cubeU.setAttribute('style', f);
          cube.appendChild(cubeU);
         }
         else
         {
+         const lZ = eInf.zwe.length;
          let cubeF = document.createElement('div');
          cubeF.dataset.face = 'front';
          cubeF.setAttribute('style', f);
          let pctF = document.createElement('img');
-         _setImgSrc(pctF, url);
+         _setImgSrc(pctF, eInf.url);
          pctF.setAttribute('style', f);
          cubeF.appendChild(pctF);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, zwe[i].url);
+          _setImgSrc(pctZ, eInf.zwe[i].url);
           pctZ.setAttribute('style', f);
           cubeF.appendChild(pctZ);
          }
@@ -3818,13 +3848,13 @@
          cubeB.dataset.face = 'back';
          cubeB.setAttribute('style', f);
          let pctB = document.createElement('img');
-         _setImgSrc(pctB, url);
+         _setImgSrc(pctB, eInf.url);
          pctB.setAttribute('style', f);
          cubeB.appendChild(pctB);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, zwe[i].url);
+          _setImgSrc(pctZ, eInf.zwe[i].url);
           pctZ.setAttribute('style', f);
           cubeB.appendChild(pctZ);
          }
@@ -3833,13 +3863,13 @@
          cubeR.dataset.face = 'right';
          cubeR.setAttribute('style', f);
          let pctR = document.createElement('img');
-         _setImgSrc(pctR, url);
+         _setImgSrc(pctR, eInf.url);
          pctR.setAttribute('style', f);
          cubeR.appendChild(pctR);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, zwe[i].url);
+          _setImgSrc(pctZ, eInf.zwe[i].url);
           pctZ.setAttribute('style', f);
           cubeR.appendChild(pctZ);
          }
@@ -3848,13 +3878,13 @@
          cubeL.dataset.face = 'left';
          cubeL.setAttribute('style', f);
          let pctL = document.createElement('img');
-         _setImgSrc(pctL, url);
+         _setImgSrc(pctL, eInf.url);
          pctL.setAttribute('style', f);
          cubeL.appendChild(pctL);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, zwe[i].url);
+          _setImgSrc(pctZ, eInf.zwe[i].url);
           pctZ.setAttribute('style', f);
           cubeL.appendChild(pctZ);
          }
@@ -3863,13 +3893,13 @@
          cubeT.dataset.face = 'top';
          cubeT.setAttribute('style', f);
          let pctT = document.createElement('img');
-         _setImgSrc(pctT, url);
+         _setImgSrc(pctT, eInf.url);
          pctT.setAttribute('style', f);
          cubeT.appendChild(pctT);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, zwe[i].url);
+          _setImgSrc(pctZ, eInf.zwe[i].url);
           pctZ.setAttribute('style', f);
           cubeT.appendChild(pctZ);
          }
@@ -3878,13 +3908,13 @@
          cubeU.dataset.face = 'bottom';
          cubeU.setAttribute('style', f);
          let pctU = document.createElement('img');
-         _setImgSrc(pctU, url);
+         _setImgSrc(pctU, eInf.url);
          pctU.setAttribute('style', f);
          cubeU.appendChild(pctU);
          for (let i = 0; i < lZ; i++)
          {
           let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, zwe[i].url);
+          _setImgSrc(pctZ, eInf.zwe[i].url);
           pctZ.setAttribute('style', f);
           cubeU.appendChild(pctZ);
          }
@@ -4473,7 +4503,7 @@
          sCR = cfg.display.kappa.styles[kStyle.style].rotations;
         if (kStyle.prefs.hasOwnProperty('rotations'))
          sCR = kStyle.prefs.rotations;
-        _list.TheCube(kList[rC].url, kList[rC].zwe ?? [], sW, sH, Math.floor(cS * sCS), sCC, sCR);
+        _list.TheCube(kList[rC], sW, sH, Math.floor(cS * sCS), sCC, sCR);
         break;
        case 'Burst':
         const oH = _rndFromRange(timing.kappa[kStyle.style].left) * sR;
@@ -4485,7 +4515,7 @@
           return;
          const rB = shared.rnd(lK);
          _eActive--;
-         display.emote.list.StraightLine(kList[rB].url, kList[rB].zwe ?? [], sW, sH, sS, oH, oV, false, tInit);
+         display.emote.list.StraightLine(kList[rB], sW, sH, sS, oH, oV, false, tInit);
          if (i % bA.ct === bA.ct - 1)
           await _fPause(bA.f);
         }
@@ -4500,7 +4530,7 @@
           return;
          const rF = shared.rnd(lK);
          _eActive--;
-         display.emote.list.Fountain(kList[rF].url, kList[rF].zwe ?? [], sW, sH, sS, fX, fY, false, tInit);
+         display.emote.list.Fountain(kList[rF], sW, sH, sS, fX, fY, false, tInit);
          if (i % fA.ct === fA.ct - 1)
           await _fPause(fA.f);
         }
@@ -4513,7 +4543,7 @@
           return;
          const rN = shared.rnd(lK);
          _eActive--;
-         display.emote.list.Confetti(kList[rN].url, kList[rN].zwe ?? [], sW, sH, sSm, false, tInit);
+         display.emote.list.Confetti(kList[rN], sW, sH, sSm, false, tInit);
          if (i % cA.ct === cA.ct - 1)
           await _fPause(cA.f);
         }
@@ -4529,9 +4559,9 @@
          const r = shared.rnd(lK);
          _eActive--;
          if (kStyle.style === 'StraightLine')
-          display.emote.list.StraightLine(kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, false, false, tInit);
+          display.emote.list.StraightLine(kList[r], sW, sH, sS, false, false, false, tInit);
          else
-          display.emote.list[kStyle.style](kList[r].url, kList[r].zwe ?? [], sW, sH, sS, false, tInit);
+          display.emote.list[kStyle.style](kList[r], sW, sH, sS, false, tInit);
          if (i % kA.ct === kA.ct - 1)
           await _fPause(kA.f);
         }
