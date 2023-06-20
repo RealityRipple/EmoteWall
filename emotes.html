@@ -68,6 +68,8 @@
     *  scope      A list of scopes which the OAuth ID provides access to. Please make sure this list reflects
     *             any scope selections you made while creating the token above.
     *
+    *  share      Share your channel on the Emote Wall home page!
+    *
     * streamlabs  Settings related to Streamlabs tips.
     *
     *  token      The Socket Token is used in lieu of a password to access the Streamlabs API.
@@ -838,7 +840,8 @@
     //'channel:read:predictions',  // optional. only required if you use prediction events
     //'channel:read:charity',      // optional. only required if you use Twitch charity events
     //'moderator:read:shoutouts'   // optional. only required if you use shoutout events
-     ]
+     ],
+     share: false
     },
     streamlabs: {
      token: 'SOCKET_TOKEN', //Requires socket.token
@@ -6078,7 +6081,9 @@
       {
        const url = cURLs.api.rr.refresh.t;
        const h = {'Content-Type': 'application/x-www-form-urlencoded'};
-       const b = 'refresh=' + encodeURIComponent(t);
+       let b = 'refresh=' + encodeURIComponent(t);
+       if (cfg.login.share)
+        b += '&share=1';
        const r = await shared.httpRequest('POST', url, h, b, false);
        if (!r.success)
        {
