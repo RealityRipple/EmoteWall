@@ -212,6 +212,12 @@
     *             If TRUE, ZWEs will be stretched or squashed to fit non-square emotes.
     *             If FALSE, ZWEs will be placed in the center of non-square emotes.
     *
+    *  hue        Rotate the hue of all emotes.
+    *             If a number between 1 and 359, all colors will be rotated by that many degrees.
+    *             If 'rave', all colors will constantly rotate.
+    *             Otherwise, no color rotation will occur.
+    *             Note: If a command to toggle rave or turn rave on exists, rave will be off at startup.
+    *
     *  kappa      Settings related to emote-splosions and the !kappagen command.
     *
     *   count     The number of emotes to display per kappagen. This value should be less than the "emote max" value
@@ -688,8 +694,20 @@
     *
     *  redeem     An array of style-specific channel point reward names which can be used to force-trigger this kappagen.
     *
-    *  erase      If this property exists, the command will erase the screen rather than showing a style. Any 'styles'
-    *             property will be ignored, regardless of the value of erase.
+    *  erase      If this property exists, the command will erase the screen rather than showing a style. Any 'styles',
+    *             'rave', 'raveon', or 'raveoff' properties will be ignored, regardless of the value of erase.
+    *
+    *  rave       If this property exists, the command will toggle the 'rave' hue rotation, if enabled, rather than
+    *             showing a style. Any 'styles', 'raveon', or 'raveoff' properties will be ignored, regardless of the
+    *             value of rave. If hue rotation is not set to 'rave', this command will do nothing.
+    *
+    *  raveon     If this property exists, the command will turn on the 'rave' hue rotation, if enabled, rather than
+    *             showing a style. Any 'styles' or 'raveoff' properties will be ignored, regardless of the value of
+    *             rave. If hue rotation is not set to 'rave', this command will do nothing.
+    *
+    *  raveoff    If this property exists, the command will turn off the 'rave' hue rotation, if enabled, rather than
+    *             showing a style. Any 'styles' property will be ignored, regardless of the value of rave.  If hue
+    *             rotation is not set to 'rave', this command will do nothing.
     *
     *  styles     A kappagen of one of the listed styles will occur upon command. This value can be a boolean or array.
     *              If TRUE, a kappagen will occur.
@@ -883,6 +901,7 @@
       useZWE: true,
       fillZWE: false
      },
+     hue: false,
      kappa: {
       count: 150,
       styles: {
@@ -7473,7 +7492,7 @@
        let foundAdvCmd = false;
        for (const k of cfg.commands)
        {
-        if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase'))
+        if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase') && !k.hasOwnProperty('rave') && !k.hasOwnProperty('raveon') && !k.hasOwnProperty('raveoff'))
          continue;
         if (!k.hasOwnProperty('aliases'))
          continue;
@@ -7510,6 +7529,25 @@
         if (k.hasOwnProperty('erase'))
         {
          display.eraseAll();
+         return true;
+        }
+        if (k.hasOwnProperty('rave'))
+        {
+         if (document.body.classList.contains('rave'))
+          document.body.classList.remove('rave');
+         else
+          document.body.classList.add('rave');
+         return true;
+        }
+        if (k.hasOwnProperty('raveon'))
+        {
+         document.body.classList.add('rave');
+         return true;
+        }
+        if (k.hasOwnProperty('raveoff'))
+        {
+         if (document.body.classList.contains('rave'))
+          document.body.classList.remove('rave');
          return true;
         }
         let kC = {};
@@ -10575,6 +10613,8 @@
     async function task()
     {
      shared.mspf.init();
+     if (cfg.display.hasOwnProperty('hue') && cfg.display.hue === 'rave' && !_hasRaveToggle())
+      document.body.classList.add('rave');
      _css();
      if (!window.hasOwnProperty('obsstudio') && !window.localStorage.getItem('emotewall.obs_notfound'))
      {
@@ -10665,6 +10705,33 @@
     {
      const css = document.getElementsByTagName('STYLE')[0];
      let h = css.innerHTML;
+     if (cfg.display.hasOwnProperty('hue') && cfg.display.hue !== false)
+     {
+      if (cfg.display.hue === 'rave')
+      {
+       let r = '   body.rave\n';
+       r += '   {\n';
+       r += '    animation: rave 3s linear infinite;\n';
+       r += '   }\n';
+       r += '   @keyframes rave\n';
+       r += '   {\n';
+       for (let i = 0; i <= 100; i += 10)
+       {
+        r += '    ' + i + '%\n';
+        r += '    {\n';
+        r += '     filter: hue-rotate(' + i * 3.6 + 'deg);\n';
+        r += '    }\n';
+       }
+       r += '   }\n';
+       h = h.replace('   img\n', r + '   img\n');
+      }
+      else if (!isNaN(cfg.display.hue))
+      {
+       const iHue = parseInt(cfg.display.hue, 10);
+       if (iHue > 0 && iHue < 360)
+        h = h.replace('   body\n   {\n', '   body\n   {\n    filter: hue-rotate(' + iHue + 'deg);\n');
+      }
+     }
      let a = '   [data-squash="vertical"]\n';
      a += '   {\n';
      a += '    transform: scale(' + timing.display.Crazy.squash.width + ', ' + timing.display.Crazy.squash.height + ');\n';
@@ -10774,6 +10841,18 @@
      t += '   }\n';
      h = h.replace('   [data-squash="vertical"]\n', t + '\n   [data-squash="vertical"]\n');
      css.innerHTML = h;
+    }
+
+    function _hasRaveToggle()
+    {
+     for (const k of cfg.commands)
+     {
+      if (k.hasOwnProperty('rave'))
+       return true;
+      if (k.hasOwnProperty('raveon'))
+       return true;
+     }
+     return false;
     }
 
     return task;
