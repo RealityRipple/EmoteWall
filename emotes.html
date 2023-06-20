@@ -285,6 +285,10 @@
     *                the screen globally.
     *             If FALSE, the setting will default to any more specific avoidMiddle Conga settings.
     *
+    *  statuses   Display status icons whenever a connection issue occurs.
+    *             If TRUE, any connection issues will show a status icon for a moment.
+    *             If FALSE, connection statuses will only be shown on startup.
+    *
     * emote       Settings related to individual emote display.
     *
     *  time       The number of seconds an emote should show up on the screen for.
@@ -938,7 +942,8 @@
        time: 5,
        avoidMiddle: false
       }
-     }
+     },
+     statuses: false
     },
     emote: {
      time: 5,
@@ -10641,6 +10646,7 @@
      if (cfg.display.hasOwnProperty('hue') && cfg.display.hue === 'rave' && !_hasRaveToggle())
       document.body.classList.add('rave');
      _css();
+     _statuses();
      if (!window.hasOwnProperty('obsstudio') && !window.localStorage.getItem('emotewall.obs_notfound'))
      {
       window.localStorage.setItem('emotewall.obs_notfound', '1');
@@ -10661,6 +10667,409 @@
      else
       twitch.net.dead = true;
     }
+
+    const _statuses = function()
+    {
+     const vFade = 3000;
+     let tStats = false;
+     let tSVC = false;
+     let tEG = false;
+
+     function task()
+     {
+      let services = document.createElement('span') ;
+      services.setAttribute('id', 'services');
+      services.setAttribute('class', 'stateIconBox');
+
+      let svcTwitch = document.createElement('span');
+      svcTwitch.setAttribute('id', 'svcTwitch');
+      svcTwitch.setAttribute('class', 'service unused');
+      svcTwitch.innerHTML = 'T';
+      let bdgTwitchIRC = document.createElement('span');
+      bdgTwitchIRC.setAttribute('id', 'badgeTwitchIRC');
+      bdgTwitchIRC.setAttribute('class', 'badge global unused');
+      svcTwitch.appendChild(bdgTwitchIRC);
+      let bdgTwitchEventSub = document.createElement('span');
+      bdgTwitchEventSub.setAttribute('id', 'badgeTwitchEventSub');
+      bdgTwitchEventSub.setAttribute('class', 'badge channel unused');
+      svcTwitch.appendChild(bdgTwitchEventSub);
+      services.appendChild(svcTwitch);
+
+      let svcBTTV = document.createElement('span');
+      svcBTTV.setAttribute('id', 'svcBTTV');
+      svcBTTV.setAttribute('class', 'service unused');
+      svcBTTV.innerHTML = 'B';
+      services.appendChild(svcBTTV);
+
+      let svc7TV = document.createElement('span');
+      svc7TV.setAttribute('id', 'svc7TV');
+      svc7TV.setAttribute('class', 'service unused');
+      svc7TV.innerHTML = '7';
+      services.appendChild(svc7TV);
+
+      let svcStreamlabs = document.createElement('span');
+      svcStreamlabs.setAttribute('id', 'svcStreamlabs');
+      svcStreamlabs.setAttribute('class', 'service unused');
+      svcStreamlabs.innerHTML = 'SL';
+      services.appendChild(svcStreamlabs);
+
+      let svcStreamElements = document.createElement('span');
+      svcStreamElements.setAttribute('id', 'svcStreamElements');
+      svcStreamElements.setAttribute('class', 'service unused');
+      svcStreamElements.innerHTML = 'SE';
+      services.appendChild(svcStreamElements);
+
+      document.body.appendChild(services);
+
+      let emotegroups = document.createElement('span') ;
+      emotegroups.setAttribute('id', 'emotegroups');
+      emotegroups.setAttribute('class', 'stateIconBox');
+
+      let emgTwitch = document.createElement('span');
+      emgTwitch.setAttribute('id', 'emgTwitch');
+      emgTwitch.setAttribute('class', 'service unused');
+      emgTwitch.innerHTML = 'T';
+      let bdgTwitchGlobal = document.createElement('span');
+      bdgTwitchGlobal.setAttribute('id', 'badgeTwitchGlobal');
+      bdgTwitchGlobal.setAttribute('class', 'badge global unused');
+      emgTwitch.appendChild(bdgTwitchGlobal);
+      let bdgTwitchChannel = document.createElement('span');
+      bdgTwitchChannel.setAttribute('id', 'badgeTwitchChannel');
+      bdgTwitchChannel.setAttribute('class', 'badge channel unused');
+      emgTwitch.appendChild(bdgTwitchChannel);
+      emotegroups.appendChild(emgTwitch);
+
+      let emgFFZ = document.createElement('span');
+      emgFFZ.setAttribute('id', 'emgFFZ');
+      emgFFZ.setAttribute('class', 'service unused');
+      emgFFZ.innerHTML = 'F';
+      let bdgFFZGlobal = document.createElement('span');
+      bdgFFZGlobal.setAttribute('id', 'badgeFFZGlobal');
+      bdgFFZGlobal.setAttribute('class', 'badge global unused');
+      emgFFZ.appendChild(bdgFFZGlobal);
+      let bdgFFZChannel = document.createElement('span');
+      bdgFFZChannel.setAttribute('id', 'badgeFFZChannel');
+      bdgFFZChannel.setAttribute('class', 'badge channel unused');
+      emgFFZ.appendChild(bdgFFZChannel);
+      emotegroups.appendChild(emgFFZ);
+
+      let emgBTTV = document.createElement('span');
+      emgBTTV.setAttribute('id', 'emgBTTV');
+      emgBTTV.setAttribute('class', 'service unused');
+      emgBTTV.innerHTML = 'B';
+      let bdgBTTVGlobal = document.createElement('span');
+      bdgBTTVGlobal.setAttribute('id', 'badgeBTTVGlobal');
+      bdgBTTVGlobal.setAttribute('class', 'badge global unused');
+      emgBTTV.appendChild(bdgBTTVGlobal);
+      let bdgBTTVChannel = document.createElement('span');
+      bdgBTTVChannel.setAttribute('id', 'badgeBTTVChannel');
+      bdgBTTVChannel.setAttribute('class', 'badge channel unused');
+      emgBTTV.appendChild(bdgBTTVChannel);
+      emotegroups.appendChild(emgBTTV);
+
+      let emg7TV = document.createElement('span');
+      emg7TV.setAttribute('id', 'emg7TV');
+      emg7TV.setAttribute('class', 'service unused');
+      emg7TV.innerHTML = '7';
+      let bdg7TVGlobal = document.createElement('span');
+      bdg7TVGlobal.setAttribute('id', 'badge7TVGlobal');
+      bdg7TVGlobal.setAttribute('class', 'badge global unused');
+      emg7TV.appendChild(bdg7TVGlobal);
+      let bdg7TVChannel = document.createElement('span');
+      bdg7TVChannel.setAttribute('id', 'badge7TVChannel');
+      bdg7TVChannel.setAttribute('class', 'badge channel unused');
+      emg7TV.appendChild(bdg7TVChannel);
+      emotegroups.appendChild(emg7TV);
+
+      document.body.appendChild(emotegroups);
+
+      tStats = window.setTimeout(_stateUpdate, 1000);
+     }
+
+     function _iconize(exists, enabled, svc, badgeG = false, badgeC = false, enabledG = false, enabledC = false)
+     {
+      let r = false;
+      if (!exists)
+      {
+       if (!document.getElementById(svc).classList.contains('unused'))
+       {
+        document.getElementById(svc).classList.add('unused');
+        if (badgeG)
+         document.getElementById(badgeG).classList.add('unused');
+        if (badgeC)
+        document.getElementById(badgeC).classList.add('unused');
+        r = true;
+       }
+       return r;
+      }
+      if (document.getElementById(svc).classList.contains('unused'))
+      {
+       document.getElementById(svc).classList.remove('unused');
+       if (badgeG)
+        document.getElementById(badgeG).classList.remove('unused');
+       if (badgeC)
+        document.getElementById(badgeC).classList.remove('unused');
+       r = true;
+      }
+      if (enabled)
+      {
+       if (document.getElementById(svc).classList.contains('disabled'))
+       {
+        document.getElementById(svc).classList.remove('disabled');
+        r = true;
+       }
+       if (badgeG)
+       {
+        if (enabledG)
+        {
+         if (document.getElementById(badgeG).classList.contains('disabled'))
+         {
+          document.getElementById(badgeG).classList.remove('disabled');
+          r = true;
+         }
+        }
+        else
+        {
+         if (!document.getElementById(badgeG).classList.contains('disabled'))
+         {
+          document.getElementById(badgeG).classList.add('disabled');
+          r = true;
+         }
+        }
+       }
+       if (badgeC)
+       {
+        if (enabledC)
+        {
+         if (document.getElementById(badgeC).classList.contains('disabled'))
+         {
+          document.getElementById(badgeC).classList.remove('disabled');
+          r = true;
+         }
+        }
+        else
+        {
+         if (!document.getElementById(badgeC).classList.contains('disabled'))
+         {
+          document.getElementById(badgeC).classList.add('disabled');
+          r = true;
+         }
+        }
+       }
+      }
+      else
+      {
+       if (!document.getElementById(svc).classList.contains('disabled'))
+       {
+        document.getElementById(svc).classList.add('disabled');
+        if (badgeG)
+         document.getElementById(badgeG).classList.add('disabled');
+        if (badgeC)
+         document.getElementById(badgeC).classList.add('disabled');
+        r = true;
+       }
+      }
+      return r;
+     }
+
+     const _services = function()
+     {
+      function $twitch()
+      {
+       return _iconize(!twitch.net.dead, twitch.net.online || twitch.net.eventSubCtl.online, 'svcTwitch', 'badgeTwitchIRC', 'badgeTwitchEventSub', twitch.net.online, twitch.net.eventSubCtl.online);
+      }
+
+      function $bttv()
+      {
+       return _iconize(cfg.display.extended.useBTTV, thirdparty.bttv.online, 'svcBTTV');
+      }
+
+      function $7tv()
+      {
+       return _iconize(cfg.display.extended.use7TV, thirdparty['7tv'].online, 'svc7TV');
+      }
+
+      function $streamlabs()
+      {
+       return _iconize(streamlabs.cfgVals() > 0, streamlabs.online, 'svcStreamlabs');
+      }
+
+      function $streamelements()
+      {
+       return _iconize(streamelements.cfgVals() > 0, streamelements.online, 'svcStreamElements');
+      }
+
+      return {
+       twitch: $twitch,
+       bttv: $bttv,
+       '7tv': $7tv,
+       streamlabs: $streamlabs,
+       streamelements: $streamelements
+      };
+     }();
+
+     const _emotegroups = function()
+     {
+      function $twitch()
+      {
+       let v = false;
+       let g = -1;
+       let c = -1;
+       if (thirdparty.emotes.hasOwnProperty('twitch'))
+       {
+        v = true;
+        g = 0;
+        c = 0;
+        for (let n in thirdparty.emotes.twitch)
+        {
+         if (!thirdparty.emotes.twitch[n].hasOwnProperty('scope'))
+          continue;
+         if (thirdparty.emotes.twitch[n].scope === 'g')
+          g++;
+         if (thirdparty.emotes.twitch[n].scope === 'c')
+          c++;
+        }
+       }
+       return _iconize(v, g > 0 | c > 0, 'emgTwitch', 'badgeTwitchGlobal', 'badgeTwitchChannel', g > 0, c > 0);
+      }
+
+      function $ffz()
+      {
+       let v = false;
+       let g = -1;
+       let c = -1;
+       if (thirdparty.emotes.hasOwnProperty('ffz'))
+       {
+        v = true;
+        g = 0;
+        c = 0;
+        for (let n in thirdparty.emotes.ffz)
+        {
+         if (!thirdparty.emotes.ffz[n].hasOwnProperty('scope'))
+          continue;
+         if (thirdparty.emotes.ffz[n].scope === 'g')
+          g++;
+         if (thirdparty.emotes.ffz[n].scope === 'c')
+          c++;
+        }
+       }
+       return _iconize(v, g > 0 | c > 0, 'emgFFZ', 'badgeFFZGlobal', 'badgeFFZChannel', g > 0, c > 0);
+      }
+
+      function $bttv()
+      {
+       let r = false;
+       let v = false;
+       let g = -1;
+       let c = -1;
+       if (thirdparty.emotes.hasOwnProperty('bttv'))
+       {
+        v = true;
+        g = 0;
+        c = 0;
+        for (let n in thirdparty.emotes.bttv)
+        {
+         if (!thirdparty.emotes.bttv[n].hasOwnProperty('scope'))
+          continue;
+         if (thirdparty.emotes.bttv[n].scope === 'g')
+          g++;
+         if (thirdparty.emotes.bttv[n].scope === 'c')
+          c++;
+        }
+       }
+       return _iconize(v, g > 0 | c > 0, 'emgBTTV', 'badgeBTTVGlobal', 'badgeBTTVChannel', g > 0, c > 0);
+      }
+
+      function $7tv()
+      {
+       let r = false;
+       let v = false;
+       let g = -1;
+       let c = -1;
+       if (thirdparty.emotes.hasOwnProperty('7tv'))
+       {
+        v = true;
+        g = 0;
+        c = 0;
+        for (let n in thirdparty.emotes['7tv'])
+        {
+         if (!thirdparty.emotes['7tv'][n].hasOwnProperty('scope'))
+          continue;
+         if (thirdparty.emotes['7tv'][n].scope === 'g')
+          g++;
+         if (thirdparty.emotes['7tv'][n].scope === 'c')
+          c++;
+        }
+       }
+       return _iconize(v, g > 0 | c > 0, 'emg7TV', 'badge7TVGlobal', 'badge7TVChannel', g > 0, c > 0);
+      }
+
+      return {
+       twitch: $twitch,
+       ffz: $ffz,
+       bttv: $bttv,
+       '7tv': $7tv
+      };
+     }();
+
+     function _stateUpdate()
+     {
+      let didSVC = false;
+      let didEG = false;
+      if (_services.twitch())
+       didSVC = true;
+      if (_services.bttv())
+       didSVC = true;
+      if (_services['7tv']())
+       didSVC = true;
+      if (_services.streamlabs())
+       didSVC = true;
+      if (_services.streamelements())
+       didSVC = true;
+      if (_emotegroups.twitch())
+       didEG = true;
+      if (_emotegroups.ffz())
+       didEG = true;
+      if (_emotegroups.bttv())
+       didEG = true;
+      if (_emotegroups['7tv']())
+       didEG = true;
+      if (didSVC || didEG)
+      {
+       if (didSVC)
+       {
+        document.getElementById('services').classList.remove('idle');
+        if (tSVC !== false)
+        {
+         window.clearTimeout(tSVC);
+         tSVC = false;
+        }
+       }
+       else
+        tSVC = window.setTimeout(function(){document.getElementById('services').classList.add('idle'); tSVC = false; if (!cfg.display.statuses) window.clearTimeout(tStats);}, vFade);
+       if (didEG)
+       {
+        document.getElementById('emotegroups').classList.remove('idle');
+        if (tEG !== false)
+        {
+         window.clearTimeout(tEG);
+         tEG = false;
+        }
+       }
+       else
+        tEG = window.setTimeout(function(){document.getElementById('emotegroups').classList.add('idle'); tEG = false; if (!cfg.display.statuses) window.clearTimeout(tStats);}, vFade);
+       tStats = window.setTimeout(_stateUpdate, 200);
+      }
+      else
+      {
+       tSVC = window.setTimeout(function(){document.getElementById('services').classList.add('idle'); tSVC = false; if (!cfg.display.statuses) window.clearTimeout(tStats);}, vFade);
+       tEG = window.setTimeout(function(){document.getElementById('emotegroups').classList.add('idle'); tEG = false; if (!cfg.display.statuses) window.clearTimeout(tStats);}, vFade);
+       tStats = window.setTimeout(_stateUpdate, 1000);
+      }
+     }
+
+     return task;
+    }();
 
     async function _twitch()
     {
@@ -11358,6 +11767,121 @@
     {
      padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;
     }
+   }
+
+   .stateIconBox
+   {
+    display: inline-block;
+    position: absolute;
+    bottom: 0;
+    opacity: 1;
+    transition: opacity 1s ease-in;
+    color: #FFFFFF;
+   }
+   .stateIconBox.idle
+   {
+    opacity: 0;
+   }
+   .stateIconBox#services
+   {
+    left: 0;
+   }
+   .stateIconBox#emotegroups
+   {
+    right: 0;
+    text-direction: rtl;
+   }
+   .stateIconBox .service
+   {
+    display: inline-block;
+    margin-left: 0.5vmin;
+    margin-right: 0.5vmin;
+    width: 2vmin;
+    height: 2vmin;
+    border-radius: 1vmin;
+    position: relative;
+    text-align: center;
+    font-size: 1.25vmin;
+    line-height: 2vmin;
+    font-family: serif;
+   }
+   .stateIconBox .service.unused
+   {
+    display: none;
+   }
+   .stateIconBox .service.disabled
+   {
+    filter: grayscale(1);
+    opacity: 0.75;
+   }
+   .stateIconBox .service .badge
+   {
+    display: inline-block;
+    width: 0.75vmin;
+    height: 0.75vmin;
+    bottom: 0;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: absolute;
+   }
+   .stateIconBox .service .badge.global
+   {
+    left: -0.25vmin;
+    background-image: url('https://cdn.frankerfacez.com/static/emoji/images/blob/1f30e.png');
+   }
+   .stateIconBox .service .badge.channel
+   {
+    right: -0.25vmin;
+    background-image: url('https://cdn.frankerfacez.com/static/emoji/images/blob/1f464.png');
+   }
+   .stateIconBox .service .badge.unused
+   {
+    display: none;
+   }
+   .stateIconBox .service .badge.disabled
+   {
+    filter: grayscale(1);
+    opacity: 0.75;
+   }
+
+   .stateIconBox #badgeTwitchIRC
+   {
+    background-image: url('https://cdn.frankerfacez.com/static/emoji/images/noto/1f5e3.png');
+   }
+   .stateIconBox #badgeTwitchEventSub
+   {
+    background-image: url('https://cdn.frankerfacez.com/static/emoji/images/blob/1f4c5.png');
+   }
+
+   .stateIconBox #svcTwitch,
+   .stateIconBox #emgTwitch
+   {
+    background-color: #9146FF;
+   }
+   .stateIconBox #emgFFZ
+   {
+    background-color: #845A39;
+   }
+   .stateIconBox #svcBTTV,
+   .stateIconBox #emgBTTV
+   {
+    background-color: #D50014;
+   }
+   .stateIconBox #svc7TV,
+   .stateIconBox #emg7TV
+   {
+    background-color: #29B2A7;
+   }
+
+   .stateIconBox #svcStreamlabs
+   {
+    background-color: #80F5D2;
+    color: #000000;
+   }
+   .stateIconBox #svcStreamElements
+   {
+    background-color: #5088C7;
    }
 
    .notice
