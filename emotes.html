@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.7.9.1 BETA
+    * v0.7.9.2 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -284,10 +284,6 @@
     *    avoidMiddle  If TRUE, conga lines will only show up on the top or bottom three rows to avoid the middle off
     *                the screen globally.
     *             If FALSE, the setting will default to any more specific avoidMiddle Conga settings.
-    *
-    *  statuses   Display status icons whenever a connection issue occurs.
-    *             If TRUE, any connection issues will show a status icon for a moment.
-    *             If FALSE, connection statuses will only be shown on startup.
     *
     * emote       Settings related to individual emote display.
     *
@@ -950,8 +946,7 @@
        time: 5,
        avoidMiddle: false
       }
-     },
-     statuses: false
+     }
     },
     emote: {
      time: 5,
@@ -1871,6 +1866,7 @@
    //////////////////////////////////////////////////////////////////////////////
 
    let cList = [];
+   let cSafe = [];
    const wWS = 5;
    const oauthClient = '4umzcpmjkg6ar78b81s7302jlj33t8';
    const cURLs = {
@@ -1964,113 +1960,308 @@
 
    const notice = function()
    {
-    function $warning(w)
+    const _visTime = 5000;
+    const _errTime = 15000;
+    let _states = {};
+    let _timers = {};
+
+    function $info(i)
     {
-     if (document.getElementById('error') !== null)
+     if (_states.hasOwnProperty(i) && _states[i] === 'i')
       return;
-     const oldW = document.getElementById('warning');
-     if (oldW !== null)
+     _states[i] = 'i';
+     if (!_timers.hasOwnProperty(i))
+      _timers[i] = false;
+     _buildNotices();
+     switch (i)
      {
-      if (parseInt(oldW.dataset.code, 10) !== w)
-       window.setTimeout(notice.warning, 1000, w);
-      return;
-     }
-     let n = document.createElement('div');
-     n.setAttribute('id', 'warning');
-     n.setAttribute('class', 'notice');
-     n.style.opacity = 0;
-     n.setAttribute('data-code', w);
-     let h = '<h1>Emote Wall Warning:</h1>';
-     switch (w)
-     {
-      case 0x01:
-       h += '<h2>Too Many Instances Open Simultaneously</h2>';
-       h += 'Some events may not be correctly detected.<br><br>';
-       h += 'Please use reference copies of the Emote Wall wherever possible.<br>';
-       h += 'If you\'re using different configurations, try including different OAuth Refresh Tokens for each configuration.<br>';
-       h += 'If you need to, you may <a onclick="twitch.net.eventSubCtl.erase();" href="javascript:;">Force Clear</a> the event handlers.';
-       if (window.hasOwnProperty('obsstudio'))
-        h += '<br><br>To click the link above, please right-click this browser source and choose &quot;Interact&quot; in the context menu.';
+      case 0x12:
+       _setNotice(i, 'noticeInfo sTwitch', 'IRC Connected', 5);
        break;
-      case 0x09:
-       h += '<h2>OBS Not Detected</h2>';
-       h += 'If you are testing this Emote Wall in your browser, or using it in another capacity, then no worries.<br><br>';
-       h += 'But if you intend to use this Emote Wall for streaming with OBS Studio, please see <a href="https://www.twitch.tv/videos/1784099954" target="_blank" title="Adding Emote Wall to OBS">this &quot;How to&quot; video</a>.';
+      case 0x1A:
+       _setNotice(i, 'noticeInfo sTwitch', 'EventSub Connected', 5);
        break;
       case 0x72:
-       h += '<h2>Your StreamElements OAuth Token is Expired</h2>';
-       h += 'Please Update your StreamElements OAuth Token';
+       _setNotice(i, 'noticeInfo tStreamElements', 'Connected', 5);
+       break;
+      case 0x82:
+       _setNotice(i, 'noticeInfo tStreamlabs', 'Connected', 5);
+       break;
+      case 0xB2:
+       _setNotice(i, 'noticeInfo eBTTV', 'Connected', 5);
+       break;
+      case 0xC2:
+       _setNotice(i, 'noticeInfo e7TV', 'Connected', 5);
        break;
      }
-     n.innerHTML = h;
-     document.body.prepend(n);
-     shared.doNextFrame(function(){n.style.opacity = 1;});
-     window.setTimeout(function(){n.style.opacity = 0; n.classList.add('hiding');}, 19500);
-     window.setTimeout(function(){n.remove();}, 20000);
+    }
+
+    function $warning(w)
+    {
+     if (_states.hasOwnProperty(w) && _states[w] === 'w')
+      return;
+     _states[w] = 'w';
+     if (!_timers.hasOwnProperty(w))
+      _timers[w] = false;
+     _buildNotices();
+     switch (w)
+     {
+      case 0x1A:
+       _setNotice(w, 'noticeWarning sTwitch', 'Too Many Instances<br>Please use existing (reference) copies wherever possible.', 20);
+       break;
+     }
     }
 
     function $error(e)
     {
-     const oldW = document.getElementById('warning');
-     if (oldW !== null)
-     {
-      oldW.style.opacity = 0;
-      window.setTimeout(function(){oldW.remove();}, 500);
-     }
-     const oldE = document.getElementById('error');
-     if (oldE !== null)
-     {
-      if (parseInt(oldE.dataset.code, 10) !== e)
-       window.setTimeout(notice.error, 1000, e);
+     if (_states.hasOwnProperty(e) && _states[e] === 'e')
       return;
-     }
-     let n = document.createElement('div');
-     n.setAttribute('id', 'error');
-     n.setAttribute('class', 'notice');
-     n.style.opacity = 0;
-     n.setAttribute('data-code', e);
-     let h = '<h1>Emote Wall Error:</h1>';
+     _states[e] = 'e';
+     if (!_timers.hasOwnProperty(e))
+      _timers[e] = false;
+     _buildNotices();
      switch (e)
      {
       case 0x01:
-       h += '<h2>Corrupted Configuration</h2>';
-       h += 'Please check your browser\'s Error Console for details.';
+       _setNotice(e, 'noticeError global', 'Corrupted Configuration');
+       break;
+      case 0x09:
+       _setNotice(e, 'noticeError global', 'OBS Not Detected<br>Please see <a href="https://www.twitch.tv/videos/1784099954" target="_blank" title="Adding Emote Wall to OBS">this &quot;How to&quot; video</a> on adding the Emote Wall to OBS.');
        break;
       case 0x11:
-       h += '<h2>Unable to Connect to Twitch</h2>';
        if (typeof login !== 'undefined' && login.inUse)
        {
-        h += 'Please Log In again to update your OAuth Refresh token.';
+        _setNotice(e, 'noticeError sTwitch', 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
         login.showOut(true);
         window.setTimeout(function(){login.showIn();}, 15500);
        }
        else
-        h += 'Please update your OAuth Refresh token.';
+        _setNotice(e, 'noticeError sTwitch', 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
        break;
       case 0x12:
-       h += '<h2>The Connection to the IRC Channel was Incomplete</h2>';
-       h += 'Please verify you selected the right channel name.';
+       _setNotice(e, 'noticeError sTwitch', 'IRC Disconnected');
        break;
-      case 0x13:
-       h += '<h2>Unable to Access Channel Emotes</h2>';
-       if (typeof login !== 'undefined' && login.inUse)
-       {
-        h += 'Please Log In again to update your OAuth Refresh token.';
-        login.showOut(true);
-        window.setTimeout(function(){login.showIn();}, 15500);
-       }
-       else
-        h += 'Please check your OAuth Refresh token. You may need a new one.';
+      case 0x1A:
+       _setNotice(e, 'noticeError sTwitch', 'EventSub Disconnected');
+       break;
+      case 0x71:
+       _setNotice(e, 'noticeError tStreamElements', 'OAuth Token Rejected<br>Please update your StreamElements OAuth Token.');
+       break;
+      case 0x72:
+       _setNotice(e, 'noticeError tStreamElements', 'Disconnected');
+       break;
+      case 0x81:
+       _setNotice(e, 'noticeError tStreamlabs', 'Socket Token Rejected<br>Please update your StreamLabs Socket Token.');
+       break;
+      case 0x82:
+       _setNotice(e, 'noticeError tStreamlabs', 'Disconnected');
+       break;
+      case 0xB2:
+       _setNotice(e, 'noticeError eBTTV', 'Disconnected');
+       break;
+      case 0xC2:
+       _setNotice(e, 'noticeError e7TV', 'Disconnected');
        break;
      }
-     n.innerHTML = h;
+    }
+
+    function _buildNotices()
+    {
+     if (document.getElementById('notices'))
+      return;
+     let n = document.createElement('div');
+     n.setAttribute('id', 'notices');
+     let b = document.createElement('div');
+     b.setAttribute('id', 'badge');
+     b.dataset.alerts = 0;
+     b.innerHTML = b.dataset.alerts;
+     n.appendChild(b);
      document.body.prepend(n);
-     shared.doNextFrame(function(){n.style.opacity = 1;});
-     window.setTimeout(function(){n.style.opacity = 0; n.classList.add('hiding');}, 14500);
-     window.setTimeout(function(){document.body.innerHTML = '';}, 15000);
+    }
+
+    function _setNotice(id, state, msg, t = 0)
+    {
+     let n = document.getElementById('notices');
+     if (!n)
+      return;
+     let b = document.getElementById('badge');
+     if (!b)
+      return;
+     b.classList.remove('fade');
+     let hasFader = false;
+     const lines = n.getElementsByClassName('noticeLine');
+     for (let i = 0; i < lines.length; i++)
+     {
+      if (!lines[i].classList.contains('fader'))
+      {
+       hasFader = true;
+       break;
+      }
+     }
+     if (!hasFader)
+      b.classList.remove('fader');
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+     {
+      b.dataset.alerts++;
+      b.innerHTML = b.dataset.alerts;
+      nID = document.createElement('div');
+      nID.setAttribute('id', 'notice' + id);
+      n.appendChild(nID);
+     }
+     nID.setAttribute('class', 'noticeLine ' + state);
+     nID.innerHTML = msg;
+     if (t > 0)
+     {
+      document.removeEventListener('mousemove', _triggerFadeInNotice(id));
+      if (_timers[id] !== false)
+       window.clearTimeout(_timers[id]);
+      _timers[id] = window.setTimeout(_clearNoticeBegin, t * 1000, id);
+     }
+     else
+     {
+      if (_timers[id] !== false)
+       window.clearTimeout(_timers[id]);
+      _timers[id] = window.setTimeout(_hideNotice, _errTime, id);
+     }
+    }
+
+    function _clearNoticeBegin(id)
+    {
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+      return;
+     nID.classList.add('hide');
+     if (_timers[id] !== false)
+      window.clearTimeout(_timers[id]);
+     _timers[id] = window.setTimeout(_clearNoticeEnd, 300, id);
+    }
+
+    function _clearNoticeEnd(id)
+    {
+     if (_timers[id] !== false)
+     {
+      window.clearTimeout(_timers[id]);
+      _timers[id] = false;
+     }
+     let n = document.getElementById('notices');
+     if (!n)
+      return;
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+      return;
+     n.removeChild(nID);
+     let b = document.getElementById('badge');
+     if (!b)
+      return;
+     b.dataset.alerts--;
+     b.innerHTML = b.dataset.alerts;
+    }
+
+    function _hideNotice(id)
+    {
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+      return;
+     nID.classList.add('fader');
+     nID.classList.add('fade');
+     document.addEventListener('mousemove', _triggerFadeInNotice(id));
+     if (_timers[id] !== false)
+      window.clearTimeout(_timers[id]);
+     _timers[id] = window.setTimeout(_fadeOutEnd, 500, id);
+     let n = document.getElementById('notices');
+     if (!n)
+      return;
+     let hasVis = false;
+     const lines = n.getElementsByClassName('noticeLine');
+     for (let i = 0; i < lines.length; i++)
+     {
+      if (!lines[i].classList.contains('fade'))
+      {
+       hasVis = true;
+       break;
+      }
+     }
+     if (!hasVis)
+     {
+      let b = document.getElementById('badge');
+      if (!b)
+       return;
+      b.classList.add('fader');
+      b.classList.add('fade');
+     }
+    }
+
+    const _triggerFadeInNotice = function(id)
+    {
+     return function(ev)
+     {
+      _fadeInNotice(id);
+     }
+    }
+
+    function _fadeInNotice(id)
+    {
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+      return;
+     nID.classList.remove('faded');
+     nID.classList.remove('fade');
+     if (_timers[id] !== false)
+      window.clearTimeout(_timers[id]);
+     _timers[id] = window.setTimeout(_fadeOutNotice, _visTime, id);
+     let b = document.getElementById('badge');
+     if (!b)
+      return;
+     b.classList.remove('fade');
+    }
+
+    function _fadeOutNotice(id)
+    {
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+      return;
+     if (_timers[id] !== false)
+      window.clearTimeout(_timers[id]);
+     _timers[id] = window.setTimeout(_fadeOutEnd, 500, id);
+     nID.classList.add('fade');
+     let n = document.getElementById('notices');
+     if (!n)
+      return;
+     let hasVis = false;
+     const lines = n.getElementsByClassName('noticeLine');
+     for (let i = 0; i < lines.length; i++)
+     {
+      if (!lines[i].classList.contains('fade'))
+      {
+       hasVis = true;
+       break;
+      }
+     }
+     if (!hasVis)
+     {
+      let b = document.getElementById('badge');
+      if (!b)
+       return;
+      b.classList.add('fade');
+     }
+    }
+
+    function _fadeOutEnd(id)
+    {
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+      return;
+     if (_timers[id] !== false)
+     {
+      window.clearTimeout(_timers[id]);
+      _timers[id] = false;
+     }
+     nID.classList.add('faded');
     }
 
     return {
+     info: $info,
      warning: $warning,
      error: $error
     };
@@ -4467,7 +4658,7 @@
        }
       }
       if (!Array.isArray(kList) || kList.length < 1)
-       kList = cList;
+       kList = cSafe;
       if (!Array.isArray(kList) || kList.length < 1)
        kList = bareList;
       const sW = window.innerWidth;
@@ -4883,6 +5074,8 @@
      {
       img.onerror = null;
       img.onload = null;
+      if (img.naturalWidth !== img.naturalHeight)
+       shared.ec.save(url, img.naturalWidth, img.naturalHeight);
      };
      img.onerror = function()
      {
@@ -5119,7 +5312,7 @@
 
       function _wsClose()
       {
-       twitch.net.eventSubCtl.online = false;
+       notice.error(0x1A);
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -5160,7 +5353,7 @@
         return;
        if (!r.hasOwnProperty('payload'))
         return;
-       twitch.net.eventSubCtl.online = true;
+       notice.info(0x1A);
        switch (r.metadata.message_type)
        {
         case 'session_welcome':
@@ -5221,8 +5414,11 @@
            if (!r.payload.event.hasOwnProperty('user_name'))
             return;
            twitch.net.fList[r.payload.event.user_id] = {value: true, t: new Date().getTime()};
-           if (document.visibilityState !== 'hidden')
-            display.kappa.show(false, cfg.event.follow, {'%USER%': r.payload.event.user_name});
+           if (cfg.event.follow === false)
+            return;
+           if (document.visibilityState === 'hidden')
+            return;
+           display.kappa.show(false, cfg.event.follow, {'%USER%': r.payload.event.user_name});
            break;
           case 'channel.channel_points_custom_reward_redemption.add':
            if (!r.payload.hasOwnProperty('event'))
@@ -5279,11 +5475,23 @@
            await twitch.parse.event.shoutoutReceive(r.payload.event.from_broadcaster_user_id, r.payload.event.from_broadcaster_user_name);
            break;
           case 'channel.hype_train.begin':
+           if (cfg.event.hypetrain === false)
+            return;
+           if (!cfg.event.hypetrain.hasOwnProperty('begin'))
+            return;
+           if (cfg.event.hypetrain.begin === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            display.kappa.show(false, cfg.event.hypetrain.begin);
            break;
           case 'channel.hype_train.end':
+           if (cfg.event.hypetrain === false)
+            return;
+           if (!cfg.event.hypetrain.hasOwnProperty('success'))
+            return;
+           if (cfg.event.hypetrain.success === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
@@ -5296,16 +5504,27 @@
            display.kappa.show(false, rs);
            break;
           case 'channel.poll.begin':
+           if (cfg.event.poll === false)
+            return;
+           if (!cfg.event.poll.hasOwnProperty('begin'))
+            return;
+           if (cfg.event.poll.begin === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
             return;
            if (!r.payload.event.hasOwnProperty('title'))
             return;
-           if (cfg.event.poll !== false && cfg.event.poll.hasOwnProperty('begin'))
-            display.kappa.show(false, cfg.event.poll.begin, {'%TITLE%': r.payload.event.title});
+           display.kappa.show(false, cfg.event.poll.begin, {'%TITLE%': r.payload.event.title});
            break;
           case 'channel.poll.end':
+           if (cfg.event.poll === false)
+            return;
+           if (!cfg.event.poll.hasOwnProperty('end'))
+            return;
+           if (cfg.event.poll.end === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
@@ -5319,16 +5538,27 @@
            twitch.parse.event.pollEnd(r.payload.event);
            break;
           case 'channel.prediction.begin':
+           if (cfg.event.prediction === false)
+            return;
+           if (!cfg.event.prediction.hasOwnProperty('begin'))
+            return;
+           if (cfg.event.prediction.begin === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
             return;
            if (!r.payload.event.hasOwnProperty('title'))
             return;
-           if (cfg.event.prediction !== false && cfg.event.prediction.hasOwnProperty('begin'))
-            display.kappa.show(false, cfg.event.prediction.begin, {'%TITLE%': r.payload.event.title});
+           display.kappa.show(false, cfg.event.prediction.begin, {'%TITLE%': r.payload.event.title});
            break;
           case 'channel.prediction.end':
+           if (cfg.event.prediction === false)
+            return;
+           if (!cfg.event.prediction.hasOwnProperty('resolved'))
+            return;
+           if (cfg.event.prediction.resolved === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
@@ -5344,6 +5574,8 @@
            twitch.parse.event.predictionEnd(r.payload.event);
            break;
           case 'channel.charity_campaign.donate':
+           if (cfg.event.charity === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
@@ -5366,6 +5598,12 @@
            display.kappa.show(false, rd, {'%USER%': dName, '%AMOUNT%': dAmt});
            break;
           case 'channel.goal.begin':
+           if (cfg.event.goal === false)
+            return;
+           if (!cfg.event.goal.hasOwnProperty('begin'))
+            return;
+           if (cfg.event.goal.begin === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
@@ -5376,10 +5614,15 @@
             return;
            if (!r.payload.event.hasOwnProperty('target_amount'))
             return;
-           if (cfg.event.goal !== false && cfg.event.goal.hasOwnProperty('begin'))
-            display.kappa.show(false, cfg.event.goal.begin, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.target_amount});
+           display.kappa.show(false, cfg.event.goal.begin, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.target_amount});
            break;
           case 'channel.goal.end':
+           if (cfg.event.goal === false)
+            return;
+           if (!cfg.event.goal.hasOwnProperty('achieved'))
+            return;
+           if (cfg.event.goal.achieved === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
@@ -5392,8 +5635,7 @@
             return;
            if (!r.payload.event.hasOwnProperty('is_achieved') || r.payload.event.is_achieved !== true)
             return;
-           if (cfg.event.goal !== false && cfg.event.goal.hasOwnProperty('achieved'))
-            display.kappa.show(false, cfg.event.goal.achieved, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.current_amount});
+           display.kappa.show(false, cfg.event.goal.achieved, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.current_amount});
            break;
           case 'channel.update':
            if (!r.payload.hasOwnProperty('event'))
@@ -5441,7 +5683,7 @@
 
       function _wsTimeout()
       {
-       twitch.net.eventSubCtl.online = false;
+       notice.error(0x1A);
        _lTimeout = 5000;
        if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
         _wsURL = cURLs.ws.twitch.eventSub;
@@ -5667,11 +5909,11 @@
         return true;
        if (r.code === 429)
        {
-        const eNote = document.getElementById('warning');
-        if (!eNote || eNote.dataset.code !== '1')
+        const eNote = document.getElementById('notice' + 0x1A);
+        if (!eNote || !eNote.classList.contains('noticeWarning'))
         {
          if (!await _handleDanglingEventSubs())
-          notice.warning(0x01);
+          notice.warning(0x1A);
         }
        }
        return false;
@@ -5746,8 +5988,7 @@
        subscribe: $subscribe,
        erase: $erase,
        channelID: 0,
-       sessionID: null,
-       online: false
+       sessionID: null
       };
      }();
 
@@ -5789,7 +6030,7 @@
 
       function _wsClose()
       {
-       twitch.net.online = false;
+       notice.error(0x12);
        if (_tPing !== 0)
        {
         window.clearInterval(_tPing);
@@ -5856,7 +6097,7 @@
          console.log('Unparsed IRC Command: ', data[i]);
          continue;
         }
-        twitch.net.online = true;
+        notice.info(0x12);
         switch (cmd.command)
         {
          case 'PING':
@@ -5992,7 +6233,7 @@
 
       function _wsExpire()
       {
-       twitch.net.online = false;
+       notice.error(0x12);
        if (_ws === null)
         return;
        if (twitch.net.dead === true)
@@ -6005,7 +6246,6 @@
        }
        _ws.close();
        _ws = null;
-       notice.error(0x12);
       }
 
       function _wsPing()
@@ -6019,7 +6259,7 @@
 
       function _wsTimeout()
       {
-       twitch.net.online = false;
+       notice.error(0x12);
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -6042,13 +6282,36 @@
 
      async function _loadEmote_channel(chID)
      {
-      cList = [];
       if (!thirdparty.emotes.hasOwnProperty('twitch'))
        thirdparty.emotes.twitch = {};
       const r = await _findEmote_channel(chID, thirdparty.emotes.twitch);
       if (r === false)
        return false;
-      cList = r;
+      if (cList.length === 0)
+       cList = r;
+      else
+      {
+       for (let n in thirdparty.emotes.twitch)
+       {
+        if (!thirdparty.emotes.twitch[n].hasOwnProperty('scope'))
+         continue;
+        if (!thirdparty.emotes.twitch[n].scope !== 'c')
+         continue;
+        for (let c = cList.length - 1; c >= 0; c--)
+        {
+         if (cList[c].url !== thirdparty.emotes.twitch[n].url)
+          continue;
+         cList.splice(c, 1);
+         break;
+        }
+       }
+       for (let i = 0, l = r.length; i < l; i++)
+       {
+        if (!cList.includes(r[i]))
+         cList.push(r[i]);
+       }
+      }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -6218,7 +6481,6 @@
       dead: false,
       eventSubCtl: $eventSubCtl,
       irc: $irc,
-      online: false,
       userInfo: $userInfo,
       oAuth: $oAuth
      };
@@ -7519,6 +7781,11 @@
        const kNow = new Date().getTime();
        const m = cmd.params[1].toLowerCase();
        let foundAdvCmd = false;
+       if (m === '!cesc' && (lv & 0xC00) !== 0)
+       {
+        shared.ec.clear();
+        return;
+       }
        for (const k of cfg.commands)
        {
         if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase') && !k.hasOwnProperty('rave') && !k.hasOwnProperty('raveon') && !k.hasOwnProperty('raveoff'))
@@ -7656,6 +7923,12 @@
       {
        if (!thirdparty.emotes.hasOwnProperty('cheer'))
         return false;
+       if (cfg.event.cheer === false)
+        return false;
+       if (!cfg.event.cheer.hasOwnProperty('bits'))
+        return false;
+       if (cfg.event.cheer.bits === false)
+        return false;
        if (!cmd.hasOwnProperty('tags'))
         return false;
        if (!cmd.tags.hasOwnProperty('bits'))
@@ -7715,6 +7988,14 @@
 
       async function $raid(cmd)
       {
+       if (cfg.event.raid === false)
+        return;
+       if (!cfg.event.raid.hasOwnProperty('raiders'))
+        return;
+       if (cfg.event.raid.raiders === false)
+        return;
+       if (!cmd.hasOwnProperty('tags'))
+        return;
        if (!cmd.tags.hasOwnProperty('msg-param-viewerCount'))
         return;
        const c = cmd.tags['msg-param-viewerCount'];
@@ -8099,6 +8380,16 @@
 
       async function $shoutoutCreate(uID, uName)
       {
+       if (cfg.event.shoutout === false)
+        return false;
+       if (!cfg.event.shoutout.hasOwnProperty('create'))
+        return false;
+       if (cfg.event.shoutout.create === false)
+        return false;
+       if (!cfg.event.shoutout.create.hasOwnProperty('styles'))
+        return false;
+       if (cfg.event.shoutout.create.styles === false)
+        return false;
        if (!cfg.event.shoutout.create.targetEmotes)
        {
         display.kappa.show(false, cfg.event.shoutout.create.styles, {'%USER%': uName});
@@ -8150,6 +8441,16 @@
 
       async function $shoutoutReceive(uID, uName)
       {
+       if (cfg.event.shoutout === false)
+        return false;
+       if (!cfg.event.shoutout.hasOwnProperty('receive'))
+        return false;
+       if (cfg.event.shoutout.receive === false)
+        return false;
+       if (!cfg.event.shoutout.receive.hasOwnProperty('styles'))
+        return false;
+       if (cfg.event.shoutout.receive.styles === false)
+        return false;
        if (!cfg.event.shoutout.receive.originEmotes)
        {
         display.kappa.show(false, cfg.event.shoutout.receive.styles, {'%USER%': uName});
@@ -8223,8 +8524,7 @@
        let sPoll = 'None';
        if (rPoll.length > 0)
         sPoll = rPoll.join(' + ');
-       if (cfg.event.poll !== false && cfg.event.poll.hasOwnProperty('end'))
-        display.kappa.show(false, cfg.event.poll.end, {'%TITLE%': e.title, '%RESULT%': sPoll});
+       display.kappa.show(false, cfg.event.poll.end, {'%TITLE%': e.title, '%RESULT%': sPoll});
       }
 
       function $predictionEnd(e)
@@ -8241,8 +8541,7 @@
         sPrediction = e.outcomes[i].title;
         break;
        }
-       if (cfg.event.prediction !== false && cfg.event.prediction.hasOwnProperty('resolved'))
-        display.kappa.show(false, cfg.event.prediction.resolved, {'%TITLE%': e.title, '%RESULT%': sPrediction});
+       display.kappa.show(false, cfg.event.prediction.resolved, {'%TITLE%': e.title, '%RESULT%': sPrediction});
       }
 
       return {
@@ -8362,7 +8661,7 @@
         {
          if (await twitch.net.oAuth.reinit())
           return _checkFollower(cmd);
-         notice.error(0x13);
+         notice.error(0x11);
          if (!login.inUse)
           twitch.net.oAuth.clear(true);
         }
@@ -8531,6 +8830,18 @@
          r.splice(i, 1);
        }
       }
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       if (r[i].hasOwnProperty('width') || r[i].hasOwnProperty('height'))
+        continue;
+       if (!r[i].hasOwnProperty('url'))
+        continue;
+       const sz = await shared.ec.get(r[i].url);
+       if (sz === null)
+        continue;
+       r[i].width = sz.width;
+       r[i].height = sz.height;
+      }
       return r;
      }
 
@@ -8574,7 +8885,7 @@
        {
         if (await twitch.net.oAuth.reinit())
          return _findEmote_channel(chID, n);
-        notice.error(0x13);
+        notice.error(0x11);
         if (!login.inUse)
          twitch.net.oAuth.clear(true);
        }
@@ -8626,7 +8937,7 @@
       {
        if (await twitch.net.oAuth.reinit())
         return twitch.global();
-       notice.error(0x13);
+       notice.error(0x11);
        if (!login.inUse)
         twitch.net.oAuth.clear(true);
       }
@@ -8764,7 +9075,7 @@
 
      function _wsClose()
      {
-      streamlabs.online = false;
+      notice.error(0x82);
       if (_tPing !== 0)
       {
        window.clearInterval(_tPing);
@@ -8807,7 +9118,7 @@
       const d = ev.data;
       if (d.length < 1)
        return;
-      streamlabs.online = true;
+      notice.info(0x82);
       switch (d.slice(0, 1))
       {
        case '0':
@@ -8839,7 +9150,27 @@
         if (document.visibilityState === 'hidden')
          return;
         if (d.slice(1, 2) !== '2')
+        {
+         if (d.slice(1, 2) === '4')
+         {
+          notice.error(0x81);
+          notice.error(0x82);
+          _lTimeout = 5000;
+          if (_tTimeout !== false)
+          {
+           window.clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          if (_ws === null)
+           return;
+          _ws.onopen = null;
+          _ws.onmessage = null;
+          _ws.onclose = null;
+          _ws.close();
+          _ws = null;
+         }
          return;
+        }
         if (d.length < 2)
          return;
         const o = JSON.parse(d.slice(2));
@@ -8891,7 +9222,7 @@
 
      function _wsTimeout()
      {
-      streamlabs.online = false;
+      notice.error(0x82);
       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
@@ -8925,7 +9256,6 @@
 
     return {
      socket: $socket,
-     online: false,
      cfgVals: $cfgVals
     };
    }();
@@ -8995,7 +9325,7 @@
 
      function _wsClose()
      {
-      streamelements.online = false;
+      notice.error(0x72);
       if (_tPing !== 0)
       {
        window.clearInterval(_tPing);
@@ -9038,7 +9368,7 @@
       const d = ev.data;
       if (d.length < 1)
        return;
-      streamelements.online = true;
+      notice.info(0x72);
       switch (d.slice(0, 1))
       {
        case '0':
@@ -9079,14 +9409,32 @@
           _ws.send('42' + a);
          return;
         }
-        if (document.visibilityState === 'hidden')
-         return;
         if (d.slice(1, 2) !== '2')
          return;
         if (d.length < 2)
          return;
         const o = JSON.parse(d.slice(2));
         if (o.length < 2)
+         return;
+        if (o[0] === 'unauthorized')
+        {
+         notice.error(0x71);
+         notice.error(0x72);
+         _lTimeout = 5000;
+         if (_tTimeout !== false)
+         {
+          window.clearTimeout(_tTimeout);
+          _tTimeout = false;
+         }
+         if (_ws === null)
+          return;
+         _ws.onopen = null;
+         _ws.onmessage = null;
+         _ws.onclose = null;
+         _ws.close();
+         _ws = null;
+        }
+        if (document.visibilityState === 'hidden')
          return;
         if (o[0] !== 'event:update')
          return;
@@ -9117,7 +9465,7 @@
 
      function _wsTimeout()
      {
-      streamelements.online = false;
+      notice.error(0x72);
       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
@@ -9193,7 +9541,7 @@
       window.localStorage.removeItem('streamelements.tips:read.refresh');
       window.localStorage.removeItem('streamelements.tips:read.expires');
       window.localStorage.removeItem('streamelements.tips:read.refreshed');
-      notice.warning(0x72);
+      notice.error(0x71);
       return;
      }
      cfg.streamelements.oauth = ret.access_token;
@@ -9222,7 +9570,6 @@
 
     return {
      socket: $socket,
-     online: false,
      updateOAuth: $updateOAuth,
      cfgVals: $cfgVals
     };
@@ -9234,6 +9581,8 @@
 
     function _addEmote(list, scope, code, id, url, w = false, h = false, zwe = false)
     {
+     if (typeof list === 'undefined')
+      return;
      if (cfg.ignore.emotes !== false && cfg.ignore.emotes.includes(code))
       return;
      if (w === false)
@@ -9247,6 +9596,8 @@
 
     function _removeEmote(list, scope, code)
     {
+     if (typeof list === 'undefined')
+      return;
      if (!list.hasOwnProperty(code))
       return;
      if (list[code].scope !== scope)
@@ -9266,6 +9617,8 @@
 
     function _removeEmoteByID(list, scope, id)
     {
+     if (typeof list === 'undefined')
+      return;
      for (let i = Object.keys(list).length - 1; i >= 0; i--)
      {
       const k = Object.keys(list)[i];
@@ -9280,6 +9633,8 @@
 
     function _removeEmoteByScope(list, scope)
     {
+     if (typeof list === 'undefined')
+      return;
      for (let i = Object.keys(list).length - 1; i >= 0; i--)
      {
       const k = Object.keys(list)[i];
@@ -9360,7 +9715,10 @@
        }
       }
       if (!j.hasOwnProperty('users'))
+      {
+       cSafe = JSON.parse(JSON.stringify(cList));
        return true;
+      }
       for (const setID in j.users)
       {
        if (!j.users.hasOwnProperty(setID))
@@ -9417,6 +9775,7 @@
         }
        }
       }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -9472,8 +9831,6 @@
       const r = await thirdparty.ffz.channelEx(chID);
       if (r === false)
        return false;
-      _removeEmoteByScope(thirdparty.emotes.ffz, 'c');
-      _removeEmoteByScope(thirdparty.emotes.zwe.ffz, 'c');
       for (let i = 0, l = r.length; i < l; i++)
       {
        if (r[i].modifier !== false)
@@ -9486,6 +9843,7 @@
        }
        _addEmote(thirdparty.emotes.ffz, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height);
       }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -9547,6 +9905,7 @@
        }
        _addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, eURL, w, h);
       }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -9614,6 +9973,7 @@
        }
        _addEmote(thirdparty.emotes.bttv, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height);
       }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -9639,14 +9999,14 @@
         return;
        if (_ws.readyState !== 1)
         return;
-       thirdparty.bttv.online = true;
+       notice.info(0xB2);
        _ws.onopen = null;
        _ws.send(JSON.stringify({'name': 'join_channel', 'data': {'name': 'twitch:' + _ch}}));
       }
 
       function _wsClose()
       {
-       thirdparty.bttv.online = false;
+       notice.error(0xB2);
        if (_ws === null)
         return;
        _ws.onopen = null;
@@ -9663,7 +10023,6 @@
 
       function _wsMessage(ev)
       {
-       thirdparty.bttv.online = true;
        if (_ws === null)
         return;
        if (twitch.net.dead)
@@ -9714,6 +10073,7 @@
           }
           _addEmote(thirdparty.emotes.bttvU[d.data.name], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), w, h);
          }
+         cSafe = JSON.parse(JSON.stringify(cList));
          break;
         case 'emote_create':
          if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + _ch)
@@ -9733,6 +10093,7 @@
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
          _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), wC, hC);
+         cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE, _ch);
          break;
         case 'emote_delete':
@@ -9743,6 +10104,7 @@
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
          _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emoteId);
+         cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE, _ch);
          break;
         case 'emote_update':
@@ -9764,6 +10126,7 @@
           window.clearTimeout(thirdparty.bttv.timer);
          _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emote.id);
          _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), wU, hU);
+         cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE, _ch);
          break;
        }
@@ -9778,7 +10141,6 @@
       channel: $channel,
       channelEx: $channelEx,
       socket: $socket,
-      online: false,
       reload: $reload
      };
     }();
@@ -9792,7 +10154,10 @@
       let g = [];
       for (let i = 0, l = entry.urls.length; i < l; i++)
       {
-       g[i] = {dpp: entry.urls[i][0], url: entry.urls[i][1], width: false, height: false};
+       let addr = entry.urls[i][1];
+       if (typeof cfg.display.extended.use7TV === 'string')
+        addr = addr.replace('.webp', '.' + cfg.display.extended.use7TV);
+       g[i] = {dpp: entry.urls[i][0], url: addr, width: false, height: false};
       }
       if (entry.hasOwnProperty('width'))
       {
@@ -9852,6 +10217,7 @@
        }
        _addEmote(thirdparty.emotes['7tv'], 'g', j[i].name, j[i].id, jInf.url, jInf.width, jInf.height);
       }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -9904,6 +10270,7 @@
        }
        _addEmote(thirdparty.emotes['7tv'], 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height);
       }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -9958,7 +10325,7 @@
 
       function _wsClose()
       {
-       thirdparty['7tv'].online = false;
+       notice.error(0xC2);
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -10002,7 +10369,7 @@
         return;
        if (!d.hasOwnProperty('d'))
         return;
-       thirdparty['7tv'].online = true;
+       notice.info(0xC2);
        switch (d.op)
        {
         case 0:
@@ -10161,7 +10528,7 @@
 
       function _wsTimeout()
       {
-       thirdparty['7tv'].online = false;
+       notice.error(0xC2);
        _lTimeout = 5000;
        if (_tTimeout !== false)
        {
@@ -10187,8 +10554,7 @@
       global: $global,
       channel: $channel,
       channelEx: $channelEx,
-      socket: $socket,
-      online: false
+      socket: $socket
      };
     }();
 
@@ -10385,13 +10751,134 @@
      };
     }();
 
+    const $ec = function()
+    {
+     const _dbName = 'ewec';
+     const _tblName = 'emotes';
+
+     function $save(url, w, h)
+     {
+      const o = window.indexedDB.open(_dbName, 1);
+      o.onupgradeneeded = function(ev)
+      {
+       const d = ev.target.result;
+       const s = d.createObjectStore(_tblName, {keyPath: 'url'});
+      };
+      o.onerror = function(ev)
+      {
+       window.indexedDB.deleteDatabase(_dbName);
+      };
+      o.onsuccess = function(ev)
+      {
+       const d = ev.target.result;
+       if (d.objectStoreNames[0] !== _tblName)
+       {
+        d.close();
+        window.indexedDB.deleteDatabase(_dbName);
+        return;
+       }
+       let tx;
+       try
+       {
+        tx = d.transaction(_tblName, 'readwrite');
+       }
+       catch(ex)
+       {
+        d.close();
+        window.indexedDB.deleteDatabase(_dbName);
+        return;
+       }
+       const s = tx.objectStore(_tblName);
+       const p = s.put({url: url, w: w, h: h});
+       p.onerror = function(ev2)
+       {
+        d.close();
+       };
+       p.onsuccess = function(ev2)
+       {
+        d.close();
+       };
+      };
+     }
+
+     function $get(url)
+     {
+      return new Promise(
+       function(resolve)
+       {
+        const o = window.indexedDB.open(_dbName, 1);
+        o.onupgradeneeded = function(ev)
+        {
+         resolve(null);
+        };
+        o.onblocked = function(ev)
+        {
+         resolve(null);
+        };
+        o.onerror = function(ev)
+        {
+         resolve(null);
+        };
+        o.onsuccess = function(ev)
+        {
+         const dbr = ev.target.result;
+         if (dbr.objectStoreNames[0] !== _tblName)
+         {
+          dbr.close();
+          resolve(null);
+          return;
+         }
+         let tx;
+         try
+         {
+          tx = dbr.transaction(_tblName, 'readonly');
+         }
+         catch(ex)
+         {
+          dbr.close();
+          resolve(null);
+          return;
+         }
+         const s = tx.objectStore(_tblName);
+         let g = s.get(url);
+         g.onerror = function(ev2)
+         {
+          dbr.close();
+          resolve(null);
+         };
+         g.onsuccess = function(ev2)
+         {
+          dbr.close();
+          if (typeof ev2.currentTarget.result !== 'undefined')
+           resolve({width: ev2.currentTarget.result.w, height: ev2.currentTarget.result.h});
+          else
+           resolve(null);
+         };
+        };
+       }
+      );
+     }
+
+     function $clear()
+     {
+      window.indexedDB.deleteDatabase(_dbName);
+     }
+
+     return {
+      save: $save,
+      get: $get,
+      clear: $clear
+     }
+    }();
+
     return {
      rnd: $rnd,
      httpRequest: $httpRequest,
      findInMaybeRange: $findInMaybeRange,
      clearAddr: $clearAddr,
      doNextFrame: $doNextFrame,
-     mspf: $mspf
+     mspf: $mspf,
+     ec: $ec
     };
    }();
 
@@ -10612,7 +11099,7 @@
      cmdLogout.setAttribute('id', 'cmdLogout');
      cmdLogout.setAttribute('type', 'button');
      cmdLogout.classList.add('logout');
-     document.addEventListener('mouseover', _fadeInLogout);
+     document.addEventListener('mousemove', _fadeInLogout);
      if (v)
      {
       cmdLogout.setAttribute('onclick', 'login.begin();');
@@ -10670,11 +11157,10 @@
      if (cfg.display.hasOwnProperty('hue') && cfg.display.hue === 'rave' && !_hasRaveToggle())
       document.body.classList.add('rave');
      _css();
-     _statuses();
      if (!window.hasOwnProperty('obsstudio') && !window.localStorage.getItem('emotewall.obs_notfound'))
      {
       window.localStorage.setItem('emotewall.obs_notfound', '1');
-      notice.warning(0x09);
+      notice.error(0x09);
      }
      if (login.use() === true)
       return;
@@ -10691,409 +11177,6 @@
      else
       twitch.net.dead = true;
     }
-
-    const _statuses = function()
-    {
-     const vFade = 3000;
-     let tStats = false;
-     let tSVC = false;
-     let tEG = false;
-
-     function task()
-     {
-      let services = document.createElement('span') ;
-      services.setAttribute('id', 'services');
-      services.setAttribute('class', 'stateIconBox');
-
-      let svcTwitch = document.createElement('span');
-      svcTwitch.setAttribute('id', 'svcTwitch');
-      svcTwitch.setAttribute('class', 'service unused');
-      svcTwitch.innerHTML = 'T';
-      let bdgTwitchIRC = document.createElement('span');
-      bdgTwitchIRC.setAttribute('id', 'badgeTwitchIRC');
-      bdgTwitchIRC.setAttribute('class', 'badge global unused');
-      svcTwitch.appendChild(bdgTwitchIRC);
-      let bdgTwitchEventSub = document.createElement('span');
-      bdgTwitchEventSub.setAttribute('id', 'badgeTwitchEventSub');
-      bdgTwitchEventSub.setAttribute('class', 'badge channel unused');
-      svcTwitch.appendChild(bdgTwitchEventSub);
-      services.appendChild(svcTwitch);
-
-      let svcBTTV = document.createElement('span');
-      svcBTTV.setAttribute('id', 'svcBTTV');
-      svcBTTV.setAttribute('class', 'service unused');
-      svcBTTV.innerHTML = 'B';
-      services.appendChild(svcBTTV);
-
-      let svc7TV = document.createElement('span');
-      svc7TV.setAttribute('id', 'svc7TV');
-      svc7TV.setAttribute('class', 'service unused');
-      svc7TV.innerHTML = '7';
-      services.appendChild(svc7TV);
-
-      let svcStreamlabs = document.createElement('span');
-      svcStreamlabs.setAttribute('id', 'svcStreamlabs');
-      svcStreamlabs.setAttribute('class', 'service unused');
-      svcStreamlabs.innerHTML = 'SL';
-      services.appendChild(svcStreamlabs);
-
-      let svcStreamElements = document.createElement('span');
-      svcStreamElements.setAttribute('id', 'svcStreamElements');
-      svcStreamElements.setAttribute('class', 'service unused');
-      svcStreamElements.innerHTML = 'SE';
-      services.appendChild(svcStreamElements);
-
-      document.body.appendChild(services);
-
-      let emotegroups = document.createElement('span') ;
-      emotegroups.setAttribute('id', 'emotegroups');
-      emotegroups.setAttribute('class', 'stateIconBox');
-
-      let emgTwitch = document.createElement('span');
-      emgTwitch.setAttribute('id', 'emgTwitch');
-      emgTwitch.setAttribute('class', 'service unused');
-      emgTwitch.innerHTML = 'T';
-      let bdgTwitchGlobal = document.createElement('span');
-      bdgTwitchGlobal.setAttribute('id', 'badgeTwitchGlobal');
-      bdgTwitchGlobal.setAttribute('class', 'badge global unused');
-      emgTwitch.appendChild(bdgTwitchGlobal);
-      let bdgTwitchChannel = document.createElement('span');
-      bdgTwitchChannel.setAttribute('id', 'badgeTwitchChannel');
-      bdgTwitchChannel.setAttribute('class', 'badge channel unused');
-      emgTwitch.appendChild(bdgTwitchChannel);
-      emotegroups.appendChild(emgTwitch);
-
-      let emgFFZ = document.createElement('span');
-      emgFFZ.setAttribute('id', 'emgFFZ');
-      emgFFZ.setAttribute('class', 'service unused');
-      emgFFZ.innerHTML = 'F';
-      let bdgFFZGlobal = document.createElement('span');
-      bdgFFZGlobal.setAttribute('id', 'badgeFFZGlobal');
-      bdgFFZGlobal.setAttribute('class', 'badge global unused');
-      emgFFZ.appendChild(bdgFFZGlobal);
-      let bdgFFZChannel = document.createElement('span');
-      bdgFFZChannel.setAttribute('id', 'badgeFFZChannel');
-      bdgFFZChannel.setAttribute('class', 'badge channel unused');
-      emgFFZ.appendChild(bdgFFZChannel);
-      emotegroups.appendChild(emgFFZ);
-
-      let emgBTTV = document.createElement('span');
-      emgBTTV.setAttribute('id', 'emgBTTV');
-      emgBTTV.setAttribute('class', 'service unused');
-      emgBTTV.innerHTML = 'B';
-      let bdgBTTVGlobal = document.createElement('span');
-      bdgBTTVGlobal.setAttribute('id', 'badgeBTTVGlobal');
-      bdgBTTVGlobal.setAttribute('class', 'badge global unused');
-      emgBTTV.appendChild(bdgBTTVGlobal);
-      let bdgBTTVChannel = document.createElement('span');
-      bdgBTTVChannel.setAttribute('id', 'badgeBTTVChannel');
-      bdgBTTVChannel.setAttribute('class', 'badge channel unused');
-      emgBTTV.appendChild(bdgBTTVChannel);
-      emotegroups.appendChild(emgBTTV);
-
-      let emg7TV = document.createElement('span');
-      emg7TV.setAttribute('id', 'emg7TV');
-      emg7TV.setAttribute('class', 'service unused');
-      emg7TV.innerHTML = '7';
-      let bdg7TVGlobal = document.createElement('span');
-      bdg7TVGlobal.setAttribute('id', 'badge7TVGlobal');
-      bdg7TVGlobal.setAttribute('class', 'badge global unused');
-      emg7TV.appendChild(bdg7TVGlobal);
-      let bdg7TVChannel = document.createElement('span');
-      bdg7TVChannel.setAttribute('id', 'badge7TVChannel');
-      bdg7TVChannel.setAttribute('class', 'badge channel unused');
-      emg7TV.appendChild(bdg7TVChannel);
-      emotegroups.appendChild(emg7TV);
-
-      document.body.appendChild(emotegroups);
-
-      tStats = window.setTimeout(_stateUpdate, 1000);
-     }
-
-     function _iconize(exists, enabled, svc, badgeG = false, badgeC = false, enabledG = false, enabledC = false)
-     {
-      let r = false;
-      if (!exists)
-      {
-       if (!document.getElementById(svc).classList.contains('unused'))
-       {
-        document.getElementById(svc).classList.add('unused');
-        if (badgeG)
-         document.getElementById(badgeG).classList.add('unused');
-        if (badgeC)
-        document.getElementById(badgeC).classList.add('unused');
-        r = true;
-       }
-       return r;
-      }
-      if (document.getElementById(svc).classList.contains('unused'))
-      {
-       document.getElementById(svc).classList.remove('unused');
-       if (badgeG)
-        document.getElementById(badgeG).classList.remove('unused');
-       if (badgeC)
-        document.getElementById(badgeC).classList.remove('unused');
-       r = true;
-      }
-      if (enabled)
-      {
-       if (document.getElementById(svc).classList.contains('disabled'))
-       {
-        document.getElementById(svc).classList.remove('disabled');
-        r = true;
-       }
-       if (badgeG)
-       {
-        if (enabledG)
-        {
-         if (document.getElementById(badgeG).classList.contains('disabled'))
-         {
-          document.getElementById(badgeG).classList.remove('disabled');
-          r = true;
-         }
-        }
-        else
-        {
-         if (!document.getElementById(badgeG).classList.contains('disabled'))
-         {
-          document.getElementById(badgeG).classList.add('disabled');
-          r = true;
-         }
-        }
-       }
-       if (badgeC)
-       {
-        if (enabledC)
-        {
-         if (document.getElementById(badgeC).classList.contains('disabled'))
-         {
-          document.getElementById(badgeC).classList.remove('disabled');
-          r = true;
-         }
-        }
-        else
-        {
-         if (!document.getElementById(badgeC).classList.contains('disabled'))
-         {
-          document.getElementById(badgeC).classList.add('disabled');
-          r = true;
-         }
-        }
-       }
-      }
-      else
-      {
-       if (!document.getElementById(svc).classList.contains('disabled'))
-       {
-        document.getElementById(svc).classList.add('disabled');
-        if (badgeG)
-         document.getElementById(badgeG).classList.add('disabled');
-        if (badgeC)
-         document.getElementById(badgeC).classList.add('disabled');
-        r = true;
-       }
-      }
-      return r;
-     }
-
-     const _services = function()
-     {
-      function $twitch()
-      {
-       return _iconize(!twitch.net.dead, twitch.net.online || twitch.net.eventSubCtl.online, 'svcTwitch', 'badgeTwitchIRC', 'badgeTwitchEventSub', twitch.net.online, twitch.net.eventSubCtl.online);
-      }
-
-      function $bttv()
-      {
-       return _iconize(cfg.display.extended.useBTTV, thirdparty.bttv.online, 'svcBTTV');
-      }
-
-      function $7tv()
-      {
-       return _iconize(cfg.display.extended.use7TV, thirdparty['7tv'].online, 'svc7TV');
-      }
-
-      function $streamlabs()
-      {
-       return _iconize(streamlabs.cfgVals() > 0, streamlabs.online, 'svcStreamlabs');
-      }
-
-      function $streamelements()
-      {
-       return _iconize(streamelements.cfgVals() > 0, streamelements.online, 'svcStreamElements');
-      }
-
-      return {
-       twitch: $twitch,
-       bttv: $bttv,
-       '7tv': $7tv,
-       streamlabs: $streamlabs,
-       streamelements: $streamelements
-      };
-     }();
-
-     const _emotegroups = function()
-     {
-      function $twitch()
-      {
-       let v = false;
-       let g = -1;
-       let c = -1;
-       if (thirdparty.emotes.hasOwnProperty('twitch'))
-       {
-        v = true;
-        g = 0;
-        c = 0;
-        for (let n in thirdparty.emotes.twitch)
-        {
-         if (!thirdparty.emotes.twitch[n].hasOwnProperty('scope'))
-          continue;
-         if (thirdparty.emotes.twitch[n].scope === 'g')
-          g++;
-         if (thirdparty.emotes.twitch[n].scope === 'c')
-          c++;
-        }
-       }
-       return _iconize(v, g > 0 | c > 0, 'emgTwitch', 'badgeTwitchGlobal', 'badgeTwitchChannel', g > 0, c > 0);
-      }
-
-      function $ffz()
-      {
-       let v = false;
-       let g = -1;
-       let c = -1;
-       if (thirdparty.emotes.hasOwnProperty('ffz'))
-       {
-        v = true;
-        g = 0;
-        c = 0;
-        for (let n in thirdparty.emotes.ffz)
-        {
-         if (!thirdparty.emotes.ffz[n].hasOwnProperty('scope'))
-          continue;
-         if (thirdparty.emotes.ffz[n].scope === 'g')
-          g++;
-         if (thirdparty.emotes.ffz[n].scope === 'c')
-          c++;
-        }
-       }
-       return _iconize(v, g > 0 | c > 0, 'emgFFZ', 'badgeFFZGlobal', 'badgeFFZChannel', g > 0, c > 0);
-      }
-
-      function $bttv()
-      {
-       let r = false;
-       let v = false;
-       let g = -1;
-       let c = -1;
-       if (thirdparty.emotes.hasOwnProperty('bttv'))
-       {
-        v = true;
-        g = 0;
-        c = 0;
-        for (let n in thirdparty.emotes.bttv)
-        {
-         if (!thirdparty.emotes.bttv[n].hasOwnProperty('scope'))
-          continue;
-         if (thirdparty.emotes.bttv[n].scope === 'g')
-          g++;
-         if (thirdparty.emotes.bttv[n].scope === 'c')
-          c++;
-        }
-       }
-       return _iconize(v, g > 0 | c > 0, 'emgBTTV', 'badgeBTTVGlobal', 'badgeBTTVChannel', g > 0, c > 0);
-      }
-
-      function $7tv()
-      {
-       let r = false;
-       let v = false;
-       let g = -1;
-       let c = -1;
-       if (thirdparty.emotes.hasOwnProperty('7tv'))
-       {
-        v = true;
-        g = 0;
-        c = 0;
-        for (let n in thirdparty.emotes['7tv'])
-        {
-         if (!thirdparty.emotes['7tv'][n].hasOwnProperty('scope'))
-          continue;
-         if (thirdparty.emotes['7tv'][n].scope === 'g')
-          g++;
-         if (thirdparty.emotes['7tv'][n].scope === 'c')
-          c++;
-        }
-       }
-       return _iconize(v, g > 0 | c > 0, 'emg7TV', 'badge7TVGlobal', 'badge7TVChannel', g > 0, c > 0);
-      }
-
-      return {
-       twitch: $twitch,
-       ffz: $ffz,
-       bttv: $bttv,
-       '7tv': $7tv
-      };
-     }();
-
-     function _stateUpdate()
-     {
-      let didSVC = false;
-      let didEG = false;
-      if (_services.twitch())
-       didSVC = true;
-      if (_services.bttv())
-       didSVC = true;
-      if (_services['7tv']())
-       didSVC = true;
-      if (_services.streamlabs())
-       didSVC = true;
-      if (_services.streamelements())
-       didSVC = true;
-      if (_emotegroups.twitch())
-       didEG = true;
-      if (_emotegroups.ffz())
-       didEG = true;
-      if (_emotegroups.bttv())
-       didEG = true;
-      if (_emotegroups['7tv']())
-       didEG = true;
-      if (didSVC || didEG)
-      {
-       if (didSVC)
-       {
-        document.getElementById('services').classList.remove('idle');
-        if (tSVC !== false)
-        {
-         window.clearTimeout(tSVC);
-         tSVC = false;
-        }
-       }
-       else
-        tSVC = window.setTimeout(function(){document.getElementById('services').classList.add('idle'); tSVC = false; if (!cfg.display.statuses) window.clearTimeout(tStats);}, vFade);
-       if (didEG)
-       {
-        document.getElementById('emotegroups').classList.remove('idle');
-        if (tEG !== false)
-        {
-         window.clearTimeout(tEG);
-         tEG = false;
-        }
-       }
-       else
-        tEG = window.setTimeout(function(){document.getElementById('emotegroups').classList.add('idle'); tEG = false; if (!cfg.display.statuses) window.clearTimeout(tStats);}, vFade);
-       tStats = window.setTimeout(_stateUpdate, 200);
-      }
-      else
-      {
-       tSVC = window.setTimeout(function(){document.getElementById('services').classList.add('idle'); tSVC = false; if (!cfg.display.statuses) window.clearTimeout(tStats);}, vFade);
-       tEG = window.setTimeout(function(){document.getElementById('emotegroups').classList.add('idle'); tEG = false; if (!cfg.display.statuses) window.clearTimeout(tStats);}, vFade);
-       tStats = window.setTimeout(_stateUpdate, 1000);
-      }
-     }
-
-     return task;
-    }();
 
     async function _twitch()
     {
@@ -11793,159 +11876,180 @@
     }
    }
 
-   .stateIconBox
+   #notices
    {
-    display: inline-block;
     position: absolute;
-    bottom: 0;
-    opacity: 1;
-    transition: opacity 1s ease-in;
-    color: #FFFFFF;
+    top: 8px;
+    left: 8px;
+    width: 35em;
    }
-   .stateIconBox.idle
+   #notices #badge
+   {
+    position: fixed;
+    font-family: sans-serif;
+    font-size: 14px;
+    left: 8px;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    border: 1.5px solid #000000;
+    border-radius: 8px;
+    text-align: center;
+    background-color: #E0E0E0;
+    color: #000000;
+    opacity: 0.5;
+    transition: opacity 1s ease-in;
+    cursor: default;
+   }
+   #notices #badge[data-alerts="0"]
    {
     opacity: 0;
    }
-   .stateIconBox#services
+   #notices #badge.fader
    {
-    left: 0;
+    transition: all 300ms ease-out;
    }
-   .stateIconBox#emotegroups
+   #notices #badge.fade
    {
-    right: 0;
-    text-direction: rtl;
+    opacity: 0;
    }
-   .stateIconBox .service
+   #notices .noticeLine
    {
-    display: inline-block;
-    margin-left: 0.5vmin;
-    margin-right: 0.5vmin;
-    width: 2vmin;
-    height: 2vmin;
-    border-radius: 1vmin;
     position: relative;
-    text-align: center;
-    font-size: 1.25vmin;
-    line-height: 2vmin;
-    font-family: serif;
+    font-family: sans-serif;
+    font-size: 14px;
+    border: 1.5px solid #000000;
+    border-radius: 8px;
+    padding-left: 24px;
+    padding-right: 8px;
+    margin-left: 24px;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    max-width: fit-content;
+    width: 100%;
+    transition: all 300ms ease-out;
+    opacity: 0.3;
+    cursor: default;
    }
-   .stateIconBox .service.unused
+   #notices .noticeLine:hover
    {
-    display: none;
+    opacity: 1;
    }
-   .stateIconBox .service.disabled
+   #notices .noticeLine.hide
    {
-    filter: grayscale(1);
-    opacity: 0.75;
+    width: 0%;
+    overflow: hidden;
    }
-   .stateIconBox .service .badge
+   #notices .noticeLine.fader
    {
-    display: inline-block;
-    width: 0.75vmin;
-    height: 0.75vmin;
-    bottom: 0;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-size: cover;
+    transition: opacity 0.5s;
+    opacity: 0.3;
+   }
+   #notices .noticeLine.fader:hover
+   {
+    opacity: 1;
+   }
+   #notices .noticeLine.fader.fade
+   {
+    opacity: 0;
+   }
+   #notices .noticeLine.fader.faded
+   {
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+   }
+   #notices .noticeInfo
+   {
+    background-image: linear-gradient(to right, transparent 0, transparent 20px, #E0E0E0 24px);
+   }
+   #notices .noticeWarning
+   {
+    background-image: linear-gradient(to right, transparent 0, transparent 20px, #FFFF00 24px);
+   }
+   #notices .noticeError
+   {
+    color: #FFFFFF;
+    background-image: linear-gradient(to right, transparent 0, transparent 20px, #FF0000 24px);
+   }
+   #notices .noticeError a
+   {
+    color: #FFFF00;
+    text-decoration: none;
+   }
+   #notices .noticeError a:hover
+   {
+    color: #FFFFC0;
+   }
+   #notices .global
+   {
+    background-color: #FFFFFF;
+   }
+   #notices .sTwitch
+   {
+    background-color: #7D5BBE;
+   }
+   #notices .sTwitch:after
+   {
     position: absolute;
+    top: 0;
+    left: 7px;
+    content: 'T';
+    color: #FFFFFF;
+    font-size: 14px;
    }
-   .stateIconBox .service .badge.global
+   #notices .tStreamElements
    {
-    left: -0.25vmin;
-    background-image: url('https://cdn.frankerfacez.com/static/emoji/images/blob/1f30e.png');
+    background-color: #0000FF;
    }
-   .stateIconBox .service .badge.channel
+   #notices .tStreamElements:after
    {
-    right: -0.25vmin;
-    background-image: url('https://cdn.frankerfacez.com/static/emoji/images/blob/1f464.png');
+    position: absolute;
+    top: 0;
+    left: 2px;
+    content: 'SE';
+    color: #FFFFFF;
+    font-size: 14px;
    }
-   .stateIconBox .service .badge.unused
-   {
-    display: none;
-   }
-   .stateIconBox .service .badge.disabled
-   {
-    filter: grayscale(1);
-    opacity: 0.75;
-   }
-
-   .stateIconBox #badgeTwitchIRC
-   {
-    background-image: url('https://cdn.frankerfacez.com/static/emoji/images/noto/1f5e3.png');
-   }
-   .stateIconBox #badgeTwitchEventSub
-   {
-    background-image: url('https://cdn.frankerfacez.com/static/emoji/images/blob/1f4c5.png');
-   }
-
-   .stateIconBox #svcTwitch,
-   .stateIconBox #emgTwitch
-   {
-    background-color: #9146FF;
-   }
-   .stateIconBox #emgFFZ
-   {
-    background-color: #845A39;
-   }
-   .stateIconBox #svcBTTV,
-   .stateIconBox #emgBTTV
-   {
-    background-color: #D50014;
-   }
-   .stateIconBox #svc7TV,
-   .stateIconBox #emg7TV
-   {
-    background-color: #29B2A7;
-   }
-
-   .stateIconBox #svcStreamlabs
+   #notices .tStreamlabs
    {
     background-color: #80F5D2;
-    color: #000000;
    }
-   .stateIconBox #svcStreamElements
+   #notices .tStreamlabs:after
    {
-    background-color: #5088C7;
-   }
-
-   .notice
-   {
-    transition: opacity linear 500ms;
     position: absolute;
-    font-size: 3vmin;
-    font-weight: bold;
-    font-family: sans-serif;
-    text-align: center;
-   }
-   .notice h1
-   {
-    font-size: 5vmin;
-   }
-   .notice h2
-   {
-    font-size: 4vmin;
-   }
-   #warning
-   {
-    background-color: rgba(255, 192, 0, 0.75);
-    color: #000000;
-    text-shadow: 2px 2px 4px #FFFFFF;
-    top: 10vh;
-    left: 5vw;
-    right: 5vw;
-    padding: 2em;
-    border-radius: 2em;
-   }
-   #error
-   {
-    background-color: rgba(255, 0, 0, 0.75);
-    color: #FFFF00;
-    text-shadow: 2px 2px 4px #000000;
     top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    padding-top: 15vh;
+    left: 3px;
+    content: 'SL';
+    color: #000000;
+    font-size: 14px;
+   }
+   #notices .eBTTV
+   {
+    background-color: #FF0000;
+   }
+   #notices .eBTTV:after
+   {
+    position: absolute;
+    top: 0;
+    left: 7px;
+    content: 'B';
+    color: #FFFFFF;
+    font-size: 14px;
+   }
+   #notices .e7TV
+   {
+    background-color: #00FFFF;
+   }
+   #notices .e7TV:after
+   {
+    position: absolute;
+    top: 0;
+    left: 8px;
+    content: '7';
+    color: #000000;
+    font-size: 14px;
    }
 
    button
