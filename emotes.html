@@ -6045,13 +6045,35 @@
 
      async function _loadEmote_channel(chID)
      {
-      cList = [];
       if (!thirdparty.emotes.hasOwnProperty('twitch'))
        thirdparty.emotes.twitch = {};
       const r = await _findEmote_channel(chID, thirdparty.emotes.twitch);
       if (r === false)
        return false;
-      cList = r;
+      if (cList.length === 0)
+       cList = r;
+      else
+      {
+       for (let n in thirdparty.emotes.twitch)
+       {
+        if (!thirdparty.emotes.twitch[n].hasOwnProperty('scope'))
+         continue;
+        if (!thirdparty.emotes.twitch[n].scope !== 'c')
+         continue;
+        for (let c = cList.length - 1; c >= 0; c--)
+        {
+         if (cList[c].url !== thirdparty.emotes.twitch[n].url)
+          continue;
+         cList.splice(c, 1);
+         break;
+        }
+       }
+       for (let i = 0, l = r.length; i < l; i++)
+       {
+        if (!cList.includes(r[i]))
+         cList.push(r[i]);
+       }
+      }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
