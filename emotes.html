@@ -5224,8 +5224,11 @@
            if (!r.payload.event.hasOwnProperty('user_name'))
             return;
            twitch.net.fList[r.payload.event.user_id] = {value: true, t: new Date().getTime()};
-           if (document.visibilityState !== 'hidden')
-            display.kappa.show(false, cfg.event.follow, {'%USER%': r.payload.event.user_name});
+           if (cfg.event.follow === false)
+            return;
+           if (document.visibilityState === 'hidden')
+            return;
+           display.kappa.show(false, cfg.event.follow, {'%USER%': r.payload.event.user_name});
            break;
           case 'channel.channel_points_custom_reward_redemption.add':
            if (!r.payload.hasOwnProperty('event'))
@@ -5282,11 +5285,23 @@
            await twitch.parse.event.shoutoutReceive(r.payload.event.from_broadcaster_user_id, r.payload.event.from_broadcaster_user_name);
            break;
           case 'channel.hype_train.begin':
+           if (cfg.event.hypetrain === false)
+            return;
+           if (!cfg.event.hypetrain.hasOwnProperty('begin'))
+            return;
+           if (cfg.event.hypetrain.begin === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            display.kappa.show(false, cfg.event.hypetrain.begin);
            break;
           case 'channel.hype_train.end':
+           if (cfg.event.hypetrain === false)
+            return;
+           if (!cfg.event.hypetrain.hasOwnProperty('success'))
+            return;
+           if (cfg.event.hypetrain.success === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
@@ -5299,16 +5314,27 @@
            display.kappa.show(false, rs);
            break;
           case 'channel.poll.begin':
+           if (cfg.event.poll === false)
+            return;
+           if (!cfg.event.poll.hasOwnProperty('begin'))
+            return;
+           if (cfg.event.poll.begin === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
             return;
            if (!r.payload.event.hasOwnProperty('title'))
             return;
-           if (cfg.event.poll !== false && cfg.event.poll.hasOwnProperty('begin'))
-            display.kappa.show(false, cfg.event.poll.begin, {'%TITLE%': r.payload.event.title});
+           display.kappa.show(false, cfg.event.poll.begin, {'%TITLE%': r.payload.event.title});
            break;
           case 'channel.poll.end':
+           if (cfg.event.poll === false)
+            return;
+           if (!cfg.event.poll.hasOwnProperty('end'))
+            return;
+           if (cfg.event.poll.end === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
@@ -5322,16 +5348,27 @@
            twitch.parse.event.pollEnd(r.payload.event);
            break;
           case 'channel.prediction.begin':
+           if (cfg.event.prediction === false)
+            return;
+           if (!cfg.event.prediction.hasOwnProperty('begin'))
+            return;
+           if (cfg.event.prediction.begin === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
             return;
            if (!r.payload.event.hasOwnProperty('title'))
             return;
-           if (cfg.event.prediction !== false && cfg.event.prediction.hasOwnProperty('begin'))
-            display.kappa.show(false, cfg.event.prediction.begin, {'%TITLE%': r.payload.event.title});
+           display.kappa.show(false, cfg.event.prediction.begin, {'%TITLE%': r.payload.event.title});
            break;
           case 'channel.prediction.end':
+           if (cfg.event.prediction === false)
+            return;
+           if (!cfg.event.prediction.hasOwnProperty('resolved'))
+            return;
+           if (cfg.event.prediction.resolved === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
@@ -5347,6 +5384,8 @@
            twitch.parse.event.predictionEnd(r.payload.event);
            break;
           case 'channel.charity_campaign.donate':
+           if (cfg.event.charity === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
@@ -5369,6 +5408,12 @@
            display.kappa.show(false, rd, {'%USER%': dName, '%AMOUNT%': dAmt});
            break;
           case 'channel.goal.begin':
+           if (cfg.event.goal === false)
+            return;
+           if (!cfg.event.goal.hasOwnProperty('begin'))
+            return;
+           if (cfg.event.goal.begin === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
@@ -5379,10 +5424,15 @@
             return;
            if (!r.payload.event.hasOwnProperty('target_amount'))
             return;
-           if (cfg.event.goal !== false && cfg.event.goal.hasOwnProperty('begin'))
-            display.kappa.show(false, cfg.event.goal.begin, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.target_amount});
+           display.kappa.show(false, cfg.event.goal.begin, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.target_amount});
            break;
           case 'channel.goal.end':
+           if (cfg.event.goal === false)
+            return;
+           if (!cfg.event.goal.hasOwnProperty('achieved'))
+            return;
+           if (cfg.event.goal.achieved === false)
+            return;
            if (document.visibilityState === 'hidden')
             return;
            if (!r.payload.hasOwnProperty('event'))
@@ -5395,8 +5445,7 @@
             return;
            if (!r.payload.event.hasOwnProperty('is_achieved') || r.payload.event.is_achieved !== true)
             return;
-           if (cfg.event.goal !== false && cfg.event.goal.hasOwnProperty('achieved'))
-            display.kappa.show(false, cfg.event.goal.achieved, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.current_amount});
+           display.kappa.show(false, cfg.event.goal.achieved, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.current_amount});
            break;
           case 'channel.update':
            if (!r.payload.hasOwnProperty('event'))
@@ -7687,6 +7736,12 @@
       {
        if (!thirdparty.emotes.hasOwnProperty('cheer'))
         return false;
+       if (cfg.event.cheer === false)
+        return false;
+       if (!cfg.event.cheer.hasOwnProperty('bits'))
+        return false;
+       if (cfg.event.cheer.bits === false)
+        return false;
        if (!cmd.hasOwnProperty('tags'))
         return false;
        if (!cmd.tags.hasOwnProperty('bits'))
@@ -7746,6 +7801,14 @@
 
       async function $raid(cmd)
       {
+       if (cfg.event.raid === false)
+        return;
+       if (!cfg.event.raid.hasOwnProperty('raiders'))
+        return;
+       if (cfg.event.raid.raiders === false)
+        return;
+       if (!cmd.hasOwnProperty('tags'))
+        return;
        if (!cmd.tags.hasOwnProperty('msg-param-viewerCount'))
         return;
        const c = cmd.tags['msg-param-viewerCount'];
@@ -8130,6 +8193,16 @@
 
       async function $shoutoutCreate(uID, uName)
       {
+       if (cfg.event.shoutout === false)
+        return false;
+       if (!cfg.event.shoutout.hasOwnProperty('create'))
+        return false;
+       if (cfg.event.shoutout.create === false)
+        return false;
+       if (!cfg.event.shoutout.create.hasOwnProperty('styles'))
+        return false;
+       if (cfg.event.shoutout.create.styles === false)
+        return false;
        if (!cfg.event.shoutout.create.targetEmotes)
        {
         display.kappa.show(false, cfg.event.shoutout.create.styles, {'%USER%': uName});
@@ -8181,6 +8254,16 @@
 
       async function $shoutoutReceive(uID, uName)
       {
+       if (cfg.event.shoutout === false)
+        return false;
+       if (!cfg.event.shoutout.hasOwnProperty('receive'))
+        return false;
+       if (cfg.event.shoutout.receive === false)
+        return false;
+       if (!cfg.event.shoutout.receive.hasOwnProperty('styles'))
+        return false;
+       if (cfg.event.shoutout.receive.styles === false)
+        return false;
        if (!cfg.event.shoutout.receive.originEmotes)
        {
         display.kappa.show(false, cfg.event.shoutout.receive.styles, {'%USER%': uName});
@@ -8254,8 +8337,7 @@
        let sPoll = 'None';
        if (rPoll.length > 0)
         sPoll = rPoll.join(' + ');
-       if (cfg.event.poll !== false && cfg.event.poll.hasOwnProperty('end'))
-        display.kappa.show(false, cfg.event.poll.end, {'%TITLE%': e.title, '%RESULT%': sPoll});
+       display.kappa.show(false, cfg.event.poll.end, {'%TITLE%': e.title, '%RESULT%': sPoll});
       }
 
       function $predictionEnd(e)
@@ -8272,8 +8354,7 @@
         sPrediction = e.outcomes[i].title;
         break;
        }
-       if (cfg.event.prediction !== false && cfg.event.prediction.hasOwnProperty('resolved'))
-        display.kappa.show(false, cfg.event.prediction.resolved, {'%TITLE%': e.title, '%RESULT%': sPrediction});
+       display.kappa.show(false, cfg.event.prediction.resolved, {'%TITLE%': e.title, '%RESULT%': sPrediction});
       }
 
       return {
