@@ -5117,7 +5117,6 @@
 
       function _wsClose()
       {
-       twitch.net.eventSubCtl.online = false;
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -5158,7 +5157,6 @@
         return;
        if (!r.hasOwnProperty('payload'))
         return;
-       twitch.net.eventSubCtl.online = true;
        switch (r.metadata.message_type)
        {
         case 'session_welcome':
@@ -5488,7 +5486,6 @@
 
       function _wsTimeout()
       {
-       twitch.net.eventSubCtl.online = false;
        _lTimeout = 5000;
        if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
         _wsURL = cURLs.ws.twitch.eventSub;
@@ -5793,8 +5790,7 @@
        subscribe: $subscribe,
        erase: $erase,
        channelID: 0,
-       sessionID: null,
-       online: false
+       sessionID: null
       };
      }();
 
@@ -5836,7 +5832,6 @@
 
       function _wsClose()
       {
-       twitch.net.online = false;
        if (_tPing !== 0)
        {
         window.clearInterval(_tPing);
@@ -5903,7 +5898,6 @@
          console.log('Unparsed IRC Command: ', data[i]);
          continue;
         }
-        twitch.net.online = true;
         switch (cmd.command)
         {
          case 'PING':
@@ -6039,7 +6033,6 @@
 
       function _wsExpire()
       {
-       twitch.net.online = false;
        if (_ws === null)
         return;
        if (twitch.net.dead === true)
@@ -6066,7 +6059,6 @@
 
       function _wsTimeout()
       {
-       twitch.net.online = false;
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -6288,7 +6280,6 @@
       dead: false,
       eventSubCtl: $eventSubCtl,
       irc: $irc,
-      online: false,
       userInfo: $userInfo,
       oAuth: $oAuth
      };
@@ -8883,7 +8874,6 @@
 
      function _wsClose()
      {
-      streamlabs.online = false;
       if (_tPing !== 0)
       {
        window.clearInterval(_tPing);
@@ -8926,7 +8916,6 @@
       const d = ev.data;
       if (d.length < 1)
        return;
-      streamlabs.online = true;
       switch (d.slice(0, 1))
       {
        case '0':
@@ -9010,7 +8999,6 @@
 
      function _wsTimeout()
      {
-      streamlabs.online = false;
       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
@@ -9044,7 +9032,6 @@
 
     return {
      socket: $socket,
-     online: false,
      cfgVals: $cfgVals
     };
    }();
@@ -9114,7 +9101,6 @@
 
      function _wsClose()
      {
-      streamelements.online = false;
       if (_tPing !== 0)
       {
        window.clearInterval(_tPing);
@@ -9157,7 +9143,6 @@
       const d = ev.data;
       if (d.length < 1)
        return;
-      streamelements.online = true;
       switch (d.slice(0, 1))
       {
        case '0':
@@ -9236,7 +9221,6 @@
 
      function _wsTimeout()
      {
-      streamelements.online = false;
       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
@@ -9341,7 +9325,6 @@
 
     return {
      socket: $socket,
-     online: false,
      updateOAuth: $updateOAuth,
      cfgVals: $cfgVals
     };
@@ -9771,14 +9754,12 @@
         return;
        if (_ws.readyState !== 1)
         return;
-       thirdparty.bttv.online = true;
        _ws.onopen = null;
        _ws.send(JSON.stringify({'name': 'join_channel', 'data': {'name': 'twitch:' + _ch}}));
       }
 
       function _wsClose()
       {
-       thirdparty.bttv.online = false;
        if (_ws === null)
         return;
        _ws.onopen = null;
@@ -9795,7 +9776,6 @@
 
       function _wsMessage(ev)
       {
-       thirdparty.bttv.online = true;
        if (_ws === null)
         return;
        if (twitch.net.dead)
@@ -9914,7 +9894,6 @@
       channel: $channel,
       channelEx: $channelEx,
       socket: $socket,
-      online: false,
       reload: $reload
      };
     }();
@@ -10099,7 +10078,6 @@
 
       function _wsClose()
       {
-       thirdparty['7tv'].online = false;
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -10143,7 +10121,6 @@
         return;
        if (!d.hasOwnProperty('d'))
         return;
-       thirdparty['7tv'].online = true;
        switch (d.op)
        {
         case 0:
@@ -10302,7 +10279,6 @@
 
       function _wsTimeout()
       {
-       thirdparty['7tv'].online = false;
        _lTimeout = 5000;
        if (_tTimeout !== false)
        {
@@ -10328,8 +10304,7 @@
       global: $global,
       channel: $channel,
       channelEx: $channelEx,
-      socket: $socket,
-      online: false
+      socket: $socket
      };
     }();
 
