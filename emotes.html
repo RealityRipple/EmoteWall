@@ -4883,6 +4883,8 @@
      {
       img.onerror = null;
       img.onload = null;
+      if (img.naturalWidth !== img.naturalHeight)
+       shared.ec.save(url, img.naturalWidth, img.naturalHeight);
      };
      img.onerror = function()
      {
@@ -7519,6 +7521,11 @@
        const kNow = new Date().getTime();
        const m = cmd.params[1].toLowerCase();
        let foundAdvCmd = false;
+       if (m === '!cesc' && (lv & 0xC00) !== 0)
+       {
+        shared.ec.clear();
+        return;
+       }
        for (const k of cfg.commands)
        {
         if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase') && !k.hasOwnProperty('rave') && !k.hasOwnProperty('raveon') && !k.hasOwnProperty('raveoff'))
@@ -8530,6 +8537,18 @@
         if (cfg.ignore.emotes.includes(m))
          r.splice(i, 1);
        }
+      }
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       if (r[i].hasOwnProperty('width') || r[i].hasOwnProperty('height'))
+        continue;
+       if (!r[i].hasOwnProperty('url'))
+        continue;
+       const sz = await shared.ec.get(r[i].url);
+       if (sz === null)
+        continue;
+       r[i].width = sz.width;
+       r[i].height = sz.height;
       }
       return r;
      }
@@ -10396,13 +10415,134 @@
      };
     }();
 
+    const $ec = function()
+    {
+     const _dbName = 'ewec';
+     const _tblName = 'emotes';
+
+     function $save(url, w, h)
+     {
+      const o = window.indexedDB.open(_dbName, 1);
+      o.onupgradeneeded = function(ev)
+      {
+       const d = ev.target.result;
+       const s = d.createObjectStore(_tblName, {keyPath: 'url'});
+      };
+      o.onerror = function(ev)
+      {
+       window.indexedDB.deleteDatabase(_dbName);
+      };
+      o.onsuccess = function(ev)
+      {
+       const d = ev.target.result;
+       if (d.objectStoreNames[0] !== _tblName)
+       {
+        d.close();
+        window.indexedDB.deleteDatabase(_dbName);
+        return;
+       }
+       let tx;
+       try
+       {
+        tx = d.transaction(_tblName, 'readwrite');
+       }
+       catch(ex)
+       {
+        d.close();
+        window.indexedDB.deleteDatabase(_dbName);
+        return;
+       }
+       const s = tx.objectStore(_tblName);
+       const p = s.put({url: url, w: w, h: h});
+       p.onerror = function(ev2)
+       {
+        d.close();
+       };
+       p.onsuccess = function(ev2)
+       {
+        d.close();
+       };
+      };
+     }
+
+     function $get(url)
+     {
+      return new Promise(
+       function(resolve)
+       {
+        const o = window.indexedDB.open(_dbName, 1);
+        o.onupgradeneeded = function(ev)
+        {
+         resolve(null);
+        };
+        o.onblocked = function(ev)
+        {
+         resolve(null);
+        };
+        o.onerror = function(ev)
+        {
+         resolve(null);
+        };
+        o.onsuccess = function(ev)
+        {
+         const dbr = ev.target.result;
+         if (dbr.objectStoreNames[0] !== _tblName)
+         {
+          dbr.close();
+          resolve(null);
+          return;
+         }
+         let tx;
+         try
+         {
+          tx = dbr.transaction(_tblName, 'readonly');
+         }
+         catch(ex)
+         {
+          dbr.close();
+          resolve(null);
+          return;
+         }
+         const s = tx.objectStore(_tblName);
+         let g = s.get(url);
+         g.onerror = function(ev2)
+         {
+          dbr.close();
+          resolve(null);
+         };
+         g.onsuccess = function(ev2)
+         {
+          dbr.close();
+          if (typeof ev2.currentTarget.result !== 'undefined')
+           resolve({width: ev2.currentTarget.result.w, height: ev2.currentTarget.result.h});
+          else
+           resolve(null);
+         };
+        };
+       }
+      );
+     }
+
+     function $clear()
+     {
+      window.indexedDB.deleteDatabase(_dbName);
+     }
+
+     return {
+      save: $save,
+      get: $get,
+      clear: $clear
+     }
+    }();
+
     return {
      rnd: $rnd,
      httpRequest: $httpRequest,
      findInMaybeRange: $findInMaybeRange,
      clearAddr: $clearAddr,
      doNextFrame: $doNextFrame,
-     mspf: $mspf
+     mspf: $mspf,
+     ec: $ec
     };
    }();
 
