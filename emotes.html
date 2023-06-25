@@ -1960,113 +1960,308 @@
 
    const notice = function()
    {
-    function $warning(w)
+    const _visTime = 5000;
+    const _errTime = 15000;
+    let _states = {};
+    let _timers = {};
+
+    function $info(i)
     {
-     if (document.getElementById('error') !== null)
+     if (_states.hasOwnProperty(i) && _states[i] === 'i')
       return;
-     const oldW = document.getElementById('warning');
-     if (oldW !== null)
+     _states[i] = 'i';
+     if (!_timers.hasOwnProperty(i))
+      _timers[i] = false;
+     _buildNotices();
+     switch (i)
      {
-      if (parseInt(oldW.dataset.code, 10) !== w)
-       window.setTimeout(notice.warning, 1000, w);
-      return;
-     }
-     let n = document.createElement('div');
-     n.setAttribute('id', 'warning');
-     n.setAttribute('class', 'notice');
-     n.style.opacity = 0;
-     n.setAttribute('data-code', w);
-     let h = '<h1>Emote Wall Warning:</h1>';
-     switch (w)
-     {
-      case 0x01:
-       h += '<h2>Too Many Instances Open Simultaneously</h2>';
-       h += 'Some events may not be correctly detected.<br><br>';
-       h += 'Please use reference copies of the Emote Wall wherever possible.<br>';
-       h += 'If you\'re using different configurations, try including different OAuth Refresh Tokens for each configuration.<br>';
-       h += 'If you need to, you may <a onclick="twitch.net.eventSubCtl.erase();" href="javascript:;">Force Clear</a> the event handlers.';
-       if (window.hasOwnProperty('obsstudio'))
-        h += '<br><br>To click the link above, please right-click this browser source and choose &quot;Interact&quot; in the context menu.';
+      case 0x12:
+       _setNotice(i, 'noticeInfo sTwitch', 'IRC Connected', 5);
        break;
-      case 0x09:
-       h += '<h2>OBS Not Detected</h2>';
-       h += 'If you are testing this Emote Wall in your browser, or using it in another capacity, then no worries.<br><br>';
-       h += 'But if you intend to use this Emote Wall for streaming with OBS Studio, please see <a href="https://www.twitch.tv/videos/1784099954" target="_blank" title="Adding Emote Wall to OBS">this &quot;How to&quot; video</a>.';
+      case 0x1A:
+       _setNotice(i, 'noticeInfo sTwitch', 'EventSub Connected', 5);
        break;
       case 0x72:
-       h += '<h2>Your StreamElements OAuth Token is Expired</h2>';
-       h += 'Please Update your StreamElements OAuth Token';
+       _setNotice(i, 'noticeInfo tStreamElements', 'Connected', 5);
+       break;
+      case 0x82:
+       _setNotice(i, 'noticeInfo tStreamlabs', 'Connected', 5);
+       break;
+      case 0xB2:
+       _setNotice(i, 'noticeInfo eBTTV', 'Connected', 5);
+       break;
+      case 0xC2:
+       _setNotice(i, 'noticeInfo e7TV', 'Connected', 5);
        break;
      }
-     n.innerHTML = h;
-     document.body.prepend(n);
-     shared.doNextFrame(function(){n.style.opacity = 1;});
-     window.setTimeout(function(){n.style.opacity = 0; n.classList.add('hiding');}, 19500);
-     window.setTimeout(function(){n.remove();}, 20000);
+    }
+
+    function $warning(w)
+    {
+     if (_states.hasOwnProperty(w) && _states[w] === 'w')
+      return;
+     _states[w] = 'w';
+     if (!_timers.hasOwnProperty(w))
+      _timers[w] = false;
+     _buildNotices();
+     switch (w)
+     {
+      case 0x1A:
+       _setNotice(w, 'noticeWarning sTwitch', 'Too Many Instances<br>Please use existing (reference) copies wherever possible.', 20);
+       break;
+     }
     }
 
     function $error(e)
     {
-     const oldW = document.getElementById('warning');
-     if (oldW !== null)
-     {
-      oldW.style.opacity = 0;
-      window.setTimeout(function(){oldW.remove();}, 500);
-     }
-     const oldE = document.getElementById('error');
-     if (oldE !== null)
-     {
-      if (parseInt(oldE.dataset.code, 10) !== e)
-       window.setTimeout(notice.error, 1000, e);
+     if (_states.hasOwnProperty(e) && _states[e] === 'e')
       return;
-     }
-     let n = document.createElement('div');
-     n.setAttribute('id', 'error');
-     n.setAttribute('class', 'notice');
-     n.style.opacity = 0;
-     n.setAttribute('data-code', e);
-     let h = '<h1>Emote Wall Error:</h1>';
+     _states[e] = 'e';
+     if (!_timers.hasOwnProperty(e))
+      _timers[e] = false;
+     _buildNotices();
      switch (e)
      {
       case 0x01:
-       h += '<h2>Corrupted Configuration</h2>';
-       h += 'Please check your browser\'s Error Console for details.';
+       _setNotice(e, 'noticeError global', 'Corrupted Configuration');
+       break;
+      case 0x09:
+       _setNotice(e, 'noticeError global', 'OBS Not Detected<br>Please see <a href="https://www.twitch.tv/videos/1784099954" target="_blank" title="Adding Emote Wall to OBS">this &quot;How to&quot; video</a> on adding the Emote Wall to OBS.');
        break;
       case 0x11:
-       h += '<h2>Unable to Connect to Twitch</h2>';
        if (typeof login !== 'undefined' && login.inUse)
        {
-        h += 'Please Log In again to update your OAuth Refresh token.';
+        _setNotice(e, 'noticeError sTwitch', 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
         login.showOut(true);
         window.setTimeout(function(){login.showIn();}, 15500);
        }
        else
-        h += 'Please update your OAuth Refresh token.';
+        _setNotice(e, 'noticeError sTwitch', 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
        break;
       case 0x12:
-       h += '<h2>The Connection to the IRC Channel was Incomplete</h2>';
-       h += 'Please verify you selected the right channel name.';
+       _setNotice(e, 'noticeError sTwitch', 'IRC Disconnected');
        break;
-      case 0x13:
-       h += '<h2>Unable to Access Channel Emotes</h2>';
-       if (typeof login !== 'undefined' && login.inUse)
-       {
-        h += 'Please Log In again to update your OAuth Refresh token.';
-        login.showOut(true);
-        window.setTimeout(function(){login.showIn();}, 15500);
-       }
-       else
-        h += 'Please check your OAuth Refresh token. You may need a new one.';
+      case 0x1A:
+       _setNotice(e, 'noticeError sTwitch', 'EventSub Disconnected');
+       break;
+      case 0x71:
+       _setNotice(e, 'noticeError tStreamElements', 'OAuth Token Rejected<br>Please update your StreamElements OAuth Token.');
+       break;
+      case 0x72:
+       _setNotice(e, 'noticeError tStreamElements', 'Disconnected');
+       break;
+      case 0x81:
+       _setNotice(e, 'noticeError tStreamlabs', 'Socket Token Rejected<br>Please update your StreamLabs Socket Token.');
+       break;
+      case 0x82:
+       _setNotice(e, 'noticeError tStreamlabs', 'Disconnected');
+       break;
+      case 0xB2:
+       _setNotice(e, 'noticeError eBTTV', 'Disconnected');
+       break;
+      case 0xC2:
+       _setNotice(e, 'noticeError e7TV', 'Disconnected');
        break;
      }
-     n.innerHTML = h;
+    }
+
+    function _buildNotices()
+    {
+     if (document.getElementById('notices'))
+      return;
+     let n = document.createElement('div');
+     n.setAttribute('id', 'notices');
+     let b = document.createElement('div');
+     b.setAttribute('id', 'badge');
+     b.dataset.alerts = 0;
+     b.innerHTML = b.dataset.alerts;
+     n.appendChild(b);
      document.body.prepend(n);
-     shared.doNextFrame(function(){n.style.opacity = 1;});
-     window.setTimeout(function(){n.style.opacity = 0; n.classList.add('hiding');}, 14500);
-     window.setTimeout(function(){document.body.innerHTML = '';}, 15000);
+    }
+
+    function _setNotice(id, state, msg, t = 0)
+    {
+     let n = document.getElementById('notices');
+     if (!n)
+      return;
+     let b = document.getElementById('badge');
+     if (!b)
+      return;
+     b.classList.remove('fade');
+     let hasFader = false;
+     const lines = n.getElementsByClassName('noticeLine');
+     for (let i = 0; i < lines.length; i++)
+     {
+      if (!lines[i].classList.contains('fader'))
+      {
+       hasFader = true;
+       break;
+      }
+     }
+     if (!hasFader)
+      b.classList.remove('fader');
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+     {
+      b.dataset.alerts++;
+      b.innerHTML = b.dataset.alerts;
+      nID = document.createElement('div');
+      nID.setAttribute('id', 'notice' + id);
+      n.appendChild(nID);
+     }
+     nID.setAttribute('class', 'noticeLine ' + state);
+     nID.innerHTML = msg;
+     if (t > 0)
+     {
+      document.removeEventListener('mousemove', _triggerFadeInNotice(id));
+      if (_timers[id] !== false)
+       window.clearTimeout(_timers[id]);
+      _timers[id] = window.setTimeout(_clearNoticeBegin, t * 1000, id);
+     }
+     else
+     {
+      if (_timers[id] !== false)
+       window.clearTimeout(_timers[id]);
+      _timers[id] = window.setTimeout(_hideNotice, _errTime, id);
+     }
+    }
+
+    function _clearNoticeBegin(id)
+    {
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+      return;
+     nID.classList.add('hide');
+     if (_timers[id] !== false)
+      window.clearTimeout(_timers[id]);
+     _timers[id] = window.setTimeout(_clearNoticeEnd, 300, id);
+    }
+
+    function _clearNoticeEnd(id)
+    {
+     if (_timers[id] !== false)
+     {
+      window.clearTimeout(_timers[id]);
+      _timers[id] = false;
+     }
+     let n = document.getElementById('notices');
+     if (!n)
+      return;
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+      return;
+     n.removeChild(nID);
+     let b = document.getElementById('badge');
+     if (!b)
+      return;
+     b.dataset.alerts--;
+     b.innerHTML = b.dataset.alerts;
+    }
+
+    function _hideNotice(id)
+    {
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+      return;
+     nID.classList.add('fader');
+     nID.classList.add('fade');
+     document.addEventListener('mousemove', _triggerFadeInNotice(id));
+     if (_timers[id] !== false)
+      window.clearTimeout(_timers[id]);
+     _timers[id] = window.setTimeout(_fadeOutEnd, 500, id);
+     let n = document.getElementById('notices');
+     if (!n)
+      return;
+     let hasVis = false;
+     const lines = n.getElementsByClassName('noticeLine');
+     for (let i = 0; i < lines.length; i++)
+     {
+      if (!lines[i].classList.contains('fade'))
+      {
+       hasVis = true;
+       break;
+      }
+     }
+     if (!hasVis)
+     {
+      let b = document.getElementById('badge');
+      if (!b)
+       return;
+      b.classList.add('fader');
+      b.classList.add('fade');
+     }
+    }
+
+    const _triggerFadeInNotice = function(id)
+    {
+     return function(ev)
+     {
+      _fadeInNotice(id);
+     }
+    }
+
+    function _fadeInNotice(id)
+    {
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+      return;
+     nID.classList.remove('faded');
+     nID.classList.remove('fade');
+     if (_timers[id] !== false)
+      window.clearTimeout(_timers[id]);
+     _timers[id] = window.setTimeout(_fadeOutNotice, _visTime, id);
+     let b = document.getElementById('badge');
+     if (!b)
+      return;
+     b.classList.remove('fade');
+    }
+
+    function _fadeOutNotice(id)
+    {
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+      return;
+     if (_timers[id] !== false)
+      window.clearTimeout(_timers[id]);
+     _timers[id] = window.setTimeout(_fadeOutEnd, 500, id);
+     nID.classList.add('fade');
+     let n = document.getElementById('notices');
+     if (!n)
+      return;
+     let hasVis = false;
+     const lines = n.getElementsByClassName('noticeLine');
+     for (let i = 0; i < lines.length; i++)
+     {
+      if (!lines[i].classList.contains('fade'))
+      {
+       hasVis = true;
+       break;
+      }
+     }
+     if (!hasVis)
+     {
+      let b = document.getElementById('badge');
+      if (!b)
+       return;
+      b.classList.add('fade');
+     }
+    }
+
+    function _fadeOutEnd(id)
+    {
+     let nID = document.getElementById('notice' + id);
+     if (!nID)
+      return;
+     if (_timers[id] !== false)
+     {
+      window.clearTimeout(_timers[id]);
+      _timers[id] = false;
+     }
+     nID.classList.add('faded');
     }
 
     return {
+     info: $info,
      warning: $warning,
      error: $error
     };
@@ -5117,6 +5312,7 @@
 
       function _wsClose()
       {
+       notice.error(0x1A);
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -5157,6 +5353,7 @@
         return;
        if (!r.hasOwnProperty('payload'))
         return;
+       notice.info(0x1A);
        switch (r.metadata.message_type)
        {
         case 'session_welcome':
@@ -5486,6 +5683,7 @@
 
       function _wsTimeout()
       {
+       notice.error(0x1A);
        _lTimeout = 5000;
        if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
         _wsURL = cURLs.ws.twitch.eventSub;
@@ -5711,11 +5909,11 @@
         return true;
        if (r.code === 429)
        {
-        const eNote = document.getElementById('warning');
-        if (!eNote || eNote.dataset.code !== '1')
+        const eNote = document.getElementById('notice' + 0x1A);
+        if (!eNote || !eNote.classList.contains('noticeWarning'))
         {
          if (!await _handleDanglingEventSubs())
-          notice.warning(0x01);
+          notice.warning(0x1A);
         }
        }
        return false;
@@ -5832,6 +6030,7 @@
 
       function _wsClose()
       {
+       notice.error(0x12);
        if (_tPing !== 0)
        {
         window.clearInterval(_tPing);
@@ -5898,6 +6097,7 @@
          console.log('Unparsed IRC Command: ', data[i]);
          continue;
         }
+        notice.info(0x12);
         switch (cmd.command)
         {
          case 'PING':
@@ -6033,6 +6233,7 @@
 
       function _wsExpire()
       {
+       notice.error(0x12);
        if (_ws === null)
         return;
        if (twitch.net.dead === true)
@@ -6045,7 +6246,6 @@
        }
        _ws.close();
        _ws = null;
-       notice.error(0x12);
       }
 
       function _wsPing()
@@ -6059,6 +6259,7 @@
 
       function _wsTimeout()
       {
+       notice.error(0x12);
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -8460,7 +8661,7 @@
         {
          if (await twitch.net.oAuth.reinit())
           return _checkFollower(cmd);
-         notice.error(0x13);
+         notice.error(0x11);
          if (!login.inUse)
           twitch.net.oAuth.clear(true);
         }
@@ -8684,7 +8885,7 @@
        {
         if (await twitch.net.oAuth.reinit())
          return _findEmote_channel(chID, n);
-        notice.error(0x13);
+        notice.error(0x11);
         if (!login.inUse)
          twitch.net.oAuth.clear(true);
        }
@@ -8736,7 +8937,7 @@
       {
        if (await twitch.net.oAuth.reinit())
         return twitch.global();
-       notice.error(0x13);
+       notice.error(0x11);
        if (!login.inUse)
         twitch.net.oAuth.clear(true);
       }
@@ -8874,6 +9075,7 @@
 
      function _wsClose()
      {
+      notice.error(0x82);
       if (_tPing !== 0)
       {
        window.clearInterval(_tPing);
@@ -8916,6 +9118,7 @@
       const d = ev.data;
       if (d.length < 1)
        return;
+      notice.info(0x82);
       switch (d.slice(0, 1))
       {
        case '0':
@@ -8947,7 +9150,27 @@
         if (document.visibilityState === 'hidden')
          return;
         if (d.slice(1, 2) !== '2')
+        {
+         if (d.slice(1, 2) === '4')
+         {
+          notice.error(0x81);
+          notice.error(0x82);
+          _lTimeout = 5000;
+          if (_tTimeout !== false)
+          {
+           window.clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          if (_ws === null)
+           return;
+          _ws.onopen = null;
+          _ws.onmessage = null;
+          _ws.onclose = null;
+          _ws.close();
+          _ws = null;
+         }
          return;
+        }
         if (d.length < 2)
          return;
         const o = JSON.parse(d.slice(2));
@@ -8999,6 +9222,7 @@
 
      function _wsTimeout()
      {
+      notice.error(0x82);
       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
@@ -9101,6 +9325,7 @@
 
      function _wsClose()
      {
+      notice.error(0x72);
       if (_tPing !== 0)
       {
        window.clearInterval(_tPing);
@@ -9143,6 +9368,7 @@
       const d = ev.data;
       if (d.length < 1)
        return;
+      notice.info(0x72);
       switch (d.slice(0, 1))
       {
        case '0':
@@ -9183,14 +9409,32 @@
           _ws.send('42' + a);
          return;
         }
-        if (document.visibilityState === 'hidden')
-         return;
         if (d.slice(1, 2) !== '2')
          return;
         if (d.length < 2)
          return;
         const o = JSON.parse(d.slice(2));
         if (o.length < 2)
+         return;
+        if (o[0] === 'unauthorized')
+        {
+         notice.error(0x71);
+         notice.error(0x72);
+         _lTimeout = 5000;
+         if (_tTimeout !== false)
+         {
+          window.clearTimeout(_tTimeout);
+          _tTimeout = false;
+         }
+         if (_ws === null)
+          return;
+         _ws.onopen = null;
+         _ws.onmessage = null;
+         _ws.onclose = null;
+         _ws.close();
+         _ws = null;
+        }
+        if (document.visibilityState === 'hidden')
          return;
         if (o[0] !== 'event:update')
          return;
@@ -9221,6 +9465,7 @@
 
      function _wsTimeout()
      {
+      notice.error(0x72);
       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
@@ -9296,7 +9541,7 @@
       window.localStorage.removeItem('streamelements.tips:read.refresh');
       window.localStorage.removeItem('streamelements.tips:read.expires');
       window.localStorage.removeItem('streamelements.tips:read.refreshed');
-      notice.warning(0x72);
+      notice.error(0x71);
       return;
      }
      cfg.streamelements.oauth = ret.access_token;
@@ -9754,12 +9999,14 @@
         return;
        if (_ws.readyState !== 1)
         return;
+       notice.info(0xB2);
        _ws.onopen = null;
        _ws.send(JSON.stringify({'name': 'join_channel', 'data': {'name': 'twitch:' + _ch}}));
       }
 
       function _wsClose()
       {
+       notice.error(0xB2);
        if (_ws === null)
         return;
        _ws.onopen = null;
@@ -10078,6 +10325,7 @@
 
       function _wsClose()
       {
+       notice.error(0xC2);
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -10121,6 +10369,7 @@
         return;
        if (!d.hasOwnProperty('d'))
         return;
+       notice.info(0xC2);
        switch (d.op)
        {
         case 0:
@@ -10279,6 +10528,7 @@
 
       function _wsTimeout()
       {
+       notice.error(0xC2);
        _lTimeout = 5000;
        if (_tTimeout !== false)
        {
@@ -10849,7 +11099,7 @@
      cmdLogout.setAttribute('id', 'cmdLogout');
      cmdLogout.setAttribute('type', 'button');
      cmdLogout.classList.add('logout');
-     document.addEventListener('mouseover', _fadeInLogout);
+     document.addEventListener('mousemove', _fadeInLogout);
      if (v)
      {
       cmdLogout.setAttribute('onclick', 'login.begin();');
@@ -10910,7 +11160,7 @@
      if (!window.hasOwnProperty('obsstudio') && !window.localStorage.getItem('emotewall.obs_notfound'))
      {
       window.localStorage.setItem('emotewall.obs_notfound', '1');
-      notice.warning(0x09);
+      notice.error(0x09);
      }
      if (login.use() === true)
       return;
@@ -11626,44 +11876,180 @@
     }
    }
 
-   .notice
+   #notices
    {
-    transition: opacity linear 500ms;
     position: absolute;
-    font-size: 3vmin;
-    font-weight: bold;
+    top: 8px;
+    left: 8px;
+    width: 35em;
+   }
+   #notices #badge
+   {
+    position: fixed;
     font-family: sans-serif;
+    font-size: 14px;
+    left: 8px;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    border: 1.5px solid #000000;
+    border-radius: 8px;
     text-align: center;
-   }
-   .notice h1
-   {
-    font-size: 5vmin;
-   }
-   .notice h2
-   {
-    font-size: 4vmin;
-   }
-   #warning
-   {
-    background-color: rgba(255, 192, 0, 0.75);
+    background-color: #E0E0E0;
     color: #000000;
-    text-shadow: 2px 2px 4px #FFFFFF;
-    top: 10vh;
-    left: 5vw;
-    right: 5vw;
-    padding: 2em;
-    border-radius: 2em;
+    opacity: 0.5;
+    transition: opacity 1s ease-in;
+    cursor: default;
    }
-   #error
+   #notices #badge[data-alerts="0"]
    {
-    background-color: rgba(255, 0, 0, 0.75);
+    opacity: 0;
+   }
+   #notices #badge.fader
+   {
+    transition: all 300ms ease-out;
+   }
+   #notices #badge.fade
+   {
+    opacity: 0;
+   }
+   #notices .noticeLine
+   {
+    position: relative;
+    font-family: sans-serif;
+    font-size: 14px;
+    border: 1.5px solid #000000;
+    border-radius: 8px;
+    padding-left: 24px;
+    padding-right: 8px;
+    margin-left: 24px;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    max-width: fit-content;
+    width: 100%;
+    transition: all 300ms ease-out;
+    opacity: 0.3;
+    cursor: default;
+   }
+   #notices .noticeLine:hover
+   {
+    opacity: 1;
+   }
+   #notices .noticeLine.hide
+   {
+    width: 0%;
+    overflow: hidden;
+   }
+   #notices .noticeLine.fader
+   {
+    transition: opacity 0.5s;
+    opacity: 0.3;
+   }
+   #notices .noticeLine.fader:hover
+   {
+    opacity: 1;
+   }
+   #notices .noticeLine.fader.fade
+   {
+    opacity: 0;
+   }
+   #notices .noticeLine.fader.faded
+   {
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+   }
+   #notices .noticeInfo
+   {
+    background-image: linear-gradient(to right, transparent 0, transparent 20px, #E0E0E0 24px);
+   }
+   #notices .noticeWarning
+   {
+    background-image: linear-gradient(to right, transparent 0, transparent 20px, #FFFF00 24px);
+   }
+   #notices .noticeError
+   {
+    color: #FFFFFF;
+    background-image: linear-gradient(to right, transparent 0, transparent 20px, #FF0000 24px);
+   }
+   #notices .noticeError a
+   {
     color: #FFFF00;
-    text-shadow: 2px 2px 4px #000000;
+    text-decoration: none;
+   }
+   #notices .noticeError a:hover
+   {
+    color: #FFFFC0;
+   }
+   #notices .global
+   {
+    background-color: #FFFFFF;
+   }
+   #notices .sTwitch
+   {
+    background-color: #7D5BBE;
+   }
+   #notices .sTwitch:after
+   {
+    position: absolute;
     top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    padding-top: 15vh;
+    left: 7px;
+    content: 'T';
+    color: #FFFFFF;
+    font-size: 14px;
+   }
+   #notices .tStreamElements
+   {
+    background-color: #0000FF;
+   }
+   #notices .tStreamElements:after
+   {
+    position: absolute;
+    top: 0;
+    left: 2px;
+    content: 'SE';
+    color: #FFFFFF;
+    font-size: 14px;
+   }
+   #notices .tStreamlabs
+   {
+    background-color: #80F5D2;
+   }
+   #notices .tStreamlabs:after
+   {
+    position: absolute;
+    top: 0;
+    left: 3px;
+    content: 'SL';
+    color: #000000;
+    font-size: 14px;
+   }
+   #notices .eBTTV
+   {
+    background-color: #FF0000;
+   }
+   #notices .eBTTV:after
+   {
+    position: absolute;
+    top: 0;
+    left: 7px;
+    content: 'B';
+    color: #FFFFFF;
+    font-size: 14px;
+   }
+   #notices .e7TV
+   {
+    background-color: #00FFFF;
+   }
+   #notices .e7TV:after
+   {
+    position: absolute;
+    top: 0;
+    left: 8px;
+    content: '7';
+    color: #000000;
+    font-size: 14px;
    }
 
    button
