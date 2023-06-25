@@ -9800,7 +9800,10 @@
       let g = [];
       for (let i = 0, l = entry.urls.length; i < l; i++)
       {
-       g[i] = {dpp: entry.urls[i][0], url: entry.urls[i][1], width: false, height: false};
+       let addr = entry.urls[i][1];
+       if (typeof cfg.display.extended.use7TV === 'string')
+        addr = addr.replace('.webp', '.' + cfg.display.extended.use7TV);
+       g[i] = {dpp: entry.urls[i][0], url: addr, width: false, height: false};
       }
       if (entry.hasOwnProperty('width'))
       {
