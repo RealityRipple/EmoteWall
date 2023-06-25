@@ -1871,6 +1871,7 @@
    //////////////////////////////////////////////////////////////////////////////
 
    let cList = [];
+   let cSafe = [];
    const wWS = 5;
    const oauthClient = '4umzcpmjkg6ar78b81s7302jlj33t8';
    const cURLs = {
@@ -4467,7 +4468,7 @@
        }
       }
       if (!Array.isArray(kList) || kList.length < 1)
-       kList = cList;
+       kList = cSafe;
       if (!Array.isArray(kList) || kList.length < 1)
        kList = bareList;
       const sW = window.innerWidth;
@@ -6051,6 +6052,7 @@
       if (r === false)
        return false;
       cList = r;
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -9387,7 +9389,10 @@
        }
       }
       if (!j.hasOwnProperty('users'))
+      {
+       cSafe = JSON.parse(JSON.stringify(cList));
        return true;
+      }
       for (const setID in j.users)
       {
        if (!j.users.hasOwnProperty(setID))
@@ -9444,6 +9449,7 @@
         }
        }
       }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -9513,6 +9519,7 @@
        }
        _addEmote(thirdparty.emotes.ffz, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height);
       }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -9574,6 +9581,7 @@
        }
        _addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, eURL, w, h);
       }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -9641,6 +9649,7 @@
        }
        _addEmote(thirdparty.emotes.bttv, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height);
       }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -9741,6 +9750,7 @@
           }
           _addEmote(thirdparty.emotes.bttvU[d.data.name], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), w, h);
          }
+         cSafe = JSON.parse(JSON.stringify(cList));
          break;
         case 'emote_create':
          if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + _ch)
@@ -9760,6 +9770,7 @@
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
          _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), wC, hC);
+         cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE, _ch);
          break;
         case 'emote_delete':
@@ -9770,6 +9781,7 @@
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
          _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emoteId);
+         cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE, _ch);
          break;
         case 'emote_update':
@@ -9791,6 +9803,7 @@
           window.clearTimeout(thirdparty.bttv.timer);
          _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emote.id);
          _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), wU, hU);
+         cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE, _ch);
          break;
        }
@@ -9882,6 +9895,7 @@
        }
        _addEmote(thirdparty.emotes['7tv'], 'g', j[i].name, j[i].id, jInf.url, jInf.width, jInf.height);
       }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
@@ -9934,6 +9948,7 @@
        }
        _addEmote(thirdparty.emotes['7tv'], 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height);
       }
+      cSafe = JSON.parse(JSON.stringify(cList));
       return true;
      }
 
