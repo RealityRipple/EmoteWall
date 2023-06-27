@@ -5924,9 +5924,11 @@
        const d = await _getList();
        if (d.length < 1)
         return false;
-       let ids = [];
+       let ids = {};
        for (let i = 0, l = d.length; i < l; i++)
        {
+        if (!d[i].hasOwnProperty('id'))
+         continue;
         if (!d[i].hasOwnProperty('status'))
          continue;
         if (d[i].status !== 'enabled')
@@ -5939,12 +5941,19 @@
          continue;
         if (!d[i].transport.hasOwnProperty('session_id'))
          continue;
-        if (!ids.includes(d[i].transport.session_id))
-         ids.push(d[i].transport.session_id);
+        if (!Object.keys(ids).includes(d[i].transport.session_id))
+         ids[d[i].transport.session_id] = [];
+        ids[d[i].transport.session_id].push(d[i].id);
        }
-       if (ids.length < 1)
+       if (Object.keys(ids).length < 1)
         return false;
-       const b = 'type=check&ids=' + encodeURIComponent(ids.join(' '));
+       let b = 'type=check&ids=' + encodeURIComponent(Object.keys(ids).join(' '));
+       for (let id in ids)
+       {
+        if (!id.hasOwnProperty(id))
+         continue;
+        b += '&sub' + encodeURIComponent(id) + '=' + encodeURIComponent(ids[id].join(' '));
+       }
        const r = await shared.httpRequest('POST', cURLs.api.rr.feedback.eventsub, {'Content-Type': 'application/x-www-form-urlencoded'}, b, false);
        if (!r.success)
         return false;
