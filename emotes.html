@@ -1317,7 +1317,6 @@
        total: 0.8,   /* percentage of time to spend showing the pyramid */
        min: 75       /* minimum animation speed per block (in ms) */
       },
-      pause: 0.2,
       hide: 0.01
      }
     }
@@ -2194,7 +2193,7 @@
 
     const _triggerFadeInNotice = function(id)
     {
-     return function(ev)
+     return function()
      {
       _fadeInNotice(id);
      };
@@ -4001,7 +4000,6 @@
          sE = bS * (ct - 1 - col) + xtra;
          sB = sE + sW;
         }
-        const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.hide);
         s = 'top: ' + v + 'px;';
         s += ' left: 0px;';
         s += ' height: ' + bS + 'px;';
@@ -10771,9 +10769,9 @@
       o.onupgradeneeded = function(ev)
       {
        const d = ev.target.result;
-       const s = d.createObjectStore(_tblName, {keyPath: 'url'});
+       d.createObjectStore(_tblName, {keyPath: 'url'});
       };
-      o.onerror = function(ev)
+      o.onerror = function()
       {
        window.indexedDB.deleteDatabase(_dbName);
       };
@@ -10799,11 +10797,11 @@
        }
        const s = tx.objectStore(_tblName);
        const p = s.put({url: url, w: w, h: h});
-       p.onerror = function(ev2)
+       p.onerror = function()
        {
         d.close();
        };
-       p.onsuccess = function(ev2)
+       p.onsuccess = function()
        {
         d.close();
        };
@@ -10816,15 +10814,15 @@
        function(resolve)
        {
         const o = window.indexedDB.open(_dbName, 1);
-        o.onupgradeneeded = function(ev)
+        o.onupgradeneeded = function()
         {
          resolve(null);
         };
-        o.onblocked = function(ev)
+        o.onblocked = function()
         {
          resolve(null);
         };
-        o.onerror = function(ev)
+        o.onerror = function()
         {
          resolve(null);
         };
@@ -10850,7 +10848,7 @@
          }
          const s = tx.objectStore(_tblName);
          let g = s.get(url);
-         g.onerror = function(ev2)
+         g.onerror = function()
          {
           dbr.close();
           resolve(null);
