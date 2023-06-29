@@ -5290,6 +5290,8 @@
       let _oldWS = null;
       let _lTimeout = 5000;
       let _tTimeout = false;
+      const _lOldTimeout = 10000;
+      let _tOldTimeout = false;
 
       function task(chID = null)
       {
@@ -5358,6 +5360,11 @@
          {
           _oldWS.close();
           _oldWS = null;
+          if (_tOldTimeout !== false)
+          {
+           window.clearTimeout(_tOldTimeout);
+           _tOldTimeout = false;
+          }
          }
          if (!r.payload.hasOwnProperty('session'))
           return;
@@ -5660,6 +5667,7 @@
          _oldWS = _ws;
          _oldWS.onclose = null;
          _oldWS.onmessage = null;
+         _tOldTimeout = window.setTimeout(_oldWSTimeout, _lOldTimeout);
          _ws = null;
          const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
          if (_wsRetry < 2)
@@ -5699,6 +5707,22 @@
        if (twitch.net.dead === true)
         return;
        _eventSub();
+      }
+
+      function _oldWSTimeout()
+      {
+       if (_tOldTimeout !== false)
+       {
+        window.clearTimeout(_tOldTimeout);
+        _tOldTimeout = false;
+       }
+       if (_oldWS === null)
+        return;
+       _oldWS.onopen = null;
+       _oldWS.onmessage = null;
+       _oldWS.onclose = null;
+       _oldWS.close();
+       _oldWS = null;
       }
 
       return task;
