@@ -26,15 +26,15 @@
     * Configuration Information
     * -------------------------
     *
-    * channel     The name of the channel to join. Also used to choose an IRC nickname.
-    *             If FALSE, the interactive login process will be enabled.
-    *
     * twitch      Settings related to the Twitch login process.
     *
     *             NOTE: OAuth refresh tokens expire automatically (usually after around half a year).
     *                   If you don't use the Emote Wall for around this long, you may have to log in again.
     *                   Regular OAuth tokens expire much sooner (usually after 60 days). If you use the manual oauth
     *                   method, please make sure to update these values on a regular basis.
+    *
+    *  channel    The name of the channel to join. Also used to choose an IRC nickname.
+    *             If FALSE, the interactive login process will be enabled.
     *
     *  client     The Client ID value is used to track which third-party project is accessing your account.
     *             This emote wall does not require a constant ID, and will work with whatever tool you use to
@@ -852,8 +852,8 @@
    /* jshint esversion: 11, bitwise: false, eqeqeq: true, loopfunc: true, forin: true, freeze: true, futurehostile: true, leanswitch: true, noarg: true, nocomma: true, nonbsp: true, nonew: true, noreturnawait: true, quotmark: single, shadow: outer, singleGroups: false, strict: global, trailingcomma: false, undef: true, unused: true, varstmt: true */
 
    var cfg = {
-    channel: 'CHANNEL_NAME',
     twitch: {
+     channel: 'CHANNEL_NAME',
      client: '4umzcpmjkg6ar78b81s7302jlj33t8',
      oauth_refresh: 'OAUTH_REFRESH',
      scope: [
@@ -6081,8 +6081,8 @@
        _tExpire = window.setTimeout(_wsExpire, _lExpire);
        _ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
        _ws.send('PASS oauth:' + cfg.twitch.oauth);
-       _ws.send('NICK ' + cfg.channel);
-       _ws.send('JOIN #' + cfg.channel);
+       _ws.send('NICK ' + cfg.twitch.channel);
+       _ws.send('JOIN #' + cfg.twitch.channel);
       }
 
       function _wsClose()
@@ -6569,7 +6569,7 @@
        window.localStorage.removeItem(loginT.path() + '.refreshed');
        if (!clearRefresh)
         return;
-       cfg.channel = 'CHANNEL_NAME';
+       cfg.twitch.channel = 'CHANNEL_NAME';
        cfg.twitch.oauth_refresh = 'OAUTH_REFRESH';
        cfg.twitch.client = oauthClient;
        cfg.twitch.scope = [];
@@ -11136,7 +11136,7 @@
      if (!cfg.hasOwnProperty('twitch'))
       return 0;
      let r = 0;
-     if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== null && cfg.channel !== 'CHANNEL_NAME')
+     if (cfg.twitch.hasOwnProperty('channel') && cfg.twitch.channel !== false && cfg.twitch.channel !== null && cfg.twitch.channel !== 'CHANNEL_NAME')
       r |= 0x01;
      if (cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh !== false && cfg.twitch.oauth_refresh !== null && cfg.twitch.oauth_refresh !== 'OAUTH_REFRESH')
       r |= 0x02;
@@ -11175,7 +11175,7 @@
       window.localStorage.setItem(loginT.path() + '.client', lsClient);
       window.localStorage.setItem(loginT.path() + '.scope', lsScope);
      }
-     cfg.channel = lsChannel;
+     cfg.twitch.channel = lsChannel;
      cfg.twitch.oauth = lsOAuth;
      cfg.twitch.oauth_refresh = lsRefresh;
      cfg.twitch.client = lsClient;
