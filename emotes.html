@@ -2038,7 +2038,10 @@
    let cList = [];
    let cSafe = [];
    const wWS = 5;
-   const oauthClient = '4umzcpmjkg6ar78b81s7302jlj33t8';
+   const oauthClient = {
+    t: '4umzcpmjkg6ar78b81s7302jlj33t8',
+    yt: '71876675824-aepsnb3onligbj62r1i2qakfjh9sr8kg.apps.googleusercontent.com'
+   };
    const cURLs = {
     ws: {
      twitch: {
@@ -2074,6 +2077,21 @@
        delete: 'https://api.twitch.tv/helix/eventsub/subscriptions?id=%ID%'
       }
      },
+     youtube: {
+      broadcasts: 'https://youtube.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status&broadcastStatus=all&broadcastType=all&maxResults=50',
+      livechat: {
+       messages: {
+        init: 'https://youtube.googleapis.com/youtube/v3/liveChat/messages?liveChatId=%CHAT_ID%&part=%PART%&maxResults=2000',
+        page: 'https://youtube.googleapis.com/youtube/v3/liveChat/messages?liveChatId=%CHAT_ID%&part=%PART%&pageToken=%PAGE%&maxResults=2000'
+       },
+       emojis: 'https://realityripple.com/Tools/Twitch/EmoteWall/yte.json'
+      },
+      subscriptions: 'https://www.googleapis.com/youtube/v3/subscriptions?part=%PART%&myRecentSubscribers=true&maxResults=50',
+      members: {
+       init: 'https://www.googleapis.com/youtube/v3/members?part=%PART%&mode=updates&maxResults=1',
+       page: 'https://www.googleapis.com/youtube/v3/members?part=%PART%&mode=updates&pageToken=%PAGE%&maxResults=1000'
+      }
+     },
      ffz: {
       set: {
        global: 'https://api.frankerfacez.com/v1/set/global'
@@ -2085,7 +2103,8 @@
        global: 'https://api.betterttv.net/3/cached/emotes/global'
       },
       users: {
-       twitch: 'https://api.betterttv.net/3/cached/users/twitch/%CHANNEL_ID%'
+       twitch: 'https://api.betterttv.net/3/cached/users/twitch/%CHANNEL_ID%',
+       youtube: 'https://api.betterttv.net/3/cached/users/youtube/%CHANNEL_ID%'
       }
      },
      '7tv': {
@@ -2093,16 +2112,20 @@
        global: 'https://7tv.io/v3/emote-sets/global'
       },
       users: {
-       twitch: 'https://7tv.io/v3/users/twitch/%CHANNEL_ID%'
+       twitch: 'https://7tv.io/v3/users/twitch/%CHANNEL_ID%',
+       youtube: 'https://7tv.io/v3/users/youtube/%CHANNEL_ID%'
       }
      },
      rr: {
       refresh: {
        t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
+       yt: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2yt.php',
        se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php'
       },
       feedback: {
-       eventsub: 'https://realityripple.com/Tools/Twitch/EmoteWall/dangling-eventsub.php'
+       eventsub: 'https://realityripple.com/Tools/Twitch/EmoteWall/dangling-eventsub.php',
+       ytmonetized: 'https://realityripple.com/Tools/Twitch/EmoteWall/ytsurvey.php',
+       yterrors: 'https://realityripple.com/Tools/Twitch/EmoteWall/yterrors.php'
       }
      }
     },
@@ -2120,10 +2143,14 @@
     },
     html: {
      rr: {
-      auth: 'https://realityripple.com/Tools/Twitch/EmoteWall/twitch.php',
+      auth: {
+       t: 'https://realityripple.com/Tools/Twitch/EmoteWall/twitch.php',
+       yt: 'https://realityripple.com/Tools/Twitch/EmoteWall/youtube.php'
+      },
       redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php'
      },
-     twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&scope=%SCOPE%&state=redirto_%ORIGIN%&force_verify=true'
+     twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&scope=%SCOPE%&state=redirto_%ORIGIN%&force_verify=true',
+     youtube: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&access_type=offline&scope=%SCOPE%&state=redirto_%ORIGIN%&prompt=consent%20select_account&include_granted_scopes=false'
     }
    };
 
@@ -6741,7 +6768,7 @@
         return;
        cfg.twitch.channel = 'CHANNEL_NAME';
        cfg.twitch.oauth_refresh = 'OAUTH_REFRESH';
-       cfg.twitch.client = oauthClient;
+       cfg.twitch.client = oauthClient.t;
        cfg.twitch.scope = [];
        window.localStorage.removeItem(loginT.path() + '.channel');
        window.localStorage.removeItem(loginT.path() + '.refresh');
@@ -11584,8 +11611,8 @@
      if (window.location.hash.length > 1)
       loc = loc.slice(0, -1 * window.location.hash.length);
      const o = encodeURIComponent(window.btoa(loc));
-     const c = encodeURIComponent(oauthClient);
-     const r = encodeURIComponent(cURLs.html.rr.auth);
+     const c = encodeURIComponent(oauthClient.t);
+     const r = encodeURIComponent(cURLs.html.rr.auth.t);
      const u = cURLs.html.twitch.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', o);
      if (u.length < 1500)
      {
@@ -11608,12 +11635,12 @@
      const fc = document.createElement('input');
      fc.setAttribute('type', 'hidden');
      fc.setAttribute('name', 'c');
-     fc.setAttribute('value', oauthClient);
+     fc.setAttribute('value', oauthClient.t);
      f.appendChild(fc);
      const fr = document.createElement('input');
      fr.setAttribute('type', 'hidden');
      fr.setAttribute('name', 'r');
-     fr.setAttribute('value', cURLs.html.rr.auth);
+     fr.setAttribute('value', cURLs.html.rr.auth.t);
      f.appendChild(fr);
      const fs = document.createElement('input');
      fs.setAttribute('type', 'hidden');
