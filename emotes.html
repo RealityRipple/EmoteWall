@@ -4614,8 +4614,7 @@
        }
        if (cfg.display.useEmoji !== false)
        {
-        const cmd = {params: [null, s[i]]};
-        const eMoji = await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, true);
+        const eMoji = await service.parse.content.emoji(s[i], cfg.display.useEmoji, true);
         if (eMoji.length > 0)
         {
          v.svc = 'e';
@@ -6689,204 +6688,13 @@
 
      const $content = function()
      {
-      const $emoji = function()
+      async function $emoji(cmd, set, dup = null)
       {
-       let _uList = {};
-
-       async function task(cmd, set, dup = null)
-       {
-        if (cmd.params.length < 2)
-         return [];
-        const msg = cmd.params[1];
-        const emSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
-        let emList = [];
-        let match = '';
-        while ((match = emSeg.exec(msg)) !== null)
-        {
-         emList.push(match);
-        }
-        const kcSeg = /((?:[0-9#\*]\ufe0f\u20e3)+)+/gu;
-        match = '';
-        while ((match = kcSeg.exec(msg)) !== null)
-        {
-         emList.push(match);
-        }
-        const acSeg = /(\u0d9e)/gu;
-        match = '';
-        while ((match = acSeg.exec(msg)) !== null)
-        {
-         emList.push(match);
-        }
-        if (emList.length === 0)
-         return [];
-        if (dup === null)
-         dup = cfg.display.duplicates;
-        if (set === true)
-         set = 'twemoji';
-        let ret = [];
-        const uri = cURLs.cdn.ffz.emoji.replaceAll('%SET_ID%', set);
-        let addList = {};
-        function __showEmoji(c, p)
-        {
-         if (c.slice(-5) === '-fe0f' && !c.match(/-200d-264[0|2]-/) && !c.match(/-200d-269[5|6]-/) && !c.match(/-200d-26a7/) && !c.match(/-200d-2620/) && !c.match(/-200d-2708/))
-          c = c.slice(0, -5);
-         if (!addList.hasOwnProperty(c))
-          addList[c] = 0;
-         else
-         {
-          if (dup === false)
-           return false;
-          if (dup !== true && addList[c] >= dup)
-           return false;
-         }
-         addList[c]++;
-         ret.push({svc: 'e', url: uri + c + '.png', str: c, pos: p});
-         return true;
-        }
-        function __showCrew(p)
-        {
-         if (!addList.hasOwnProperty('0d9e'))
-          addList['0d9e'] = 0;
-         else
-         {
-          if (dup === false)
-           return false;
-          if (dup !== true && addList['0d9e'] >= dup)
-           return false;
-         }
-         addList['0d9e']++;
-         const crew = cURLs.cdn.crew.replaceAll('%DIRECTION%', shared.rnd(2)).replaceAll('%COLOR%', shared.rnd(18));
-         ret.push({svc: 'e', url: crew, str: '0d9e', pos: p});
-         return true;
-        }
-        for (let i = 0, l = emList.length; i < l; i++)
-        {
-         let cpList = [];
-         for (const c of emList[i][0])
-         {
-          const p = c.codePointAt(0).toString(16).padStart(4, '0');
-          if (cpList.length === 0)
-          {
-           cpList.push(p);
-           continue;
-          }
-          const lL = cpList.length - 1;
-          if (p === 'fe0f')
-           cpList[lL] += '-' + p;
-          else if (p === '200d')
-           cpList[lL] += '-' + p;
-          else if (p === '20e3')
-           cpList[lL] += '-' + p;
-          else if (p.match(/1f3f[b-f]/))
-           cpList[lL] += '-' + p;
-          else if (p.match(/1f9b[0-3]/))
-          {
-           if (cpList[lL].slice(-5) === '-200d')
-            cpList[lL] += '-' + p;
-           else
-            cpList[lL] += '-200d-' + p;
-          }
-          else if (p.match(/264[0|2]/) || p.match(/26a7/))
-          {
-           if (cpList[lL].slice(-5) === '-200d')
-            cpList[lL] += '-' + p;
-           else
-            cpList[lL] += '-200d-' + p;
-          }
-          else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].length < 11)
-           cpList[lL] += '-' + p;
-          else if (p === '1f308' && cpList[lL] === '1f3f3-fe0f')
-           cpList[lL] += '-200d-' + p;
-          else if (p === '2620' && cpList[lL] === '1f3f4')
-           cpList[lL] += '-200d-' + p;
-          else if (cpList[lL].slice(-5) === '-200d')
-           cpList[lL] += '-' + p;
-          else
-           cpList.push(p);
-         }
-         let found = false;
-         const lP = cpList.length;
-         if (lP === 1)
-         {
-          let s = cpList[0];
-          if (s === '0d9e')
-          {
-           __showCrew(emList[i].index);
-           continue;
-          }
-          let tU;
-          if (s.slice(-5) === '-fe0f')
-          {
-           if (s.match(/-200d-264[0|2]-/) || s.match(/-200d-264[0|2]-/) || s.match(/-200d-26a7/) || s.match(/-200d-2620/) || s.match(/-200d-2708/))
-            tU = uri + s + '.png';
-           else
-            tU = uri + s.slice(0, -5) + '.png';
-          }
-          else
-           tU = uri + s + '.png';
-          found = await _checkURL(tU);
-          if (found)
-          {
-           __showEmoji(s, emList[i].index);
-           continue;
-          }
-          while (s.includes('-'))
-          {
-           s = s.slice(0, s.lastIndexOf('-'));
-           if (s.slice(-5) === '-fe0f')
-            tU = uri + s.slice(0, -5) + '.png';
-           else
-            tU = uri + s + '.png';
-           found = await _checkURL(tU);
-           if (found)
-           {
-            __showEmoji(s, emList[i].index);
-            break;
-           }
-          }
-          continue;
-         }
-         let p = emList[i].index;
-         for (let j = 0; j < lP; j++)
-         {
-          p += cpList[j].replaceAll(/[^\-]/g, '').length + 1;
-          found = await _checkURL(uri + cpList[j] + '.png');
-          if (found)
-           __showEmoji(cpList[j], p);
-         }
-        }
-        return ret;
-       }
-
-       function _checkURL(url)
-       {
-        const p = new Promise(
-         function(resolve)
-         {
-          if (_uList.hasOwnProperty(url))
-          {
-           resolve(_uList[url]);
-           return;
-          }
-          const x = new XMLHttpRequest();
-          x.open('HEAD', url);
-          x.onreadystatechange = function()
-          {
-           if (x.readyState < 2)
-            return;
-           x.onreadystatechange = null;
-           const r = x.status === 200;
-           _uList[url] = r;
-           resolve(r);
-          };
-          x.send();
-         }
-        );
-        return p;
-       }
-
-       return task;
-      }();
+       if (cmd.params.length < 2)
+        return [];
+       const msg = cmd.params[1];
+       return service.parse.content.emoji(msg, set, dup);
+      }
 
       function $twitch(cmd, dup = null)
       {
@@ -6934,313 +6742,35 @@
        {
         function $general(cmd, dup = null)
         {
-         if (!thirdparty.emotes.hasOwnProperty('ffz'))
-          return [];
          if (cmd.params.length < 2)
           return [];
-         const m = cmd.params[1].split(' ');
-         if (dup === null)
-          dup = cfg.display.duplicates;
-         let ret = [];
-         let addList = {};
-         for (let i = 0, l = m.length; i < l; i++)
-         {
-          if (!thirdparty.emotes.ffz.hasOwnProperty(m[i]))
-           continue;
-          if (!addList.hasOwnProperty(m[i]))
-           addList[m[i]] = 0;
-          else
-          {
-           if (dup === false)
-            continue;
-           if (dup !== true && addList[m[i]] >= dup)
-            continue;
-          }
-          addList[m[i]]++;
-          let p = 0;
-          for (let j = 0; j < i; j++)
-          {
-           p+= m[j].length + 1;
-          }
-          ret.push({svc: 'f', url: thirdparty.emotes.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.ffz[m[i]].scope, width: thirdparty.emotes.ffz[m[i]].width, height: thirdparty.emotes.ffz[m[i]].height});
-         }
-         return ret;
+         return service.parse.content['3rdparty'].ffz.general(cmd.params[1], dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
-         if (!cfg.display.extended.useZWE)
-          return;
-         if (!thirdparty.emotes.hasOwnProperty('zwe'))
-          return;
-         if (!thirdparty.emotes.zwe.hasOwnProperty('ffz'))
-          return;
          if (cmd.params.length < 2)
           return;
          const u = _parseUser(cmd);
-         l.sort(_posSort);
-         const m = cmd.params[1].split(' ');
-         if (dup === null)
-          dup = cfg.display.duplicates;
-         let addList = {};
-         for (let i = 0, n = m.length; i < n; i++)
-         {
-          if (!thirdparty.emotes.zwe.ffz.hasOwnProperty(m[i]))
-           continue;
-          if (!addList.hasOwnProperty(m[i]))
-           addList[m[i]] = 0;
-          else
-          {
-           if (dup === false)
-            continue;
-           if (dup !== true && addList[m[i]] >= dup)
-            continue;
-          }
-          addList[m[i]]++;
-          let p = 0;
-          for (let j = 0; j < i; j++)
-          {
-           p+= m[j].length + 1;
-          }
-          let f = -1;
-          let h = -1;
-          for (let j = 0, o = l.length; j < o; j++)
-          {
-           if (l[j].pos > h)
-            h = l[j].pos;
-           else
-            continue;
-           if (l[j].pos < p)
-            f = j;
-          }
-          if (f === -1)
-          {
-           if (pass === 1)
-            l.push({svc: 'f', url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope, width: thirdparty.emotes.zwe.ffz[m[i]].width, height: thirdparty.emotes.zwe.ffz[m[i]].height});
-          }
-          else
-          {
-           let t = cmd.params[1].slice(l[f].pos + l[f].str.length, p);
-           let z = Object.keys(thirdparty.emotes.zwe.ffz);
-           for (let j = 0, o = z.length; j < o; j++)
-           {
-            t = t.replaceAll(z[j], '');
-           }
-           if (thirdparty.emotes.zwe.hasOwnProperty('ffzU') && thirdparty.emotes.zwe.ffzU.hasOwnProperty(u.host))
-           {
-            z = Object.keys(thirdparty.emotes.zwe.ffzU[u.host]);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-           }
-           if (thirdparty.emotes.zwe.hasOwnProperty('bttv'))
-           {
-            z = Object.keys(thirdparty.emotes.zwe.bttv);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-           }
-           if (thirdparty.emotes.zwe.hasOwnProperty('bttvU') && thirdparty.emotes.zwe.bttvU.hasOwnProperty(u.host))
-           {
-            z = Object.keys(thirdparty.emotes.zwe.bttvU[u.host]);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-           }
-           if (thirdparty.emotes.zwe.hasOwnProperty('7tv'))
-           {
-            z = Object.keys(thirdparty.emotes.zwe['7tv']);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-           }
-           t = t.trim();
-           if (t.length > 0)
-           {
-            if (pass === 1)
-             l.push({svc: 'f', url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope, width: thirdparty.emotes.zwe.ffz[m[i]].width, height: thirdparty.emotes.zwe.ffz[m[i]].height});
-           }
-           else if (pass === 2)
-           {
-            if (!l[f].hasOwnProperty('zwe'))
-             l[f].zwe = [];
-            l[f].zwe.push({svc: 'f', url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope, width: thirdparty.emotes.zwe.ffz[m[i]].width, height: thirdparty.emotes.zwe.ffz[m[i]].height});
-            l[f].zwe.sort(_posSort);
-            for (let j = 0, o = l.length; j < o; j++)
-            {
-             if (l[j].svc !== 'f')
-              continue;
-             if (l[j].pos !== p)
-              continue;
-             l.splice(j, 1);
-             break;
-            }
-           }
-          }
-         }
+         service.parse.content['3rdparty'].ffz.zwe(l, u.host, cmd.params[1], pass, dup);
         }
 
         const $user = function()
         {
          function $userGeneral(cmd, dup = null)
          {
-          if (!thirdparty.emotes.hasOwnProperty('ffzU'))
-           return [];
           if (cmd.params.length < 2)
            return [];
-          const m = cmd.params[1].split(' ');
           const u = _parseUser(cmd);
-          if (!thirdparty.emotes.ffzU.hasOwnProperty(u.host))
-           return [];
-          if (dup === null)
-           dup = cfg.display.duplicates;
-          let ret = [];
-          let addList = {};
-          for (let i = 0, l = m.length; i < l; i++)
-          {
-           if (!thirdparty.emotes.ffzU[u.host].hasOwnProperty(m[i]))
-            continue;
-           if (!addList.hasOwnProperty(m[i]))
-            addList[m[i]] = 0;
-           else
-           {
-            if (dup === false)
-             continue;
-            if (dup !== true && addList[m[i]] >= dup)
-             continue;
-           }
-           addList[m[i]]++;
-           let p = 0;
-           for (let j = 0; j < i; j++)
-           {
-            p+= m[j].length + 1;
-           }
-           ret.push({svc: 'f', url: thirdparty.emotes.ffzU[u.host][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.ffzU[u.host][m[i]].scope, width: thirdparty.emotes.ffzU[u.host][m[i]].width, height: thirdparty.emotes.ffzU[u.host][m[i]].height});
-          }
-          return ret;
+          return service.parse.content['3rdparty'].ffz.user.general(u.host, cmd.params[1], dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
          {
-          if (!cfg.display.extended.useZWE)
-           return;
-          if (!thirdparty.emotes.hasOwnProperty('zwe'))
-           return;
-          if (!thirdparty.emotes.zwe.hasOwnProperty('ffzU'))
-           return;
           if (cmd.params.length < 2)
            return;
           const u = _parseUser(cmd);
-          if (!thirdparty.emotes.zwe.ffzU.hasOwnProperty(u.host))
-           return [];
-          l.sort(_posSort);
-          const m = cmd.params[1].split(' ');
-          if (dup === null)
-           dup = cfg.display.duplicates;
-          let addList = {};
-          for (let i = 0, n = m.length; i < n; i++)
-          {
-           if (!thirdparty.emotes.zwe.ffzU[u.host].hasOwnProperty(m[i]))
-            continue;
-           if (!addList.hasOwnProperty(m[i]))
-            addList[m[i]] = 0;
-           else
-           {
-            if (dup === false)
-             continue;
-            if (dup !== true && addList[m[i]] >= dup)
-             continue;
-           }
-           addList[m[i]]++;
-           let p = 0;
-           for (let j = 0; j < i; j++)
-           {
-            p+= m[j].length + 1;
-           }
-           let f = -1;
-           let h = -1;
-           for (let j = 0, o = l.length; j < o; j++)
-           {
-            if (l[j].pos > h)
-             h = l[j].pos;
-            else
-             continue;
-            if (l[j].pos < p)
-             f = j;
-           }
-           if (f === -1)
-           {
-            if (pass === 1)
-             l.push({svc: 'f', url: thirdparty.emotes.zwe.ffzU[u.host][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffzU[u.host][m[i]].scope, width: thirdparty.emotes.zwe.ffzU[u.host][m[i]].width, height: thirdparty.emotes.zwe.ffzU[u.host][m[i]].height});
-           }
-           else
-           {
-            let t = cmd.params[1].slice(l[f].pos + l[f].str.length, p);
-            let z = Object.keys(thirdparty.emotes.zwe.ffzU[u.host]);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-            if (thirdparty.emotes.zwe.hasOwnProperty('ffz'))
-            {
-             z = Object.keys(thirdparty.emotes.zwe.ffz);
-             for (let j = 0, o = z.length; j < o; j++)
-             {
-              t = t.replaceAll(z[j], '');
-             }
-            }
-            if (thirdparty.emotes.zwe.hasOwnProperty('bttv'))
-            {
-             z = Object.keys(thirdparty.emotes.zwe.bttv);
-             for (let j = 0, o = z.length; j < o; j++)
-             {
-              t = t.replaceAll(z[j], '');
-             }
-            }
-            if (thirdparty.emotes.zwe.hasOwnProperty('bttvU') && thirdparty.emotes.zwe.bttvU.hasOwnProperty(u.host))
-            {
-             z = Object.keys(thirdparty.emotes.zwe.bttvU[u.host]);
-             for (let j = 0, o = z.length; j < o; j++)
-             {
-              t = t.replaceAll(z[j], '');
-             }
-            }
-            if (thirdparty.emotes.zwe.hasOwnProperty('7tv'))
-            {
-             z = Object.keys(thirdparty.emotes.zwe['7tv']);
-             for (let j = 0, o = z.length; j < o; j++)
-             {
-              t = t.replaceAll(z[j], '');
-             }
-            }
-            t = t.trim();
-            if (t.length > 0)
-            {
-             if (pass === 1)
-              l.push({svc: 'f', url: thirdparty.emotes.zwe.ffzU[u.host][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffzU[u.host][m[i]].scope, width: thirdparty.emotes.zwe.ffzU[u.host][m[i]].width, height: thirdparty.emotes.zwe.ffzU[u.host][m[i]].height});
-            }
-            else if (pass === 2)
-            {
-             if (!l[f].hasOwnProperty('zwe'))
-              l[f].zwe = [];
-             l[f].zwe.push({svc: 'f', url: thirdparty.emotes.zwe.ffzU[u.host][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffzU[u.host][m[i]].scope, width: thirdparty.emotes.zwe.ffzU[u.host][m[i]].width, height: thirdparty.emotes.zwe.ffzU[u.host][m[i]].height});
-             l[f].zwe.sort(_posSort);
-             for (let j = 0, o = l.length; j < o; j++)
-             {
-              if (l[j].svc !== 'f')
-               continue;
-              if (l[j].pos !== p)
-               continue;
-              l.splice(j, 1);
-              break;
-             }
-            }
-           }
-          }
+          service.parse.content['3rdparty'].ffz.user.zwe(l, u.host, cmd.params[1], pass, dup);
          }
 
          return {
@@ -7248,11 +6778,6 @@
           zwe: $userZWE
          };
         }();
-
-        function _posSort(a, b)
-        {
-         return a.pos - b.pos;
-        }
 
         return {
          general: $general,
@@ -7265,313 +6790,35 @@
        {
         function $general(cmd, dup = null)
         {
-         if (!thirdparty.emotes.hasOwnProperty('bttv'))
-          return [];
          if (cmd.params.length < 2)
           return [];
-         const m = cmd.params[1].split(' ');
-         if (dup === null)
-          dup = cfg.display.duplicates;
-         let ret = [];
-         let addList = {};
-         for (let i = 0, l = m.length; i < l; i++)
-         {
-          if (!thirdparty.emotes.bttv.hasOwnProperty(m[i]))
-           continue;
-          if (!addList.hasOwnProperty(m[i]))
-           addList[m[i]] = 0;
-          else
-          {
-           if (dup === false)
-            continue;
-           if (dup !== true && addList[m[i]] >= dup)
-            continue;
-          }
-          addList[m[i]]++;
-          let p = 0;
-          for (let j = 0; j < i; j++)
-          {
-           p+= m[j].length + 1;
-          }
-          ret.push({svc: 'b', url: thirdparty.emotes.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.bttv[m[i]].scope, width: thirdparty.emotes.bttv[m[i]].width, height: thirdparty.emotes.bttv[m[i]].height});
-         }
-         return ret;
+         return service.parse.content['3rdparty'].bttv.general(cmd.params[1], dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
-         if (!cfg.display.extended.useZWE)
-          return;
-         if (!thirdparty.emotes.hasOwnProperty('zwe'))
-          return;
-         if (!thirdparty.emotes.zwe.hasOwnProperty('bttv'))
-          return;
          if (cmd.params.length < 2)
           return;
          const u = _parseUser(cmd);
-         l.sort(_posSort);
-         const m = cmd.params[1].split(' ');
-         if (dup === null)
-          dup = cfg.display.duplicates;
-         let addList = {};
-         for (let i = 0, n = m.length; i < n; i++)
-         {
-          if (!thirdparty.emotes.zwe.bttv.hasOwnProperty(m[i]))
-           continue;
-          if (!addList.hasOwnProperty(m[i]))
-           addList[m[i]] = 0;
-          else
-          {
-           if (dup === false)
-            continue;
-           if (dup !== true && addList[m[i]] >= dup)
-            continue;
-          }
-          addList[m[i]]++;
-          let p = 0;
-          for (let j = 0; j < i; j++)
-          {
-           p+= m[j].length + 1;
-          }
-          let f = -1;
-          let h = -1;
-          for (let j = 0, o = l.length; j < o; j++)
-          {
-           if (l[j].pos > h)
-            h = l[j].pos;
-           else
-            continue;
-           if (l[j].pos < p)
-            f = j;
-          }
-          if (f === -1)
-          {
-           if (pass === 1)
-            l.push({svc: 'b', url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope, width: thirdparty.emotes.zwe.bttv[m[i]].width, height: thirdparty.emotes.zwe.bttv[m[i]].height});
-          }
-          else
-          {
-           let t = cmd.params[1].slice(l[f].pos + l[f].str.length, p);
-           let z = Object.keys(thirdparty.emotes.zwe.bttv);
-           for (let j = 0, o = z.length; j < o; j++)
-           {
-            t = t.replaceAll(z[j], '');
-           }
-           if (thirdparty.emotes.zwe.hasOwnProperty('ffz'))
-           {
-            z = Object.keys(thirdparty.emotes.zwe.ffz);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-           }
-           if (thirdparty.emotes.zwe.hasOwnProperty('ffzU') && thirdparty.emotes.zwe.ffzU.hasOwnProperty(u.host))
-           {
-            z = Object.keys(thirdparty.emotes.zwe.ffzU[u.host]);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-           }
-           if (thirdparty.emotes.zwe.hasOwnProperty('bttvU') && thirdparty.emotes.zwe.bttvU.hasOwnProperty(u.host))
-           {
-            z = Object.keys(thirdparty.emotes.zwe.bttvU[u.host]);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-           }
-           if (thirdparty.emotes.zwe.hasOwnProperty('7tv'))
-           {
-            z = Object.keys(thirdparty.emotes.zwe['7tv']);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-           }
-           t = t.trim();
-           if (t.length > 0)
-           {
-            if (pass === 1)
-             l.push({svc: 'b', url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope, width: thirdparty.emotes.zwe.bttv[m[i]].width, height: thirdparty.emotes.zwe.bttv[m[i]].height});
-           }
-           else if (pass === 2)
-           {
-            if (!l[f].hasOwnProperty('zwe'))
-             l[f].zwe = [];
-            l[f].zwe.push({svc: 'b', url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope, width: thirdparty.emotes.zwe.bttv[m[i]].width, height: thirdparty.emotes.zwe.bttv[m[i]].height});
-            l[f].zwe.sort(_posSort);
-            for (let j = 0, o = l.length; j < o; j++)
-            {
-             if (l[j].svc !== 'b')
-              continue;
-             if (l[j].pos !== p)
-              continue;
-             l.splice(j, 1);
-             break;
-            }
-           }
-          }
-         }
+         service.parse.content['3rdparty'].bttv.zwe(l, u.host, cmd.params[1], pass, dup);
         }
 
         const $user = function()
         {
          function $userGeneral(cmd, dup = null)
          {
-          if (!thirdparty.emotes.hasOwnProperty('bttvU'))
-           return [];
           if (cmd.params.length < 2)
            return [];
           const u = _parseUser(cmd);
-          if (!thirdparty.emotes.bttvU.hasOwnProperty(u.host))
-           return [];
-          const m = cmd.params[1].split(' ');
-          if (dup === null)
-           dup = cfg.display.duplicates;
-          let ret = [];
-          let addList = {};
-          for (let i = 0, l = m.length; i < l; i++)
-          {
-           if (!thirdparty.emotes.bttvU[u.host].hasOwnProperty(m[i]))
-            continue;
-           if (!addList.hasOwnProperty(m[i]))
-            addList[m[i]] = 0;
-           else
-           {
-            if (dup === false)
-             continue;
-            if (dup !== true && addList[m[i]] >= dup)
-             continue;
-           }
-           addList[m[i]]++;
-           let p = 0;
-           for (let j = 0; j < i; j++)
-           {
-            p+= m[j].length + 1;
-           }
-           ret.push({svc: 'b', url: thirdparty.emotes.bttvU[u.host][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.bttvU[u.host][m[i]].scope, width: thirdparty.emotes.bttvU[u.host][m[i]].width, height: thirdparty.emotes.bttvU[u.host][m[i]].height});
-          }
-          return ret;
+          return service.parse.content['3rdparty'].bttv.user.general(u.host, cmd.params[1], dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
          {
-          if (!cfg.display.extended.useZWE)
-           return;
-          if (!thirdparty.emotes.hasOwnProperty('zwe'))
-           return;
-          if (!thirdparty.emotes.zwe.hasOwnProperty('bttvU'))
-           return;
           if (cmd.params.length < 2)
            return;
           const u = _parseUser(cmd);
-          if (!thirdparty.emotes.zwe.bttvU.hasOwnProperty(u.host))
-           return [];
-          l.sort(_posSort);
-          const m = cmd.params[1].split(' ');
-          if (dup === null)
-           dup = cfg.display.duplicates;
-          let addList = {};
-          for (let i = 0, n = m.length; i < n; i++)
-          {
-           if (!thirdparty.emotes.zwe.bttvU[u.host].hasOwnProperty(m[i]))
-            continue;
-           if (!addList.hasOwnProperty(m[i]))
-            addList[m[i]] = 0;
-           else
-           {
-            if (dup === false)
-             continue;
-            if (dup !== true && addList[m[i]] >= dup)
-             continue;
-           }
-           addList[m[i]]++;
-           let p = 0;
-           for (let j = 0; j < i; j++)
-           {
-            p+= m[j].length + 1;
-           }
-           let f = -1;
-           let h = -1;
-           for (let j = 0, o = l.length; j < o; j++)
-           {
-            if (l[j].pos > h)
-             h = l[j].pos;
-            else
-             continue;
-            if (l[j].pos < p)
-             f = j;
-           }
-           if (f === -1)
-           {
-            if (pass === 1)
-             l.push({svc: 'b', url: thirdparty.emotes.zwe.bttvU[u.host][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[u.host][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[u.host][m[i]].width, height: thirdparty.emotes.zwe.bttvU[u.host][m[i]].height});
-           }
-           else
-           {
-            let t = cmd.params[1].slice(l[f].pos + l[f].str.length, p);
-            let z = Object.keys(thirdparty.emotes.zwe.bttvU[u.host]);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-            if (thirdparty.emotes.zwe.hasOwnProperty('ffz'))
-            {
-             z = Object.keys(thirdparty.emotes.zwe.ffz);
-             for (let j = 0, o = z.length; j < o; j++)
-             {
-              t = t.replaceAll(z[j], '');
-             }
-            }
-            if (thirdparty.emotes.zwe.hasOwnProperty('ffzU') && thirdparty.emotes.zwe.ffzU.hasOwnProperty(u.host))
-            {
-             z = Object.keys(thirdparty.emotes.zwe.ffzU[u.host]);
-             for (let j = 0, o = z.length; j < o; j++)
-             {
-              t = t.replaceAll(z[j], '');
-             }
-            }
-            if (thirdparty.emotes.zwe.hasOwnProperty('bttv'))
-            {
-             z = Object.keys(thirdparty.emotes.zwe.bttv);
-             for (let j = 0, o = z.length; j < o; j++)
-             {
-              t = t.replaceAll(z[j], '');
-             }
-            }
-            if (thirdparty.emotes.zwe.hasOwnProperty('7tv'))
-            {
-             z = Object.keys(thirdparty.emotes.zwe['7tv']);
-             for (let j = 0, o = z.length; j < o; j++)
-             {
-              t = t.replaceAll(z[j], '');
-             }
-            }
-            t = t.trim();
-            if (t.length > 0)
-            {
-             if (pass === 1)
-              l.push({svc: 'b', url: thirdparty.emotes.zwe.bttvU[u.host][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[u.host][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[u.host][m[i]].width, height: thirdparty.emotes.zwe.bttvU[u.host][m[i]].height});
-            }
-            else if (pass === 2)
-            {
-             if (!l[f].hasOwnProperty('zwe'))
-              l[f].zwe = [];
-             l[f].zwe.push({svc: 'b', url: thirdparty.emotes.zwe.bttvU[u.host][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[u.host][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[u.host][m[i]].width, height: thirdparty.emotes.zwe.bttvU[u.host][m[i]].height});
-             l[f].zwe.sort(_posSort);
-             for (let j = 0, o = l.length; j < o; j++)
-             {
-              if (l[j].svc !== 'b')
-               continue;
-              if (l[j].pos !== p)
-               continue;
-              l.splice(j, 1);
-              break;
-             }
-            }
-           }
-          }
+          service.parse.content['3rdparty'].bttv.user.zwe(l, u.host, cmd.params[1], pass, dup);
          }
 
          return {
@@ -7579,11 +6826,6 @@
           zwe: $userZWE
          };
         }();
-
-        function _posSort(a, b)
-        {
-         return a.pos - b.pos;
-        }
 
         return {
          general: $general,
@@ -7596,159 +6838,17 @@
        {
         function $general(cmd, dup = null)
         {
-         if (!thirdparty.emotes.hasOwnProperty('7tv'))
-          return [];
          if (cmd.params.length < 2)
           return [];
-         const m = cmd.params[1].split(' ');
-         if (dup === null)
-          dup = cfg.display.duplicates;
-         let ret = [];
-         let addList = {};
-         for (let i = 0, l = m.length; i < l; i++)
-         {
-          if (!thirdparty.emotes['7tv'].hasOwnProperty(m[i]))
-           continue;
-          if (!addList.hasOwnProperty(m[i]))
-           addList[m[i]] = 0;
-          else
-          {
-           if (dup === false)
-            continue;
-           if (dup !== true && addList[m[i]] >= dup)
-            continue;
-          }
-          addList[m[i]]++;
-          let p = 0;
-          for (let j = 0; j < i; j++)
-          {
-           p+= m[j].length + 1;
-          }
-          ret.push({svc: '7', url: thirdparty.emotes['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes['7tv'][m[i]].scope, width: thirdparty.emotes['7tv'][m[i]].width, height: thirdparty.emotes['7tv'][m[i]].height});
-         }
-         return ret;
+         return service.parse.content['3rdparty']['7tv'].general(cmd.params[1], dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
-         if (!cfg.display.extended.useZWE)
-          return;
-         if (!thirdparty.emotes.hasOwnProperty('zwe'))
-          return;
-         if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
-          return;
          if (cmd.params.length < 2)
           return;
          const u = _parseUser(cmd);
-         l.sort(_posSort);
-         const m = cmd.params[1].split(' ');
-         if (dup === null)
-          dup = cfg.display.duplicates;
-         let addList = {};
-         for (let i = 0, n = m.length; i < n; i++)
-         {
-          if (!thirdparty.emotes.zwe['7tv'].hasOwnProperty(m[i]))
-           continue;
-          if (!addList.hasOwnProperty(m[i]))
-           addList[m[i]] = 0;
-          else
-          {
-           if (dup === false)
-            continue;
-           if (dup !== true && addList[m[i]] >= dup)
-            continue;
-          }
-          addList[m[i]]++;
-          let p = 0;
-          for (let j = 0; j < i; j++)
-          {
-           p+= m[j].length + 1;
-          }
-          let f = -1;
-          let h = -1;
-          for (let j = 0, o = l.length; j < o; j++)
-          {
-           if (l[j].pos > h)
-            h = l[j].pos;
-           else
-            continue;
-           if (l[j].pos < p)
-            f = j;
-          }
-          if (f === -1)
-          {
-           if (pass === 1)
-            l.push({svc: '7', url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope, width: thirdparty.emotes.zwe['7tv'][m[i]].width, height: thirdparty.emotes.zwe['7tv'][m[i]].height});
-          }
-          else
-          {
-           let t = cmd.params[1].slice(l[f].pos + l[f].str.length, p);
-           let z = Object.keys(thirdparty.emotes.zwe['7tv']);
-           for (let j = 0, o = z.length; j < o; j++)
-           {
-            t = t.replaceAll(z[j], '');
-           }
-           if (thirdparty.emotes.zwe.hasOwnProperty('ffz'))
-           {
-            z = Object.keys(thirdparty.emotes.zwe.ffz);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-           }
-           if (thirdparty.emotes.zwe.hasOwnProperty('ffzU') && thirdparty.emotes.zwe.ffzU.hasOwnProperty(u.host))
-           {
-            z = Object.keys(thirdparty.emotes.zwe.ffzU[u.host]);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-           }
-           if (thirdparty.emotes.zwe.hasOwnProperty('bttv'))
-           {
-            z = Object.keys(thirdparty.emotes.zwe.bttv);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-           }
-           if (thirdparty.emotes.zwe.hasOwnProperty('bttvU') && thirdparty.emotes.zwe.bttvU.hasOwnProperty(u.host))
-           {
-            z = Object.keys(thirdparty.emotes.zwe.bttvU[u.host]);
-            for (let j = 0, o = z.length; j < o; j++)
-            {
-             t = t.replaceAll(z[j], '');
-            }
-           }
-           t = t.trim();
-           if (t.length > 0)
-           {
-            if (pass === 1)
-             l.push({svc: '7', url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope, width: thirdparty.emotes.zwe['7tv'][m[i]].width, height: thirdparty.emotes.zwe['7tv'][m[i]].height});
-           }
-           else if (pass === 2)
-           {
-            if (!l[f].hasOwnProperty('zwe'))
-             l[f].zwe = [];
-            l[f].zwe.push({svc: '7', url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope, width: thirdparty.emotes.zwe['7tv'][m[i]].width, height: thirdparty.emotes.zwe['7tv'][m[i]].height});
-            l[f].zwe.sort(_posSort);
-            for (let j = 0, o = l.length; j < o; j++)
-            {
-             if (l[j].svc !== '7')
-              continue;
-             if (l[j].pos !== p)
-              continue;
-             l.splice(j, 1);
-             break;
-            }
-           }
-          }
-         }
-        }
-
-        function _posSort(a, b)
-        {
-         return a.pos - b.pos;
+         return service.parse.content['3rdparty']['7tv'].zwe(l, u.host, cmd.params[1], pass, dup);
         }
 
         return {
@@ -9088,6 +8188,1033 @@
      net: $net,
      parse: $parse,
      global: $global
+    };
+   }();
+
+   const service = function()
+   {
+    const $parse = function()
+    {
+     const $content = function()
+     {
+      const $emoji = function()
+      {
+       let _uList = {};
+
+       async function task(msg, set, dup = null)
+       {
+        const emSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
+        let emList = [];
+        let match = '';
+        while ((match = emSeg.exec(msg)) !== null)
+        {
+         emList.push(match);
+        }
+        const kcSeg = /((?:[0-9#\*]\ufe0f\u20e3)+)+/gu;
+        match = '';
+        while ((match = kcSeg.exec(msg)) !== null)
+        {
+         emList.push(match);
+        }
+        const acSeg = /(\u0d9e)/gu;
+        match = '';
+        while ((match = acSeg.exec(msg)) !== null)
+        {
+         emList.push(match);
+        }
+        if (emList.length === 0)
+         return [];
+        if (dup === null)
+         dup = cfg.display.duplicates;
+        if (set === true)
+         set = 'twemoji';
+        let ret = [];
+        const uri = cURLs.cdn.ffz.emoji.replaceAll('%SET_ID%', set);
+        let addList = {};
+        function __showEmoji(c, p)
+        {
+         if (c.slice(-5) === '-fe0f' && !c.match(/-200d-264[0|2]-/) && !c.match(/-200d-269[5|6]-/) && !c.match(/-200d-26a7/) && !c.match(/-200d-2620/) && !c.match(/-200d-2708/))
+          c = c.slice(0, -5);
+         if (!addList.hasOwnProperty(c))
+          addList[c] = 0;
+         else
+         {
+          if (dup === false)
+           return false;
+          if (dup !== true && addList[c] >= dup)
+           return false;
+         }
+         addList[c]++;
+         ret.push({svc: 'e', url: uri + c + '.png', str: c, pos: p});
+         return true;
+        }
+        function __showCrew(p)
+        {
+         if (!addList.hasOwnProperty('0d9e'))
+          addList['0d9e'] = 0;
+         else
+         {
+          if (dup === false)
+           return false;
+          if (dup !== true && addList['0d9e'] >= dup)
+           return false;
+         }
+         addList['0d9e']++;
+         const crew = cURLs.cdn.crew.replaceAll('%DIRECTION%', shared.rnd(2)).replaceAll('%COLOR%', shared.rnd(18));
+         ret.push({svc: 'e', url: crew, str: '0d9e', pos: p});
+         return true;
+        }
+        for (let i = 0, l = emList.length; i < l; i++)
+        {
+         let cpList = [];
+         for (const c of emList[i][0])
+         {
+          const p = c.codePointAt(0).toString(16).padStart(4, '0');
+          if (cpList.length === 0)
+          {
+           cpList.push(p);
+           continue;
+          }
+          const lL = cpList.length - 1;
+          if (p === 'fe0f')
+           cpList[lL] += '-' + p;
+          else if (p === '200d')
+           cpList[lL] += '-' + p;
+          else if (p === '20e3')
+           cpList[lL] += '-' + p;
+          else if (p.match(/1f3f[b-f]/))
+           cpList[lL] += '-' + p;
+          else if (p.match(/1f9b[0-3]/))
+          {
+           if (cpList[lL].slice(-5) === '-200d')
+            cpList[lL] += '-' + p;
+           else
+            cpList[lL] += '-200d-' + p;
+          }
+          else if (p.match(/264[0|2]/) || p.match(/26a7/))
+          {
+           if (cpList[lL].slice(-5) === '-200d')
+            cpList[lL] += '-' + p;
+           else
+            cpList[lL] += '-200d-' + p;
+          }
+          else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].length < 11)
+           cpList[lL] += '-' + p;
+          else if (p === '1f308' && cpList[lL] === '1f3f3-fe0f')
+           cpList[lL] += '-200d-' + p;
+          else if (p === '2620' && cpList[lL] === '1f3f4')
+           cpList[lL] += '-200d-' + p;
+          else if (cpList[lL].slice(-5) === '-200d')
+           cpList[lL] += '-' + p;
+          else
+           cpList.push(p);
+         }
+         let found = false;
+         const lP = cpList.length;
+         if (lP === 1)
+         {
+          let s = cpList[0];
+          if (s === '0d9e')
+          {
+           __showCrew(emList[i].index);
+           continue;
+          }
+          let tU;
+          if (s.slice(-5) === '-fe0f')
+          {
+           if (s.match(/-200d-264[0|2]-/) || s.match(/-200d-264[0|2]-/) || s.match(/-200d-26a7/) || s.match(/-200d-2620/) || s.match(/-200d-2708/))
+            tU = uri + s + '.png';
+           else
+            tU = uri + s.slice(0, -5) + '.png';
+          }
+          else
+           tU = uri + s + '.png';
+          found = await _checkURL(tU);
+          if (found)
+          {
+           __showEmoji(s, emList[i].index);
+           continue;
+          }
+          while (s.includes('-'))
+          {
+           s = s.slice(0, s.lastIndexOf('-'));
+           if (s.slice(-5) === '-fe0f')
+            tU = uri + s.slice(0, -5) + '.png';
+           else
+            tU = uri + s + '.png';
+           found = await _checkURL(tU);
+           if (found)
+           {
+            __showEmoji(s, emList[i].index);
+            break;
+           }
+          }
+          continue;
+         }
+         let p = emList[i].index;
+         for (let j = 0; j < lP; j++)
+         {
+          p += cpList[j].replaceAll(/[^\-]/g, '').length + 1;
+          found = await _checkURL(uri + cpList[j] + '.png');
+          if (found)
+           __showEmoji(cpList[j], p);
+         }
+        }
+        return ret;
+       }
+
+       function _checkURL(url)
+       {
+        const p = new Promise(
+         function(resolve)
+         {
+          if (_uList.hasOwnProperty(url))
+          {
+           resolve(_uList[url]);
+           return;
+          }
+          const x = new XMLHttpRequest();
+          x.open('HEAD', url);
+          x.onreadystatechange = function()
+          {
+           if (x.readyState < 2)
+            return;
+           x.onreadystatechange = null;
+           const r = x.status === 200;
+           _uList[url] = r;
+           resolve(r);
+          };
+          x.send();
+         }
+        );
+        return p;
+       }
+
+       return task;
+      }();
+
+      const $3rdparty = function()
+      {
+       const $ffz = function()
+       {
+        function $general(msg, dup = null)
+        {
+         if (!thirdparty.emotes.hasOwnProperty('ffz'))
+          return [];
+         const m = msg.split(' ');
+         if (dup === null)
+          dup = cfg.display.duplicates;
+         let ret = [];
+         let addList = {};
+         for (let i = 0, l = m.length; i < l; i++)
+         {
+          if (!thirdparty.emotes.ffz.hasOwnProperty(m[i]))
+           continue;
+          if (!addList.hasOwnProperty(m[i]))
+           addList[m[i]] = 0;
+          else
+          {
+           if (dup === false)
+            continue;
+           if (dup !== true && addList[m[i]] >= dup)
+            continue;
+          }
+          addList[m[i]]++;
+          let p = 0;
+          for (let j = 0; j < i; j++)
+          {
+           p+= m[j].length + 1;
+          }
+          ret.push({svc: 'f', url: thirdparty.emotes.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.ffz[m[i]].scope, width: thirdparty.emotes.ffz[m[i]].width, height: thirdparty.emotes.ffz[m[i]].height});
+         }
+         return ret;
+        }
+
+        function $zwe(l, usr, msg, pass, dup = null)
+        {
+         if (!cfg.display.extended.useZWE)
+          return;
+         if (!thirdparty.emotes.hasOwnProperty('zwe'))
+          return;
+         if (!thirdparty.emotes.zwe.hasOwnProperty('ffz'))
+          return;
+         l.sort(_posSort);
+         const m = msg.split(' ');
+         if (dup === null)
+          dup = cfg.display.duplicates;
+         let addList = {};
+         for (let i = 0, n = m.length; i < n; i++)
+         {
+          if (!thirdparty.emotes.zwe.ffz.hasOwnProperty(m[i]))
+           continue;
+          if (!addList.hasOwnProperty(m[i]))
+           addList[m[i]] = 0;
+          else
+          {
+           if (dup === false)
+            continue;
+           if (dup !== true && addList[m[i]] >= dup)
+            continue;
+          }
+          addList[m[i]]++;
+          let p = 0;
+          for (let j = 0; j < i; j++)
+          {
+           p+= m[j].length + 1;
+          }
+          let f = -1;
+          let h = -1;
+          for (let j = 0, o = l.length; j < o; j++)
+          {
+           if (l[j].pos > h)
+            h = l[j].pos;
+           else
+            continue;
+           if (l[j].pos < p)
+            f = j;
+          }
+          if (f === -1)
+          {
+           if (pass === 1)
+            l.push({svc: 'f', url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope, width: thirdparty.emotes.zwe.ffz[m[i]].width, height: thirdparty.emotes.zwe.ffz[m[i]].height});
+          }
+          else
+          {
+           let t = msg.slice(l[f].pos + l[f].str.length, p);
+           let z = Object.keys(thirdparty.emotes.zwe.ffz);
+           for (let j = 0, o = z.length; j < o; j++)
+           {
+            t = t.replaceAll(z[j], '');
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('ffzU') && thirdparty.emotes.zwe.ffzU.hasOwnProperty(usr))
+           {
+            z = Object.keys(thirdparty.emotes.zwe.ffzU[usr]);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('bttv'))
+           {
+            z = Object.keys(thirdparty.emotes.zwe.bttv);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('bttvU') && thirdparty.emotes.zwe.bttvU.hasOwnProperty(usr))
+           {
+            z = Object.keys(thirdparty.emotes.zwe.bttvU[usr]);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('7tv'))
+           {
+            z = Object.keys(thirdparty.emotes.zwe['7tv']);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           t = t.trim();
+           if (t.length > 0)
+           {
+            if (pass === 1)
+             l.push({svc: 'f', url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope, width: thirdparty.emotes.zwe.ffz[m[i]].width, height: thirdparty.emotes.zwe.ffz[m[i]].height});
+           }
+           else if (pass === 2)
+           {
+            if (!l[f].hasOwnProperty('zwe'))
+             l[f].zwe = [];
+            l[f].zwe.push({svc: 'f', url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope, width: thirdparty.emotes.zwe.ffz[m[i]].width, height: thirdparty.emotes.zwe.ffz[m[i]].height});
+            l[f].zwe.sort(_posSort);
+            for (let j = 0, o = l.length; j < o; j++)
+            {
+             if (l[j].svc !== 'f')
+              continue;
+             if (l[j].pos !== p)
+              continue;
+             l.splice(j, 1);
+             break;
+            }
+           }
+          }
+         }
+        }
+
+        const $user = function()
+        {
+         function $userGeneral(usr, msg, dup = null)
+         {
+          if (!thirdparty.emotes.hasOwnProperty('ffzU'))
+           return [];
+          const m = msg.split(' ');
+          if (!thirdparty.emotes.ffzU.hasOwnProperty(usr))
+           return [];
+          if (dup === null)
+           dup = cfg.display.duplicates;
+          let ret = [];
+          let addList = {};
+          for (let i = 0, l = m.length; i < l; i++)
+          {
+           if (!thirdparty.emotes.ffzU[usr].hasOwnProperty(m[i]))
+            continue;
+           if (!addList.hasOwnProperty(m[i]))
+            addList[m[i]] = 0;
+           else
+           {
+            if (dup === false)
+             continue;
+            if (dup !== true && addList[m[i]] >= dup)
+             continue;
+           }
+           addList[m[i]]++;
+           let p = 0;
+           for (let j = 0; j < i; j++)
+           {
+            p+= m[j].length + 1;
+           }
+           ret.push({svc: 'f', url: thirdparty.emotes.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.ffzU[usr][m[i]].scope, width: thirdparty.emotes.ffzU[usr][m[i]].width, height: thirdparty.emotes.ffzU[usr][m[i]].height});
+          }
+          return ret;
+         }
+
+         function $userZWE(l, usr, msg, pass, dup = null)
+         {
+          if (!cfg.display.extended.useZWE)
+           return;
+          if (!thirdparty.emotes.hasOwnProperty('zwe'))
+           return;
+          if (!thirdparty.emotes.zwe.hasOwnProperty('ffzU'))
+           return;
+          if (!thirdparty.emotes.zwe.ffzU.hasOwnProperty(usr))
+           return;
+          l.sort(_posSort);
+          const m = msg.split(' ');
+          if (dup === null)
+           dup = cfg.display.duplicates;
+          let addList = {};
+          for (let i = 0, n = m.length; i < n; i++)
+          {
+           if (!thirdparty.emotes.zwe.ffzU[usr].hasOwnProperty(m[i]))
+            continue;
+           if (!addList.hasOwnProperty(m[i]))
+            addList[m[i]] = 0;
+           else
+           {
+            if (dup === false)
+             continue;
+            if (dup !== true && addList[m[i]] >= dup)
+             continue;
+           }
+           addList[m[i]]++;
+           let p = 0;
+           for (let j = 0; j < i; j++)
+           {
+            p+= m[j].length + 1;
+           }
+           let f = -1;
+           let h = -1;
+           for (let j = 0, o = l.length; j < o; j++)
+           {
+            if (l[j].pos > h)
+             h = l[j].pos;
+            else
+             continue;
+            if (l[j].pos < p)
+             f = j;
+           }
+           if (f === -1)
+           {
+            if (pass === 1)
+             l.push({svc: 'f', url: thirdparty.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffzU[usr][m[i]].scope, width: thirdparty.emotes.zwe.ffzU[usr][m[i]].width, height: thirdparty.emotes.zwe.ffzU[usr][m[i]].height});
+           }
+           else
+           {
+            let t = msg.slice(l[f].pos + l[f].str.length, p);
+            let z = Object.keys(thirdparty.emotes.zwe.ffzU[usr]);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('ffz'))
+            {
+             z = Object.keys(thirdparty.emotes.zwe.ffz);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('bttv'))
+            {
+             z = Object.keys(thirdparty.emotes.zwe.bttv);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('bttvU') && thirdparty.emotes.zwe.bttvU.hasOwnProperty(usr))
+            {
+             z = Object.keys(thirdparty.emotes.zwe.bttvU[usr]);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('7tv'))
+            {
+             z = Object.keys(thirdparty.emotes.zwe['7tv']);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            t = t.trim();
+            if (t.length > 0)
+            {
+             if (pass === 1)
+              l.push({svc: 'f', url: thirdparty.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffzU[usr][m[i]].scope, width: thirdparty.emotes.zwe.ffzU[usr][m[i]].width, height: thirdparty.emotes.zwe.ffzU[usr][m[i]].height});
+            }
+            else if (pass === 2)
+            {
+             if (!l[f].hasOwnProperty('zwe'))
+              l[f].zwe = [];
+             l[f].zwe.push({svc: 'f', url: thirdparty.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffzU[usr][m[i]].scope, width: thirdparty.emotes.zwe.ffzU[usr][m[i]].width, height: thirdparty.emotes.zwe.ffzU[usr][m[i]].height});
+             l[f].zwe.sort(_posSort);
+             for (let j = 0, o = l.length; j < o; j++)
+             {
+              if (l[j].svc !== 'f')
+               continue;
+              if (l[j].pos !== p)
+               continue;
+              l.splice(j, 1);
+              break;
+             }
+            }
+           }
+          }
+         }
+
+         return {
+          general: $userGeneral,
+          zwe: $userZWE
+         };
+        }();
+
+        function _posSort(a, b)
+        {
+         return a.pos - b.pos;
+        }
+
+        return {
+         general: $general,
+         zwe: $zwe,
+         user: $user
+        };
+       }();
+
+       const $bttv = function()
+       {
+        function $general(msg, dup = null)
+        {
+         if (!thirdparty.emotes.hasOwnProperty('bttv'))
+          return [];
+         const m = msg.split(' ');
+         if (dup === null)
+          dup = cfg.display.duplicates;
+         let ret = [];
+         let addList = {};
+         for (let i = 0, l = m.length; i < l; i++)
+         {
+          if (!thirdparty.emotes.bttv.hasOwnProperty(m[i]))
+           continue;
+          if (!addList.hasOwnProperty(m[i]))
+           addList[m[i]] = 0;
+          else
+          {
+           if (dup === false)
+            continue;
+           if (dup !== true && addList[m[i]] >= dup)
+            continue;
+          }
+          addList[m[i]]++;
+          let p = 0;
+          for (let j = 0; j < i; j++)
+          {
+           p+= m[j].length + 1;
+          }
+          ret.push({svc: 'b', url: thirdparty.emotes.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.bttv[m[i]].scope, width: thirdparty.emotes.bttv[m[i]].width, height: thirdparty.emotes.bttv[m[i]].height});
+         }
+         return ret;
+        }
+
+        function $zwe(l, usr, msg, pass, dup = null)
+        {
+         if (!cfg.display.extended.useZWE)
+          return;
+         if (!thirdparty.emotes.hasOwnProperty('zwe'))
+          return;
+         if (!thirdparty.emotes.zwe.hasOwnProperty('bttv'))
+          return;
+         l.sort(_posSort);
+         const m = msg.split(' ');
+         if (dup === null)
+          dup = cfg.display.duplicates;
+         let addList = {};
+         for (let i = 0, n = m.length; i < n; i++)
+         {
+          if (!thirdparty.emotes.zwe.bttv.hasOwnProperty(m[i]))
+           continue;
+          if (!addList.hasOwnProperty(m[i]))
+           addList[m[i]] = 0;
+          else
+          {
+           if (dup === false)
+            continue;
+           if (dup !== true && addList[m[i]] >= dup)
+            continue;
+          }
+          addList[m[i]]++;
+          let p = 0;
+          for (let j = 0; j < i; j++)
+          {
+           p+= m[j].length + 1;
+          }
+          let f = -1;
+          let h = -1;
+          for (let j = 0, o = l.length; j < o; j++)
+          {
+           if (l[j].pos > h)
+            h = l[j].pos;
+           else
+            continue;
+           if (l[j].pos < p)
+            f = j;
+          }
+          if (f === -1)
+          {
+           if (pass === 1)
+            l.push({svc: 'b', url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope, width: thirdparty.emotes.zwe.bttv[m[i]].width, height: thirdparty.emotes.zwe.bttv[m[i]].height});
+          }
+          else
+          {
+           let t = msg.slice(l[f].pos + l[f].str.length, p);
+           let z = Object.keys(thirdparty.emotes.zwe.bttv);
+           for (let j = 0, o = z.length; j < o; j++)
+           {
+            t = t.replaceAll(z[j], '');
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('ffz'))
+           {
+            z = Object.keys(thirdparty.emotes.zwe.ffz);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('ffzU') && thirdparty.emotes.zwe.ffzU.hasOwnProperty(usr))
+           {
+            z = Object.keys(thirdparty.emotes.zwe.ffzU[usr]);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('bttvU') && thirdparty.emotes.zwe.bttvU.hasOwnProperty(usr))
+           {
+            z = Object.keys(thirdparty.emotes.zwe.bttvU[usr]);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('7tv'))
+           {
+            z = Object.keys(thirdparty.emotes.zwe['7tv']);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           t = t.trim();
+           if (t.length > 0)
+           {
+            if (pass === 1)
+             l.push({svc: 'b', url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope, width: thirdparty.emotes.zwe.bttv[m[i]].width, height: thirdparty.emotes.zwe.bttv[m[i]].height});
+           }
+           else if (pass === 2)
+           {
+            if (!l[f].hasOwnProperty('zwe'))
+             l[f].zwe = [];
+            l[f].zwe.push({svc: 'b', url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope, width: thirdparty.emotes.zwe.bttv[m[i]].width, height: thirdparty.emotes.zwe.bttv[m[i]].height});
+            l[f].zwe.sort(_posSort);
+            for (let j = 0, o = l.length; j < o; j++)
+            {
+             if (l[j].svc !== 'b')
+              continue;
+             if (l[j].pos !== p)
+              continue;
+             l.splice(j, 1);
+             break;
+            }
+           }
+          }
+         }
+        }
+
+        const $user = function()
+        {
+         function $userGeneral(usr, msg, dup = null)
+         {
+          if (!thirdparty.emotes.hasOwnProperty('bttvU'))
+           return [];
+          if (!thirdparty.emotes.bttvU.hasOwnProperty(usr))
+           return [];
+          const m = msg.split(' ');
+          if (dup === null)
+           dup = cfg.display.duplicates;
+          let ret = [];
+          let addList = {};
+          for (let i = 0, l = m.length; i < l; i++)
+          {
+           if (!thirdparty.emotes.bttvU[usr].hasOwnProperty(m[i]))
+            continue;
+           if (!addList.hasOwnProperty(m[i]))
+            addList[m[i]] = 0;
+           else
+           {
+            if (dup === false)
+             continue;
+            if (dup !== true && addList[m[i]] >= dup)
+             continue;
+           }
+           addList[m[i]]++;
+           let p = 0;
+           for (let j = 0; j < i; j++)
+           {
+            p+= m[j].length + 1;
+           }
+           ret.push({svc: 'b', url: thirdparty.emotes.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.bttvU[usr][m[i]].scope, width: thirdparty.emotes.bttvU[usr][m[i]].width, height: thirdparty.emotes.bttvU[usr][m[i]].height});
+          }
+          return ret;
+         }
+
+         function $userZWE(l, usr, msg, pass, dup = null)
+         {
+          if (!cfg.display.extended.useZWE)
+           return;
+          if (!thirdparty.emotes.hasOwnProperty('zwe'))
+           return;
+          if (!thirdparty.emotes.zwe.hasOwnProperty('bttvU'))
+           return;
+          if (!thirdparty.emotes.zwe.bttvU.hasOwnProperty(usr))
+           return;
+          l.sort(_posSort);
+          const m = msg.split(' ');
+          if (dup === null)
+           dup = cfg.display.duplicates;
+          let addList = {};
+          for (let i = 0, n = m.length; i < n; i++)
+          {
+           if (!thirdparty.emotes.zwe.bttvU[usr].hasOwnProperty(m[i]))
+            continue;
+           if (!addList.hasOwnProperty(m[i]))
+            addList[m[i]] = 0;
+           else
+           {
+            if (dup === false)
+             continue;
+            if (dup !== true && addList[m[i]] >= dup)
+             continue;
+           }
+           addList[m[i]]++;
+           let p = 0;
+           for (let j = 0; j < i; j++)
+           {
+            p+= m[j].length + 1;
+           }
+           let f = -1;
+           let h = -1;
+           for (let j = 0, o = l.length; j < o; j++)
+           {
+            if (l[j].pos > h)
+             h = l[j].pos;
+            else
+             continue;
+            if (l[j].pos < p)
+             f = j;
+           }
+           if (f === -1)
+           {
+            if (pass === 1)
+             l.push({svc: 'b', url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
+           }
+           else
+           {
+            let t = msg.slice(l[f].pos + l[f].str.length, p);
+            let z = Object.keys(thirdparty.emotes.zwe.bttvU[usr]);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('ffz'))
+            {
+             z = Object.keys(thirdparty.emotes.zwe.ffz);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('ffzU') && thirdparty.emotes.zwe.ffzU.hasOwnProperty(usr))
+            {
+             z = Object.keys(thirdparty.emotes.zwe.ffzU[usr]);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('bttv'))
+            {
+             z = Object.keys(thirdparty.emotes.zwe.bttv);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('7tv'))
+            {
+             z = Object.keys(thirdparty.emotes.zwe['7tv']);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            t = t.trim();
+            if (t.length > 0)
+            {
+             if (pass === 1)
+              l.push({svc: 'b', url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
+            }
+            else if (pass === 2)
+            {
+             if (!l[f].hasOwnProperty('zwe'))
+              l[f].zwe = [];
+             l[f].zwe.push({svc: 'b', url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
+             l[f].zwe.sort(_posSort);
+             for (let j = 0, o = l.length; j < o; j++)
+             {
+              if (l[j].svc !== 'b')
+               continue;
+              if (l[j].pos !== p)
+               continue;
+              l.splice(j, 1);
+              break;
+             }
+            }
+           }
+          }
+         }
+
+         return {
+          general: $userGeneral,
+          zwe: $userZWE
+         };
+        }();
+
+        function _posSort(a, b)
+        {
+         return a.pos - b.pos;
+        }
+
+        return {
+         general: $general,
+         zwe: $zwe,
+         user: $user
+        };
+       }();
+
+       const $7tv = function()
+       {
+        function $general(msg, dup = null)
+        {
+         if (!thirdparty.emotes.hasOwnProperty('7tv'))
+          return [];
+         const m = msg.split(' ');
+         if (dup === null)
+          dup = cfg.display.duplicates;
+         let ret = [];
+         let addList = {};
+         for (let i = 0, l = m.length; i < l; i++)
+         {
+          if (!thirdparty.emotes['7tv'].hasOwnProperty(m[i]))
+           continue;
+          if (!addList.hasOwnProperty(m[i]))
+           addList[m[i]] = 0;
+          else
+          {
+           if (dup === false)
+            continue;
+           if (dup !== true && addList[m[i]] >= dup)
+            continue;
+          }
+          addList[m[i]]++;
+          let p = 0;
+          for (let j = 0; j < i; j++)
+          {
+           p+= m[j].length + 1;
+          }
+          ret.push({svc: '7', url: thirdparty.emotes['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes['7tv'][m[i]].scope, width: thirdparty.emotes['7tv'][m[i]].width, height: thirdparty.emotes['7tv'][m[i]].height});
+         }
+         return ret;
+        }
+
+        function $zwe(l, usr, msg, pass, dup = null)
+        {
+         if (!cfg.display.extended.useZWE)
+          return;
+         if (!thirdparty.emotes.hasOwnProperty('zwe'))
+          return;
+         if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
+          return;
+         l.sort(_posSort);
+         const m = msg.split(' ');
+         if (dup === null)
+          dup = cfg.display.duplicates;
+         let addList = {};
+         for (let i = 0, n = m.length; i < n; i++)
+         {
+          if (!thirdparty.emotes.zwe['7tv'].hasOwnProperty(m[i]))
+           continue;
+          if (!addList.hasOwnProperty(m[i]))
+           addList[m[i]] = 0;
+          else
+          {
+           if (dup === false)
+            continue;
+           if (dup !== true && addList[m[i]] >= dup)
+            continue;
+          }
+          addList[m[i]]++;
+          let p = 0;
+          for (let j = 0; j < i; j++)
+          {
+           p+= m[j].length + 1;
+          }
+          let f = -1;
+          let h = -1;
+          for (let j = 0, o = l.length; j < o; j++)
+          {
+           if (l[j].pos > h)
+            h = l[j].pos;
+           else
+            continue;
+           if (l[j].pos < p)
+            f = j;
+          }
+          if (f === -1)
+          {
+           if (pass === 1)
+            l.push({svc: '7', url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope, width: thirdparty.emotes.zwe['7tv'][m[i]].width, height: thirdparty.emotes.zwe['7tv'][m[i]].height});
+          }
+          else
+          {
+           let t = msg.slice(l[f].pos + l[f].str.length, p);
+           let z = Object.keys(thirdparty.emotes.zwe['7tv']);
+           for (let j = 0, o = z.length; j < o; j++)
+           {
+            t = t.replaceAll(z[j], '');
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('ffz'))
+           {
+            z = Object.keys(thirdparty.emotes.zwe.ffz);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('ffzU') && thirdparty.emotes.zwe.ffzU.hasOwnProperty(usr))
+           {
+            z = Object.keys(thirdparty.emotes.zwe.ffzU[usr]);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('bttv'))
+           {
+            z = Object.keys(thirdparty.emotes.zwe.bttv);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('bttvU') && thirdparty.emotes.zwe.bttvU.hasOwnProperty(usr))
+           {
+            z = Object.keys(thirdparty.emotes.zwe.bttvU[usr]);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           t = t.trim();
+           if (t.length > 0)
+           {
+            if (pass === 1)
+             l.push({svc: '7', url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope, width: thirdparty.emotes.zwe['7tv'][m[i]].width, height: thirdparty.emotes.zwe['7tv'][m[i]].height});
+           }
+           else if (pass === 2)
+           {
+            if (!l[f].hasOwnProperty('zwe'))
+             l[f].zwe = [];
+            l[f].zwe.push({svc: '7', url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope, width: thirdparty.emotes.zwe['7tv'][m[i]].width, height: thirdparty.emotes.zwe['7tv'][m[i]].height});
+            l[f].zwe.sort(_posSort);
+            for (let j = 0, o = l.length; j < o; j++)
+            {
+             if (l[j].svc !== '7')
+              continue;
+             if (l[j].pos !== p)
+              continue;
+             l.splice(j, 1);
+             break;
+            }
+           }
+          }
+         }
+        }
+
+        function _posSort(a, b)
+        {
+         return a.pos - b.pos;
+        }
+
+        return {
+         general: $general,
+         zwe: $zwe
+        };
+       }();
+
+       return {
+        ffz: $ffz,
+        bttv: $bttv,
+        '7tv': $7tv
+       };
+      }();
+
+      return {
+       emoji: $emoji,
+       '3rdparty': $3rdparty
+      };
+     }();
+
+     return {
+      content: $content
+     };
+    }();
+
+    return {
+     parse: $parse
     };
    }();
 
