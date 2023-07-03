@@ -2027,11 +2027,11 @@
        _setNotice(e, 'noticeError global', 'OBS Not Detected<br>Please see <a href="https://www.twitch.tv/videos/1784099954" target="_blank" title="Adding Emote Wall to OBS">this &quot;How to&quot; video</a> on adding the Emote Wall to OBS.');
        break;
       case 0x11:
-       if (typeof login !== 'undefined' && login.inUse)
+       if (typeof loginT !== 'undefined' && loginT.inUse)
        {
         _setNotice(e, 'noticeError sTwitch', 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
-        login.showOut(true);
-        window.setTimeout(function(){login.showIn();}, 15500);
+        loginT.showOut(true);
+        window.setTimeout(function(){loginT.showIn();}, 15500);
        }
        else
         _setNotice(e, 'noticeError sTwitch', 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
@@ -6160,10 +6160,10 @@
          case 'PING':
           if (_ws.readyState === 1)
            _ws.send('PONG ' + cmd.params[0]);
-          if ((login.cfgVals() & 0x02) === 0x02)
+          if ((loginT.cfgVals() & 0x02) === 0x02)
           {
            await twitch.net.oAuth.update();
-           if ((login.cfgVals() & 0x04) !== 0x04)
+           if ((loginT.cfgVals() & 0x04) !== 0x04)
             notice.error(0x11);
           }
           break;
@@ -6199,7 +6199,7 @@
            }
            twitch.net.dead = true;
            notice.error(0x11);
-           if (!login.inUse)
+           if (!loginT.inUse)
             twitch.net.oAuth.clear(true);
           }
           break;
@@ -6522,9 +6522,9 @@
 
       async function $update()
       {
-       const lsOAuth = window.localStorage.getItem(login.path() + '.oauth');
-       const lsRefresh = window.localStorage.getItem(login.path() + '.refresh');
-       const lsRefreshed = window.localStorage.getItem(login.path() + '.refreshed');
+       const lsOAuth = window.localStorage.getItem(loginT.path() + '.oauth');
+       const lsRefresh = window.localStorage.getItem(loginT.path() + '.refresh');
+       const lsRefreshed = window.localStorage.getItem(loginT.path() + '.refreshed');
        if (lsOAuth !== null)
         cfg.twitch.oauth = lsOAuth;
        if (lsRefresh !== null)
@@ -6543,18 +6543,18 @@
        cfg.twitch.oauth = ret.access_token;
        cfg.twitch.oauth_refresh = ret.refresh_token;
        cfg.twitch.oauth_refreshed = Math.floor(new Date().getTime() / 1000);
-       window.localStorage.setItem(login.path() + '.oauth', cfg.twitch.oauth);
-       window.localStorage.setItem(login.path() + '.refresh', cfg.twitch.oauth_refresh);
-       window.localStorage.setItem(login.path() + '.refreshed', cfg.twitch.oauth_refreshed);
+       window.localStorage.setItem(loginT.path() + '.oauth', cfg.twitch.oauth);
+       window.localStorage.setItem(loginT.path() + '.refresh', cfg.twitch.oauth_refresh);
+       window.localStorage.setItem(loginT.path() + '.refreshed', cfg.twitch.oauth_refreshed);
       }
 
       async function $reinit()
       {
-       if ((login.cfgVals() & 0x02) === 0x02)
+       if ((loginT.cfgVals() & 0x02) === 0x02)
        {
         twitch.net.oAuth.clear();
         await twitch.net.oAuth.update();
-        if ((login.cfgVals() & 0x04) === 0x04)
+        if ((loginT.cfgVals() & 0x04) === 0x04)
          return true;
         twitch.net.oAuth.clear(true);
        }
@@ -6565,18 +6565,18 @@
       {
        cfg.twitch.oauth = 'OAUTH_ID';
        delete cfg.twitch.oauth_refreshed;
-       window.localStorage.removeItem(login.path() + '.oauth');
-       window.localStorage.removeItem(login.path() + '.refreshed');
+       window.localStorage.removeItem(loginT.path() + '.oauth');
+       window.localStorage.removeItem(loginT.path() + '.refreshed');
        if (!clearRefresh)
         return;
        cfg.channel = 'CHANNEL_NAME';
        cfg.twitch.oauth_refresh = 'OAUTH_REFRESH';
        cfg.twitch.client = oauthClient;
        cfg.twitch.scope = [];
-       window.localStorage.removeItem(login.path() + '.channel');
-       window.localStorage.removeItem(login.path() + '.refresh');
-       window.localStorage.removeItem(login.path() + '.client');
-       window.localStorage.removeItem(login.path() + '.scope');
+       window.localStorage.removeItem(loginT.path() + '.channel');
+       window.localStorage.removeItem(loginT.path() + '.refresh');
+       window.localStorage.removeItem(loginT.path() + '.client');
+       window.localStorage.removeItem(loginT.path() + '.scope');
       }
 
       return {
@@ -8773,7 +8773,7 @@
          if (await twitch.net.oAuth.reinit())
           return _checkFollower(cmd);
          notice.error(0x11);
-         if (!login.inUse)
+         if (!loginT.inUse)
           twitch.net.oAuth.clear(true);
         }
         return false;
@@ -8999,7 +8999,7 @@
         if (await twitch.net.oAuth.reinit())
          return _findEmote_channel(chID, n);
         notice.error(0x11);
-        if (!login.inUse)
+        if (!loginT.inUse)
          twitch.net.oAuth.clear(true);
        }
        return false;
@@ -9053,7 +9053,7 @@
        if (await twitch.net.oAuth.reinit())
         return twitch.global();
        notice.error(0x11);
-       if (!login.inUse)
+       if (!loginT.inUse)
         twitch.net.oAuth.clear(true);
       }
       return false;
@@ -11063,7 +11063,7 @@
     };
    }();
 
-   const login = function()
+   const loginT = function()
    {
     let _tL = false;
     const _visTime = 5000;
@@ -11147,21 +11147,21 @@
 
     function $use()
     {
-     login.inUse = false;
-     if (login.cfgVals() > 0x01)
+     loginT.inUse = false;
+     if (loginT.cfgVals() > 0x01)
       return false;
-     login.inUse = true;
-     let lsChannel = window.localStorage.getItem(login.path() + '.channel');
-     let lsClient = window.localStorage.getItem(login.path() + '.client');
-     let lsOAuth = window.localStorage.getItem(login.path() + '.oauth');
-     let lsRefresh = window.localStorage.getItem(login.path() + '.refresh');
-     let lsScope = window.localStorage.getItem(login.path() + '.scope');
+     loginT.inUse = true;
+     let lsChannel = window.localStorage.getItem(loginT.path() + '.channel');
+     let lsClient = window.localStorage.getItem(loginT.path() + '.client');
+     let lsOAuth = window.localStorage.getItem(loginT.path() + '.oauth');
+     let lsRefresh = window.localStorage.getItem(loginT.path() + '.refresh');
+     let lsScope = window.localStorage.getItem(loginT.path() + '.scope');
      if (lsChannel === null || lsRefresh === null)
      {
       const h = _getHashParams();
       if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('oauth_refresh') || !h.hasOwnProperty('scope'))
       {
-       login.showIn();
+       loginT.showIn();
        return true;
       }
       lsChannel = h.channel;
@@ -11169,18 +11169,18 @@
       lsOAuth = h.oauth;
       lsRefresh = h.oauth_refresh;
       lsScope = decodeURIComponent(h.scope);
-      window.localStorage.setItem(login.path() + '.channel', lsChannel);
-      window.localStorage.setItem(login.path() + '.oauth', lsOAuth);
-      window.localStorage.setItem(login.path() + '.refresh', lsRefresh);
-      window.localStorage.setItem(login.path() + '.client', lsClient);
-      window.localStorage.setItem(login.path() + '.scope', lsScope);
+      window.localStorage.setItem(loginT.path() + '.channel', lsChannel);
+      window.localStorage.setItem(loginT.path() + '.oauth', lsOAuth);
+      window.localStorage.setItem(loginT.path() + '.refresh', lsRefresh);
+      window.localStorage.setItem(loginT.path() + '.client', lsClient);
+      window.localStorage.setItem(loginT.path() + '.scope', lsScope);
      }
      cfg.channel = lsChannel;
      cfg.twitch.oauth = lsOAuth;
      cfg.twitch.oauth_refresh = lsRefresh;
      cfg.twitch.client = lsClient;
      cfg.twitch.scope = decodeURIComponent(lsScope).split(' ');
-     login.showOut();
+     loginT.showOut();
      return false;
     }
 
@@ -11262,7 +11262,7 @@
      cmdLogin.setAttribute('id', 'cmdLogin');
      cmdLogin.setAttribute('type', 'button');
      cmdLogin.classList.add('login');
-     cmdLogin.setAttribute('onclick', 'login.begin();');
+     cmdLogin.setAttribute('onclick', 'loginT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall';
      document.body.appendChild(cmdLogin);
     }
@@ -11283,13 +11283,13 @@
      document.addEventListener('mousemove', _fadeInLogout);
      if (v)
      {
-      cmdLogout.setAttribute('onclick', 'login.begin();');
+      cmdLogout.setAttribute('onclick', 'loginT.begin();');
       cmdLogout.innerHTML = 'Re-Auth';
       _tL = window.setTimeout(_fadeOutLogout, _visTime);
      }
      else
      {
-      cmdLogout.setAttribute('onclick', 'login.showIn();');
+      cmdLogout.setAttribute('onclick', 'loginT.showIn();');
       cmdLogout.innerHTML = 'Log Out';
       cmdLogout.classList.add('hidden');
      }
@@ -11343,14 +11343,14 @@
       window.localStorage.setItem('emotewall.obs_notfound', '1');
       notice.error(0x09);
      }
-     if (login.use() === true)
+     if (loginT.use() === true)
       return;
      shared.clearAddr();
      _streamlabs();
      await _streamelements();
      await _bttv();
      await _7tv();
-     if (login.cfgVals() > 0x01)
+     if (loginT.cfgVals() > 0x01)
      {
       if (await _twitch() === false)
        twitch.net.dead = true;
@@ -11361,11 +11361,11 @@
 
     async function _twitch()
     {
-     let tCfg = login.cfgVals();
+     let tCfg = loginT.cfgVals();
      if ((tCfg & (0x02 | 0x01)) === (0x02 | 0x01))
      {
       await twitch.net.oAuth.update();
-      tCfg = login.cfgVals();
+      tCfg = loginT.cfgVals();
       if ((tCfg & 0x04) !== 0x04)
       {
        notice.error(0x11);
