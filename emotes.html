@@ -6172,6 +6172,16 @@
          case 'NOTICE':
           if (cmd.params.length > 1 && cmd.params[1] === 'Login authentication failed')
           {
+           if (_tTimeout !== false)
+           {
+            window.clearTimeout(_tTimeout);
+            _tTimeout = false;
+           }
+           if (_tPing !== 0)
+           {
+            window.clearInterval(_tPing);
+            _tPing = 0;
+           }
            _ws.onmessage = null;
            _ws.onclose = null;
            _ws.close();
@@ -6304,6 +6314,16 @@
       function _wsExpire()
       {
        notice.error(0x12);
+       if (_tTimeout !== false)
+       {
+        window.clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
+       }
        if (_ws === null)
         return;
        if (twitch.net.dead === true)
@@ -6334,6 +6354,11 @@
        {
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
+       }
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
        }
        if (_ws === null)
         return;
@@ -9163,6 +9188,11 @@
        window.clearInterval(_tPing);
        _tPing = 0;
       }
+      if (_tTimeout !== false)
+      {
+       window.clearTimeout(_tTimeout);
+       _tTimeout = false;
+      }
       if (_ws === null)
        return;
       _ws.onopen = null;
@@ -9243,6 +9273,11 @@
            window.clearTimeout(_tTimeout);
            _tTimeout = false;
           }
+          if (_tPing !== 0)
+          {
+           window.clearInterval(_tPing);
+           _tPing = 0;
+          }
           if (_ws === null)
            return;
           _ws.onopen = null;
@@ -9310,6 +9345,11 @@
       {
        window.clearTimeout(_tTimeout);
        _tTimeout = false;
+      }
+      if (_tPing !== 0)
+      {
+       window.clearInterval(_tPing);
+       _tPing = 0;
       }
       if (_ws === null)
        return;
@@ -9408,6 +9448,11 @@
      function _wsClose()
      {
       notice.error(0x72);
+      if (_tTimeout !== false)
+      {
+       window.clearTimeout(_tTimeout);
+       _tTimeout = false;
+      }
       if (_tPing !== 0)
       {
        window.clearInterval(_tPing);
@@ -9508,6 +9553,11 @@
           window.clearTimeout(_tTimeout);
           _tTimeout = false;
          }
+         if (_tPing !== 0)
+         {
+          window.clearInterval(_tPing);
+          _tPing = 0;
+         }
          if (_ws === null)
           return;
          _ws.onopen = null;
@@ -9515,6 +9565,7 @@
          _ws.onclose = null;
          _ws.close();
          _ws = null;
+         return;
         }
         if (document.visibilityState === 'hidden')
          return;
@@ -9553,6 +9604,11 @@
       {
        window.clearTimeout(_tTimeout);
        _tTimeout = false;
+      }
+      if (_tPing !== 0)
+      {
+       window.clearInterval(_tPing);
+       _tPing = 0;
       }
       if (_ws === null)
        return;
