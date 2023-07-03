@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.7.9.6 BETA
+    * v0.7.9.7 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -9739,6 +9739,12 @@
       w = _defSize;
      if (h === false)
       h = _defSize;
+     if (list.hasOwnProperty(code))
+     {
+      if (scope === 'g' && list[code].scope === 'c')
+       return;
+      _removeEmote(list, scope, code);
+     }
      list[code] = {scope: scope, url: url, id: id, width: w, height: h};
      if (scope === 'c' && !zwe)
       cList.push({url: url, width: w, height: h});
@@ -9778,19 +9784,6 @@
        continue;
       _removeEmote(list, scope, k);
       break;
-     }
-    }
-
-    function _removeEmoteByScope(list, scope)
-    {
-     if (typeof list === 'undefined')
-      return;
-     for (let i = Object.keys(list).length - 1; i >= 0; i--)
-     {
-      const k = Object.keys(list)[i];
-      if (list[k].scope !== scope)
-       continue;
-      _removeEmote(list, scope, k);
      }
     }
 
@@ -10119,8 +10112,6 @@
       const r = await thirdparty.bttv.channelEx(chID);
       if (r === false)
        return false;
-      _removeEmoteByScope(thirdparty.emotes.bttv, 'c');
-      _removeEmoteByScope(thirdparty.emotes.zwe.bttv, 'c');
       for (let i = 0, l = r.length; i < l; i++)
       {
        if (bttvZWE.includes(r[i].id))
