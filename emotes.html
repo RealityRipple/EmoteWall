@@ -29,7 +29,7 @@
     * channel     The name of the channel to join. Also used to choose an IRC nickname.
     *             If FALSE, the interactive login process will be enabled.
     *
-    * login       Settings related to the login process.
+    * twitch      Settings related to the Twitch login process.
     *
     *             NOTE: OAuth refresh tokens expire automatically (usually after around half a year).
     *                   If you don't use the Emote Wall for around this long, you may have to log in again.
@@ -853,7 +853,7 @@
 
    var cfg = {
     channel: 'CHANNEL_NAME',
-    login: {
+    twitch: {
      client: '4umzcpmjkg6ar78b81s7302jlj33t8',
      oauth_refresh: 'OAUTH_REFRESH',
      scope: [
@@ -5195,8 +5195,8 @@
        thirdparty.emotes.cheer = {};
       const url = cURLs.api.twitch.bits.cheermotes.replaceAll('%CHANNEL_ID%', chID);
       const h = {
-       'Authorization': 'Bearer ' + cfg.login.oauth,
-       'Client-Id': cfg.login.client
+       'Authorization': 'Bearer ' + cfg.twitch.oauth,
+       'Client-Id': cfg.twitch.client
       };
       const r = await shared.httpRequest('GET', url, h);
       if (!r.success)
@@ -5828,7 +5828,7 @@
        {
         for (let i = 0, l = sub.scope.length; i < l; i++)
         {
-         if (!cfg.login.scope.includes(sub.scope[i]))
+         if (!cfg.twitch.scope.includes(sub.scope[i]))
           return false;
         }
        }
@@ -5842,8 +5842,8 @@
       async function _getList()
       {
        const h = {
-        'Authorization': 'Bearer ' + cfg.login.oauth,
-        'Client-Id': cfg.login.client
+        'Authorization': 'Bearer ' + cfg.twitch.oauth,
+        'Client-Id': cfg.twitch.client
        };
        const r = await shared.httpRequest('GET', cURLs.api.twitch.eventSub.get, h);
        if (!r.success)
@@ -5946,8 +5946,8 @@
          break;
        }
        const h = {
-        'Authorization': 'Bearer ' + cfg.login.oauth,
-        'Client-Id': cfg.login.client,
+        'Authorization': 'Bearer ' + cfg.twitch.oauth,
+        'Client-Id': cfg.twitch.client,
         'Content-Type': 'application/json'
        };
        const r = await shared.httpRequest('POST', cURLs.api.twitch.eventSub.get, h, JSON.stringify(d), false);
@@ -6028,8 +6028,8 @@
        if (id !== false)
        {
         const h = {
-         'Authorization': 'Bearer ' + cfg.login.oauth,
-         'Client-Id': cfg.login.client
+         'Authorization': 'Bearer ' + cfg.twitch.oauth,
+         'Client-Id': cfg.twitch.client
         };
         const r = await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', id), h, null, false);
         if (!r.success)
@@ -6080,7 +6080,7 @@
        _ws.onopen = null;
        _tExpire = window.setTimeout(_wsExpire, _lExpire);
        _ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
-       _ws.send('PASS oauth:' + cfg.login.oauth);
+       _ws.send('PASS oauth:' + cfg.twitch.oauth);
        _ws.send('NICK ' + cfg.channel);
        _ws.send('JOIN #' + cfg.channel);
       }
@@ -6426,8 +6426,8 @@
       if (isID)
        url = cURLs.api.twitch.users.id.replaceAll('%USER_ID%', u);
       const h = {
-       'Authorization': 'Bearer ' + cfg.login.oauth,
-       'Client-Id': cfg.login.client
+       'Authorization': 'Bearer ' + cfg.twitch.oauth,
+       'Client-Id': cfg.twitch.client
       };
       const r = await shared.httpRequest('GET', url, h);
       if (!r.success)
@@ -6446,8 +6446,8 @@
      {
       const url = cURLs.api.twitch.channels.root.replaceAll('%CHANNEL_ID%', chID);
       const h = {
-       'Authorization': 'Bearer ' + cfg.login.oauth,
-       'Client-Id': cfg.login.client
+       'Authorization': 'Bearer ' + cfg.twitch.oauth,
+       'Client-Id': cfg.twitch.client
       };
       const r = await shared.httpRequest('GET', url, h);
       if (!r.success)
@@ -6498,7 +6498,7 @@
        const url = cURLs.api.rr.refresh.t;
        const h = {'Content-Type': 'application/x-www-form-urlencoded'};
        let b = 'refresh=' + encodeURIComponent(t);
-       if (cfg.login.share)
+       if (cfg.twitch.share)
         b += '&share=1';
        const r = await shared.httpRequest('POST', url, h, b, false);
        if (!r.success)
@@ -6526,26 +6526,26 @@
        const lsRefresh = window.localStorage.getItem(login.path() + '.refresh');
        const lsRefreshed = window.localStorage.getItem(login.path() + '.refreshed');
        if (lsOAuth !== null)
-        cfg.login.oauth = lsOAuth;
+        cfg.twitch.oauth = lsOAuth;
        if (lsRefresh !== null)
-        cfg.login.oauth_refresh = lsRefresh;
+        cfg.twitch.oauth_refresh = lsRefresh;
        if (lsRefreshed !== null)
-        cfg.login.oauth_refreshed = lsRefreshed;
-       if (cfg.login.hasOwnProperty('oauth_refreshed') && cfg.login.oauth_refreshed > 0)
+        cfg.twitch.oauth_refreshed = lsRefreshed;
+       if (cfg.twitch.hasOwnProperty('oauth_refreshed') && cfg.twitch.oauth_refreshed > 0)
        {
-        const tokAge = Math.floor(new Date().getTime() / 1000) - cfg.login.oauth_refreshed;
+        const tokAge = Math.floor(new Date().getTime() / 1000) - cfg.twitch.oauth_refreshed;
         if (tokAge < 60 * 60)
          return;
        }
-       const ret = await _getToken(cfg.login.oauth_refresh);
+       const ret = await _getToken(cfg.twitch.oauth_refresh);
        if (ret === false)
         return;
-       cfg.login.oauth = ret.access_token;
-       cfg.login.oauth_refresh = ret.refresh_token;
-       cfg.login.oauth_refreshed = Math.floor(new Date().getTime() / 1000);
-       window.localStorage.setItem(login.path() + '.oauth', cfg.login.oauth);
-       window.localStorage.setItem(login.path() + '.refresh', cfg.login.oauth_refresh);
-       window.localStorage.setItem(login.path() + '.refreshed', cfg.login.oauth_refreshed);
+       cfg.twitch.oauth = ret.access_token;
+       cfg.twitch.oauth_refresh = ret.refresh_token;
+       cfg.twitch.oauth_refreshed = Math.floor(new Date().getTime() / 1000);
+       window.localStorage.setItem(login.path() + '.oauth', cfg.twitch.oauth);
+       window.localStorage.setItem(login.path() + '.refresh', cfg.twitch.oauth_refresh);
+       window.localStorage.setItem(login.path() + '.refreshed', cfg.twitch.oauth_refreshed);
       }
 
       async function $reinit()
@@ -6563,16 +6563,16 @@
 
       function $clear(clearRefresh = false)
       {
-       cfg.login.oauth = 'OAUTH_ID';
-       delete cfg.login.oauth_refreshed;
+       cfg.twitch.oauth = 'OAUTH_ID';
+       delete cfg.twitch.oauth_refreshed;
        window.localStorage.removeItem(login.path() + '.oauth');
        window.localStorage.removeItem(login.path() + '.refreshed');
        if (!clearRefresh)
         return;
        cfg.channel = 'CHANNEL_NAME';
-       cfg.login.oauth_refresh = 'OAUTH_REFRESH';
-       cfg.login.client = oauthClient;
-       cfg.login.scope = [];
+       cfg.twitch.oauth_refresh = 'OAUTH_REFRESH';
+       cfg.twitch.client = oauthClient;
+       cfg.twitch.scope = [];
        window.localStorage.removeItem(login.path() + '.channel');
        window.localStorage.removeItem(login.path() + '.refresh');
        window.localStorage.removeItem(login.path() + '.client');
@@ -8762,8 +8762,8 @@
        }
        const url = cURLs.api.twitch.channels.followers.replaceAll('%USER_ID%', uID).replaceAll('%CHANNEL_ID%', cmd.tags['room-id']);
        const h = {
-        'Authorization': 'Bearer ' + cfg.login.oauth,
-        'Client-Id': cfg.login.client
+        'Authorization': 'Bearer ' + cfg.twitch.oauth,
+        'Client-Id': cfg.twitch.client
        };
        const r = await shared.httpRequest('GET', url, h);
        if (!r.success)
@@ -8988,8 +8988,8 @@
       }
       const url = cURLs.api.twitch.chat.emotes.root.replaceAll('%CHANNEL_ID%', chID);
       const h = {
-       'Authorization': 'Bearer ' + cfg.login.oauth,
-       'Client-Id': cfg.login.client
+       'Authorization': 'Bearer ' + cfg.twitch.oauth,
+       'Client-Id': cfg.twitch.client
       };
       const r = await shared.httpRequest('GET', url, h);
       if (!r.success)
@@ -9042,8 +9042,8 @@
       thirdparty.emotes.twitch = {};
      const url = cURLs.api.twitch.chat.emotes.global;
      const h = {
-      'Authorization': 'Bearer ' + cfg.login.oauth,
-      'Client-Id': cfg.login.client
+      'Authorization': 'Bearer ' + cfg.twitch.oauth,
+      'Client-Id': cfg.twitch.client
      };
      const r = await shared.httpRequest('GET', url, h);
      if (!r.success)
@@ -11133,14 +11133,14 @@
 
     function $cfgVals()
     {
-     if (!cfg.hasOwnProperty('login'))
+     if (!cfg.hasOwnProperty('twitch'))
       return 0;
      let r = 0;
      if (cfg.hasOwnProperty('channel') && cfg.channel !== false && cfg.channel !== null && cfg.channel !== 'CHANNEL_NAME')
       r |= 0x01;
-     if (cfg.login.hasOwnProperty('oauth_refresh') && cfg.login.oauth_refresh !== false && cfg.login.oauth_refresh !== null && cfg.login.oauth_refresh !== 'OAUTH_REFRESH')
+     if (cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh !== false && cfg.twitch.oauth_refresh !== null && cfg.twitch.oauth_refresh !== 'OAUTH_REFRESH')
       r |= 0x02;
-     if (cfg.login.hasOwnProperty('oauth') && cfg.login.oauth !== false && cfg.login.oauth !== null && cfg.login.oauth !== 'OAUTH_ID')
+     if (cfg.twitch.hasOwnProperty('oauth') && cfg.twitch.oauth !== false && cfg.twitch.oauth !== null && cfg.twitch.oauth !== 'OAUTH_ID')
       r |= 0x04;
      return r;
     }
@@ -11176,10 +11176,10 @@
       window.localStorage.setItem(login.path() + '.scope', lsScope);
      }
      cfg.channel = lsChannel;
-     cfg.login.oauth = lsOAuth;
-     cfg.login.oauth_refresh = lsRefresh;
-     cfg.login.client = lsClient;
-     cfg.login.scope = decodeURIComponent(lsScope).split(' ');
+     cfg.twitch.oauth = lsOAuth;
+     cfg.twitch.oauth_refresh = lsRefresh;
+     cfg.twitch.client = lsClient;
+     cfg.twitch.scope = decodeURIComponent(lsScope).split(' ');
      login.showOut();
      return false;
     }
