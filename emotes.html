@@ -5196,6 +5196,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('data'))
        return false;
       for (let c = 0, l = j.data.length; c < l; c++)
@@ -5841,6 +5843,8 @@
        if (!r.success)
         return [];
        const j = r.json;
+       if (j === null)
+        return [];
        if (!j.hasOwnProperty('data'))
         return [];
        if (!j.hasOwnProperty('total'))
@@ -5994,6 +5998,8 @@
        if (!r.success)
         return false;
        const j = r.json;
+       if (j === null)
+        return false;
        if (j.length < 1)
         return false;
        console.log(j);
@@ -6373,6 +6379,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('data'))
        return false;
       if (j.data.length !== 1)
@@ -6391,6 +6399,8 @@
       if (!r.success)
        return;
       const j = r.json;
+      if (j === null)
+       return;
       if (!j.hasOwnProperty('data'))
        return;
       if (j.data.length !== 1)
@@ -6447,6 +6457,8 @@
         return false;
        }
        const j = r.json;
+       if (j === null)
+        return false;
        if (!j.hasOwnProperty('access_token'))
         return false;
        if (!j.hasOwnProperty('refresh_token'))
@@ -8713,6 +8725,8 @@
         return false;
        }
        const j = r.json;
+       if (j === null)
+        return false;
        if (j.hasOwnProperty('data') && j.data.length > 0)
        {
         twitch.net.fList[uID] = {value: true, t: new Date().getTime()};
@@ -8937,6 +8951,8 @@
        return false;
       }
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('data'))
        return false;
       if (!Array.isArray(j.data))
@@ -8989,6 +9005,8 @@
       return false;
      }
      const j = r.json;
+     if (j === null)
+      return false;
      if (!j.hasOwnProperty('data'))
       return false;
      if (!Array.isArray(j.data))
@@ -9541,6 +9559,8 @@
      if (!r.success)
       return false;
      const j = r.json;
+     if (j === null)
+      return false;
      if (!j.hasOwnProperty('access_token'))
       return false;
      if (!j.hasOwnProperty('refresh_token'))
@@ -9719,6 +9739,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('sets'))
        return false;
       let usedSets = [];
@@ -9831,6 +9853,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('sets'))
        return false;
       let ret = [];
@@ -9927,6 +9951,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!Array.isArray(j))
        return false;
       for (let i = 0, l = j.length; i < l; i++)
@@ -9961,6 +9987,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       let ret = [];
       if (j.hasOwnProperty('channelEmotes'))
       {
@@ -10251,6 +10279,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('emotes'))
        return false;
       if (!Array.isArray(j.emotes))
@@ -10285,6 +10315,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('emote_set'))
        return false;
       if (!j.emote_set.hasOwnProperty('emotes'))
@@ -10343,6 +10375,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('user'))
        return false;
       if (!j.user.hasOwnProperty('id'))
@@ -10695,7 +10729,7 @@
         if (x.readyState !== 4)
          return;
         x.onreadystatechange = null;
-        resolve({code: x.status, data: x.responseText, get success(){return Math.floor(this.code / 100) === 2;}, get json(){return JSON.parse(this.data);}});
+        resolve({code: x.status, data: x.responseText, get success(){return Math.floor(this.code / 100) === 2;}, get json(){try{return JSON.parse(this.data);}catch(ex){return null;}}});
        };
        if (body === null)
         x.send();
