@@ -5305,6 +5305,10 @@
 
       function _wsOpen()
       {
+       if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
+        return;
        _ws.onopen = null;
        _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
       }
@@ -5317,9 +5321,12 @@
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
-       _ws.onopen = null;
-       _ws.onmessage = null;
-       _ws.onclose = null;
+       if (_ws !== null)
+       {
+        _ws.onopen = null;
+        _ws.onmessage = null;
+        _ws.onclose = null;
+       }
        if (twitch.net.dead)
         return;
        if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
@@ -5339,6 +5346,8 @@
        }
        if (twitch.net.dead)
        {
+        if (_ws === null)
+         return;
         _ws.onopen = null;
         _ws.onmessage = null;
         _ws.onclose = null;
@@ -5388,11 +5397,14 @@
            window.clearTimeout(_tTimeout);
            _tTimeout = false;
           }
-          _ws.onopen = null;
-          _ws.onmessage = null;
-          _ws.onclose = null;
-          _ws.close();
-          _ws = null;
+          if (_ws !== null)
+          {
+           _ws.onopen = null;
+           _ws.onmessage = null;
+           _ws.onclose = null;
+           _ws.close();
+           _ws = null;
+          }
           return;
          }
          if (r.payload.session.hasOwnProperty('id'))
@@ -5662,13 +5674,16 @@
           twitch.net.eventSubCtl.sessionID = r.payload.session.id;
          if (r.payload.session.hasOwnProperty('keepalive_timeout_seconds') && r.payload.session.keepalive_timeout_seconds !== null)
           _lTimeout = parseInt(r.payload.session.keepalive_timeout_seconds, 10) * 2 * 1000;
-         if (r.payload.session.hasOwnProperty('reconnect_url'))
-          _wsURL = r.payload.session.reconnect_url;
-         _oldWS = _ws;
-         _oldWS.onclose = null;
-         _oldWS.onmessage = null;
-         _tOldTimeout = window.setTimeout(_oldWSTimeout, _lOldTimeout);
-         _ws = null;
+         if (_ws !== null)
+         {
+          if (r.payload.session.hasOwnProperty('reconnect_url'))
+           _wsURL = r.payload.session.reconnect_url;
+          _oldWS = _ws;
+          _oldWS.onclose = null;
+          _oldWS.onmessage = null;
+          _tOldTimeout = window.setTimeout(_oldWSTimeout, _lOldTimeout);
+          _ws = null;
+         }
          const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
          if (_wsRetry < 2)
           _wsRetry += 0.2;
