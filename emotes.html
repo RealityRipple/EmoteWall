@@ -11472,9 +11472,34 @@
      cmdLogin.setAttribute('type', 'button');
      cmdLogin.classList.add('twitch');
      cmdLogin.classList.add('login');
+     document.addEventListener('mouseover', _fadeInLogin);
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall';
      document.body.appendChild(cmdLogin);
+    }
+
+    function _fadeInLogin()
+    {
+     if (document.getElementById('cmdTLogin'))
+      document.getElementById('cmdTLogin').classList.remove('hidden');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+    }
+
+    function _fadeOutLogin()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById('cmdTLogin'))
+      document.getElementById('cmdTLogin').classList.add('hidden');
     }
 
     function $showOut(v = false)
@@ -12483,6 +12508,7 @@
 
    button.login
    {
+    transition: opacity 0.5s;
     left: calc(50% - 6.5em);
     width: 13em;
     font-size: 6vmin;
