@@ -1926,7 +1926,7 @@
        global: 'https://7tv.io/v3/emote-sets/global'
       },
       users: {
-       root: 'https://7tv.io/v3/users/twitch/%CHANNEL_ID%'
+       twitch: 'https://7tv.io/v3/users/twitch/%CHANNEL_ID%'
       }
      },
      rr: {
@@ -6237,11 +6237,11 @@
             }
             if (cfg.display.extended.use7TV)
             {
-             thirdparty['7tv'].channel(twitch.net.channelID);
-             thirdparty['7tv'].socket(twitch.net.channelID);
+             thirdparty['7tv'].channel('twitch', twitch.net.channelID);
+             await thirdparty['7tv'].socket.join('twitch', twitch.net.channelID);
             }
             if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
-             thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval, twitch.net.channelID);
+             thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
             if (cfg.display.extended.useBTTV)
              thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
             _eventSub(twitch.net.channelID);
@@ -7875,7 +7875,7 @@
         }
         if (cfg.display.extended.use7TV)
         {
-         const r7TV = await thirdparty['7tv'].channelEx(uID);
+         const r7TV = await thirdparty['7tv'].channelEx('twitch', uID);
          if (r7TV !== false)
          {
           for (let i = 0, l = r7TV.length; i < l; i++)
@@ -8158,7 +8158,7 @@
         }
         if (cfg.display.extended.use7TV)
         {
-         const r7TV = await thirdparty['7tv'].channelEx(d);
+         const r7TV = await thirdparty['7tv'].channelEx('twitch', d);
          if (r7TV !== false)
          {
           for (let i = 0, l = r7TV.length; i < l; i++)
@@ -8539,7 +8539,7 @@
         }
         if (cfg.display.extended.use7TV)
         {
-         const r7TV = await thirdparty['7tv'].channelEx(uID);
+         const r7TV = await thirdparty['7tv'].channelEx('twitch', uID);
          if (r7TV !== false)
          {
           for (let i = 0, l = r7TV.length; i < l; i++)
@@ -8600,7 +8600,7 @@
         }
         if (cfg.display.extended.use7TV)
         {
-         const r7TV = await thirdparty['7tv'].channelEx(uID);
+         const r7TV = await thirdparty['7tv'].channelEx('twitch', uID);
          if (r7TV !== false)
          {
           for (let i = 0, l = r7TV.length; i < l; i++)
@@ -10419,9 +10419,9 @@
       return true;
      }
 
-     async function $channelEx(chID)
+     async function $channelEx(svcName, chID)
      {
-      const url = cURLs.api['7tv'].users.root.replaceAll('%CHANNEL_ID%', chID);
+      const url = cURLs.api['7tv'].users[svcName].replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest('GET', url);
       if (!r.success)
        return false;
@@ -10454,7 +10454,7 @@
       return ret;
      }
 
-     async function $channel(chID)
+     async function $channel(svcName, chID)
      {
       if (!thirdparty.emotes.hasOwnProperty('7tv'))
        thirdparty.emotes['7tv'] = {};
@@ -10462,7 +10462,7 @@
        thirdparty.emotes.zwe = {};
       if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
        thirdparty.emotes.zwe['7tv'] = {};
-      const r = await thirdparty['7tv'].channelEx(chID);
+      const r = await thirdparty['7tv'].channelEx(svcName, chID);
       if (r === false)
        return false;
       for (let i = 0, l = r.length; i < l; i++)
@@ -10479,9 +10479,9 @@
       return true;
      }
 
-     async function _load7TV_channelID(chID)
+     async function _load7TV_channelID(svcName, chID)
      {
-      const url = cURLs.api['7tv'].users.root.replaceAll('%CHANNEL_ID%', chID);
+      const url = cURLs.api['7tv'].users[svcName].replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest('GET', url);
       if (!r.success)
        return false;
@@ -10501,21 +10501,15 @@
       let _wsRetry = 0;
       let _wsR_RL = 0;
       let _wsR_M = 0;
-      let _ch = 0;
-      let _accID = false;
+      let _chList = [];
       let _ws = null;
       let _sess = null;
       let _lTimeout = 5000;
       let _tTimeout = false;
       let _okCt = 0;
 
-      async function task(chID = false)
+      async function $init()
       {
-       if (chID !== false)
-        _ch = chID;
-       _accID = await _load7TV_channelID(_ch);
-       if (_accID === false)
-        return;
        _ws = new WebSocket(cURLs.ws['7tv']);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
@@ -10551,7 +10545,7 @@
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(thirdparty['7tv'].socket, wsWait);
+       window.setTimeout(thirdparty['7tv'].socket.init, wsWait);
       }
 
       function _wsMessage(ev)
@@ -10584,7 +10578,7 @@
         case 0:
          if (thirdparty.timer !== false)
           window.clearTimeout(thirdparty.timer);
-         thirdparty.timer = window.setTimeout(thirdparty.reload, _lDelay, _ch);
+         thirdparty.timer = window.setTimeout(thirdparty.reload, _lDelay);
          break;
         case 1:
          if (d.d === null)
@@ -10596,7 +10590,12 @@
            _ws.send(JSON.stringify({'op': 34, 'd': {'session_id': _sess}}));
          }
          else
-          _wsSub();
+         {
+          for (let i = 0, l = _chList.length; i < l; i++)
+          {
+           _wsSub(_chList[i].acct);
+          }
+         }
          if (d.d.hasOwnProperty('session_id') && d.d.session_id !== null)
           _sess = d.d.session_id;
          if (d.d.hasOwnProperty('heartbeat_interval') && d.d.heartbeat_interval !== null)
@@ -10626,7 +10625,7 @@
           const wsRedo = Math.floor(wWS ** (1 + _wsRetry) * 1000);
           if (_wsRetry < 2)
            _wsRetry += 0.2;
-          window.setTimeout(thirdparty['7tv'].socket, wsRedo);
+          window.setTimeout(thirdparty['7tv'].socket.init, wsRedo);
           return;
          }
          _wsRetry = 0;
@@ -10646,16 +10645,29 @@
            if (!d.d.data.hasOwnProperty('success'))
             return;
            if (d.d.data.success === false || d.d.data.success === null)
-            _wsSub();
+           {
+            for (let i = 0, l = _chList.length; i < l; i++)
+            {
+             _wsSub(_chList[i].acct);
+            }
+           }
            else
            {
             if (!d.d.data.hasOwnProperty('subscriptions_restored') || d.d.data.subscriptions_restored === null)
              return;
-            if (d.d.data.subscriptions_restored !== 3)
+            if (d.d.data.subscriptions_restored !== _chList.length * 3)
             {
              if (d.d.data.subscriptions_restored > 0)
-              _wsUnsub();
-             _wsSub();
+             {
+              for (let i = 0, l = _chList.length; i < l; i++)
+              {
+               _wsUnsub(_chList[i].acct);
+              }
+             }
+             for (let i = 0, l = _chList.length; i < l; i++)
+             {
+              _wsSub(_chList[i].acct);
+             }
             }
             else
              _okCt = d.d.data.subscriptions_restored;
@@ -10714,31 +10726,31 @@
             break;
           }
          }
-         window.setTimeout(thirdparty['7tv'].socket, wsWait);
+         window.setTimeout(thirdparty['7tv'].socket.init, wsWait);
          break;
        }
       }
 
-      function _wsUnsub()
+      function _wsUnsub(accID)
       {
        if (_ws === null)
         return;
        if (_ws.readyState !== 1)
         return;
-       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
-       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
-       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
+       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'user.*', 'condition': {'object_id': accID}}}));
+       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote.*', 'condition': {'object_id': accID}}}));
+       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote_set.*', 'condition': {'object_id': accID}}}));
       }
 
-      function _wsSub()
+      function _wsSub(accID)
       {
        if (_ws === null)
         return;
        if (_ws.readyState !== 1)
         return;
-       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'user.*', 'condition': {'object_id': _accID}}}));
-       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote.*', 'condition': {'object_id': _accID}}}));
-       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote_set.*', 'condition': {'object_id': _accID}}}));
+       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'user.*', 'condition': {'object_id': accID}}}));
+       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote.*', 'condition': {'object_id': accID}}}));
+       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote_set.*', 'condition': {'object_id': accID}}}));
       }
 
       function _wsTimeout()
@@ -10759,10 +10771,39 @@
        _ws = null;
        if (twitch.net.dead === true)
         return;
-       thirdparty['7tv'].socket();
+       thirdparty['7tv'].socket.init();
       }
 
-      return task;
+      async function $join(svcName, chID)
+      {
+       for (let i = 0, l = _chList.length; i < l; i++)
+       {
+        if (_chList[i].ch.includes(chID))
+         return;
+       }
+       const accID = await _load7TV_channelID(svcName, chID);
+       if (accID === false)
+        return;
+       for (let i = 0, l = _chList.length; i < l; i++)
+       {
+        if (_chList[i].acct === accID)
+        {
+         _chList[i].ch.push(chID);
+         return;
+        }
+       }
+       _chList.push({ch: [chID], acct: accID});
+       if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
+        return;
+       _wsSub(accID);
+      }
+
+      return {
+       init: $init,
+       join: $join
+      };
      }();
 
      return {
@@ -10774,17 +10815,23 @@
      };
     }();
 
-    function $reload(chID)
+    function $reload()
     {
      if (thirdparty.timer === false)
       return;
      window.clearTimeout(thirdparty.timer);
      thirdparty.timer = false;
      if (cfg.display.extended.useFFZ)
-      thirdparty.ffz.channel(twitch.net.channelID);
+     {
+      if (!twitch.net.dead && twitch.net.channelID !== 0)
+       thirdparty.ffz.channel(twitch.net.channelID);
+     }
      if (cfg.display.extended.use7TV)
-      thirdparty['7tv'].channel(twitch.net.channelID);
-     thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval, chID);
+     {
+      if (!twitch.net.dead && twitch.net.channelID !== 0)
+       thirdparty['7tv'].channel('twitch', twitch.net.channelID);
+     }
+     thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
     }
 
     return {
@@ -11458,6 +11505,7 @@
     {
      if (!cfg.display.extended.use7TV)
       return;
+     thirdparty['7tv'].socket.init();
      await thirdparty['7tv'].global();
     }
 
