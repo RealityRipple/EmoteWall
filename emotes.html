@@ -6208,6 +6208,7 @@
            continue;
           if (!cmd.tags.hasOwnProperty('room-id'))
            continue;
+          const newID = twitch.net.channelID !== cmd.tags['room-id'];
           twitch.net.channelID = cmd.tags['room-id'];
           if (_firstRS)
           {
@@ -6217,27 +6218,30 @@
             _tExpire = false;
            }
            _firstRS = false;
-           await _loadEmote_channel(twitch.net.channelID);
-           await _loadCheer_channel(twitch.net.channelID);
-           if (cfg.event.tag.hasOwnProperty('styles') && cfg.event.tag.styles !== false)
-            await _getChannelTitleTags(twitch.net.channelID);
-           if (cfg.display.extended.useFFZ)
-            thirdparty.ffz.channel(twitch.net.channelID);
-           if (cfg.display.extended.useBTTV)
+           if (newID)
            {
-            thirdparty.bttv.channel(twitch.net.channelID);
-            thirdparty.bttv.socket(twitch.net.channelID);
+            await _loadEmote_channel(twitch.net.channelID);
+            await _loadCheer_channel(twitch.net.channelID);
+            if (cfg.event.tag.hasOwnProperty('styles') && cfg.event.tag.styles !== false)
+             await _getChannelTitleTags(twitch.net.channelID);
+            if (cfg.display.extended.useFFZ)
+             thirdparty.ffz.channel(twitch.net.channelID);
+            if (cfg.display.extended.useBTTV)
+            {
+             thirdparty.bttv.channel(twitch.net.channelID);
+             thirdparty.bttv.socket(twitch.net.channelID);
+            }
+            if (cfg.display.extended.use7TV)
+            {
+             thirdparty['7tv'].channel(twitch.net.channelID);
+             thirdparty['7tv'].socket(twitch.net.channelID);
+            }
+            if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
+             thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval, twitch.net.channelID);
+            if (cfg.display.extended.useBTTV)
+             thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval, twitch.net.channelID);
+            _eventSub(twitch.net.channelID);
            }
-           if (cfg.display.extended.use7TV)
-           {
-            thirdparty['7tv'].channel(twitch.net.channelID);
-            thirdparty['7tv'].socket(twitch.net.channelID);
-           }
-           if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
-            thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval, twitch.net.channelID);
-           if (cfg.display.extended.useBTTV)
-            thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval, twitch.net.channelID);
-           _eventSub(twitch.net.channelID);
           }
           break;
          case 'USERNOTICE':
