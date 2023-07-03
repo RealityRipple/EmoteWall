@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.7.9.4 BETA
+    * v0.7.9.5 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -5196,6 +5196,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('data'))
        return false;
       for (let c = 0, l = j.data.length; c < l; c++)
@@ -5290,6 +5292,8 @@
       let _oldWS = null;
       let _lTimeout = 5000;
       let _tTimeout = false;
+      const _lOldTimeout = 10000;
+      let _tOldTimeout = false;
 
       function task(chID = null)
       {
@@ -5303,6 +5307,10 @@
 
       function _wsOpen()
       {
+       if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
+        return;
        _ws.onopen = null;
        _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
       }
@@ -5315,9 +5323,12 @@
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
-       _ws.onopen = null;
-       _ws.onmessage = null;
-       _ws.onclose = null;
+       if (_ws !== null)
+       {
+        _ws.onopen = null;
+        _ws.onmessage = null;
+        _ws.onclose = null;
+       }
        if (twitch.net.dead)
         return;
        if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
@@ -5337,6 +5348,8 @@
        }
        if (twitch.net.dead)
        {
+        if (_ws === null)
+         return;
         _ws.onopen = null;
         _ws.onmessage = null;
         _ws.onclose = null;
@@ -5358,6 +5371,11 @@
          {
           _oldWS.close();
           _oldWS = null;
+          if (_tOldTimeout !== false)
+          {
+           window.clearTimeout(_tOldTimeout);
+           _tOldTimeout = false;
+          }
          }
          if (!r.payload.hasOwnProperty('session'))
           return;
@@ -5381,11 +5399,14 @@
            window.clearTimeout(_tTimeout);
            _tTimeout = false;
           }
-          _ws.onopen = null;
-          _ws.onmessage = null;
-          _ws.onclose = null;
-          _ws.close();
-          _ws = null;
+          if (_ws !== null)
+          {
+           _ws.onopen = null;
+           _ws.onmessage = null;
+           _ws.onclose = null;
+           _ws.close();
+           _ws = null;
+          }
           return;
          }
          if (r.payload.session.hasOwnProperty('id'))
@@ -5655,12 +5676,16 @@
           twitch.net.eventSubCtl.sessionID = r.payload.session.id;
          if (r.payload.session.hasOwnProperty('keepalive_timeout_seconds') && r.payload.session.keepalive_timeout_seconds !== null)
           _lTimeout = parseInt(r.payload.session.keepalive_timeout_seconds, 10) * 2 * 1000;
-         if (r.payload.session.hasOwnProperty('reconnect_url'))
-          _wsURL = r.payload.session.reconnect_url;
-         _oldWS = _ws;
-         _oldWS.onclose = null;
-         _oldWS.onmessage = null;
-         _ws = null;
+         if (_ws !== null)
+         {
+          if (r.payload.session.hasOwnProperty('reconnect_url'))
+           _wsURL = r.payload.session.reconnect_url;
+          _oldWS = _ws;
+          _oldWS.onclose = null;
+          _oldWS.onmessage = null;
+          _tOldTimeout = window.setTimeout(_oldWSTimeout, _lOldTimeout);
+          _ws = null;
+         }
          const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
          if (_wsRetry < 2)
           _wsRetry += 0.2;
@@ -5699,6 +5724,22 @@
        if (twitch.net.dead === true)
         return;
        _eventSub();
+      }
+
+      function _oldWSTimeout()
+      {
+       if (_tOldTimeout !== false)
+       {
+        window.clearTimeout(_tOldTimeout);
+        _tOldTimeout = false;
+       }
+       if (_oldWS === null)
+        return;
+       _oldWS.onopen = null;
+       _oldWS.onmessage = null;
+       _oldWS.onclose = null;
+       _oldWS.close();
+       _oldWS = null;
       }
 
       return task;
@@ -5802,6 +5843,8 @@
        if (!r.success)
         return [];
        const j = r.json;
+       if (j === null)
+        return [];
        if (!j.hasOwnProperty('data'))
         return [];
        if (!j.hasOwnProperty('total'))
@@ -5955,6 +5998,8 @@
        if (!r.success)
         return false;
        const j = r.json;
+       if (j === null)
+        return false;
        if (j.length < 1)
         return false;
        console.log(j);
@@ -6334,6 +6379,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('data'))
        return false;
       if (j.data.length !== 1)
@@ -6352,6 +6399,8 @@
       if (!r.success)
        return;
       const j = r.json;
+      if (j === null)
+       return;
       if (!j.hasOwnProperty('data'))
        return;
       if (j.data.length !== 1)
@@ -6408,6 +6457,8 @@
         return false;
        }
        const j = r.json;
+       if (j === null)
+        return false;
        if (!j.hasOwnProperty('access_token'))
         return false;
        if (!j.hasOwnProperty('refresh_token'))
@@ -8674,6 +8725,8 @@
         return false;
        }
        const j = r.json;
+       if (j === null)
+        return false;
        if (j.hasOwnProperty('data') && j.data.length > 0)
        {
         twitch.net.fList[uID] = {value: true, t: new Date().getTime()};
@@ -8898,6 +8951,8 @@
        return false;
       }
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('data'))
        return false;
       if (!Array.isArray(j.data))
@@ -8950,6 +9005,8 @@
       return false;
      }
      const j = r.json;
+     if (j === null)
+      return false;
      if (!j.hasOwnProperty('data'))
       return false;
      if (!Array.isArray(j.data))
@@ -9502,6 +9559,8 @@
      if (!r.success)
       return false;
      const j = r.json;
+     if (j === null)
+      return false;
      if (!j.hasOwnProperty('access_token'))
       return false;
      if (!j.hasOwnProperty('refresh_token'))
@@ -9680,6 +9739,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('sets'))
        return false;
       let usedSets = [];
@@ -9792,6 +9853,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('sets'))
        return false;
       let ret = [];
@@ -9888,6 +9951,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!Array.isArray(j))
        return false;
       for (let i = 0, l = j.length; i < l; i++)
@@ -9922,6 +9987,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       let ret = [];
       if (j.hasOwnProperty('channelEmotes'))
       {
@@ -10212,6 +10279,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('emotes'))
        return false;
       if (!Array.isArray(j.emotes))
@@ -10246,6 +10315,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('emote_set'))
        return false;
       if (!j.emote_set.hasOwnProperty('emotes'))
@@ -10304,6 +10375,8 @@
       if (!r.success)
        return false;
       const j = r.json;
+      if (j === null)
+       return false;
       if (!j.hasOwnProperty('user'))
        return false;
       if (!j.user.hasOwnProperty('id'))
@@ -10656,7 +10729,7 @@
         if (x.readyState !== 4)
          return;
         x.onreadystatechange = null;
-        resolve({code: x.status, data: x.responseText, get success(){return Math.floor(this.code / 100) === 2;}, get json(){return JSON.parse(this.data);}});
+        resolve({code: x.status, data: x.responseText, get success(){return Math.floor(this.code / 100) === 2;}, get json(){try{return JSON.parse(this.data);}catch(ex){return null;}}});
        };
        if (body === null)
         x.send();
