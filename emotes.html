@@ -2177,6 +2177,9 @@
       case 0x1A:
        _setNotice(i, 'noticeInfo sTwitch', 'EventSub Connected', 5);
        break;
+      case 0x22:
+       _setNotice(i, 'noticeInfo sYouTube', 'Connected', 5);
+       break;
       case 0x72:
        _setNotice(i, 'noticeInfo tStreamElements', 'Connected', 5);
        break;
@@ -2208,7 +2211,7 @@
      }
     }
 
-    function $error(e)
+    function $error(e, sMsg = false)
     {
      if (_states.hasOwnProperty(e) && _states[e] === 'e')
       return;
@@ -2239,6 +2242,25 @@
        break;
       case 0x1A:
        _setNotice(e, 'noticeError sTwitch', 'EventSub Disconnected');
+       break;
+      case 0x21:
+       if (typeof loginYT !== 'undefined' && loginYT.inUse)
+       {
+        _setNotice(e, 'noticeError sYouTube', 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
+        loginYT.showOut(true);
+        window.setTimeout(function(){loginYT.showIn();}, 15500);
+       }
+       else
+        _setNotice(e, 'noticeError sYouTube', 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
+       break;
+      case 0x22:
+       _setNotice(e, 'noticeError sYouTube', 'Disconnected');
+       break;
+      case 0x28:
+       _setNotice(e, 'noticeError sYouTube', 'YouTube Rate Limit Exceeded<br>You have sent too many requests. Please wait a while.');
+       break;
+      case 0x29:
+       _setNotice(e, 'noticeError sYouTube', 'Unhandled YouTube Error<br>' + sMsg);
        break;
       case 0x71:
        _setNotice(e, 'noticeError tStreamElements', 'OAuth Token Rejected<br>Please update your StreamElements OAuth Token.');
