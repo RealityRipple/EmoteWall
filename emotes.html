@@ -6232,8 +6232,8 @@
              thirdparty.ffz.channel(twitch.net.channelID);
             if (cfg.display.extended.useBTTV)
             {
-             thirdparty.bttv.channel(twitch.net.channelID);
-             thirdparty.bttv.socket(twitch.net.channelID);
+             thirdparty.bttv.channel('twitch', twitch.net.channelID);
+             thirdparty.bttv.socket.join('twitch', twitch.net.channelID);
             }
             if (cfg.display.extended.use7TV)
             {
@@ -6243,7 +6243,7 @@
             if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
              thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval, twitch.net.channelID);
             if (cfg.display.extended.useBTTV)
-             thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval, twitch.net.channelID);
+             thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
             _eventSub(twitch.net.channelID);
            }
           }
@@ -7864,7 +7864,7 @@
         }
         if (cfg.display.extended.useBTTV)
         {
-         const rBTTV = await thirdparty.bttv.channelEx(uID);
+         const rBTTV = await thirdparty.bttv.channelEx('twitch', uID);
          if (rBTTV !== false)
          {
           for (let i = 0, l = rBTTV.length; i < l; i++)
@@ -8147,7 +8147,7 @@
         }
         if (cfg.display.extended.useBTTV)
         {
-         const rBTTV = await thirdparty.bttv.channelEx(d);
+         const rBTTV = await thirdparty.bttv.channelEx('twitch', d);
          if (rBTTV !== false)
          {
           for (let i = 0, l = rBTTV.length; i < l; i++)
@@ -8528,7 +8528,7 @@
         }
         if (cfg.display.extended.useBTTV)
         {
-         const rBTTV = await thirdparty.bttv.channelEx(uID);
+         const rBTTV = await thirdparty.bttv.channelEx('twitch', uID);
          if (rBTTV !== false)
          {
           for (let i = 0, l = rBTTV.length; i < l; i++)
@@ -8589,7 +8589,7 @@
         }
         if (cfg.display.extended.useBTTV)
         {
-         const rBTTV = await thirdparty.bttv.channelEx(uID);
+         const rBTTV = await thirdparty.bttv.channelEx('twitch', uID);
          if (rBTTV !== false)
          {
           for (let i = 0, l = rBTTV.length; i < l; i++)
@@ -10009,15 +10009,18 @@
     {
      const _rBE = 600000;
 
-     function $reload(chID)
+     function $reload()
      {
       if (thirdparty.bttv.timer === false)
        return;
       window.clearTimeout(thirdparty.bttv.timer);
       thirdparty.bttv.timer = false;
       if (cfg.display.extended.useBTTV)
-       thirdparty.bttv.channel(twitch.net.channelID);
-      thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval, chID);
+      {
+       if (!twitch.net.dead && twitch.net.channelID !== 0)
+        thirdparty.bttv.channel('twitch', twitch.net.channelID);
+      }
+      thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
      }
 
      async function $global()
@@ -10062,9 +10065,11 @@
       return true;
      }
 
-     async function $channelEx(chID)
+     async function $channelEx(svcName, chID)
      {
-      const url = cURLs.api.bttv.users.twitch.replaceAll('%CHANNEL_ID%', chID);
+      if (!cURLs.api.bttv.users.hasOwnProperty(svcName))
+       return [];
+      const url = cURLs.api.bttv.users[svcName].replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest('GET', url);
       if (!r.success)
        return false;
@@ -10109,11 +10114,11 @@
       return ret;
      }
 
-     async function $channel(chID)
+     async function $channel(svcName, chID)
      {
       if (!thirdparty.emotes.hasOwnProperty('bttv'))
        thirdparty.emotes.bttv = {};
-      const r = await thirdparty.bttv.channelEx(chID);
+      const r = await thirdparty.bttv.channelEx(svcName, chID);
       if (r === false)
        return false;
       for (let i = 0, l = r.length; i < l; i++)
@@ -10133,13 +10138,11 @@
      const $socket = function()
      {
       let _wsRetry = 0;
-      let _ch = 0;
+      let _chList = [];
       let _ws = null;
 
-      function task(chID = false)
+      function $init()
       {
-       if (chID !== false)
-        _ch = chID;
        _ws = new WebSocket(cURLs.ws.bttv);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
@@ -10154,7 +10157,10 @@
         return;
        notice.info(0xB2);
        _ws.onopen = null;
-       _ws.send(JSON.stringify({'name': 'join_channel', 'data': {'name': 'twitch:' + _ch}}));
+       for (let i = 0, l = _chList.length; i < l; i++)
+       {
+        _wsJoin(_chList[i].svc, _chList[i].ch);
+       }
       }
 
       function _wsClose()
@@ -10171,7 +10177,7 @@
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(thirdparty.bttv.socket, wsWait);
+       window.setTimeout(thirdparty.bttv.socket.init, wsWait);
       }
 
       function _wsMessage(ev)
@@ -10229,7 +10235,7 @@
          cSafe = JSON.parse(JSON.stringify(cList));
          break;
         case 'emote_create':
-         if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + _ch)
+         if (!d.data.hasOwnProperty('channel'))
           return;
          if (!d.data.hasOwnProperty('emote'))
           return;
@@ -10247,10 +10253,10 @@
           window.clearTimeout(thirdparty.bttv.timer);
          _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), wC, hC);
          cSafe = JSON.parse(JSON.stringify(cList));
-         thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE, _ch);
+         thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
         case 'emote_delete':
-         if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + _ch)
+         if (!d.data.hasOwnProperty('channel'))
           return;
          if (!d.data.hasOwnProperty('emoteId'))
           return;
@@ -10258,10 +10264,10 @@
           window.clearTimeout(thirdparty.bttv.timer);
          _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emoteId);
          cSafe = JSON.parse(JSON.stringify(cList));
-         thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE, _ch);
+         thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
         case 'emote_update':
-         if (!d.data.hasOwnProperty('channel') || d.data.channel !== 'twitch:' + _ch)
+         if (!d.data.hasOwnProperty('channel'))
           return;
          if (!d.data.hasOwnProperty('emote'))
           return;
@@ -10280,16 +10286,41 @@
          _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emote.id);
          _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), wU, hU);
          cSafe = JSON.parse(JSON.stringify(cList));
-         thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE, _ch);
+         thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
        }
       }
 
-      return task;
+      function $join(svcName, chID)
+      {
+       for (let i = 0, l = _chList.length; i < l; i++)
+       {
+        if (_chList[i].svc !== svcName)
+         continue;
+        if (_chList[i].ch === chID)
+         return;
+       }
+       _chList.push({svc: svcName, ch: chID});
+       _wsJoin(svcName, chID);
+      }
+
+      function _wsJoin(s, c)
+      {
+       if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
+        return;
+       _ws.send(JSON.stringify({name: 'join_channel', data: {name: s + ':' + c}}));
+      }
+
+      return {
+       init: $init,
+       join: $join
+      };
      }();
 
      return {
-      timer: false,
+      timer: {},
       global: $global,
       channel: $channel,
       channelEx: $channelEx,
@@ -11419,6 +11450,7 @@
     {
      if (!cfg.display.extended.useBTTV)
       return;
+     thirdparty.bttv.socket.init();
      await thirdparty.bttv.global();
     }
 
