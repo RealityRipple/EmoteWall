@@ -68,7 +68,82 @@
     *  scope      A list of scopes which the OAuth ID provides access to. Please make sure this list reflects
     *             any scope selections you made while creating the token above.
     *
-    *  share      Share your channel on the Emote Wall home page!
+    *  share      Share your Twitch channel on the Emote Wall home page!
+    *
+    * youtube     Settings related to the YouTube login process.
+    *
+    *             NOTE: OAuth tokens expire automatically (usually after 60 days). Please make sure to update
+    *                   these values on a regular basis, if not using the interactive login process.
+    *
+    *  client     The Client ID value is used to track which third-party project is accessing your account.
+    *             This emote wall does not require a constant ID, and will work with whatever tool you use to
+    *             get an OAuth ID (see below).
+    *
+    *  oauth      The OAuth ID value is used in lieu of a password to access the Google API.
+    *             By default, this value is not required.
+    *             If you do not wish to use the oauth_refresh method, which relies on a file on my webserver,
+    *             you can generate your own OAuth2 token manually using a third-party YouTube Token Generator, and set
+    *             this value to the token you receive. However, it will expire and require updating manually.
+    *
+    *  oauth_refresh  A refresh token to get a new YouTube OAuth ID when the current one expires.
+    *                This value is used instead of the oauth value above, by default. Using a refresh token allows the
+    *             emote wall to stay logged in for a much longer period of time. Please note that this feature makes
+    *             use of the browser's Local Storage to store new OAuth Tokens and Refresh Tokens as they're generated.
+    *             New OAuth Tokens are generated every 60 minutes, and YouTube may or may not send a new Refresh Token
+    *             at the same time. If the token expires, the Local Storage values will be erased on the next refesh
+    *             attempt automatically.
+    *             Please generate an OAuth ID and matching Client ID:
+    *             - Visit <https://realityripple.com/Tools/Twitch/EmoteWall/>
+    *             - Click the "Authenticate on YouTube" button under "Do-it-Yourself" and log in
+    *             - Fill out the captcha prompt, if necessary
+    *             - Copy the Client ID value and paste it into "client:"
+    *             - Copy the OAuth Refresh value and paste it into "oauth_refresh:"
+    *             If you ever stop using this emote wall, please log into YouTube and visit
+    *             <https://myaccount.google.com/permissions>. Under "Apps with access to your account", click the
+    *             "Disconnect" button next to "RealityRipple's Home-Made Emote Wall".
+    *             If FALSE, the interactive login process will be enabled.
+    *
+    *  connect_to  Settings to control which YouTube broadcast to connect to.
+    *
+    *   title     The broadcast title of the stream to connect to. This forces a specific connection, regardless of
+    *             the status list (below). The sort, max, and recheck settings still apply, though, in case of multiple
+    *             broadcasts with identical titles.
+    *
+    *   list      An array of broadcast statuses which will be connected to. The list can include the following:
+    *              "created"       The broadcast has incomplete settings, so it is not ready to transition to a "live"
+    *                              or "testing" status, but it has been created and is otherwise valid.
+    *              "ready"         The broadcast settings are complete and the broadcast can transition to a "live"
+    *                              or "testing" status.
+    *              "live"          The broadcast is active.
+    *              "liveStarting"  The broadcast is in the process of transitioning to "live" status.
+    *              "testing"       The broadcast is only visible to the partner.
+    *              "testStarting"  The broadcast is in the process of transitioning to "testing" status.
+    *              "complete"      The broadcast is finished.
+    *              "revoked"       This broadcast was removed by an admin action.
+    *
+    *   max       The maximum simultaneous chats to connect to. In most use cases, you will only need 1, but rate limits
+    *             allow up to 3 active connections at once.
+    *
+    *   sort      An associative array of broadcast attributes and their sort order. The attributes can be any of these:
+    *              "actualStartTime"  The date and time that the broadcast actually started. Any non-live broadcasts
+    *                                 will end up at the bottom of a list with this sort.
+    *              "publishedAt"      The date and time that the broadcast was added your live broadcast schedule.
+    *              "title"            The broadcast's title, in localized alphabetical order.
+    *              "description"      The broadcast's description, in localized alphabetical order.
+    *             The value for each entry may be either "desc" or "asc" for descending or ascending order.
+    *
+    *   recheck   A boolean value to determine if the Emote Wall should continue checking the status of broadcasts
+    *             after a broadcast has already been successfully found.
+    *             If TRUE, broadcasts will be checked every 30 seconds.
+    *              New broadcasts that match the above parameters will be connected to.
+    *              Existing broadcasts that were matched and no longer match will be disconnected from.
+    *             If FALSE, broadcasts will be checked every 30 seconds until a connection is made.
+    *              Any matching broadcasts on the first success will be connected to.
+    *              No further broadcast status checks will be made.
+    *              No additional connections will be made, even less than "max".
+    *              No existing broadcasts will be disconnected from.
+    *
+    *  share      Share your YouTube channel on the Emote Wall home page!
     *
     * streamlabs  Settings related to Streamlabs tips.
     *
@@ -156,17 +231,18 @@
     *  access     A bitwise flag representing which users' messages show up on the emote wall. Account types are
     *             represented by the following values:
     *
-    *              0x800 = broadcaster
-    *              0x400 = moderator badge
-    *              0x200 = founder badge
-    *              0x100 = vip badge
-    *              0x080 = artist badge
-    *              0x040 = tier 3 subscriber badge
-    *              0x020 = tier 2 subscriber badge
-    *              0x010 = tier 1 subscriber badge
-    *              0x004 = cheer badge
-    *              0x002 = follower
-    *              0x001 = stranger
+    *              0x800 = broadcaster              T YT
+    *              0x400 = moderator badge          T YT
+    *              0x200 = founder badge            T
+    *              0x100 = vip badge                T
+    *              0x080 = artist badge             T
+    *              0x040 = tier 3 subscriber badge  T
+    *              0x020 = tier 2 subscriber badge  T
+    *              0x010 = tier 1 subscriber badge  T YT [YT Member]
+    *              0x008 = verified user              YT
+    *              0x004 = cheer badge              T
+    *              0x002 = follower                 T YT [YT Subscriber]
+    *              0x001 = stranger                 T YT
     *
     *             Just put a vertical pipe " | " in between each of the values representing levels of access:
     *
@@ -178,8 +254,8 @@
     *             If you know how bitwise flags work, you can also use them
     *             in more complicated ways:
     *               ACCESS           MEANING
-    *             0xFF7             all users from the broadcaster to strangers
-    *             0xFF7 ^ 0x003     all users except followers and strangers
+    *             0xFFF             all users from the broadcaster to strangers
+    *             0xFFF ^ 0x003     all users except followers and strangers
     *             0x070             all subscribers
     *
     *  duplicates  A boolean or integer to toggle duplicate emotes per message.
@@ -638,6 +714,65 @@
     *              If FALSE, no kappagen will occur.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
+    *  youtube    Settings related to YouTube channel events.
+    *
+    *   sub       A user subscribes the channel.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   member    Settings related to kappagens on a membership event.
+    *             Note: Member event booleans can also be arrays of kappa styles. This will override the default list
+    *                   of kappa styles for the particular event in question.
+    *
+    *    useMsg   If TRUE, any emotes in member milestone messages will be used for the kappagen.
+    *             If FALSE, any emotes in member milestone messages will show up like normal emotes.
+    *
+    *    first    A user becomes a member for the first time.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    milestone  A user reaches a membership milestone. This can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on all milestones.
+    *              If FALSE, no kappagen will occur on milestones.
+    *              If Integer, the value is the minimum months required for a milestone to trigger a kappagen.
+    *               If 0, no kappagen will occur.
+    *               If 1, a kappagen will occur every month.
+    *               If greater than 1, the number of months as a member must be greater than or equal to this number
+    *               to trigger a kappagen.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    giftbomb  A user gifts multiple memberships. This value can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on any random gift.
+    *              If FALSE, no kappagen will occur on giftbombs.
+    *              If Integer, the value is the minimum gifts required for a gift bomb to trigger a kappagen.
+    *               If 0, no kappagen will occur.
+    *               If 1, a kappagen will occur on any random gift.
+    *               If greater than 1, the number of gifted users in a giftbomb must be greater than or equal to
+    *               this number to trigger a kappagen.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   superchat  A user posts a superchat in the channel.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   supersticker  A user posts a superchat in the channel.
+    *                If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
     *  tip        Settings related to third-party tip systems.
     *
     *   useProfileImage  If TRUE, tips will use the tipper's profile image instead of emotes.
@@ -783,8 +918,8 @@
     *
     *  To update this emote wall, simply use the Wizard to import and download it.
     *   1) Visit the official page <https://realityripple.com/Tools/Twitch/EmoteWall/>.
-    *   2) Under "Config Wizard", click "Authorize on Twitch".
-    *   3) Import this HTML file by clicking Import.
+    *   2) Click "Download Emote Wall" and choose "Use the Wizard".
+    *   3) Import your previous HTML file by clicking "Import from File".
     *   4) Make any changes you need to make on each page.
     *   5) At the end of your configuration, hit "Download".
     *  You will receive a new version of this HTML file with your previous settings.
