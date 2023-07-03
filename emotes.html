@@ -11269,13 +11269,13 @@
      return false;
     }
 
-    function $clearAddr()
+    function $clearAddr(query)
     {
      const o = window.location.toString();
      let u = o;
      if (u.indexOf('#') > -1)
       u = u.slice(0, u.indexOf('#'));
-     if (u.indexOf('?') > -1)
+     if (query && u.indexOf('?') > -1)
       u = u.slice(0, u.indexOf('?'));
      if (u !== o)
       window.history.replaceState(null, '', u);
@@ -11775,7 +11775,7 @@
      }
      if (loginT.use() === true)
       return;
-     shared.clearAddr();
+     shared.clearAddr(true);
      _streamlabs();
      await _streamelements();
      await _bttv();
