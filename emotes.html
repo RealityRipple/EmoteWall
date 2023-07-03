@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.7.9.5 BETA
+    * v0.7.9.6 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -2207,6 +2207,8 @@
      nID.classList.remove('fade');
      if (_timers[id] !== false)
       window.clearTimeout(_timers[id]);
+     if (!nID.classList.contains('fader'))
+      return;
      _timers[id] = window.setTimeout(_fadeOutNotice, _visTime, id);
      let b = document.getElementById('badge');
      if (!b)
@@ -2221,6 +2223,8 @@
       return;
      if (_timers[id] !== false)
       window.clearTimeout(_timers[id]);
+     if (!nID.classList.contains('fader'))
+      return;
      _timers[id] = window.setTimeout(_fadeOutEnd, 500, id);
      nID.classList.add('fade');
      let n = document.getElementById('notices');
@@ -2255,6 +2259,8 @@
       window.clearTimeout(_timers[id]);
       _timers[id] = false;
      }
+     if (!nID.classList.contains('fader'))
+      return;
      nID.classList.add('faded');
     }
 
@@ -5867,7 +5873,7 @@
          continue;
         if (!d[i].transport.hasOwnProperty('session_id'))
          continue;
-        await _unsubscribe(d[i].id, d[i].transport.session_id);
+        await _unsubscribe(d[i].id);
        }
        window.location.reload();
       }
@@ -6012,7 +6018,7 @@
         if (!j.includes(d[i].transport.session_id))
          continue;
         console.log('server gives permission to delete', d[i].id);
-        await _unsubscribe(d[i].id, d[i].transport.session_id);
+        await _unsubscribe(d[i].id);
        }
        return true;
       }
@@ -6172,6 +6178,16 @@
          case 'NOTICE':
           if (cmd.params.length > 1 && cmd.params[1] === 'Login authentication failed')
           {
+           if (_tTimeout !== false)
+           {
+            window.clearTimeout(_tTimeout);
+            _tTimeout = false;
+           }
+           if (_tPing !== 0)
+           {
+            window.clearInterval(_tPing);
+            _tPing = 0;
+           }
            _ws.onmessage = null;
            _ws.onclose = null;
            _ws.close();
@@ -6192,6 +6208,7 @@
            continue;
           if (!cmd.tags.hasOwnProperty('room-id'))
            continue;
+          const newID = twitch.net.channelID !== cmd.tags['room-id'];
           twitch.net.channelID = cmd.tags['room-id'];
           if (_firstRS)
           {
@@ -6201,27 +6218,30 @@
             _tExpire = false;
            }
            _firstRS = false;
-           await _loadEmote_channel(twitch.net.channelID);
-           await _loadCheer_channel(twitch.net.channelID);
-           if (cfg.event.tag.hasOwnProperty('styles') && cfg.event.tag.styles !== false)
-            await _getChannelTitleTags(twitch.net.channelID);
-           if (cfg.display.extended.useFFZ)
-            thirdparty.ffz.channel(twitch.net.channelID);
-           if (cfg.display.extended.useBTTV)
+           if (newID)
            {
-            thirdparty.bttv.channel(twitch.net.channelID);
-            thirdparty.bttv.socket(twitch.net.channelID);
+            await _loadEmote_channel(twitch.net.channelID);
+            await _loadCheer_channel(twitch.net.channelID);
+            if (cfg.event.tag.hasOwnProperty('styles') && cfg.event.tag.styles !== false)
+             await _getChannelTitleTags(twitch.net.channelID);
+            if (cfg.display.extended.useFFZ)
+             thirdparty.ffz.channel(twitch.net.channelID);
+            if (cfg.display.extended.useBTTV)
+            {
+             thirdparty.bttv.channel(twitch.net.channelID);
+             thirdparty.bttv.socket(twitch.net.channelID);
+            }
+            if (cfg.display.extended.use7TV)
+            {
+             thirdparty['7tv'].channel(twitch.net.channelID);
+             thirdparty['7tv'].socket(twitch.net.channelID);
+            }
+            if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
+             thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval, twitch.net.channelID);
+            if (cfg.display.extended.useBTTV)
+             thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval, twitch.net.channelID);
+            _eventSub(twitch.net.channelID);
            }
-           if (cfg.display.extended.use7TV)
-           {
-            thirdparty['7tv'].channel(twitch.net.channelID);
-            thirdparty['7tv'].socket(twitch.net.channelID);
-           }
-           if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
-            thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval, twitch.net.channelID);
-           if (cfg.display.extended.useBTTV)
-            thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval, twitch.net.channelID);
-           _eventSub(twitch.net.channelID);
           }
           break;
          case 'USERNOTICE':
@@ -6278,6 +6298,25 @@
             break;
           }
           break;
+         case 'RECONNECT':
+          if (_tTimeout !== false)
+          {
+           window.clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          if (_tPing !== 0)
+          {
+           window.clearInterval(_tPing);
+           _tPing = 0;
+          }
+          _ws.onmessage = null;
+          _ws.onclose = null;
+          _ws.close();
+          _ws = null;
+          if (twitch.net.dead === true)
+           return;
+          window.setTimeout(twitch.net.irc, 1000);
+          break;
         }
        }
       }
@@ -6285,6 +6324,16 @@
       function _wsExpire()
       {
        notice.error(0x12);
+       if (_tTimeout !== false)
+       {
+        window.clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
+       }
        if (_ws === null)
         return;
        if (twitch.net.dead === true)
@@ -6315,6 +6364,11 @@
        {
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
+       }
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
        }
        if (_ws === null)
         return;
@@ -9144,6 +9198,11 @@
        window.clearInterval(_tPing);
        _tPing = 0;
       }
+      if (_tTimeout !== false)
+      {
+       window.clearTimeout(_tTimeout);
+       _tTimeout = false;
+      }
       if (_ws === null)
        return;
       _ws.onopen = null;
@@ -9224,6 +9283,11 @@
            window.clearTimeout(_tTimeout);
            _tTimeout = false;
           }
+          if (_tPing !== 0)
+          {
+           window.clearInterval(_tPing);
+           _tPing = 0;
+          }
           if (_ws === null)
            return;
           _ws.onopen = null;
@@ -9291,6 +9355,11 @@
       {
        window.clearTimeout(_tTimeout);
        _tTimeout = false;
+      }
+      if (_tPing !== 0)
+      {
+       window.clearInterval(_tPing);
+       _tPing = 0;
       }
       if (_ws === null)
        return;
@@ -9389,6 +9458,11 @@
      function _wsClose()
      {
       notice.error(0x72);
+      if (_tTimeout !== false)
+      {
+       window.clearTimeout(_tTimeout);
+       _tTimeout = false;
+      }
       if (_tPing !== 0)
       {
        window.clearInterval(_tPing);
@@ -9489,6 +9563,11 @@
           window.clearTimeout(_tTimeout);
           _tTimeout = false;
          }
+         if (_tPing !== 0)
+         {
+          window.clearInterval(_tPing);
+          _tPing = 0;
+         }
          if (_ws === null)
           return;
          _ws.onopen = null;
@@ -9496,6 +9575,7 @@
          _ws.onclose = null;
          _ws.close();
          _ws = null;
+         return;
         }
         if (document.visibilityState === 'hidden')
          return;
@@ -9534,6 +9614,11 @@
       {
        window.clearTimeout(_tTimeout);
        _tTimeout = false;
+      }
+      if (_tPing !== 0)
+      {
+       window.clearInterval(_tPing);
+       _tPing = 0;
       }
       if (_ws === null)
        return;
@@ -10222,11 +10307,11 @@
     {
      function _read7tv_URL(entry)
      {
-      if (!entry.hasOwnProperty('host'))
+      if (!entry.hasOwnProperty('host') || entry.host === null)
        return false;
-      if (!entry.host.hasOwnProperty('url'))
+      if (!entry.host.hasOwnProperty('url') || entry.host.url === null)
        return false;
-      if (!entry.host.hasOwnProperty('files'))
+      if (!entry.host.hasOwnProperty('files') || entry.host.files === null)
        return false;
       if (!Array.isArray(entry.host.files))
        return false;
@@ -10236,9 +10321,9 @@
        findFormat = cfg.display.extended.use7TV.toUpperCase();
       for (let i = 0, l = entry.host.files.length; i < l; i++)
       {
-       if (!entry.host.files[i].hasOwnProperty('format'))
+       if (!entry.host.files[i].hasOwnProperty('format') || entry.host.files[i].format === null)
         continue;
-       if (!entry.host.files[i].hasOwnProperty('name'))
+       if (!entry.host.files[i].hasOwnProperty('name') || entry.host.files[i].name === null)
         continue;
        if (entry.host.files[i].format !== findFormat)
         continue;
@@ -10246,9 +10331,9 @@
        const addr = 'https:' + entry.host.url + '/' + entry.host.files[i].name;
        let w = false;
        let h = false;
-       if (entry.host.files[i].hasOwnProperty('width'))
+       if (entry.host.files[i].hasOwnProperty('width') && entry.host.files[i].width !== null)
         w = entry.host.files[i].width;
-       if (entry.host.files[i].hasOwnProperty('height'))
+       if (entry.host.files[i].hasOwnProperty('height') && entry.host.files[i].height !== null)
         h = entry.host.files[i].height;
        g.push({dpp: dpp, url: addr, width: w, height: h});
       }
@@ -10281,22 +10366,22 @@
       const j = r.json;
       if (j === null)
        return false;
-      if (!j.hasOwnProperty('emotes'))
+      if (!j.hasOwnProperty('emotes') || j.emotes === null)
        return false;
       if (!Array.isArray(j.emotes))
        return false;
       for (let i = 0, l = j.emotes.length; i < l; i++)
       {
-       if (!j.emotes[i].hasOwnProperty('data'))
+       if (!j.emotes[i].hasOwnProperty('data') || j.emotes[i].data === null)
         continue;
-       if (!j.emotes[i].data.hasOwnProperty('id'))
+       if (!j.emotes[i].data.hasOwnProperty('id') || j.emotes[i].data.id === null)
         continue;
-       if (!j.emotes[i].data.hasOwnProperty('name'))
+       if (!j.emotes[i].data.hasOwnProperty('name') || j.emotes[i].data.name === null)
         continue;
        const jInf = _read7tv_URL(j.emotes[i].data);
        if (jInf === false)
         continue;
-       if (j.emotes[i].data.hasOwnProperty('flags') && (j.emotes[i].data.flags & thirdparty['7tv'].zweFlag) === thirdparty['7tv'].zweFlag)
+       if (j.emotes[i].data.hasOwnProperty('flags') && j.emotes[i].data.flags !== null && (j.emotes[i].data.flags & thirdparty['7tv'].zweFlag) === thirdparty['7tv'].zweFlag)
        {
         if (cfg.display.extended.useZWE)
          _addEmote(thirdparty.emotes.zwe['7tv'], 'g', j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, jInf.width, jInf.height, true);
@@ -10317,26 +10402,26 @@
       const j = r.json;
       if (j === null)
        return false;
-      if (!j.hasOwnProperty('emote_set'))
+      if (!j.hasOwnProperty('emote_set') || j.emote_set === null)
        return false;
-      if (!j.emote_set.hasOwnProperty('emotes'))
+      if (!j.emote_set.hasOwnProperty('emotes') || j.emote_set.emotes === null)
        return false;
       if (!Array.isArray(j.emote_set.emotes))
        return false;
       let ret = [];
       for (let i = 0, l = j.emote_set.emotes.length; i < l; i++)
       {
-       if (!j.emote_set.emotes[i].hasOwnProperty('data'))
+       if (!j.emote_set.emotes[i].hasOwnProperty('data') || j.emote_set.emotes[i].data === null)
         continue;
-       if (!j.emote_set.emotes[i].data.hasOwnProperty('id'))
+       if (!j.emote_set.emotes[i].data.hasOwnProperty('id') || j.emote_set.emotes[i].data.id === null)
         continue;
-       if (!j.emote_set.emotes[i].data.hasOwnProperty('name'))
+       if (!j.emote_set.emotes[i].data.hasOwnProperty('name') || j.emote_set.emotes[i].data.name === null)
         continue;
        const jInf = _read7tv_URL(j.emote_set.emotes[i].data);
        if (jInf === false)
         continue;
        let vis = 0;
-       if ((j.emote_set.emotes[i].data.hasOwnProperty('flags')))
+       if (j.emote_set.emotes[i].data.hasOwnProperty('flags') && j.emote_set.emotes[i].data.flags !== null)
         vis = j.emote_set.emotes[i].data.flags;
        ret.push({name: j.emote_set.emotes[i].data.name, id: j.emote_set.emotes[i].data.id, url: jInf.url, vis: vis, width: jInf.width, height: jInf.height});
       }
@@ -10377,9 +10462,9 @@
       const j = r.json;
       if (j === null)
        return false;
-      if (!j.hasOwnProperty('user'))
+      if (!j.hasOwnProperty('user') || j.user === null)
        return false;
-      if (!j.user.hasOwnProperty('id'))
+      if (!j.user.hasOwnProperty('id') || j.user.id === null)
        return false;
       return j.user.id;
      }
@@ -10463,7 +10548,7 @@
        }
        _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
        const d = JSON.parse(ev.data);
-       if (!d.hasOwnProperty('op'))
+       if (!d.hasOwnProperty('op') || d.op === null)
         return;
        if (!d.hasOwnProperty('d'))
         return;
@@ -10476,6 +10561,8 @@
          thirdparty.timer = window.setTimeout(thirdparty.reload, _lDelay, _ch);
          break;
         case 1:
+         if (d.d === null)
+          return;
          _okCt = 0;
          if (_sess !== null)
          {
@@ -10484,9 +10571,9 @@
          }
          else
           _wsSub();
-         if (d.d.hasOwnProperty('session_id'))
+         if (d.d.hasOwnProperty('session_id') && d.d.session_id !== null)
           _sess = d.d.session_id;
-         if (d.d.hasOwnProperty('heartbeat_interval'))
+         if (d.d.hasOwnProperty('heartbeat_interval') && d.d.heartbeat_interval !== null)
          {
           _lTimeout = parseInt(d.d.heartbeat_interval, 10) * 3;
           if (_tTimeout !== false)
@@ -10521,20 +10608,22 @@
          _wsR_M = 0;
          break;
         case 5:
-         if (!d.d.hasOwnProperty('command'))
+         if (d.d === null)
+          return;
+         if (!d.d.hasOwnProperty('command') || d.d.command === null)
           return;
          switch (d.d.command)
          {
           case 'RESUME':
-           if (!d.d.hasOwnProperty('data'))
+           if (!d.d.hasOwnProperty('data') || d.d.data === null)
             return;
            if (!d.d.data.hasOwnProperty('success'))
             return;
-           if (d.d.data.success === false)
+           if (d.d.data.success === false || d.d.data.success === null)
             _wsSub();
            else
            {
-            if (!d.d.data.hasOwnProperty('subscriptions_restored'))
+            if (!d.d.data.hasOwnProperty('subscriptions_restored') || d.d.data.subscriptions_restored === null)
              return;
             if (d.d.data.subscriptions_restored !== 3)
             {
@@ -10552,6 +10641,8 @@
          }
          break;
         case 7:
+         if (d.d === null)
+          return;
          if (_tTimeout !== false)
          {
           window.clearTimeout(_tTimeout);
@@ -10563,7 +10654,7 @@
          _ws.close();
          _ws = null;
          let wsWait = _lDelay;
-         if (d.d.hasOwnProperty('code'))
+         if (d.d.hasOwnProperty('code') && d.d.code !== null)
          {
           switch (d.d.code)
           {
