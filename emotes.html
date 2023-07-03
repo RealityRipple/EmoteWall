@@ -6278,6 +6278,25 @@
             break;
           }
           break;
+         case 'RECONNECT':
+          if (_tTimeout !== false)
+          {
+           window.clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          if (_tPing !== 0)
+          {
+           window.clearInterval(_tPing);
+           _tPing = 0;
+          }
+          _ws.onmessage = null;
+          _ws.onclose = null;
+          _ws.close();
+          _ws = null;
+          if (twitch.net.dead === true)
+           return;
+          window.setTimeout(twitch.net.irc, 1000);
+          break;
         }
        }
       }
