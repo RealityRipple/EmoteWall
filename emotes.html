@@ -11259,12 +11259,13 @@
 
     function $showIn()
     {
-     if (document.getElementById('cmdLogout'))
-      document.body.removeChild(document.getElementById('cmdLogout'));
+     if (document.getElementById('cmdTLogout'))
+      document.body.removeChild(document.getElementById('cmdTLogout'));
      twitch.net.oAuth.clear(true);
      let cmdLogin = document.createElement('button');
-     cmdLogin.setAttribute('id', 'cmdLogin');
+     cmdLogin.setAttribute('id', 'cmdTLogin');
      cmdLogin.setAttribute('type', 'button');
+     cmdLogin.classList.add('twitch');
      cmdLogin.classList.add('login');
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall';
@@ -11273,16 +11274,17 @@
 
     function $showOut(v = false)
     {
-     if (document.getElementById('cmdLogout'))
-      document.body.removeChild(document.getElementById('cmdLogout'));
+     if (document.getElementById('cmdTLogout'))
+      document.body.removeChild(document.getElementById('cmdTLogout'));
      let cmdLogout = document.createElement('button');
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
       _tL = false;
      }
-     cmdLogout.setAttribute('id', 'cmdLogout');
+     cmdLogout.setAttribute('id', 'cmdTLogout');
      cmdLogout.setAttribute('type', 'button');
+     cmdLogout.classList.add('twitch');
      cmdLogout.classList.add('logout');
      document.addEventListener('mousemove', _fadeInLogout);
      if (v)
@@ -11302,8 +11304,8 @@
 
     function _fadeInLogout()
     {
-     if (document.getElementById('cmdLogout'))
-      document.getElementById('cmdLogout').classList.remove('hidden');
+     if (document.getElementById('cmdTLogout'))
+      document.getElementById('cmdTLogout').classList.remove('hidden');
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -11319,8 +11321,8 @@
       window.clearTimeout(_tL);
       _tL = false;
      }
-     if (document.getElementById('cmdLogout'))
-      document.getElementById('cmdLogout').classList.add('hidden');
+     if (document.getElementById('cmdTLogout'))
+      document.getElementById('cmdTLogout').classList.add('hidden');
     }
 
     return {
@@ -12239,7 +12241,6 @@
 
    button
    {
-    background-color: #7D5BBE;
     transition: background 0.12s ease-in, color 0.12s ease-in;
     white-space: nowrap;
     cursor: pointer;
@@ -12255,32 +12256,40 @@
    {
     opacity: 0;
    }
-   button:focus, button:hover
-   {
-    background-color: #772CE8;
-   }
    button:focus
    {
     outline: none;
    }
-   button:active
+
+   button.twitch
+   {
+    background-color: #7D5BBE;
+   }
+   button.twitch:focus, button.twitch:hover
+   {
+    background-color: #772CE8;
+   }
+   button.twitch:active
    {
     background-color: #5C16C5;
    }
 
    button.login
    {
-    top: calc(50% - 1em - 1.25em);
     left: calc(50% - 6.5em);
     width: 13em;
     font-size: 6vmin;
     padding: 0.5em;
    }
-   .notice + button.login
+   button.login.twitch
+   {
+    top: calc(50% - 1em - 1.25em);
+   }
+   .notice + button.login.twitch
    {
     top: calc(100% - 10vw);
    }
-   .notice.hiding + button.login
+   .notice.hiding + button.login.twitch
    {
     transition: top 500ms ease-out;
     top: calc(50% - 1em - 1.25em);
@@ -12289,11 +12298,14 @@
    button.logout
    {
     transition: opacity 0.5s;
-    top: 1em;
     right: 1em;
     width: 5em;
     font-size: 2vmin;
     padding: 0.5em;
+   }
+   button#cmdTLogout
+   {
+    top: 1em;
    }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
