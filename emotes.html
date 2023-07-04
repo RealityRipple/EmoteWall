@@ -10955,7 +10955,7 @@
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
-      if (twitch.net.dead)
+      if (twitch.net.dead && youtube.net.dead)
        return;
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
@@ -10972,7 +10972,7 @@
       }
       if (_ws === null)
        return;
-      if (twitch.net.dead)
+      if (twitch.net.dead && youtube.net.dead)
       {
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -11114,7 +11114,7 @@
       _ws.onclose = null;
       _ws.close();
       _ws = null;
-      if (twitch.net.dead === true)
+      if (twitch.net.dead && youtube.net.dead)
        return;
       streamlabs.socket();
      }
@@ -11220,7 +11220,7 @@
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
-      if (twitch.net.dead)
+      if (twitch.net.dead && youtube.net.dead)
        return;
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
@@ -11237,7 +11237,7 @@
       }
       if (_ws === null)
        return;
-      if (twitch.net.dead)
+      if (twitch.net.dead && youtube.net.dead)
       {
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -11373,7 +11373,7 @@
       _ws.onclose = null;
       _ws.close();
       _ws = null;
-      if (twitch.net.dead === true)
+      if (twitch.net.dead && youtube.net.dead)
        return;
       streamelements.socket();
      }
@@ -11921,7 +11921,7 @@
        _ws.onmessage = null;
        _ws.onclose = null;
        _ws = null;
-       if (twitch.net.dead)
+       if (twitch.net.dead && youtube.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
@@ -11933,7 +11933,7 @@
       {
        if (_ws === null)
         return;
-       if (twitch.net.dead)
+       if (twitch.net.dead && youtube.net.dead)
        {
         _ws.onopen = null;
         _ws.onmessage = null;
@@ -12289,7 +12289,7 @@
        _ws.onmessage = null;
        _ws.onclose = null;
        _ws = null;
-       if (twitch.net.dead)
+       if (twitch.net.dead && youtube.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
@@ -12306,7 +12306,7 @@
        }
        if (_ws === null)
         return;
-       if (twitch.net.dead)
+       if (twitch.net.dead && youtube.net.dead)
        {
         _ws.onopen = null;
         _ws.onmessage = null;
@@ -12518,7 +12518,7 @@
        _ws.onclose = null;
        _ws.close();
        _ws = null;
-       if (twitch.net.dead === true)
+       if (twitch.net.dead && youtube.net.dead)
         return;
        thirdparty['7tv'].socket.init();
       }
@@ -12999,6 +12999,11 @@
       const h = _getHashParams();
       if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('oauth_refresh') || !h.hasOwnProperty('scope'))
       {
+       loginT.showIn(true);
+       return true;
+      }
+      if (h.hasOwnProperty('service') && h.service !== 'twitch')
+      {
        loginT.showIn();
        return true;
       }
@@ -13091,7 +13096,7 @@
      f.submit();
     }
 
-    function $showIn()
+    function $showIn(auto = false)
     {
      if (document.getElementById('cmdTLogout'))
       document.body.removeChild(document.getElementById('cmdTLogout'));
@@ -13105,6 +13110,8 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall';
+     if (auto && loginYT.cfgVals() > 0x01)
+      cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
     }
 
@@ -13459,9 +13466,13 @@
       window.localStorage.setItem('emotewall.obs_notfound', '1');
       notice.error(0x09);
      }
-     if (loginT.use() === true)
+     const usesT = loginT.use();
+     const usesYT = loginYT.use();
+     if (usesT === true && usesYT === true)
       return;
-     shared.clearAddr(true);
+     shared.clearAddr(false);
+     if (usesT !== true && usesYT !== true)
+      shared.clearAddr(true);
      _streamlabs();
      await _streamelements();
      await _bttv();
@@ -13473,6 +13484,13 @@
      }
      else
       twitch.net.dead = true;
+     if (loginYT.cfgVals() > 0x01)
+     {
+      if (await _youtube() === false)
+       youtube.net.dead = true;
+     }
+     else
+      youtube.net.dead = true;
     }
 
     async function _twitch()
