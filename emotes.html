@@ -68,7 +68,82 @@
     *  scope      A list of scopes which the OAuth ID provides access to. Please make sure this list reflects
     *             any scope selections you made while creating the token above.
     *
-    *  share      Share your channel on the Emote Wall home page!
+    *  share      Share your Twitch channel on the Emote Wall home page!
+    *
+    * youtube     Settings related to the YouTube login process.
+    *
+    *             NOTE: OAuth tokens expire automatically (usually after 60 days). Please make sure to update
+    *                   these values on a regular basis, if not using the interactive login process.
+    *
+    *  client     The Client ID value is used to track which third-party project is accessing your account.
+    *             This emote wall does not require a constant ID, and will work with whatever tool you use to
+    *             get an OAuth ID (see below).
+    *
+    *  oauth      The OAuth ID value is used in lieu of a password to access the Google API.
+    *             By default, this value is not required.
+    *             If you do not wish to use the oauth_refresh method, which relies on a file on my webserver,
+    *             you can generate your own OAuth2 token manually using a third-party YouTube Token Generator, and set
+    *             this value to the token you receive. However, it will expire and require updating manually.
+    *
+    *  oauth_refresh  A refresh token to get a new YouTube OAuth ID when the current one expires.
+    *                This value is used instead of the oauth value above, by default. Using a refresh token allows the
+    *             emote wall to stay logged in for a much longer period of time. Please note that this feature makes
+    *             use of the browser's Local Storage to store new OAuth Tokens and Refresh Tokens as they're generated.
+    *             New OAuth Tokens are generated every 60 minutes, and YouTube may or may not send a new Refresh Token
+    *             at the same time. If the token expires, the Local Storage values will be erased on the next refesh
+    *             attempt automatically.
+    *             Please generate an OAuth ID and matching Client ID:
+    *             - Visit <https://realityripple.com/Tools/Twitch/EmoteWall/>
+    *             - Click the "Authenticate on YouTube" button under "Do-it-Yourself" and log in
+    *             - Fill out the captcha prompt, if necessary
+    *             - Copy the Client ID value and paste it into "client:"
+    *             - Copy the OAuth Refresh value and paste it into "oauth_refresh:"
+    *             If you ever stop using this emote wall, please log into YouTube and visit
+    *             <https://myaccount.google.com/permissions>. Under "Apps with access to your account", click the
+    *             "Disconnect" button next to "RealityRipple's Home-Made Emote Wall".
+    *             If FALSE, the interactive login process will be enabled.
+    *
+    *  connect_to  Settings to control which YouTube broadcast to connect to.
+    *
+    *   title     The broadcast title of the stream to connect to. This forces a specific connection, regardless of
+    *             the status list (below). The sort, max, and recheck settings still apply, though, in case of multiple
+    *             broadcasts with identical titles.
+    *
+    *   list      An array of broadcast statuses which will be connected to. The list can include the following:
+    *              "created"       The broadcast has incomplete settings, so it is not ready to transition to a "live"
+    *                              or "testing" status, but it has been created and is otherwise valid.
+    *              "ready"         The broadcast settings are complete and the broadcast can transition to a "live"
+    *                              or "testing" status.
+    *              "live"          The broadcast is active.
+    *              "liveStarting"  The broadcast is in the process of transitioning to "live" status.
+    *              "testing"       The broadcast is only visible to the partner.
+    *              "testStarting"  The broadcast is in the process of transitioning to "testing" status.
+    *              "complete"      The broadcast is finished.
+    *              "revoked"       This broadcast was removed by an admin action.
+    *
+    *   max       The maximum simultaneous chats to connect to. In most use cases, you will only need 1, but rate limits
+    *             allow up to 3 active connections at once.
+    *
+    *   sort      An associative array of broadcast attributes and their sort order. The attributes can be any of these:
+    *              "actualStartTime"  The date and time that the broadcast actually started. Any non-live broadcasts
+    *                                 will end up at the bottom of a list with this sort.
+    *              "publishedAt"      The date and time that the broadcast was added your live broadcast schedule.
+    *              "title"            The broadcast's title, in localized alphabetical order.
+    *              "description"      The broadcast's description, in localized alphabetical order.
+    *             The value for each entry may be either "desc" or "asc" for descending or ascending order.
+    *
+    *   recheck   A boolean value to determine if the Emote Wall should continue checking the status of broadcasts
+    *             after a broadcast has already been successfully found.
+    *             If TRUE, broadcasts will be checked every 30 seconds.
+    *              New broadcasts that match the above parameters will be connected to.
+    *              Existing broadcasts that were matched and no longer match will be disconnected from.
+    *             If FALSE, broadcasts will be checked every 30 seconds until a connection is made.
+    *              Any matching broadcasts on the first success will be connected to.
+    *              No further broadcast status checks will be made.
+    *              No additional connections will be made, even less than "max".
+    *              No existing broadcasts will be disconnected from.
+    *
+    *  share      Share your YouTube channel on the Emote Wall home page!
     *
     * streamlabs  Settings related to Streamlabs tips.
     *
@@ -156,17 +231,18 @@
     *  access     A bitwise flag representing which users' messages show up on the emote wall. Account types are
     *             represented by the following values:
     *
-    *              0x800 = broadcaster
-    *              0x400 = moderator badge
-    *              0x200 = founder badge
-    *              0x100 = vip badge
-    *              0x080 = artist badge
-    *              0x040 = tier 3 subscriber badge
-    *              0x020 = tier 2 subscriber badge
-    *              0x010 = tier 1 subscriber badge
-    *              0x004 = cheer badge
-    *              0x002 = follower
-    *              0x001 = stranger
+    *              0x800 = broadcaster              T YT
+    *              0x400 = moderator badge          T YT
+    *              0x200 = founder badge            T
+    *              0x100 = vip badge                T
+    *              0x080 = artist badge             T
+    *              0x040 = tier 3 subscriber badge  T
+    *              0x020 = tier 2 subscriber badge  T
+    *              0x010 = tier 1 subscriber badge  T YT [YT Member]
+    *              0x008 = verified user              YT
+    *              0x004 = cheer badge              T
+    *              0x002 = follower                 T YT [YT Subscriber]
+    *              0x001 = stranger                 T YT
     *
     *             Just put a vertical pipe " | " in between each of the values representing levels of access:
     *
@@ -178,8 +254,8 @@
     *             If you know how bitwise flags work, you can also use them
     *             in more complicated ways:
     *               ACCESS           MEANING
-    *             0xFF7             all users from the broadcaster to strangers
-    *             0xFF7 ^ 0x003     all users except followers and strangers
+    *             0xFFF             all users from the broadcaster to strangers
+    *             0xFFF ^ 0x003     all users except followers and strangers
     *             0x070             all subscribers
     *
     *  duplicates  A boolean or integer to toggle duplicate emotes per message.
@@ -638,6 +714,65 @@
     *              If FALSE, no kappagen will occur.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
+    *  youtube    Settings related to YouTube channel events.
+    *
+    *   sub       A user subscribes the channel.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   member    Settings related to kappagens on a membership event.
+    *             Note: Member event booleans can also be arrays of kappa styles. This will override the default list
+    *                   of kappa styles for the particular event in question.
+    *
+    *    useMsg   If TRUE, any emotes in member milestone messages will be used for the kappagen.
+    *             If FALSE, any emotes in member milestone messages will show up like normal emotes.
+    *
+    *    first    A user becomes a member for the first time.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    milestone  A user reaches a membership milestone. This can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on all milestones.
+    *              If FALSE, no kappagen will occur on milestones.
+    *              If Integer, the value is the minimum months required for a milestone to trigger a kappagen.
+    *               If 0, no kappagen will occur.
+    *               If 1, a kappagen will occur every month.
+    *               If greater than 1, the number of months as a member must be greater than or equal to this number
+    *               to trigger a kappagen.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    giftbomb  A user gifts multiple memberships. This value can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on any random gift.
+    *              If FALSE, no kappagen will occur on giftbombs.
+    *              If Integer, the value is the minimum gifts required for a gift bomb to trigger a kappagen.
+    *               If 0, no kappagen will occur.
+    *               If 1, a kappagen will occur on any random gift.
+    *               If greater than 1, the number of gifted users in a giftbomb must be greater than or equal to
+    *               this number to trigger a kappagen.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   superchat  A user posts a superchat in the channel.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   supersticker  A user posts a superchat in the channel.
+    *                If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
     *  tip        Settings related to third-party tip systems.
     *
     *   useProfileImage  If TRUE, tips will use the tipper's profile image instead of emotes.
@@ -783,8 +918,8 @@
     *
     *  To update this emote wall, simply use the Wizard to import and download it.
     *   1) Visit the official page <https://realityripple.com/Tools/Twitch/EmoteWall/>.
-    *   2) Under "Config Wizard", click "Authorize on Twitch".
-    *   3) Import this HTML file by clicking Import.
+    *   2) Click "Download Emote Wall" and choose "Use the Wizard".
+    *   3) Import your previous HTML file by clicking "Import from File".
     *   4) Make any changes you need to make on each page.
     *   5) At the end of your configuration, hit "Download".
     *  You will receive a new version of this HTML file with your previous settings.
@@ -871,6 +1006,27 @@
      ],
      share: false
     },
+    youtube: {
+     client: '71876675824-aepsnb3onligbj62r1i2qakfjh9sr8kg.apps.googleusercontent.com',
+     oauth_refresh: 'OAUTH_REFRESH',
+     connect_to: {
+      title: false,
+      list: [
+       'liveStarting',
+       'live',
+       'testStarting',
+       'testing'
+      ],
+      max: 1,
+      sort: {
+       'actualStartTime': 'desc',
+       'publishedAt': 'desc'
+      },
+      recheck: false
+     },
+     share: false,
+     feedback: false /* help improve support for monetized YouTube events, such as memberships, superchat, and gifts */
+    },
     streamlabs: {
      token: 'SOCKET_TOKEN', //Requires socket.token
      curMul: 100,
@@ -901,7 +1057,7 @@
       'Throw',        // Toss at the middle and tumble down   (no fade/zoom in, only out)
       'TheCube'       // Rotate a 3D cube of an emote         (no zoom, only fade)
      ],
-     access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002 | 0x001,
+     access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x008 | 0x004 | 0x002 | 0x001,
      duplicates: true,
      useEmoji: true,
      extended: {
@@ -937,7 +1093,7 @@
         time: 3
        }
       },
-      access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x004 | 0x002,
+      access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x008 | 0x004 | 0x002,
       aliases: [      // !kappagen command aliases (must be lower-case)
        '!kappagen',
        '-kappagen'
@@ -1075,6 +1231,17 @@
       charity: false,
       timeout: false,
       ban: false
+     },
+     youtube: {
+      sub: true,
+      member: {
+       useMsg: true,
+       first: true,
+       milestone: true,
+       giftbomb: 5
+      },
+      superchat: true,
+      supersticker: true
      },
      tip: {
       useProfileImage: false,
@@ -1871,7 +2038,10 @@
    let cList = [];
    let cSafe = [];
    const wWS = 5;
-   const oauthClient = '4umzcpmjkg6ar78b81s7302jlj33t8';
+   const oauthClient = {
+    t: '4umzcpmjkg6ar78b81s7302jlj33t8',
+    yt: '71876675824-aepsnb3onligbj62r1i2qakfjh9sr8kg.apps.googleusercontent.com'
+   };
    const cURLs = {
     ws: {
      twitch: {
@@ -1907,6 +2077,21 @@
        delete: 'https://api.twitch.tv/helix/eventsub/subscriptions?id=%ID%'
       }
      },
+     youtube: {
+      broadcasts: 'https://youtube.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status&broadcastStatus=all&broadcastType=all&maxResults=50',
+      livechat: {
+       messages: {
+        init: 'https://youtube.googleapis.com/youtube/v3/liveChat/messages?liveChatId=%CHAT_ID%&part=%PART%&maxResults=2000',
+        page: 'https://youtube.googleapis.com/youtube/v3/liveChat/messages?liveChatId=%CHAT_ID%&part=%PART%&pageToken=%PAGE%&maxResults=2000'
+       },
+       emojis: 'https://realityripple.com/Tools/Twitch/EmoteWall/yte.json'
+      },
+      subscriptions: 'https://www.googleapis.com/youtube/v3/subscriptions?part=%PART%&myRecentSubscribers=true&maxResults=50',
+      members: {
+       init: 'https://www.googleapis.com/youtube/v3/members?part=%PART%&mode=updates&maxResults=1',
+       page: 'https://www.googleapis.com/youtube/v3/members?part=%PART%&mode=updates&pageToken=%PAGE%&maxResults=1000'
+      }
+     },
      ffz: {
       set: {
        global: 'https://api.frankerfacez.com/v1/set/global'
@@ -1918,7 +2103,8 @@
        global: 'https://api.betterttv.net/3/cached/emotes/global'
       },
       users: {
-       twitch: 'https://api.betterttv.net/3/cached/users/twitch/%CHANNEL_ID%'
+       twitch: 'https://api.betterttv.net/3/cached/users/twitch/%CHANNEL_ID%',
+       youtube: 'https://api.betterttv.net/3/cached/users/youtube/%CHANNEL_ID%'
       }
      },
      '7tv': {
@@ -1926,16 +2112,20 @@
        global: 'https://7tv.io/v3/emote-sets/global'
       },
       users: {
-       twitch: 'https://7tv.io/v3/users/twitch/%CHANNEL_ID%'
+       twitch: 'https://7tv.io/v3/users/twitch/%CHANNEL_ID%',
+       youtube: 'https://7tv.io/v3/users/youtube/%CHANNEL_ID%'
       }
      },
      rr: {
       refresh: {
        t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
+       yt: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2yt.php',
        se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php'
       },
       feedback: {
-       eventsub: 'https://realityripple.com/Tools/Twitch/EmoteWall/dangling-eventsub.php'
+       eventsub: 'https://realityripple.com/Tools/Twitch/EmoteWall/dangling-eventsub.php',
+       ytmonetized: 'https://realityripple.com/Tools/Twitch/EmoteWall/ytsurvey.php',
+       yterrors: 'https://realityripple.com/Tools/Twitch/EmoteWall/yterrors.php'
       }
      }
     },
@@ -1953,10 +2143,14 @@
     },
     html: {
      rr: {
-      auth: 'https://realityripple.com/Tools/Twitch/EmoteWall/twitch.php',
+      auth: {
+       t: 'https://realityripple.com/Tools/Twitch/EmoteWall/twitch.php',
+       yt: 'https://realityripple.com/Tools/Twitch/EmoteWall/youtube.php'
+      },
       redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php'
      },
-     twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&scope=%SCOPE%&state=redirto_%ORIGIN%&force_verify=true'
+     twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&scope=%SCOPE%&state=redirto_%ORIGIN%&force_verify=true',
+     youtube: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&access_type=offline&scope=%SCOPE%&state=redirto_%ORIGIN%&prompt=consent%20select_account&include_granted_scopes=false'
     }
    };
 
@@ -1982,6 +2176,9 @@
        break;
       case 0x1A:
        _setNotice(i, 'noticeInfo sTwitch', 'EventSub Connected', 5);
+       break;
+      case 0x22:
+       _setNotice(i, 'noticeInfo sYouTube', 'Connected', 5);
        break;
       case 0x72:
        _setNotice(i, 'noticeInfo tStreamElements', 'Connected', 5);
@@ -2014,7 +2211,7 @@
      }
     }
 
-    function $error(e)
+    function $error(e, sMsg = false)
     {
      if (_states.hasOwnProperty(e) && _states[e] === 'e')
       return;
@@ -2045,6 +2242,25 @@
        break;
       case 0x1A:
        _setNotice(e, 'noticeError sTwitch', 'EventSub Disconnected');
+       break;
+      case 0x21:
+       if (typeof loginYT !== 'undefined' && loginYT.inUse)
+       {
+        _setNotice(e, 'noticeError sYouTube', 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
+        loginYT.showOut(true);
+        window.setTimeout(function(){loginYT.showIn();}, 15500);
+       }
+       else
+        _setNotice(e, 'noticeError sYouTube', 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
+       break;
+      case 0x22:
+       _setNotice(e, 'noticeError sYouTube', 'Disconnected');
+       break;
+      case 0x28:
+       _setNotice(e, 'noticeError sYouTube', 'YouTube Rate Limit Exceeded<br>You have sent too many requests. Please wait a while.');
+       break;
+      case 0x29:
+       _setNotice(e, 'noticeError sYouTube', 'Unhandled YouTube Error<br>' + sMsg);
        break;
       case 0x71:
        _setNotice(e, 'noticeError tStreamElements', 'OAuth Token Rejected<br>Please update your StreamElements OAuth Token.');
@@ -4544,6 +4760,14 @@
         r.push(v);
         continue;
        }
+       if (thirdparty.emotes.hasOwnProperty('youtube') && thirdparty.emotes.youtube.hasOwnProperty(s[i]))
+       {
+        v.svc = 'y';
+        v.url = thirdparty.emotes.youtube[s[i]].url;
+        v.scope = thirdparty.emotes.youtube[s[i]].scope;
+        r.push(v);
+        continue;
+       }
        if (thirdparty.emotes.hasOwnProperty('ffz') && thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope === 'c')
        {
         v.svc = 'f';
@@ -6574,7 +6798,7 @@
         return;
        cfg.twitch.channel = 'CHANNEL_NAME';
        cfg.twitch.oauth_refresh = 'OAUTH_REFRESH';
-       cfg.twitch.client = oauthClient;
+       cfg.twitch.client = oauthClient.t;
        cfg.twitch.scope = [];
        window.localStorage.removeItem(loginT.path() + '.channel');
        window.localStorage.removeItem(loginT.path() + '.refresh');
@@ -8191,6 +8415,1397 @@
     };
    }();
 
+   const youtube = function()
+   {
+    const $net = function()
+    {
+     let _scope = [];
+
+     const $broadcasts = function()
+     {
+      let _aC = [];
+      let _tS = false;
+
+      async function $updateStream()
+      {
+       if (_tS !== false)
+       {
+        window.clearTimeout(_tS);
+        _tS = false;
+       }
+       const lStreams = await _getActiveStreams();
+       if (lStreams === null)
+       {
+        notice.error(0x22);
+        return;
+       }
+       notice.info(0x22);
+       if (lStreams === false)
+       {
+        _tS = window.setTimeout(youtube.net.broadcasts.updateStream, 30 * 1000);
+        return;
+       }
+       let didSomething = false;
+       for (let i = 0; i < lStreams.length; i++)
+       {
+        if (!youtube.net.channelIDs.includes(lStreams[i].channel))
+        {
+         youtube.net.channelIDs.push(lStreams[i].channel);
+         if (cfg.display.extended.useBTTV)
+         {
+          thirdparty.bttv.channel('youtube', lStreams[i].channel);
+          thirdparty.bttv.socket.join('youtube', lStreams[i].channel);
+         }
+         if (cfg.display.extended.use7TV)
+         {
+          thirdparty['7tv'].channel('youtube', lStreams[i].channel);
+          await thirdparty['7tv'].socket.join('youtube', lStreams[i].channel);
+         }
+         if (cfg.display.extended.useBTTV)
+          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
+        }
+        if (!_aC.includes(lStreams[i].chat))
+        {
+         didSomething = true;
+         _aC.push(lStreams[i].chat);
+         window.setTimeout(youtube.net.broadcasts.getMessages.start, 48, lStreams[i].chat);
+        }
+       }
+       if (didSomething && cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('recheck') && cfg.youtube.connect_to.recheck === false)
+        return;
+       _tS = window.setTimeout(youtube.net.broadcasts.updateStream, 30 * 1000);
+       for (let i = _aC.length - 1; i >= 0; i--)
+       {
+        let found = false;
+        for (let j = 0, m = lStreams.length; j < m; j++)
+        {
+         if (lStreams[j].chat === _aC[i])
+         {
+          found = true;
+          break;
+         }
+        }
+        if (!found)
+        {
+         youtube.net.broadcasts.getMessages.stop(_aC[i]);
+         _aC.splice(i, 1);
+        }
+       }
+      }
+
+      async function _getActiveStreams()
+      {
+       if ((loginYT.cfgVals() & 0x02) === 0x02)
+       {
+        await youtube.net.oAuth.update();
+        if ((loginYT.cfgVals() & 0x04) !== 0x04)
+        {
+         notice.error(0x21);
+         return null;
+        }
+       }
+       if ((loginYT.cfgVals() & 0x04) !== 0x04)
+        return null;
+       if (!_scope.includes('https://www.googleapis.com/auth/youtube.readonly'))
+       {
+        notice.error(0x21);
+        return null;
+       }
+       let h = {
+        'Authorization': 'Bearer ' + cfg.youtube.oauth,
+        'Accept': 'application/json'
+       };
+       let r = await shared.httpRequest('GET', cURLs.api.youtube.broadcasts, h);
+       const j = r.json;
+       if (!r.success)
+       {
+        if (j !== null)
+        {
+         const e = _flatJSON(j);
+         console.log(e);
+         if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAUTHENTICATED')
+         {
+          notice.error(0x21);
+          youtube.net.oAuth.clear(true);
+          return null;
+         }
+         console.log(j);
+        }
+        console.log(r.code);
+        notice.error(0x29, 'Error Getting Streams: ' + r.code);
+        _errorReport('broadcasts._getActiveStreams', cURLs.api.youtube.broadcasts, r);
+        return null;
+       }
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('pageInfo'))
+        return false;
+       if (!j.pageInfo.hasOwnProperty('totalResults'))
+        return false;
+       if (j.pageInfo.totalResults < 1)
+        return false;
+       if (!j.hasOwnProperty('items'))
+        return false;
+       if (!Array.isArray(j.items))
+        return false;
+       let lcList = [];
+       if (cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('title') && cfg.youtube.connect_to.title !== false && cfg.youtube.connect_to.title !== '')
+       {
+        for (let i = 0, l = j.items.length; i < l; i++)
+        {
+         if (!j.items[i].hasOwnProperty('id'))
+          continue;
+         if (!j.items[i].hasOwnProperty('snippet'))
+          continue;
+         if (!j.items[i].snippet.hasOwnProperty('liveChatId'))
+          continue;
+         if (!j.items[i].snippet.hasOwnProperty('channelId'))
+          continue;
+         if (!j.items[i].snippet.hasOwnProperty('title'))
+          continue;
+         if (j.items[i].snippet.title === '')
+          continue;
+         const sTitle = j.items[i].snippet.title;
+         if (sTitle.toLowerCase() !== cfg.youtube.connect_to.title.toLowerCase())
+          continue;
+         let nPublished = false;
+         if (j.items[i].snippet.hasOwnProperty('publishedAt') && j.items[i].snippet.publishedAt !== '')
+          nPublished = new Date(j.items[i].snippet.publishedAt).getTime();
+         let nStarted = false;
+         if (j.items[i].snippet.hasOwnProperty('actualStartTime') && j.items[i].snippet.actualStartTime !== '')
+          nStarted = new Date(j.items[i].snippet.actualStartTime).getTime();
+         let sDesc = false;
+         if (j.items[i].snippet.hasOwnProperty('description') && j.items[i].snippet.description !== '')
+          sDesc = j.items[i].snippet.description;
+         lcList.push({channel: j.items[i].snippet.channelId, chat: j.items[i].snippet.liveChatId, publishedAt: nPublished, actualStartTime: nStarted, title: sTitle, description: sDesc});
+        }
+        lcList.sort(_ytSort);
+        if (cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('max') && !isNaN(cfg.youtube.connect_to.max) && cfg.youtube.connect_to.max > 0 && lcList.length > cfg.youtube.connect_to.max)
+         lcList.length = cfg.youtube.connect_to.max;
+        return lcList;
+       }
+       for (let i = 0, l = j.items.length; i < l; i++)
+       {
+        if (!j.items[i].hasOwnProperty('id'))
+         continue;
+        if (!j.items[i].hasOwnProperty('snippet'))
+         continue;
+        if (!j.items[i].snippet.hasOwnProperty('liveChatId'))
+         continue;
+        if (!j.items[i].snippet.hasOwnProperty('channelId'))
+         continue;
+        if (j.items[i].hasOwnProperty('status') && j.items[i].status.hasOwnProperty('lifeCycleStatus') && cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('list') && Array.isArray(cfg.youtube.connect_to.list) && cfg.youtube.connect_to.list.length > 0 && !cfg.youtube.connect_to.list.includes(j.items[i].status.lifeCycleStatus))
+         continue;
+        let nPublished = false;
+        if (j.items[i].snippet.hasOwnProperty('publishedAt') && j.items[i].snippet.publishedAt !== '')
+         nPublished = new Date(j.items[i].snippet.publishedAt).getTime();
+        let nStarted = false;
+        if (j.items[i].snippet.hasOwnProperty('actualStartTime') && j.items[i].snippet.actualStartTime !== '')
+         nStarted = new Date(j.items[i].snippet.actualStartTime).getTime();
+        let sTitle = false;
+        if (j.items[i].snippet.hasOwnProperty('title') && j.items[i].snippet.title !== '')
+         sTitle = j.items[i].snippet.title;
+        let sDesc = false;
+        if (j.items[i].snippet.hasOwnProperty('description') && j.items[i].snippet.description !== '')
+         sDesc = j.items[i].snippet.description;
+        lcList.push({channel: j.items[i].snippet.channelId, chat: j.items[i].snippet.liveChatId, publishedAt: nPublished, actualStartTime: nStarted, title: sTitle, description: sDesc});
+       }
+       lcList.sort(_ytSort);
+       if (cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('max') && !isNaN(cfg.youtube.connect_to.max) && cfg.youtube.connect_to.max > 0 && lcList.length > cfg.youtube.connect_to.max)
+        lcList.length = cfg.youtube.connect_to.max;
+       return lcList;
+      }
+
+      function _ytSort(a, b)
+      {
+       let sortOrder = {
+        'actualStartTime': 'desc',
+        'publishedAt': 'desc'
+       };
+       if (cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('sort') && typeof cfg.youtube.connect_to.sort === 'object' && cfg.youtube.connect_to.sort !== null && Object.keys(cfg.youtube.connect_to.sort).length > 0)
+        sortOrder = cfg.youtube.connect_to.sort;
+       const sortAttrs = Object.keys(sortOrder);
+       for (let i = 0; i < sortAttrs.length; i++)
+       {
+        const chooseA = sortOrder[sortAttrs[i]] === 'asc' ? 1 : -1;
+        const chooseB = -1 * chooseA;
+        if (!a.hasOwnProperty(sortAttrs[i]))
+         return chooseB;
+        if (!b.hasOwnProperty(sortAttrs[i]))
+         return chooseA;
+        const aA = a[sortAttrs[i]];
+        const aB = b[sortAttrs[i]];
+        if (aA === aB)
+         continue;
+        if (aA === false)
+         return chooseB;
+        if (aB === false)
+         return chooseA;
+        if (isNaN(aA) || isNaN(aB))
+        {
+         const cmp = aA.localeCompare(aB);
+         if (cmp === 0)
+          continue;
+         if (cmp < 0)
+          return chooseA;
+         else
+          return chooseB;
+        }
+        else
+        {
+         if (aA > aB)
+          return chooseA;
+         else
+          return chooseB;
+        }
+       }
+       return 0;
+      }
+
+      const $getMessages = function()
+      {
+       let _tM = [];
+
+       async function $start(chatID, page = false)
+       {
+        if (_tM.hasOwnProperty(chatID) && _tM[chatID] !== false)
+         window.clearTimeout(_tM[chatID]);
+        _tM[chatID] = false;
+        if ((loginYT.cfgVals() & 0x02) === 0x02)
+        {
+         await youtube.net.oAuth.update();
+         if ((loginYT.cfgVals() & 0x04) !== 0x04)
+         {
+          notice.error(0x22);
+          notice.error(0x21);
+          return;
+         }
+        }
+        if ((loginYT.cfgVals() & 0x04) !== 0x04)
+         return;
+        if (!_scope.includes('https://www.googleapis.com/auth/youtube.readonly'))
+        {
+         notice.error(0x22);
+         notice.error(0x21);
+         return;
+        }
+        let q = cURLs.api.youtube.livechat.messages.init;
+        if (page !== false)
+        {
+         q = cURLs.api.youtube.livechat.messages.page;
+         q = q.replaceAll('%PAGE%', encodeURIComponent(page));
+        }
+        q = q.replaceAll('%CHAT_ID%', encodeURIComponent(chatID));
+        q = q.replaceAll('%PART%', encodeURIComponent('snippet,authorDetails'));
+        let h = {
+         'Authorization': 'Bearer ' + cfg.youtube.oauth,
+         'Accept': 'application/json'
+        };
+        let r = await shared.httpRequest('GET', q, h);
+        const j = r.json;
+        if (!r.success)
+        {
+         if (r.code === 404)
+         {
+          notice.info(0x22);
+          youtube.net.broadcasts.updateStream();
+          return;
+         }
+         notice.error(0x22);
+         if (j !== null)
+         {
+          const e = _flatJSON(j);
+          console.log(e);
+          if (e.hasOwnProperty('error.errors.0.reason') && e['error.errors.0.reason'] === 'quotaExceeded')
+          {
+           notice.error(0x28);
+           return;
+          }
+          if (e.hasOwnProperty('error.errors.0.reason') && e['error.errors.0.reason'] === 'liveChatEnded')
+          {
+           for (let i = 0; i < _aC.length; i++)
+           {
+            if (_aC[i] !== chatID)
+             continue;
+            _aC.splice(i, 1);
+            break;
+           }
+           youtube.net.broadcasts.getMessages.stop(chatID);
+           return;
+          }
+          console.log(j);
+         }
+         console.log(r.code);
+         notice.error(0x29, 'Error Getting Messages: ' + r.code);
+         _errorReport('broadcasts.getMessages.start', q, r);
+         return;
+        }
+        if (j === null)
+         return;
+        notice.info(0x22);
+        let minPoll = 1000;
+        if (j.hasOwnProperty('pollingIntervalMillis'))
+         minPoll = j.pollingIntervalMillis;
+        let nextPage = false;
+        if (j.hasOwnProperty('nextPageToken'))
+         nextPage = j.nextPageToken;
+        if (j.hasOwnProperty('items') && Array.isArray(j.items) && j.items.length > 0)
+        {
+         const pNow = new Date().getTime();
+         for (let i = 0, l = j.items.length; i < l; i++)
+         {
+          if (!j.items[i].hasOwnProperty('snippet'))
+           continue;
+          if (!j.items[i].snippet.hasOwnProperty('type'))
+           continue;
+          if (!j.items[i].hasOwnProperty('authorDetails'))
+           continue;
+          const access = 0;
+          switch (j.items[i].snippet.type)
+          {
+           case 'textMessageEvent':
+            if (j.items[i].snippet.hasOwnProperty('publishedAt'))
+            {
+             const pTime = new Date(j.items[i].snippet.publishedAt).getTime();
+             if (pNow - pTime > 1000 * 30)
+              continue;
+            }
+            youtube.parse.line(j.items[i]);
+            break;
+           case 'superChatEvent':
+           case 'newSponsorEvent':
+           case 'memberMilestoneChatEvent':
+           case 'superStickerEvent':
+           case 'membershipGiftingEvent':
+         //case 'giftMembershipReceivedEvent':
+           case 'userBannedEvent':
+            _feedback(j.items[i].snippet.type, JSON.stringify(j.items[i].snippet));
+            if (j.items[i].snippet.hasOwnProperty('textMessageDetails') && j.items[i].snippet.textMessageDetails.hasOwnProperty('messageText'))
+             console.log(j.items[i].snippet.textMessageDetails.messageText, access);
+            else if (j.items[i].snippet.hasOwnProperty('displayMessage'))
+             console.log(j.items[i].snippet.displayMessage, access);
+            else
+             console.log(j.items[i].snippet, access);
+            break;
+           default:
+            _feedback('other', JSON.stringify(j.items[i].snippet));
+            console.log(j.items[i]);
+            break;
+          }
+         }
+        }
+        if (!_tM.hasOwnProperty(chatID))
+         return;
+        const nextPoll = Math.max(1000, minPoll); // youtube's rate limit is 610,000 requests per 24 hours
+                                                  // but there's also preflight requests and up to three
+                                                  // instances to think about
+        _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, nextPoll, chatID, nextPage);
+       }
+
+       function $stop(chatID)
+       {
+        if (!_tM.hasOwnProperty(chatID))
+         return;
+        if (_tM[chatID] === false)
+         return;
+        window.clearTimeout(_tM[chatID]);
+        delete _tM[chatID];
+       }
+
+       return {
+        start: $start,
+        stop: $stop
+       };
+      }();
+
+      return {
+       updateStream: $updateStream,
+       getMessages: $getMessages
+      };
+     }();
+
+     const $subscribers = function()
+     {
+      let _uLS = false;
+      let _tS = false;
+      const _rSC = 12000;
+
+      function task()
+      {
+       if (!_scope.includes('https://www.googleapis.com/auth/youtube.readonly'))
+       {
+        notice.error(0x21);
+        return;
+       }
+       _tS = window.setTimeout(_detect, _rSC);
+      }
+
+      async function _detect()
+      {
+       if (_tS === false)
+        return;
+       window.clearTimeout(_tS);
+       _tS = false;
+       const fRet = await _getChange();
+       if (document.visibilityState !== 'hidden' && fRet !== false && fRet.length > 0)
+       {
+        for (let i = 0, l = fRet.length; i < l; i++)
+         display.kappa.show(false, cfg.event.youtube.sub, {'%USER%': fRet[i]});
+       }
+       _tS = window.setTimeout(_detect, _rSC);
+      }
+
+      async function _getChange()
+      {
+       const url = cURLs.api.youtube.subscriptions.replaceAll('%PART%', encodeURIComponent('subscriberSnippet'));
+       const h = {
+        'Authorization': 'Bearer ' + cfg.youtube.oauth,
+        'Accept': 'application/json'
+       };
+       const r = await shared.httpRequest('GET', url, h);
+       const j = r.json;
+       if (!r.success)
+       {
+        if (j !== null)
+        {
+         const e = _flatJSON(j);
+         console.log(e);
+         console.log(j);
+        }
+        console.log(r.code);
+        notice.error(0x29, 'Error Getting Subscribers: ' + r.code);
+        _errorReport('subscribers._getChange', url, r);
+        return false;
+       }
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('items') || !Array.isArray(j.items) || j.items.length < 1)
+        return false;
+       const findU = _uLS;
+       _uLS = j.items[0].subscriberSnippet.channelId;
+       if (findU === false)
+        return false;
+       let s = [];
+       for (let i = 0, l = j.items.length; i < l; i++)
+       {
+        if (j.items[i].subscriberSnippet.channelId === findU)
+         return s;
+        //youtube.net.sList[j.items[i].subscriberSnippet.channelId] = {value: true, t: new Date().getTime()};
+        s.push(j.items[i].subscriberSnippet.title);
+       }
+       return [];
+      }
+
+      return task;
+     }();
+
+     const $members = function()
+     {
+      let _uLS = false;
+      let _tS = false;
+      const _rSC = 12000;
+
+      async function task()
+      {
+       if (!_scope.includes('https://www.googleapis.com/auth/youtube.channel-memberships.creator'))
+       {
+        notice.error(0x21);
+        return;
+       }
+       const mID = await _init();
+       if (mID === false)
+        return;
+       _tS = window.setTimeout(_detect, _rSC, mID);
+      }
+
+      async function _init()
+      {
+       const url = cURLs.api.youtube.members.init.replaceAll('%PART%', encodeURIComponent('snippet'));
+       const h = {
+        'Authorization': 'Bearer ' + cfg.youtube.oauth,
+        'Accept': 'application/json'
+       };
+       const r = await shared.httpRequest('GET', url, h);
+       const j = r.json;
+       if (!r.success)
+       {
+        if (j !== null)
+        {
+         const e = _flatJSON(j);
+         if (e.hasOwnProperty('error.errors.0.reason') && e['error.errors.0.reason'] === 'forbidden')
+         {
+          // not a monetized account
+          return false;
+         }
+         console.log(e);
+         console.log(j);
+        }
+        console.log(r.code);
+        notice.error(0x29, 'Error Getting Members: ' + r.code);
+        _errorReport('members._init', url, r);
+        return false;
+       }
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('nextPageToken'))
+        return false;
+       return j.nextPageToken;
+      }
+
+      async function _detect(mID)
+      {
+       if (_tS === false)
+        return;
+       window.clearTimeout(_tS);
+       _tS = false;
+       const fRet = await _getChange(mID);
+       if (document.visibilityState !== 'hidden' && fRet !== false && fRet.length > 0)
+       {
+        for (let i = 0, l = fRet.length; i < l; i++)
+        {
+         if (fRet[i].hasOwnProperty('gift') && fRet[i].gift > 0)
+         {
+          const gpb = shared.findInMaybeRange(cfg.event.youtube.member.giftbomb, fRet[i].gift);
+          if (gpb === false)
+           return;
+          display.kappa.show(false, gpb, {'%SENDER%': fRet[i].user, '%AMOUNT%': fRet[i].gift});
+         }
+         else
+         {
+          if (fRet[i].months === 1)
+          {
+           if (cfg.event.youtube.member.first !== false)
+            display.kappa.show(false, cfg.event.youtube.member.first, {'%USER%': fRet[i].user});
+          }
+          else
+          {
+           const rs = shared.findInMaybeRange(cfg.event.youtube.member.milestone, fRet[i].months);
+           if (rs === false)
+            return;
+           display.kappa.show(false, rs, {'%USER%': fRet[i].user, '%AMOUNT%': fRet[i].months});
+          }
+         }
+        }
+       }
+       _tS = window.setTimeout(_detect, _rSC, mID);
+      }
+
+      async function _getChange(mID)
+      {
+       const url = cURLs.api.youtube.members.page.replaceAll('%PART%', encodeURIComponent('snippet')).replaceAll('%PAGE%', encodeURIComponent(mID));
+       const h = {
+        'Authorization': 'Bearer ' + cfg.youtube.oauth,
+        'Accept': 'application/json'
+       };
+       const r = await shared.httpRequest('GET', url, h);
+       const j = r.json;
+       if (!r.success)
+       {
+        if (j !== null)
+        {
+         const e = _flatJSON(j);
+         console.log(e);
+         console.log(j);
+        }
+        console.log(r.code);
+        notice.error(0x29, 'Unknown Error Getting Members: ' + r.code);
+        _errorReport('members._getChange', url, r);
+        return false;
+       }
+       _feedback('memberChange', r.data);
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('items') || !Array.isArray(j.items) || j.items.length < 1)
+        return false;
+       const findU = _uLS;
+       _uLS = j.items[0].snippet.memberDetails.channelId;
+       if (findU === false)
+        return false;
+       let s = [];
+       for (let i = 0, l = j.items.length; i < l; i++)
+       {
+        const uID = j.items[i].snippet.memberDetails.channelId;
+        if (uID === findU)
+         return s;
+        const uName = j.items[i].snippet.memberDetails.displayName;
+        const uMonths = parseInt(j.items[i].snippet.membershipsDetails.membershipsDuration.memberTotalDurationMonths, 10);
+        s.push({user: uName, months: uMonths});
+       }
+       return [];
+      }
+
+      return task;
+     }();
+
+     const $oAuth = function()
+     {
+      async function _getToken(t)
+      {
+       const url = cURLs.api.rr.refresh.yt;
+       const h = {'Content-Type': 'application/x-www-form-urlencoded'};
+       let b = 'refresh=' + encodeURIComponent(t);
+       if (cfg.youtube.share)
+        b += '&share=1';
+       const r = await shared.httpRequest('POST', url, h, b, false);
+       const j = r.json;
+       if (!r.success)
+       {
+        if (j !== null)
+        {
+         const e = _flatJSON(j);
+         console.log(e);
+         if (e.hasOwnProperty('error') && e.error === 'invalid_grant' & e.hasOwnProperty('error_description'))
+         {
+          switch(e.error_description)
+          {
+           case 'Token has been expired or revoked.':
+            notice.error(0x21);
+            youtube.net.oAuth.clear(true);
+            return false;
+           case 'Bad Request':
+            notice.error(0x29, 'The server did not like the request.');
+            youtube.net.oAuth.clear(false);
+            return false;
+          }
+         }
+         console.log(j);
+        }
+        console.log(r.code);
+        notice.error(0x29, 'Error Getting OAuth Token: ' + r.code);
+        _errorReport('oAuth._getToken', url, r);
+        return false;
+       }
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('access_token'))
+        return false;
+       return j;
+      }
+
+      async function $update()
+      {
+       const now = Math.floor(new Date().getTime() / 1000);
+       const lsRefresh = window.localStorage.getItem(loginYT.path() + '.refresh');
+       if (lsRefresh !== null)
+        cfg.youtube.oauth_refresh = lsRefresh;
+       if (cfg.youtube.hasOwnProperty('expires') && cfg.youtube.expires > 0)
+       {
+        const tokAge = cfg.youtube.expires - now;
+        if (tokAge > 15 * 60)
+         return;
+       }
+       const ret = await _getToken(cfg.youtube.oauth_refresh);
+       if (ret === false)
+        return;
+       cfg.youtube.oauth = ret.access_token;
+       if (ret.hasOwnProperty('scope'))
+        _scope = ret.scope.split(' ');
+       if (ret.hasOwnProperty('expires_in'))
+        cfg.youtube.expires = now + ret.expires_in;
+       else
+        cfg.youtube.expires = now + 60 * 60;
+       if (ret.hasOwnProperty('refresh_token'))
+       {
+        _errorReport('oAuth.update', cURLs.api.rr.refresh.yt, 'Received a Refresh Token during OAuth Token refresh!');
+        console.log('REFRESH TOKEN SENT FROM YT! OMG!');
+        cfg.youtube.oauth_refresh = ret.refresh_token;
+        if (window.localStorage.getItem(loginYT.path() + '.refresh') !== null)
+         window.localStorage.setItem(loginYT.path() + '.refresh', ret.refresh_token);
+       }
+      }
+
+      async function $reinit()
+      {
+       if ((loginYT.cfgVals() & 0x02) === 0x02)
+       {
+        youtube.net.oAuth.clear();
+        await youtube.net.oAuth.update();
+        if ((loginYT.cfgVals() & 0x04) === 0x04)
+         return true;
+        youtube.net.oAuth.clear(true);
+       }
+       return false;
+      }
+
+      function $clear(clearRefresh = false)
+      {
+       cfg.youtube.oauth = 'OAUTH_ID';
+       if (!clearRefresh)
+        return;
+       cfg.youtube.oauth_refresh = 'OAUTH_REFRESH';
+       cfg.youtube.client = oauthClient.yt;
+       cfg.youtube.scope = [];
+       window.localStorage.removeItem(loginYT.path() + '.refresh');
+       window.localStorage.removeItem(loginYT.path() + '.client');
+       window.localStorage.removeItem(loginYT.path() + '.scope');
+      }
+
+      return {
+       update: $update,
+       reinit: $reinit,
+       clear: $clear
+      };
+     }();
+
+     function _flatJSON(j, r = {}, p = '')
+     {
+      for (let k in j)
+      {
+       if (typeof j[k] !== 'object')
+        r[p + k] = j[k];
+       else
+        _flatJSON(j[k], r, p + k + '.');
+      }
+      return r;
+     }
+
+     return {
+      channelIDs: [],
+      dead: false,
+      broadcasts: $broadcasts,
+      subscribers: $subscribers,
+      members: $members,
+      oAuth: $oAuth
+     };
+    }();
+
+    const $parse = function()
+    {
+     let _aLast = {};
+
+     function _parseUser(cmd)
+     {
+      if (!cmd.hasOwnProperty('authorDetails'))
+       return false;
+      if (!cmd.authorDetails.hasOwnProperty('displayName'))
+       return false;
+      let ret = {};
+      ret['display-name'] = cmd.authorDetails.displayName;
+      if (cmd.authorDetails.hasOwnProperty('channelId'))
+       ret.id = cmd.authorDetails.channelId;
+      return ret;
+     }
+
+     function _getMessage(cmd)
+     {
+      let msg = false;
+      if (cmd.snippet.hasOwnProperty('textMessageDetails') && cmd.snippet.textMessageDetails.hasOwnProperty('messageText'))
+       msg = cmd.snippet.textMessageDetails.messageText;
+      else if (cmd.snippet.hasOwnProperty('displayMessage'))
+       msg = cmd.snippet.displayMessage;
+      return msg;
+     }
+
+     const $content = function()
+     {
+      async function $emoji(cmd, set, dup = null)
+      {
+       const msg = _getMessage(cmd);
+       if (msg === false)
+        return [];
+       return service.parse.content.emoji(msg, set, dup);
+      }
+
+      const $youtube = function()
+      {
+       function task(cmd, dup = null)
+       {
+        let msg = _getMessage(cmd);
+        if (msg === false)
+         return [];
+        msg = msg.toLowerCase();
+        const emSeg = /(:[a-z\-]+:)/g;
+        let emList = [];
+        let match = '';
+        while ((match = emSeg.exec(msg)) !== null)
+        {
+         emList.push(match);
+        }
+        if (emList.length === 0)
+         return [];
+        let ret = [];
+        if (dup === null)
+         dup = cfg.display.duplicates;
+        if (dup === false)
+         dup = 1;
+        for (let i = 0, l = emList.length; i < l; i++)
+        {
+         const u = _ttu(emList[i][0]);
+         if (u === false)
+          continue;
+         if (dup !== true)
+         {
+          let ct = 0;
+          for (let j = 0, m = ret.length; j < m; j++)
+          {
+           if (ret[j].str === emList[i][0])
+            ct++;
+          }
+          if (ct >= dup)
+           continue;
+         }
+         ret.push({svc: 'y', url: u, str: emList[i][0], pos: emList[i].index});
+        }
+        return ret;
+       }
+
+       function _ttu(t)
+       {
+        if (t.slice(0, 1) !== ':')
+         return false;
+        t = t.slice(1);
+        if (t.slice(-1) !== ':')
+         return false;
+        t = t.slice(0, -1);
+        if (!thirdparty.emotes.youtube.hasOwnProperty(t))
+         return false;
+        return thirdparty.emotes.youtube[t].url;
+       }
+
+       return task;
+      }();
+
+      const $3rdparty = function()
+      {
+       const $ffz = function()
+       {
+        function $general(cmd, dup = null)
+        {
+         const msg = _getMessage(cmd);
+         if (msg === false)
+          return [];
+         return service.parse.content['3rdparty'].ffz.general(msg, dup);
+        }
+
+        function $zwe(l, cmd, pass, dup = null)
+        {
+         const u = _parseUser(cmd);
+         if (u === false)
+          return [];
+         const msg = _getMessage(cmd);
+         if (msg === false)
+          return [];
+         return service.parse.content['3rdparty'].ffz.zwe(l, u.displayName, msg, pass, dup);
+        }
+
+        const $user = function()
+        {
+         function $userGeneral(cmd, dup = null)
+         {
+          if (!thirdparty.emotes.hasOwnProperty('ffzU'))
+           return [];
+          const u = _parseUser(cmd);
+          if (u === false)
+           return [];
+          const msg = _getMessage(cmd);
+          if (msg === false)
+           return [];
+          if (!thirdparty.emotes.ffzU.hasOwnProperty(u.displayName))
+           return [];
+          return service.parse.content['3rdparty'].ffz.user.general(u.displayName, msg, dup);
+         }
+
+         function $userZWE(l, cmd, pass, dup = null)
+         {
+          if (!cfg.display.extended.useZWE)
+           return;
+          if (!thirdparty.emotes.hasOwnProperty('zwe'))
+           return;
+          if (!thirdparty.emotes.zwe.hasOwnProperty('ffzU'))
+           return;
+          const u = _parseUser(cmd);
+          if (u === false)
+           return [];
+          const msg = _getMessage(cmd);
+          if (msg === false)
+           return [];
+          if (!thirdparty.emotes.zwe.ffzU.hasOwnProperty(u.displayName))
+           return [];
+          return service.parse.content['3rdparty'].ffz.user.zwe(l, u.displayName, msg, pass, dup);
+         }
+
+         return {
+          general: $userGeneral,
+          zwe: $userZWE
+         };
+        }();
+
+        return {
+         general: $general,
+         zwe: $zwe,
+         user: $user
+        };
+       }();
+
+       const $bttv = function()
+       {
+        function $general(cmd, dup = null)
+        {
+         const msg = _getMessage(cmd);
+         if (msg === false)
+          return [];
+         return service.parse.content['3rdparty'].bttv.general(msg, dup);
+        }
+
+        function $zwe(l, cmd, pass, dup = null)
+        {
+         const u = _parseUser(cmd);
+         if (u === false)
+          return [];
+         const msg = _getMessage(cmd);
+         if (msg === false)
+          return;
+         return service.parse.content['3rdparty'].bttv.zwe(l, u.displayName, msg, pass, dup);
+        }
+
+        const $user = function()
+        {
+         function $userGeneral(cmd, dup = null)
+         {
+          if (!thirdparty.emotes.hasOwnProperty('bttvU'))
+           return [];
+          const msg = _getMessage(cmd);
+          if (msg === false)
+           return [];
+          const u = _parseUser(cmd);
+          if (u === false)
+           return [];
+          if (!thirdparty.emotes.bttvU.hasOwnProperty(u.displayName))
+           return [];
+          return service.parse.content['3rdparty'].bttv.user.general(u.displayName, msg, dup);
+         }
+
+         function $userZWE(l, cmd, pass, dup = null)
+         {
+          if (!cfg.display.extended.useZWE)
+           return;
+          if (!thirdparty.emotes.hasOwnProperty('zwe'))
+           return;
+          if (!thirdparty.emotes.zwe.hasOwnProperty('bttvU'))
+           return;
+          const msg = _getMessage(cmd);
+          if (msg === false)
+           return [];
+          const u = _parseUser(cmd);
+          if (u === false)
+           return [];
+          if (!thirdparty.emotes.zwe.bttvU.hasOwnProperty(u.displayName))
+           return [];
+          return service.parse.content['3rdparty'].bttv.user.zwe(l, u.displayName, msg, pass, dup);
+         }
+
+         return {
+          general: $userGeneral,
+          zwe: $userZWE
+         };
+        }();
+
+        return {
+         general: $general,
+         zwe: $zwe,
+         user: $user
+        };
+       }();
+
+       const $7tv = function()
+       {
+        function $general(cmd, dup = null)
+        {
+         const msg = _getMessage(cmd);
+         if (msg === false)
+          return [];
+         return service.parse.content['3rdparty']['7tv'].general(msg, dup);
+        }
+
+        function $zwe(l, cmd, pass, dup = null)
+        {
+         const u = _parseUser(cmd);
+         if (u === false)
+          return [];
+         const msg = _getMessage(cmd);
+         if (msg === false)
+          return;
+         return service.parse.content['3rdparty']['7tv'].zwe(l, u.displayName, msg, pass, dup);
+        }
+
+        return {
+         general: $general,
+         zwe: $zwe
+        };
+       }();
+
+       return {
+        ffz: $ffz,
+        bttv: $bttv,
+        '7tv': $7tv
+       };
+      }();
+
+      return {
+       emoji: $emoji,
+       youtube: $youtube,
+       '3rdparty': $3rdparty
+      };
+     }();
+
+     const $line = function()
+     {
+      async function task(cmd)
+      {
+       const u = _parseUser(cmd, true);
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        return;
+       const lv = await _level(cmd);
+       if (await _parseCommand(cmd, lv))
+        return;
+       if ((lv & cfg.display.access) === 0)
+        return;
+       const p = _handleDuplicates(await _eListFromCmd(cmd));
+       if (p.length === 0)
+        return;
+       display.emote.addToShowList(p);
+       display.emote.showEmotes();
+      }
+
+      async function _parseCommand(cmd, lv)
+      {
+       const kNow = new Date().getTime();
+       const m = _getMessage(cmd).toLowerCase();
+       let foundAdvCmd = false;
+       for (const k of cfg.commands)
+       {
+        if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase'))
+         continue;
+        if (!k.hasOwnProperty('aliases'))
+         continue;
+        let foundKCmd = false;
+        if (k.aliases.includes(m))
+         foundKCmd = m;
+        if (foundKCmd === false)
+        {
+         for (let i = 0, l = k.aliases.length; i < l; i++)
+         {
+          if (m.slice(0, k.aliases[i].length + 1) === k.aliases[i] + ' ')
+          {
+           foundKCmd = k.aliases[i];
+           break;
+          }
+         }
+        }
+        if (foundKCmd === false)
+         continue;
+        let kAccess = cfg.display.kappa.access;
+        if (k.hasOwnProperty('access'))
+         kAccess = k.access;
+        if ((lv & kAccess) === 0)
+         continue;
+        foundAdvCmd = true;
+        if (k.hasOwnProperty('cooldown'))
+        {
+         let hK = _hashCode(k);
+         if (!_aLast.hasOwnProperty(hK))
+          _aLast[hK] = 0;
+         if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
+          continue;
+        }
+        if (k.hasOwnProperty('erase'))
+        {
+         display.eraseAll();
+         return true;
+        }
+        let kC = {};
+        let cStyles = k.styles;
+        if (typeof cStyles !== 'object')
+        {
+         if (cStyles === false)
+          return foundAdvCmd;
+         if (cfg.display.kappa.styles.length < 1)
+          return foundAdvCmd;
+         cStyles = cfg.display.kappa.styles;
+        }
+        for (let kS in cStyles)
+        {
+         if (!cStyles.hasOwnProperty(kS))
+          continue;
+         kC[kS] = JSON.parse(JSON.stringify(cStyles[kS]));
+         kC[kS].command = foundKCmd;
+         if (foundKCmd.length === m.length)
+          kC[kS].params = null;
+         else
+          kC[kS].params = m.slice(foundKCmd.length + 1);
+        }
+        let eA = false;
+        if (foundKCmd.length < m.length)
+         eA = _handleDuplicates(await _eListFromCmd(cmd, true));
+        _aLast[_hashCode(k)] = kNow;
+        display.kappa.show(eA, kC);
+        return true;
+       }
+       let foundCmd = false;
+       if (cfg.display.kappa.aliases.includes(m))
+        foundCmd = m;
+       if (foundCmd === false)
+       {
+        for (let i = 0, l = cfg.display.kappa.aliases.length; i < l; i++)
+        {
+         if (m.slice(0, cfg.display.kappa.aliases[i].length + 1) === cfg.display.kappa.aliases[i] + ' ')
+         {
+          foundCmd = cfg.display.kappa.aliases[i];
+          break;
+         }
+        }
+       }
+       if (foundCmd === false)
+        return foundAdvCmd;
+       if ((lv & cfg.display.kappa.access) === 0)
+        return foundAdvCmd;
+       let h = _hashCode(null);
+       if (!_aLast.hasOwnProperty(h))
+        _aLast[h] = 0;
+       if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
+        return true;
+       let a = false;
+       if (foundCmd.length < m.length)
+        a = _handleDuplicates(await _eListFromCmd(cmd, true));
+       _aLast[h] = kNow;
+       display.kappa.show(a);
+       return true;
+      }
+
+      function _hashCode(o)
+      {
+       const s = JSON.stringify(o);
+       let h = 0;
+       for (let i = 0, l = s.length; i < l; i++)
+        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+       return h;
+      }
+
+      return task;
+     }();
+
+     const _level = function()
+     {
+      function task(cmd)
+      {
+       let r = 0x001;
+       if (!cmd.hasOwnProperty('authorDetails'))
+       {
+        console.log('no author details in', cmd);
+        return r;
+       }
+       const author = cmd.authorDetails;
+       if (author.hasOwnProperty('isChatOwner') && author.isChatOwner !== false)
+        r |= 0x800;
+       if (author.hasOwnProperty('isChatModerator') && author.isChatModerator !== false)
+        r |= 0x400;
+       if (author.hasOwnProperty('isChatSponsor') && author.isChatSponsor !== false)
+        r |= 0x010;
+       if (author.hasOwnProperty('isMember') && author.isMember !== false)
+        r |= 0x010;
+       if (author.hasOwnProperty('isVerified') && author.isVerified !== false)
+        r |= 0x008;
+       if (author.hasOwnProperty('isSubscriber') && author.isSubscriber !== false)
+        r |= 0x002;
+       return r;
+      }
+
+      return task;
+     }();
+
+     function _handleDuplicates(a)
+     {
+      const lA = a.length;
+      if (lA < 1)
+       return a;
+      let r = [];
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].scope === 'u')
+        r.push(a[i]);
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === 'y' || a[i].svc === 'c' || a[i].svc === 'e')
+        r.push(a[i]);
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].scope === 'c' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
+       {
+        let f = false;
+        for (let j = 0, l = r.length; j < l; j++)
+        {
+         if (r[j].str === a[i].str)
+         {
+          f = true;
+          if (r[j].svc === a[i].svc)
+           r.push(a[i]);
+          break;
+         }
+        }
+        if (!f)
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].scope !== 'c' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
+       {
+        let f = false;
+        for (let j = 0, l = r.length; j < l; j++)
+        {
+         if (r[j].str === a[i].str)
+         {
+          f = true;
+          if (r[j].svc === a[i].svc)
+           r.push(a[i]);
+          break;
+         }
+        }
+        if (!f)
+         r.push(a[i]);
+       }
+      }
+      return r;
+     }
+
+     async function _eListFromCmd(cmd, dup = null)
+     {
+      let r = [];
+      const u = _parseUser(cmd, true);
+      if (u !== false && cfg.ignore.users !== false && cfg.ignore.users.includes(u.displayName))
+       return r;
+      r = r.concat(youtube.parse.content.youtube(cmd, dup));
+      if (cfg.display.useEmoji)
+       r = r.concat(await youtube.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+      if (cfg.display.extended.useFFZ)
+      {
+       r = r.concat(youtube.parse.content['3rdparty'].ffz.general(cmd, dup));
+       r = r.concat(youtube.parse.content['3rdparty'].ffz.user.general(cmd, dup));
+      }
+      if (cfg.display.extended.useBTTV)
+      {
+       r = r.concat(youtube.parse.content['3rdparty'].bttv.general(cmd, dup));
+       r = r.concat(youtube.parse.content['3rdparty'].bttv.user.general(cmd, dup));
+      }
+      if (cfg.display.extended.use7TV)
+       r = r.concat(youtube.parse.content['3rdparty']['7tv'].general(cmd, dup));
+      if (cfg.display.extended.useFFZ)
+      {
+       youtube.parse.content['3rdparty'].ffz.zwe(r, cmd, 1, dup);
+       youtube.parse.content['3rdparty'].ffz.user.zwe(r, cmd, 1, dup);
+      }
+      if (cfg.display.extended.useBTTV)
+      {
+       youtube.parse.content['3rdparty'].bttv.zwe(r, cmd, 1, dup);
+       youtube.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 1, dup);
+      }
+      if (cfg.display.extended.use7TV)
+       youtube.parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
+      if (cfg.display.extended.useFFZ)
+      {
+       youtube.parse.content['3rdparty'].ffz.zwe(r, cmd, 2, dup);
+       youtube.parse.content['3rdparty'].ffz.user.zwe(r, cmd, 2, dup);
+      }
+      if (cfg.display.extended.useBTTV)
+      {
+       youtube.parse.content['3rdparty'].bttv.zwe(r, cmd, 2, dup);
+       youtube.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 2, dup);
+      }
+      if (cfg.display.extended.use7TV)
+       youtube.parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
+      if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
+      {
+       for (let i = r.length - 1; i >= 0; i--)
+       {
+        let m = r[i].str;
+        if (r[i].svc === 'e')
+         m = String.fromCharCode(parseInt(m, 16));
+        if (cfg.ignore.emotes.includes(m))
+         r.splice(i, 1);
+       }
+      }
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       if (r[i].hasOwnProperty('width') || r[i].hasOwnProperty('height'))
+        continue;
+       if (!r[i].hasOwnProperty('url'))
+        continue;
+       const sz = await shared.ec.get(r[i].url);
+       if (sz === null)
+        continue;
+       r[i].width = sz.width;
+       r[i].height = sz.height;
+      }
+      return r;
+     }
+
+     return {
+      content: $content,
+      line: $line
+     };
+    }();
+
+    async function $global()
+    {
+     if (!thirdparty.emotes.hasOwnProperty('youtube'))
+      thirdparty.emotes.youtube = {};
+     const url = cURLs.api.youtube.livechat.emojis;
+     const r = await shared.httpRequest('GET', url);
+     if (!r.success)
+      return false;
+     const j = r.json;
+     if (j === null)
+      return false;
+     let eCDN;
+     if (j.hasOwnProperty('template'))
+      eCDN = j.template;
+     else
+      eCDN = 'https://yt3.ggpht.com/%EMOJI_ID%=w112-h112-c-k-nd';
+     if (!j.hasOwnProperty('list'))
+      return false;
+     if (typeof j.list !== 'object')
+      return false;
+     if (j.list === null)
+      return false;
+     const jNames = Object.keys(j.list);
+     for (let i = 0, l = jNames.length; i < l; i++)
+     {
+      thirdparty.emotes.youtube[jNames[i]] = {
+       scope: 'g',
+       url: eCDN.replaceAll('%EMOJI_ID%', j.list[jNames[i]]),
+       id: j.list[jNames[i]]
+      };
+     }
+     return true;
+    }
+
+    function _feedback(type, data)
+    {
+     if (cfg.youtube.feedback !== true)
+      return;
+     const h = {'Content-Type': 'application/x-www-form-urlencoded'};
+     const b = 'type=' + encodeURIComponent(type) + '&value=' + encodeURIComponent(window.btoa(data));
+     shared.httpRequest('POST', cURLs.api.rr.feedback.ytmonetized, h, b, false, false);
+    }
+
+    function _errorReport(f, u, r)
+    {
+     if (cfg.youtube.feedback !== true)
+      return;
+     const h = {'Content-Type': 'application/x-www-form-urlencoded'};
+     const b = 'function=' + encodeURIComponent(window.btoa(f)) + '&url=' + encodeURIComponent(window.btoa(u)) + '&code=' + encodeURIComponent(window.btoa(r.code)) + '&data=' + encodeURIComponent(window.btoa(r.data));
+     shared.httpRequest('POST', cURLs.api.rr.feedback.yterrors, h, b, false, false);
+    }
+
+    return {
+     net: $net,
+     parse: $parse,
+     global: $global
+    };
+   }();
+
    const service = function()
    {
     const $parse = function()
@@ -9340,7 +10955,7 @@
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
-      if (twitch.net.dead)
+      if (twitch.net.dead && youtube.net.dead)
        return;
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
@@ -9357,7 +10972,7 @@
       }
       if (_ws === null)
        return;
-      if (twitch.net.dead)
+      if (twitch.net.dead && youtube.net.dead)
       {
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -9499,7 +11114,7 @@
       _ws.onclose = null;
       _ws.close();
       _ws = null;
-      if (twitch.net.dead === true)
+      if (twitch.net.dead && youtube.net.dead)
        return;
       streamlabs.socket();
      }
@@ -9605,7 +11220,7 @@
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
-      if (twitch.net.dead)
+      if (twitch.net.dead && youtube.net.dead)
        return;
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
@@ -9622,7 +11237,7 @@
       }
       if (_ws === null)
        return;
-      if (twitch.net.dead)
+      if (twitch.net.dead && youtube.net.dead)
       {
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -9758,7 +11373,7 @@
       _ws.onclose = null;
       _ws.close();
       _ws = null;
-      if (twitch.net.dead === true)
+      if (twitch.net.dead && youtube.net.dead)
        return;
       streamelements.socket();
      }
@@ -10146,6 +11761,13 @@
       {
        if (!twitch.net.dead && twitch.net.channelID !== 0)
         thirdparty.bttv.channel('twitch', twitch.net.channelID);
+       if (!youtube.net.dead && youtube.net.channelIDs.length > 0)
+       {
+        for (let i = 0; i < youtube.net.channelIDs.length; i++)
+        {
+         thirdparty.bttv.channel('youtube', youtube.net.channelIDs[i]);
+        }
+       }
       }
       thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
      }
@@ -10299,7 +11921,7 @@
        _ws.onmessage = null;
        _ws.onclose = null;
        _ws = null;
-       if (twitch.net.dead)
+       if (twitch.net.dead && youtube.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
@@ -10311,7 +11933,7 @@
       {
        if (_ws === null)
         return;
-       if (twitch.net.dead)
+       if (twitch.net.dead && youtube.net.dead)
        {
         _ws.onopen = null;
         _ws.onmessage = null;
@@ -10667,7 +12289,7 @@
        _ws.onmessage = null;
        _ws.onclose = null;
        _ws = null;
-       if (twitch.net.dead)
+       if (twitch.net.dead && youtube.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
@@ -10684,7 +12306,7 @@
        }
        if (_ws === null)
         return;
-       if (twitch.net.dead)
+       if (twitch.net.dead && youtube.net.dead)
        {
         _ws.onopen = null;
         _ws.onmessage = null;
@@ -10896,7 +12518,7 @@
        _ws.onclose = null;
        _ws.close();
        _ws = null;
-       if (twitch.net.dead === true)
+       if (twitch.net.dead && youtube.net.dead)
         return;
        thirdparty['7tv'].socket.init();
       }
@@ -10957,6 +12579,13 @@
      {
       if (!twitch.net.dead && twitch.net.channelID !== 0)
        thirdparty['7tv'].channel('twitch', twitch.net.channelID);
+      if (!youtube.net.dead && youtube.net.channelIDs.length > 0)
+      {
+       for (let i = 0, l = youtube.net.channelIDs.length; i < l; i++)
+       {
+        thirdparty['7tv'].channel('youtube', youtube.net.channelIDs[i]);
+       }
+      }
      }
      thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
     }
@@ -11075,13 +12704,13 @@
      return false;
     }
 
-    function $clearAddr()
+    function $clearAddr(query)
     {
      const o = window.location.toString();
      let u = o;
      if (u.indexOf('#') > -1)
       u = u.slice(0, u.indexOf('#'));
-     if (u.indexOf('?') > -1)
+     if (query && u.indexOf('?') > -1)
       u = u.slice(0, u.indexOf('?'));
      if (u !== o)
       window.history.replaceState(null, '', u);
@@ -11370,6 +12999,11 @@
       const h = _getHashParams();
       if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('oauth_refresh') || !h.hasOwnProperty('scope'))
       {
+       loginT.showIn(true);
+       return true;
+      }
+      if (h.hasOwnProperty('service') && h.service !== 'twitch')
+      {
        loginT.showIn();
        return true;
       }
@@ -11417,8 +13051,8 @@
      if (window.location.hash.length > 1)
       loc = loc.slice(0, -1 * window.location.hash.length);
      const o = encodeURIComponent(window.btoa(loc));
-     const c = encodeURIComponent(oauthClient);
-     const r = encodeURIComponent(cURLs.html.rr.auth);
+     const c = encodeURIComponent(oauthClient.t);
+     const r = encodeURIComponent(cURLs.html.rr.auth.t);
      const u = cURLs.html.twitch.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', o);
      if (u.length < 1500)
      {
@@ -11441,12 +13075,12 @@
      const fc = document.createElement('input');
      fc.setAttribute('type', 'hidden');
      fc.setAttribute('name', 'c');
-     fc.setAttribute('value', oauthClient);
+     fc.setAttribute('value', oauthClient.t);
      f.appendChild(fc);
      const fr = document.createElement('input');
      fr.setAttribute('type', 'hidden');
      fr.setAttribute('name', 'r');
-     fr.setAttribute('value', cURLs.html.rr.auth);
+     fr.setAttribute('value', cURLs.html.rr.auth.t);
      f.appendChild(fr);
      const fs = document.createElement('input');
      fs.setAttribute('type', 'hidden');
@@ -11462,7 +13096,7 @@
      f.submit();
     }
 
-    function $showIn()
+    function $showIn(auto = false)
     {
      if (document.getElementById('cmdTLogout'))
       document.body.removeChild(document.getElementById('cmdTLogout'));
@@ -11476,6 +13110,8 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall';
+     if (auto && loginYT.cfgVals() > 0x01)
+      cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
     }
 
@@ -11566,6 +13202,257 @@
     };
    }();
 
+   const loginYT = function()
+   {
+    let _tL = false;
+    const _visTime = 5000;
+
+    function _activeScope()
+    {
+     let r = [];
+     r.push('https://www.googleapis.com/auth/youtube.readonly');
+     let hasM = false;
+     if ((cfg.event.youtube.member.first === true) || (Array.isArray(cfg.event.youtube.member.first) && cfg.event.youtube.member.first.length > 0))
+      hasM = true;
+     if ((cfg.event.youtube.member.milestone === true) || (typeof cfg.event.youtube.member.milestone === 'object' && cfg.event.youtube.member.milestone !== null && Object.keys(cfg.event.youtube.member.milestone).length > 0))
+      hasM = true;
+     if ((cfg.event.youtube.member.giftbomb === true) || (typeof cfg.event.youtube.member.giftbomb === 'object' && cfg.event.youtube.member.giftbomb !== null && Object.keys(cfg.event.youtube.member.giftbomb).length > 0))
+      hasM = true;
+     if (hasM)
+      r.push('https://www.googleapis.com/auth/youtube.channel-memberships.creator');
+     return r;
+    }
+
+    function _uScope()
+    {
+     return encodeURIComponent(_activeScope().join(' '));
+    }
+
+    function $path()
+    {
+     return 'youtube.' + _activeScope().join('+');
+    }
+
+    function $cfgVals()
+    {
+     if (!cfg.hasOwnProperty('youtube'))
+      return 0;
+     let r = 0;
+     if (cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh !== false && cfg.youtube.oauth_refresh !== null && cfg.youtube.oauth_refresh !== 'OAUTH_REFRESH')
+      r |= 0x02;
+     if (cfg.youtube.hasOwnProperty('oauth') && cfg.youtube.oauth !== false && cfg.youtube.oauth !== null && cfg.youtube.oauth !== 'OAUTH_ID')
+      r |= 0x04;
+     return r;
+    }
+
+    function $use()
+    {
+     loginYT.inUse = false;
+     if (loginYT.cfgVals() > 0x01)
+      return false;
+     loginYT.inUse = true;
+     let lsClient  = window.localStorage.getItem(loginYT.path() + '.client');
+     let lsRefresh = window.localStorage.getItem(loginYT.path() + '.refresh');
+     if (lsRefresh === null)
+     {
+      const h = _getHashParams();
+      if (!h.hasOwnProperty('client') || !h.hasOwnProperty('oauth_refresh'))
+      {
+       loginYT.showIn(true);
+       return true;
+      }
+      if (h.hasOwnProperty('service') && h.service !== 'youtube')
+      {
+       loginYT.showIn();
+       return true;
+      }
+      lsClient = h.client;
+      lsRefresh = h.oauth_refresh;
+      window.localStorage.setItem(loginYT.path() + '.refresh', lsRefresh);
+      window.localStorage.setItem(loginYT.path() + '.client', lsClient);
+     }
+     cfg.youtube.oauth_refresh = lsRefresh;
+     cfg.youtube.client = lsClient;
+     document.title = 'RealityRipple\'s Home-Made Emote Wall';
+     loginYT.showOut();
+     return false;
+    }
+
+    function _getHashParams()
+    {
+     const d = function(s) {
+      const a = /\+/g;
+      return decodeURIComponent(s.replace(a, ' '));
+     };
+     let hashParams = {};
+     const r = /([^&;=]+)=?([^&;]*)/g;
+     const q = window.location.hash.substring(1);
+     let e;
+     while ((e = r.exec(q)) !== null)
+     {
+      hashParams[d(e[1])] = d(e[2]);
+     }
+     return hashParams;
+    }
+
+    function $begin()
+    {
+     youtube.net.oAuth.clear(true);
+     let loc = window.location.toString();
+     if (window.location.hash.length > 1)
+      loc = loc.slice(0, -1 * window.location.hash.length);
+     const o = encodeURIComponent(btoa(loc));
+     const c = encodeURIComponent(oauthClient.yt);
+     const r = encodeURIComponent(cURLs.html.rr.auth.yt);
+     const u = cURLs.html.youtube.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', o);
+     if (u.length < 1500)
+     {
+      window.location = u;
+      return;
+     }
+     const f = document.createElement('form');
+     f.setAttribute('method', 'POST');
+     f.setAttribute('action', cURLs.html.rr.redir);
+     const ft = document.createElement('input');
+     ft.setAttribute('type', 'hidden');
+     ft.setAttribute('name', 't');
+     ft.setAttribute('value', 'code');
+     f.appendChild(ft);
+     const fv = document.createElement('input');
+     fv.setAttribute('type', 'hidden');
+     fv.setAttribute('name', 'v');
+     fv.setAttribute('value', 'youtube');
+     f.appendChild(fv);
+     const fc = document.createElement('input');
+     fc.setAttribute('type', 'hidden');
+     fc.setAttribute('name', 'c');
+     fc.setAttribute('value', oauthClient);
+     f.appendChild(fc);
+     const fr = document.createElement('input');
+     fr.setAttribute('type', 'hidden');
+     fr.setAttribute('name', 'r');
+     fr.setAttribute('value', cURLs.html.rr.auth.yt);
+     f.appendChild(fr);
+     const fs = document.createElement('input');
+     fs.setAttribute('type', 'hidden');
+     fs.setAttribute('name', 's');
+     fs.setAttribute('value', _activeScope().join(' '));
+     f.appendChild(fs);
+     const fu = document.createElement('input');
+     fu.setAttribute('type', 'hidden');
+     fu.setAttribute('name', 'u');
+     fu.setAttribute('value', loc);
+     f.appendChild(fu);
+     document.body.appendChild(f);
+     f.submit();
+    }
+
+    function $showIn(auto = false)
+    {
+     if (document.getElementById('cmdYTLogout'))
+      document.body.removeChild(document.getElementById('cmdYTLogout'));
+     youtube.net.oAuth.clear(true);
+     let cmdLogin = document.createElement('button');
+     cmdLogin.setAttribute('id', 'cmdYTLogin');
+     cmdLogin.setAttribute('type', 'button');
+     cmdLogin.classList.add('youtube');
+     cmdLogin.classList.add('login');
+     document.addEventListener('mouseover', _fadeInLogin);
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+     cmdLogin.setAttribute('onclick', 'loginYT.begin();');
+     cmdLogin.innerHTML = 'Authenticate Emote Wall';
+     if (auto && loginT.cfgVals() > 0x01)
+      cmdLogin.classList.add('hidden');
+     document.body.appendChild(cmdLogin);
+    }
+
+    function _fadeInLogin()
+    {
+     if (document.getElementById('cmdYTLogin'))
+      document.getElementById('cmdYTLogin').classList.remove('hidden');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+    }
+
+    function _fadeOutLogin()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById('cmdYTLogin'))
+      document.getElementById('cmdYTLogin').classList.add('hidden');
+    }
+
+    function $showOut(v = false)
+    {
+     if (document.getElementById('cmdYTLogout'))
+      document.body.removeChild(document.getElementById('cmdYTLogout'));
+     let cmdLogout = document.createElement('button');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     cmdLogout.setAttribute('id', 'cmdYTLogout');
+     cmdLogout.setAttribute('type', 'button');
+     cmdLogout.classList.add('youtube');
+     cmdLogout.classList.add('logout');
+     document.addEventListener('mouseover', _fadeInLogout);
+     if (v)
+     {
+      cmdLogout.setAttribute('onclick', 'loginYT.begin();');
+      cmdLogout.innerHTML = 'Re-Auth';
+      _tL = window.setTimeout(_fadeOutLogout, _visTime);
+     }
+     else
+     {
+      cmdLogout.setAttribute('onclick', 'loginYT.showIn();');
+      cmdLogout.innerHTML = 'Log Out';
+      cmdLogout.classList.add('hidden');
+     }
+     document.body.appendChild(cmdLogout);
+    }
+
+    function _fadeInLogout()
+    {
+     if (document.getElementById('cmdYTLogout'))
+      document.getElementById('cmdYTLogout').classList.remove('hidden');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogout, _visTime);
+    }
+
+    function _fadeOutLogout()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById('cmdYTLogout'))
+      document.getElementById('cmdYTLogout').classList.add('hidden');
+    }
+
+    return {
+     inUse: false,
+     use: $use,
+     begin: $begin,
+     showIn: $showIn,
+     showOut: $showOut,
+     path: $path,
+     cfgVals: $cfgVals
+    };
+   }();
+
    const startup = function()
    {
     async function task()
@@ -11579,9 +13466,13 @@
       window.localStorage.setItem('emotewall.obs_notfound', '1');
       notice.error(0x09);
      }
-     if (loginT.use() === true)
+     const usesT = loginT.use();
+     const usesYT = loginYT.use();
+     if (usesT === true && usesYT === true)
       return;
-     shared.clearAddr();
+     shared.clearAddr(false);
+     if (usesT !== true && usesYT !== true)
+      shared.clearAddr(true);
      _streamlabs();
      await _streamelements();
      await _bttv();
@@ -11593,6 +13484,13 @@
      }
      else
       twitch.net.dead = true;
+     if (loginYT.cfgVals() > 0x01)
+     {
+      if (await _youtube() === false)
+       youtube.net.dead = true;
+     }
+     else
+      youtube.net.dead = true;
     }
 
     async function _twitch()
@@ -11614,6 +13512,30 @@
       return false;
      await _ffz();
      twitch.net.irc();
+     return true;
+    }
+
+    async function _youtube()
+    {
+     let yCfg = loginYT.cfgVals();
+     if ((yCfg & 0x02) === 0x02)
+     {
+      await youtube.net.oAuth.update();
+      yCfg = loginYT.cfgVals();
+      if ((yCfg & 0x04) !== 0x04)
+      {
+       notice.error(0x21);
+       return false;
+      }
+     }
+     if ((yCfg & 0x04) !== 0x04)
+      return false;
+     if (await youtube.global() === false)
+      return false;
+     if (cfg.event.youtube.sub !== false)
+      youtube.net.subscribers();
+     youtube.net.members();
+     youtube.net.broadcasts.updateStream();
      return true;
     }
 
@@ -12418,6 +14340,19 @@
     color: #FFFFFF;
     font-size: 14px;
    }
+   #notices .sYouTube
+   {
+    background-color: #E93223;
+   }
+   #notices .sYouTube:after
+   {
+    position: absolute;
+    top: 0;
+    left: 2px;
+    content: 'YT';
+    color: #FFFFFF;
+    font-size: 14px;
+   }
    #notices .tStreamElements
    {
     background-color: #0000FF;
@@ -12506,6 +14441,19 @@
     background-color: #5C16C5;
    }
 
+   button.youtube
+   {
+    background-color: #E93223;
+   }
+   button.youtube:focus, button.youtube:hover
+   {
+    background-color: #D00000;
+   }
+   button.youtube:active
+   {
+    background-color: #FF0000;
+   }
+
    button.login
    {
     transition: opacity 0.5s;
@@ -12520,12 +14468,25 @@
    }
    .notice + button.login.twitch
    {
-    top: calc(100% - 10vw);
+    top: calc(100% - 10vmin - 2.5em);
    }
    .notice.hiding + button.login.twitch
    {
     transition: top 500ms ease-out;
     top: calc(50% - 1em - 1.25em);
+   }
+   button.login.youtube
+   {
+    top: calc(50% - 1em + 1.25em);
+   }
+   .notice ~ button.login.youtube
+   {
+    top: calc(100% - 10vmin);
+   }
+   .notice.hiding ~ button.login.youtube
+   {
+    transition: top 500ms ease-out;
+    top: calc(50% - 1em + 1.25em);
    }
 
    button.logout
@@ -12539,6 +14500,10 @@
    button#cmdTLogout
    {
     top: 1em;
+   }
+   button#cmdYTLogout
+   {
+    top: 4em;
    }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
