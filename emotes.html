@@ -13173,6 +13173,257 @@
     };
    }();
 
+   const loginYT = function()
+   {
+    let _tL = false;
+    const _visTime = 5000;
+
+    function _activeScope()
+    {
+     let r = [];
+     r.push('https://www.googleapis.com/auth/youtube.readonly');
+     let hasM = false;
+     if ((cfg.event.youtube.member.first === true) || (Array.isArray(cfg.event.youtube.member.first) && cfg.event.youtube.member.first.length > 0))
+      hasM = true;
+     if ((cfg.event.youtube.member.milestone === true) || (typeof cfg.event.youtube.member.milestone === 'object' && cfg.event.youtube.member.milestone !== null && Object.keys(cfg.event.youtube.member.milestone).length > 0))
+      hasM = true;
+     if ((cfg.event.youtube.member.giftbomb === true) || (typeof cfg.event.youtube.member.giftbomb === 'object' && cfg.event.youtube.member.giftbomb !== null && Object.keys(cfg.event.youtube.member.giftbomb).length > 0))
+      hasM = true;
+     if (hasM)
+      r.push('https://www.googleapis.com/auth/youtube.channel-memberships.creator');
+     return r;
+    }
+
+    function _uScope()
+    {
+     return encodeURIComponent(_activeScope().join(' '));
+    }
+
+    function $path()
+    {
+     return 'youtube.' + _activeScope().join('+');
+    }
+
+    function $cfgVals()
+    {
+     if (!cfg.hasOwnProperty('youtube'))
+      return 0;
+     let r = 0;
+     if (cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh !== false && cfg.youtube.oauth_refresh !== null && cfg.youtube.oauth_refresh !== 'OAUTH_REFRESH')
+      r |= 0x02;
+     if (cfg.youtube.hasOwnProperty('oauth') && cfg.youtube.oauth !== false && cfg.youtube.oauth !== null && cfg.youtube.oauth !== 'OAUTH_ID')
+      r |= 0x04;
+     return r;
+    }
+
+    function $use()
+    {
+     loginYT.inUse = false;
+     if (loginYT.cfgVals() > 0x01)
+      return false;
+     loginYT.inUse = true;
+     let lsClient  = window.localStorage.getItem(loginYT.path() + '.client');
+     let lsRefresh = window.localStorage.getItem(loginYT.path() + '.refresh');
+     if (lsRefresh === null)
+     {
+      const h = _getHashParams();
+      if (!h.hasOwnProperty('client') || !h.hasOwnProperty('oauth_refresh'))
+      {
+       loginYT.showIn(true);
+       return true;
+      }
+      if (h.hasOwnProperty('service') && h.service !== 'youtube')
+      {
+       loginYT.showIn();
+       return true;
+      }
+      lsClient = h.client;
+      lsRefresh = h.oauth_refresh;
+      window.localStorage.setItem(loginYT.path() + '.refresh', lsRefresh);
+      window.localStorage.setItem(loginYT.path() + '.client', lsClient);
+     }
+     cfg.youtube.oauth_refresh = lsRefresh;
+     cfg.youtube.client = lsClient;
+     document.title = 'RealityRipple\'s Home-Made Emote Wall';
+     loginYT.showOut();
+     return false;
+    }
+
+    function _getHashParams()
+    {
+     const d = function(s) {
+      const a = /\+/g;
+      return decodeURIComponent(s.replace(a, ' '));
+     };
+     let hashParams = {};
+     const r = /([^&;=]+)=?([^&;]*)/g;
+     const q = window.location.hash.substring(1);
+     let e;
+     while ((e = r.exec(q)) !== null)
+     {
+      hashParams[d(e[1])] = d(e[2]);
+     }
+     return hashParams;
+    }
+
+    function $begin()
+    {
+     youtube.net.oAuth.clear(true);
+     let loc = window.location.toString();
+     if (window.location.hash.length > 1)
+      loc = loc.slice(0, -1 * window.location.hash.length);
+     const o = encodeURIComponent(btoa(loc));
+     const c = encodeURIComponent(oauthClient.yt);
+     const r = encodeURIComponent(cURLs.html.rr.auth.yt);
+     const u = cURLs.html.youtube.replaceAll('%CLIENT_ID%', c).replaceAll('%URL%', r).replaceAll('%SCOPE%', _uScope()).replaceAll('%ORIGIN%', o);
+     if (u.length < 1500)
+     {
+      window.location = u;
+      return;
+     }
+     const f = document.createElement('form');
+     f.setAttribute('method', 'POST');
+     f.setAttribute('action', cURLs.html.rr.redir);
+     const ft = document.createElement('input');
+     ft.setAttribute('type', 'hidden');
+     ft.setAttribute('name', 't');
+     ft.setAttribute('value', 'code');
+     f.appendChild(ft);
+     const fv = document.createElement('input');
+     fv.setAttribute('type', 'hidden');
+     fv.setAttribute('name', 'v');
+     fv.setAttribute('value', 'youtube');
+     f.appendChild(fv);
+     const fc = document.createElement('input');
+     fc.setAttribute('type', 'hidden');
+     fc.setAttribute('name', 'c');
+     fc.setAttribute('value', oauthClient);
+     f.appendChild(fc);
+     const fr = document.createElement('input');
+     fr.setAttribute('type', 'hidden');
+     fr.setAttribute('name', 'r');
+     fr.setAttribute('value', cURLs.html.rr.auth.yt);
+     f.appendChild(fr);
+     const fs = document.createElement('input');
+     fs.setAttribute('type', 'hidden');
+     fs.setAttribute('name', 's');
+     fs.setAttribute('value', _activeScope().join(' '));
+     f.appendChild(fs);
+     const fu = document.createElement('input');
+     fu.setAttribute('type', 'hidden');
+     fu.setAttribute('name', 'u');
+     fu.setAttribute('value', loc);
+     f.appendChild(fu);
+     document.body.appendChild(f);
+     f.submit();
+    }
+
+    function $showIn(auto = false)
+    {
+     if (document.getElementById('cmdYTLogout'))
+      document.body.removeChild(document.getElementById('cmdYTLogout'));
+     youtube.net.oAuth.clear(true);
+     let cmdLogin = document.createElement('button');
+     cmdLogin.setAttribute('id', 'cmdYTLogin');
+     cmdLogin.setAttribute('type', 'button');
+     cmdLogin.classList.add('youtube');
+     cmdLogin.classList.add('login');
+     document.addEventListener('mouseover', _fadeInLogin);
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+     cmdLogin.setAttribute('onclick', 'loginYT.begin();');
+     cmdLogin.innerHTML = 'Authenticate Emote Wall';
+     if (auto && loginT.cfgVals() > 0x01)
+      cmdLogin.classList.add('hidden');
+     document.body.appendChild(cmdLogin);
+    }
+
+    function _fadeInLogin()
+    {
+     if (document.getElementById('cmdYTLogin'))
+      document.getElementById('cmdYTLogin').classList.remove('hidden');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+    }
+
+    function _fadeOutLogin()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById('cmdYTLogin'))
+      document.getElementById('cmdYTLogin').classList.add('hidden');
+    }
+
+    function $showOut(v = false)
+    {
+     if (document.getElementById('cmdYTLogout'))
+      document.body.removeChild(document.getElementById('cmdYTLogout'));
+     let cmdLogout = document.createElement('button');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     cmdLogout.setAttribute('id', 'cmdYTLogout');
+     cmdLogout.setAttribute('type', 'button');
+     cmdLogout.classList.add('youtube');
+     cmdLogout.classList.add('logout');
+     document.addEventListener('mouseover', _fadeInLogout);
+     if (v)
+     {
+      cmdLogout.setAttribute('onclick', 'loginYT.begin();');
+      cmdLogout.innerHTML = 'Re-Auth';
+      _tL = window.setTimeout(_fadeOutLogout, _visTime);
+     }
+     else
+     {
+      cmdLogout.setAttribute('onclick', 'loginYT.showIn();');
+      cmdLogout.innerHTML = 'Log Out';
+      cmdLogout.classList.add('hidden');
+     }
+     document.body.appendChild(cmdLogout);
+    }
+
+    function _fadeInLogout()
+    {
+     if (document.getElementById('cmdYTLogout'))
+      document.getElementById('cmdYTLogout').classList.remove('hidden');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogout, _visTime);
+    }
+
+    function _fadeOutLogout()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById('cmdYTLogout'))
+      document.getElementById('cmdYTLogout').classList.add('hidden');
+    }
+
+    return {
+     inUse: false,
+     use: $use,
+     begin: $begin,
+     showIn: $showIn,
+     showOut: $showOut,
+     path: $path,
+     cfgVals: $cfgVals
+    };
+   }();
+
    const startup = function()
    {
     async function task()
