@@ -13497,6 +13497,30 @@
      return true;
     }
 
+    async function _youtube()
+    {
+     let yCfg = loginYT.cfgVals();
+     if ((yCfg & 0x02) === 0x02)
+     {
+      await youtube.net.oAuth.update();
+      yCfg = loginYT.cfgVals();
+      if ((yCfg & 0x04) !== 0x04)
+      {
+       notice.error(0x21);
+       return false;
+      }
+     }
+     if ((yCfg & 0x04) !== 0x04)
+      return false;
+     if (await youtube.global() === false)
+      return false;
+     if (cfg.event.youtube.sub !== false)
+      youtube.net.subscribers();
+     youtube.net.members();
+     youtube.net.broadcasts.updateStream();
+     return true;
+    }
+
     function _streamlabs()
     {
      const slCfg = streamlabs.cfgVals();
