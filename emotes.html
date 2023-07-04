@@ -4760,6 +4760,14 @@
         r.push(v);
         continue;
        }
+       if (thirdparty.emotes.hasOwnProperty('youtube') && thirdparty.emotes.youtube.hasOwnProperty(s[i]))
+       {
+        v.svc = 'y';
+        v.url = thirdparty.emotes.youtube[s[i]].url;
+        v.scope = thirdparty.emotes.youtube[s[i]].scope;
+        r.push(v);
+        continue;
+       }
        if (thirdparty.emotes.hasOwnProperty('ffz') && thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope === 'c')
        {
         v.svc = 'f';
@@ -11753,6 +11761,13 @@
       {
        if (!twitch.net.dead && twitch.net.channelID !== 0)
         thirdparty.bttv.channel('twitch', twitch.net.channelID);
+       if (!youtube.net.dead && youtube.net.channelIDs.length > 0)
+       {
+        for (let i = 0; i < youtube.net.channelIDs.length; i++)
+        {
+         thirdparty.bttv.channel('youtube', youtube.net.channelIDs[i]);
+        }
+       }
       }
       thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
      }
@@ -12564,6 +12579,13 @@
      {
       if (!twitch.net.dead && twitch.net.channelID !== 0)
        thirdparty['7tv'].channel('twitch', twitch.net.channelID);
+      if (!youtube.net.dead && youtube.net.channelIDs.length > 0)
+      {
+       for (let i = 0, l = youtube.net.channelIDs.length; i < l; i++)
+       {
+        thirdparty['7tv'].channel('youtube', youtube.net.channelIDs[i]);
+       }
+      }
      }
      thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
     }
