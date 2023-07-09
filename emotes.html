@@ -145,6 +145,11 @@
     *
     *  share      Share your YouTube channel on the Emote Wall home page!
     *
+    * kick      Settings related to the Kick login process.
+    *
+    *  channel    The name of the channel to join.
+    *             If FALSE, no connection to Kick will be made.
+    *
     * streamlabs  Settings related to Streamlabs tips.
     *
     *  token      The Socket Token is used in lieu of a password to access the Streamlabs API.
@@ -231,18 +236,18 @@
     *  access     A bitwise flag representing which users' messages show up on the emote wall. Account types are
     *             represented by the following values:
     *
-    *              0x800 = broadcaster              T YT
-    *              0x400 = moderator badge          T YT
-    *              0x200 = founder badge            T
-    *              0x100 = vip badge                T
+    *              0x800 = broadcaster              T YT K
+    *              0x400 = moderator badge          T YT K
+    *              0x200 = founder badge            T    K
+    *              0x100 = vip badge                T    K
     *              0x080 = artist badge             T
-    *              0x040 = tier 3 subscriber badge  T
+    *              0x040 = tier 3 subscriber badge  T    K [K OG]
     *              0x020 = tier 2 subscriber badge  T
-    *              0x010 = tier 1 subscriber badge  T YT [YT Member]
-    *              0x008 = verified user              YT
+    *              0x010 = tier 1 subscriber badge  T YT K [YT Member]
+    *              0x008 = verified user              YT K
     *              0x004 = cheer badge              T
-    *              0x002 = follower                 T YT [YT Subscriber]
-    *              0x001 = stranger                 T YT
+    *              0x002 = follower                 T YT K [YT Subscriber]
+    *              0x001 = stranger                 T YT K
     *
     *             Just put a vertical pipe " | " in between each of the values representing levels of access:
     *
@@ -461,11 +466,11 @@
     *              If FALSE, no kappagen will occur.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
-    *    targetEmotes  A boolean to toggle the use of the target channel's emotes for shoutout kappagens.
-    *                 If TRUE, shoutout kappagens will use channel emotes from the target's channel.
-    *               If FALSE, shoutout kappagens will use your channel's emotes.
+    *     targetEmotes  A boolean to toggle the use of the target channel's emotes for shoutout kappagens.
+    *                  If TRUE, shoutout kappagens will use channel emotes from the target's channel.
+    *              If FALSE, shoutout kappagens will use your channel's emotes.
     *
-    *    targetExtendedEmotes  A boolean to toggle third-party emotes, if targetEmotes is enabled.
+    *     targetExtendedEmotes  A boolean to toggle third-party emotes, if targetEmotes is enabled.
     *
     *    receive   Settings related to kappagens when another channel shouts you out.
     *
@@ -474,15 +479,15 @@
     *              If FALSE, no kappagen will occur.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
-    *    originEmotes  A boolean to toggle the use of the source channel's emotes for shoutout kappagens.
-    *                 If TRUE, shoutout kappagens will use channel emotes from the source's channel.
-    *               If FALSE, shoutout kappagens will use your channel's emotes.
+    *     originEmotes  A boolean to toggle the use of the source channel's emotes for shoutout kappagens.
+    *                  If TRUE, shoutout kappagens will use channel emotes from the source's channel.
+    *              If FALSE, shoutout kappagens will use your channel's emotes.
     *
-    *    originExtendedEmotes  A boolean to toggle third-party emotes, if originEmotes is enabled.
+    *     originExtendedEmotes  A boolean to toggle third-party emotes, if originEmotes is enabled.
     *
     *   tag       Settings related to kappagens when users tag a channel you've tagged in your stream title.
     *
-    *    styles    A user posts a message that starts with '@user'. This value can be a boolean or array.
+    *    styles   A user posts a message that starts with '@user'. This value can be a boolean or array.
     *              If TRUE, a kappagen will occur.
     *              If FALSE, no kappagen will occur.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
@@ -490,11 +495,11 @@
     *    access   A bitwise flag representing which users can trigger this kappagen with a command.
     *             This value will fall back to the general kappagen access value if missing or less than 0.
     *
-    *    targetEmotes  A boolean to toggle the use of the target channel's emotes for tag kappagens.
-    *                 If TRUE, tag kappagens will use channel emotes from the target's channel.
-    *               If FALSE, tag kappagens will use your channel's emotes.
+    *     targetEmotes  A boolean to toggle the use of the target channel's emotes for tag kappagens.
+    *                  If TRUE, tag kappagens will use channel emotes from the target's channel.
+    *              If FALSE, tag kappagens will use your channel's emotes.
     *
-    *    targetExtendedEmotes  A boolean to toggle third-party emotes, if targetEmotes is enabled.
+    *     targetExtendedEmotes  A boolean to toggle third-party emotes, if targetEmotes is enabled.
     *
     *   sub       Settings related to kappagens on a subscribe event.
     *             Note: Sub event booleans can also be arrays of kappa styles. This will override the default list
@@ -773,6 +778,111 @@
     *              If FALSE, no kappagen will occur.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
+    *  kick     Settings related to Kick channel events.
+    *
+    *   clear     A boolean to toggle clearing the screen when chat is cleared.
+    *              If TRUE, the emote wall will be cleared when the /clear command is used.
+    *              If FALSE, the emote wall will ignore the /clear command.
+    *
+    *   raid      Settings related to kappagens when being raided (hosted).
+    *
+    *    raiders  A streamer raids the channel with viewers. This value can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on all raids.
+    *              If FALSE, no kappagen will occur on raids.
+    *              If Integer, the value is the minimum raiders required for a raid to trigger a kappagen.
+    *               If 0, no kappagen will occur on raid.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    originEmotes  A boolean to toggle the use of the raiding streamer's channel emotes for raid kappagens.
+    *                 If TRUE, raid kappagens will use channel emotes from the raider's channel.
+    *               If FALSE, raid kappagens will use your channel's emotes.
+    *
+    *    originExtendedEmotes  A boolean to toggle third-party emotes, if originEmotes is enabled.
+    *
+    *   follow    A user follows the channel.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   sub       Settings related to kappagens on a subscribe event.
+    *             Note: Sub event booleans can also be arrays of kappa styles. This will override the default list
+    *                   of kappa styles for the particular event in question.
+    *
+    *    first    A user subscribes for the first time.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    resub    A user resubscribes. This can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on all resubs.
+    *              If FALSE, no kappagen will occur on resubs.
+    *              If Integer, the value is the minimum months required for a resub to trigger a kappagen.
+    *               If 0, no kappagen will occur.
+    *               If 1, a kappagen will occur every month.
+    *               If greater than 1, the number of months subscribed must be greater than or equal to this number
+    *               to trigger a kappagen.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    gift     A user gifts another user a subscription.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    giftbomb  A user gifts multiple subscriptions. This value can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on any random gift.
+    *              If FALSE, no kappagen will occur on giftbombs.
+    *              If Integer, the value is the minimum gifts required for a gift bomb to trigger a kappagen.
+    *               If 0, no kappagen will occur.
+    *               If 1, a kappagen will occur on any random gift.
+    *               If greater than 1, the number of gifted users in a giftbomb must be greater than or equal to
+    *               this number to trigger a kappagen.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   poll      Settings related to polls.
+    *
+    *    begin    A poll begins in your channel.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    end      A poll ends in your channel.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   timeout   Minimum time for a kappagen when a user is timed out. This value can be a boolean, integer, or
+    *              array:
+    *              If TRUE, a kappagen will occur on all timeouts.
+    *              If FALSE, no kappagen will occur on timeouts.
+    *              If Integer, the value is the minimum seconds required for a timeout to trigger a kappagen.
+    *               If 0, no kappagen will occur on timeouts.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '5-30' or '60-180', or an open-maximum range such as '300+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   ban       A user is banned in the channel.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
     *  tip        Settings related to third-party tip systems.
     *
     *   useProfileImage  If TRUE, tips will use the tipper's profile image instead of emotes.
@@ -1027,6 +1137,9 @@
      share: false,
      feedback: false /* help improve support for monetized YouTube events, such as memberships, superchat, and gifts */
     },
+    kick: {
+     channel: 'CHANNEL_NAME'
+    },
     streamlabs: {
      token: 'SOCKET_TOKEN', //Requires socket.token
      curMul: 100,
@@ -1242,6 +1355,27 @@
       },
       superchat: true,
       supersticker: true
+     },
+     kick: {
+      clear: true,
+      raid: {
+       raiders: 2,
+       originEmotes: true,
+       originExtendedEmotes: false
+      },
+      follow: true,
+      sub: {
+       first: true,
+       resub: true,
+       gift: true,
+       giftbomb: 1
+      },
+      poll: {
+       begin: false,
+       end: false
+      },
+      timeout: false,
+      ban: false
      },
      tip: {
       useProfileImage: false,
@@ -2048,6 +2182,7 @@
       irc: 'wss://irc-ws.chat.twitch.tv',
       eventSub: 'wss://eventsub.wss.twitch.tv/ws'
      },
+     kick: 'wss://ws-us2.pusher.com/app/eb1d5f283081a78b932c?protocol=7&client=js&version=7.6.0&flash=false',
      streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket&token=%TOKEN%',
      streamelements: 'wss://realtime.streamelements.com/socket.io/?transport=websocket',
      bttv: 'wss://sockets.betterttv.net/ws',
@@ -2092,6 +2227,12 @@
        page: 'https://www.googleapis.com/youtube/v3/members?part=%PART%&mode=updates&pageToken=%PAGE%&maxResults=1000'
       }
      },
+     kick: {
+      users: 'https://kick.com/api/v2/channels/%CHANNEL_NAME%/users/%USER%',
+      channels: 'https://kick.com/api/v2/channels/%CHANNEL_NAME%',
+      followers: 'https://kick.com/api/internal/v1/channels/%CHANNEL_NAME%/followers-count',
+      emotes: 'https://kick.com/emotes/%CHANNEL_NAME%'
+     },
      ffz: {
       set: {
        global: 'https://api.frankerfacez.com/v1/set/global'
@@ -2113,7 +2254,8 @@
       },
       users: {
        twitch: 'https://7tv.io/v3/users/twitch/%CHANNEL_ID%',
-       youtube: 'https://7tv.io/v3/users/youtube/%CHANNEL_ID%'
+       youtube: 'https://7tv.io/v3/users/youtube/%CHANNEL_ID%',
+       kick: 'https://7tv.io/v3/users/kick/%CHANNEL_ID%'
       }
      },
      rr: {
@@ -2132,6 +2274,9 @@
     cdn: {
      twitch: {
       emote: 'https://static-cdn.jtvnw.net/emoticons/v2/%EMOTE_ID%/default/dark/3.0'
+     },
+     kick: {
+      emote: 'https://files.kick.com/emotes/%EMOTE_ID%/fullsize'
      },
      ffz: {
       emoji: 'https://cdn.frankerfacez.com/static/emoji/images/%SET_ID%/'
@@ -2179,6 +2324,9 @@
        break;
       case 0x22:
        _setNotice(i, 'noticeInfo sYouTube', 'Connected', 5);
+       break;
+      case 0x32:
+       _setNotice(i, 'noticeInfo sKick', 'Connected', 5);
        break;
       case 0x72:
        _setNotice(i, 'noticeInfo tStreamElements', 'Connected', 5);
@@ -2261,6 +2409,15 @@
        break;
       case 0x29:
        _setNotice(e, 'noticeError sYouTube', 'Unhandled YouTube Error<br>' + sMsg);
+       break;
+      case 0x31:
+       _setNotice(e, 'noticeError sKick', 'Connection Rejected<br>Please check your Kick channel name.');
+       break;
+      case 0x32:
+       _setNotice(e, 'noticeError sKick', 'Disconnected');
+       break;
+      case 0x39:
+       _setNotice(e, 'noticeError sKick', 'Kick Connection Error<br>' + sMsg);
        break;
       case 0x71:
        _setNotice(e, 'noticeError tStreamElements', 'OAuth Token Rejected<br>Please update your StreamElements OAuth Token.');
@@ -4765,6 +4922,14 @@
         v.svc = 'y';
         v.url = thirdparty.emotes.youtube[s[i]].url;
         v.scope = thirdparty.emotes.youtube[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.hasOwnProperty('kick') && thirdparty.emotes.kick.hasOwnProperty(s[i]))
+       {
+        v.svc = 'k';
+        v.url = thirdparty.emotes.kick[s[i]].url;
+        v.scope = thirdparty.emotes.kick[s[i]].scope;
         r.push(v);
         continue;
        }
@@ -9806,6 +9971,1336 @@
     };
    }();
 
+   const kick = function()
+   {
+    let _usesHyphen = 0;
+
+    const $net = function()
+    {
+     const $socket = function()
+     {
+      let _wsRetry = 0;
+      let _firstRS = true;
+      let _ws = null;
+      const _lPing = 30000;
+      const _lTimeout = 35000;
+      const _lExpire = 5000;
+      let _tTimeout = false;
+      let _tExpire = false;
+      let _tPing = 0;
+      let _tPoll = false;
+
+      async function task()
+      {
+       if (kick.net.channelID === 0 || kick.net.chatID === 0)
+       {
+        await _getChIDs();
+        if (kick.net.channelID === 0 || kick.net.chatID === 0)
+        {
+         notice.error(0x31);
+         kick.net.dead = true;
+         return;
+        }
+       }
+       _tPing = 0;
+       _firstRS = true;
+       _ws = new WebSocket(cURLs.ws.kick);
+       _ws.onopen = _wsOpen;
+       _ws.onclose = _wsClose;
+       _ws.onmessage = _wsMessage;
+      }
+
+      function _wsOpen()
+      {
+       if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
+        return;
+       _ws.onopen = null;
+       _tExpire = window.setTimeout(_wsExpire, _lExpire);
+      }
+
+      function _wsClose()
+      {
+       notice.error(0x32);
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
+       }
+       if (_tExpire !== false)
+       {
+        window.clearTimeout(_tExpire);
+        _tExpire = false;
+       }
+       if (_tTimeout !== false)
+       {
+        window.clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       if (_ws === null)
+        return;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
+       _ws = null;
+       if (kick.net.dead)
+        return;
+       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+       if (_wsRetry < 2)
+        _wsRetry += 0.2;
+       window.setTimeout(kick.net.socket, wsWait);
+      }
+
+      async function _wsMessage(ev)
+      {
+       if (_tTimeout !== false)
+       {
+        window.clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
+       }
+       _tPing = window.setInterval(_wsPing, _lPing);
+       if (_ws === null)
+        return;
+       if (kick.net.dead)
+       {
+        _ws.onopen = null;
+        _ws.onmessage = null;
+        _ws.onclose = null;
+        _ws.close();
+        _ws = null;
+        return;
+       }
+       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+       _wsRetry = 0;
+       const j = JSON.parse(ev.data);
+       if (!j.hasOwnProperty('event') || j.event === null)
+        return;
+       if (j.event === 'pusher:error')
+       {
+        if (j.hasOwnProperty('data') && j.data !== null)
+        {
+         if (j.data.hasOwnProperty('code') && j.data.code !== null)
+         {
+          if (j.data.code >= 4000 && j.data.code <= 4099)
+          {
+           if (_tTimeout !== false)
+           {
+            window.clearTimeout(_tTimeout);
+            _tTimeout = false;
+           }
+           _ws.onmessage = null;
+           _ws.onclose = null;
+           _ws.close();
+           _ws = null;
+           if (kick.net.dead === true)
+            return;
+           if (j.data.hasOwnProperty('message') && j.data.message !== null)
+            notice.error(0x39, j.data.message);
+           notice.error(0x32);
+           return;
+          }
+          else if (j.data.code >= 4100 && j.data.code <= 4199)
+          {
+           if (_tTimeout !== false)
+           {
+            window.clearTimeout(_tTimeout);
+            _tTimeout = false;
+           }
+           _ws.onmessage = null;
+           _ws.onclose = null;
+           _ws.close();
+           _ws = null;
+           if (kick.net.dead === true)
+            return;
+           const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+           if (_wsRetry < 2)
+            _wsRetry += 0.2;
+           window.setTimeout(kick.net.socket, wsWait);
+           return;
+          }
+          else if (j.data.code >= 4200 && j.data.code <= 4299)
+          {
+           if (_tTimeout !== false)
+           {
+            window.clearTimeout(_tTimeout);
+            _tTimeout = false;
+           }
+           _ws.onmessage = null;
+           _ws.onclose = null;
+           _ws.close();
+           _ws = null;
+           if (kick.net.dead === true)
+            return;
+           window.setTimeout(kick.net.socket, 200);
+           return;
+          }
+         }
+         console.log(j.data);
+        }
+        else
+         console.log(j);
+        return;
+       }
+       if (!j.hasOwnProperty('data') || j.data === null)
+        return;
+       const jData = JSON.parse(j.data);
+       notice.info(0x32);
+       if (j.event.startsWith('pusher:'))
+       {
+        switch (j.event.slice(7))
+        {
+         case 'pong':
+          return;
+         case 'connection_established':
+          if (jData.hasOwnProperty('activity_timeout') && jData.activity_timeout !== null)
+          {
+           if (_tTimeout !== false)
+           {
+            window.clearTimeout(_tTimeout);
+            _tTimeout = false;
+           }
+           _tTimeout = window.setTimeout(_wsTimeout, jData.activity_timeout);
+           if (_tPing !== 0)
+           {
+            window.clearInterval(_tPing);
+            _tPing = 0;
+           }
+           _tPing = window.setInterval(_wsPing, Math.floor(jData.activity_timeout / 2) * 1000);
+          }
+          _ws.send(JSON.stringify({event:'pusher:subscribe', data: {auth: '', channel: 'chatrooms.' + kick.net.chatID + '.v2'}}));
+          return;
+        }
+        console.log('unknown pusher event:', j.event.slice(7), jData);
+        return;
+       }
+       if (j.event.startsWith('pusher_internal:'))
+       {
+        switch (j.event.slice(16))
+        {
+         case 'subscription_succeeded':
+          if (!j.hasOwnProperty('channel') || j.channel === null)
+           return;
+          if (j.channel === 'chatrooms.' + kick.net.chatID + '.v2')
+          {
+           if (_tExpire !== false)
+           {
+            window.clearTimeout(_tExpire);
+            _tExpire = false;
+           }
+           await _loadEmote_channel(cfg.kick.channel);
+           if (cfg.display.extended.use7TV && kick.net.userID !== 0)
+           {
+            thirdparty['7tv'].channel('kick', kick.net.userID);
+            await thirdparty['7tv'].socket.join('kick', kick.net.userID);
+            thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
+           }
+          }
+          return;
+        }
+        console.log('unknown internal pusher event:', j.event.slice(16), jData);
+        return;
+       }
+       if (j.event.startsWith('App\\Events\\'))
+       {
+        switch (j.event.slice(11))
+        {
+         case 'ChatMessageEvent':
+          if (document.visibilityState === 'hidden')
+           return;
+          kick.parse.line(jData);
+          return;
+         case 'UserBannedEvent':
+          if (document.visibilityState === 'hidden')
+           return;
+          if (jData.hasOwnProperty('expires_at') && jData.expires_at !== null)
+          {
+           if (cfg.event.kick.timeout !== false)
+            await kick.parse.event.timeout(jData);
+          }
+          else
+          {
+           if (cfg.event.kick.ban !== false)
+            await kick.parse.event.ban(jData);
+          }
+          return;
+         case 'StreamHostEvent':
+          if (jData.optional_message !== '')
+           console.log(jData.host_username + ' hosted for ' + jData.number_viewers + ' viewers with the message: ' + jData.optional_message);
+          if (document.visibilityState === 'hidden')
+           return;
+          kick.parse.event.raid(jData);
+          return;
+         case 'SubscriptionEvent':
+          if (document.visibilityState === 'hidden')
+           return;
+          kick.parse.event.sub(jData);
+          return;
+         case 'GiftedSubscriptionsEvent':
+          if (document.visibilityState === 'hidden')
+           return;
+          kick.parse.event.gift(jData);
+          return;
+         case 'PollUpdateEvent':
+          if (cfg.event.kick.poll === false)
+           return;
+          if ((!cfg.event.kick.poll.hasOwnProperty('begin') || cfg.event.kick.poll.begin === false) && (!cfg.event.kick.poll.hasOwnProperty('end') || cfg.event.kick.poll.end === false))
+           return;
+          if (!jData.hasOwnProperty('poll') || jData.poll === null)
+           return;
+          if (!jData.poll.hasOwnProperty('remaining') || jData.poll.remaining === null)
+           return;
+          if (_tPoll !== false)
+          {
+           window.clearTimeout(_tPoll);
+           _tPoll = false;
+          }
+          _tPoll = window.setTimeout(
+           function()
+           {
+            kick.parse.event.pollEnd(jData.poll);
+            _tPoll = false;
+           },
+           jData.poll.remaining * 1000
+          );
+          if (!jData.poll.hasOwnProperty('duration') || jData.poll.duration === null)
+           return;
+          if (jData.poll.duration === jData.poll.remaining)
+          {
+           if (!cfg.event.kick.poll.hasOwnProperty('begin'))
+            return;
+           if (cfg.event.kick.poll.begin === false)
+            return;
+           if (document.visibilityState === 'hidden')
+            return;
+           if (!jData.poll.hasOwnProperty('title') || jData.poll.title === null)
+            return;
+           display.kappa.show(false, cfg.event.kick.poll.begin, {'%TITLE%': jData.poll.title});
+           return;
+          }
+          return;
+         case 'PollDeleteEvent':
+          if (_tPoll !== false)
+          {
+           window.clearTimeout(_tPoll);
+           _tPoll = false;
+          }
+          return;
+         case 'ChatroomClearEvent':
+          if (cfg.event.kick.clear)
+           display.eraseAll();
+          return;
+        }
+        console.log('unhandled app event:', j.event.slice(11), jData);
+        return;
+       }
+       console.log('unknown event:', j.event, jData);
+      }
+
+      function _wsExpire()
+      {
+       notice.error(0x32);
+       if (_ws === null)
+        return;
+       if (kick.net.dead === true)
+        return;
+       kick.net.dead = true;
+       if (_tExpire !== false)
+       {
+        window.clearTimeout(_tExpire);
+        _tExpire = false;
+       }
+       _ws.close();
+       _ws = null;
+      }
+
+      function _wsPing()
+      {
+       if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
+        return;
+       _ws.send(JSON.stringify({event: 'pusher:ping', data: {}}));
+      }
+
+      function _wsTimeout()
+      {
+       notice.error(0x32);
+       if (_tTimeout !== false)
+       {
+        window.clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       if (_ws === null)
+        return;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
+       _ws.close();
+       _ws = null;
+       if (kick.net.dead === true)
+        return;
+       kick.net.socket();
+      }
+
+      async function _getChIDs()
+      {
+       const slug = _usesHyphen === true ? cfg.kick.channel.replaceAll('_', '-') : cfg.kick.channel;
+       const url = cURLs.api.kick.channels.replaceAll('%CHANNEL_NAME%', encodeURIComponent(slug));
+       const r = await shared.httpRequest('GET', url);
+       if (!r.success)
+       {
+        if (r.code === 404 && _usesHyphen === 0)
+        {
+         _usesHyphen = true;
+         return _getChIDs();
+        }
+        console.log(r.code);
+        console.log(r.data);
+        return false;
+       }
+       const j = r.json;
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('id') || j.id === null)
+        return false;
+       if (!j.hasOwnProperty('chatroom') || j.chatroom === null)
+        return false;
+       if (!j.hasOwnProperty('user_id') || j.user_id === null)
+        return false;
+       if (!j.chatroom.hasOwnProperty('id') || j.chatroom.id === null)
+        return false;
+       if (_usesHyphen === 0)
+        _usesHyphen = false;
+       kick.net.channelID = j.id;
+       kick.net.chatID = j.chatroom.id;
+       kick.net.userID = j.user_id;
+       return true;
+      }
+
+      return task;
+     }();
+
+     const $followers = function()
+     {
+      let _uLC = -1;
+      let _tS = false;
+      const _rSC = 5000;
+
+      async function task()
+      {
+       _tS = window.setTimeout(_detect, _rSC);
+      }
+
+      async function _detect()
+      {
+       if (_tS === false)
+        return;
+       window.clearTimeout(_tS);
+       _tS = false;
+       if (kick.net.dead === true)
+        return;
+       const fRet = await _getChange();
+       if (document.visibilityState !== 'hidden' && fRet > 0)
+       {
+        for (let i = 0, l = fRet; i < l; i++)
+         display.kappa.show(false, cfg.event.kick.follow, {'%USER%': 'Kick User'});
+       }
+       _tS = window.setTimeout(_detect, _rSC);
+      }
+
+      async function _getChange()
+      {
+       const slug = _usesHyphen === true ? cfg.kick.channel.replaceAll('_', '-') : cfg.kick.channel;
+       const url = cURLs.api.kick.followers.replaceAll('%CHANNEL_NAME%', encodeURIComponent(slug));
+       const r = await shared.httpRequest('GET', url);
+       if (!r.success)
+       {
+        if (r.code === 404 && _usesHyphen === 0)
+        {
+         _usesHyphen = true;
+         return _getChange();
+        }
+        console.log(r.code);
+        console.log(r.data);
+        return 0;
+       }
+       const j = r.json;
+       if (j === null)
+        return 0;
+       if (!j.hasOwnProperty('data') || j.data === null)
+        return 0;
+       if (!j.data.hasOwnProperty('count') || j.data.count === null)
+        return 0;
+       if (_usesHyphen === 0)
+        _usesHyphen = false;
+       if (_uLC === -1)
+        _uLC = j.data.count;
+       if (j.data.count !== _uLC)
+       {
+        if (j.data.count > _uLC)
+        {
+         const cDif = j.data.count - _uLC;
+         _uLC = j.data.count;
+         return cDif;
+        }
+        _uLC = j.data.count;
+       }
+       return 0;
+      }
+
+      return task;
+     }();
+
+     async function _loadEmote_channel(chName)
+     {
+      if (!thirdparty.emotes.hasOwnProperty('kick'))
+       thirdparty.emotes.kick = {};
+      const r = await _findEmote_channel(chName, thirdparty.emotes.kick);
+      if (r === false)
+       return false;
+      if (cList.length === 0)
+       cList = r;
+      else
+      {
+       for (let n in thirdparty.emotes.kick)
+       {
+        if (!thirdparty.emotes.kick[n].hasOwnProperty('scope'))
+         continue;
+        if (thirdparty.emotes.kick[n].scope !== 'c')
+         continue;
+        for (let c = cList.length - 1; c >= 0; c--)
+        {
+         if (cList[c].url !== thirdparty.emotes.kick[n].url)
+          continue;
+         cList.splice(c, 1);
+         break;
+        }
+       }
+       for (let i = 0, l = r.length; i < l; i++)
+       {
+        if (!cList.includes(r[i]))
+         cList.push(r[i]);
+       }
+      }
+      cSafe = JSON.parse(JSON.stringify(cList));
+     }
+
+     return {
+      channelID: 0,
+      chatID: 0,
+      userID: 0,
+      sckID: false,
+      fList: {},
+      dead: false,
+      socket: $socket,
+      followers: $followers
+     };
+    }();
+
+    const $parse = function()
+    {
+     let _aLast = {};
+
+     const $content = function()
+     {
+      async function $emoji(cmd, set, dup = null)
+      {
+       if (!cmd.hasOwnProperty('content') || cmd.content === null)
+        return [];
+       const msg = cmd.content;
+       return service.parse.content.emoji(msg, set, dup);
+      }
+
+      function $kick(cmd, dup = null)
+      {
+       if (!cmd.hasOwnProperty('content') || cmd.content === null)
+        return [];
+       const m = cmd.content;
+       if (dup === null)
+        dup = cfg.display.duplicates;
+       if (dup === false)
+        dup = 1;
+       const emSeg = /(\[emote:(\d+):([^\]]*)\])/gu;
+       let ret = [];
+       let ids = [];
+       let emList = [];
+       let match = '';
+       while ((match = emSeg.exec(m)) !== null)
+       {
+        emList.push(match);
+       }
+       if (emList.length === 0)
+        return [];
+       for (let i = 0, n = emList.length; i < n; i++)
+       {
+        if (emList[i].length !== 4)
+         continue;
+        const eID = emList[i][2];
+        if (dup !== true)
+        {
+         let ct = 0;
+         for (let j = 0, l = ids.length; j < l; j++)
+         {
+          if (ids[j] === eID)
+           ct++;
+         }
+         if (ct >= dup)
+          continue;
+        }
+        const u = cURLs.cdn.kick.emote.replaceAll('%EMOTE_ID%', eID);
+        const p = emList[i].index;
+        let sc = 'c';
+        const sName = emList[i][3];
+        if (sName !== '')
+        {
+         if (thirdparty.emotes.kick.hasOwnProperty(sName) && thirdparty.emotes.kick[sName].hasOwnProperty('scope'))
+          sc = thirdparty.emotes.kick[sName].scope;
+        }
+        ret.push({svc: 'k', url: u, str: emList[i][0], pos: p, scope: sc});
+        ids.push(eID);
+       }
+       return ret;
+      }
+
+      const $3rdparty = function()
+      {
+       const $7tv = function()
+       {
+        function $general(cmd, dup = null)
+        {
+         if (!cmd.hasOwnProperty('content') || cmd.content === null)
+          return [];
+         return service.parse.content['3rdparty']['7tv'].general(cmd.content, dup);
+        }
+
+        function $zwe(l, cmd, pass, dup = null)
+        {
+         if (!cmd.hasOwnProperty('content') || cmd.content === null)
+          return [];
+         if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+          return [];
+         if (!cmd.sender.hasOwnProperty('slug') || cmd.sender.slug === null)
+          return [];
+         return service.parse.content['3rdparty']['7tv'].zwe(l, cmd.sender.slug, cmd.content, pass, dup);
+        }
+
+        return {
+         general: $general,
+         zwe: $zwe
+        };
+       }();
+
+       return {
+        '7tv': $7tv
+       };
+      }();
+
+      return {
+       emoji: $emoji,
+       kick: $kick,
+       '3rdparty': $3rdparty
+      };
+     }();
+
+     const $line = function()
+     {
+      async function task(cmd)
+      {
+       let u = null;
+       if (cmd.hasOwnProperty('sender') && cmd.sender !== null)
+       {
+        if (cmd.sender.hasOwnProperty('slug') && cmd.sender.slug !== null)
+         u = cmd.sender.slug;
+       }
+       if (cfg.ignore.users !== false && u !== null && cfg.ignore.users.includes(u))
+        return;
+       if (!cmd.hasOwnProperty('content') || cmd.content === null)
+        return;
+       const lv = await _level(cmd);
+       if (await _parseCommand(cmd, lv))
+        return;
+       if ((lv & cfg.display.access) === 0)
+        return;
+       const p = _handleDuplicates(await _eListFromCmd(cmd));
+       if (p.length === 0)
+        return;
+       display.emote.addToShowList(p);
+       display.emote.showEmotes();
+      }
+
+      async function _parseCommand(cmd, lv)
+      {
+       const kNow = new Date().getTime();
+       const m = cmd.content.toLowerCase();
+       let foundAdvCmd = false;
+       for (const k of cfg.commands)
+       {
+        if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase') && !k.hasOwnProperty('rave') && !k.hasOwnProperty('raveon') && !k.hasOwnProperty('raveoff'))
+         continue;
+        if (!k.hasOwnProperty('aliases'))
+         continue;
+        let foundKCmd = false;
+        if (k.aliases.includes(m))
+         foundKCmd = m;
+        if (foundKCmd === false)
+        {
+         for (let i = 0, l = k.aliases.length; i < l; i++)
+         {
+          if (m.slice(0, k.aliases[i].length + 1) === k.aliases[i] + ' ')
+          {
+           foundKCmd = k.aliases[i];
+           break;
+          }
+         }
+        }
+        if (foundKCmd === false)
+         continue;
+        let kAccess = cfg.display.kappa.access;
+        if (k.hasOwnProperty('access'))
+         kAccess = k.access;
+        if ((lv & kAccess) === 0)
+         continue;
+        foundAdvCmd = true;
+        if (k.hasOwnProperty('cooldown'))
+        {
+         let hK = _hashCode(k);
+         if (!_aLast.hasOwnProperty(hK))
+          _aLast[hK] = 0;
+         if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
+          continue;
+        }
+        if (k.hasOwnProperty('erase'))
+        {
+         display.eraseAll();
+         return true;
+        }
+        if (k.hasOwnProperty('rave'))
+        {
+         if (document.body.classList.contains('rave'))
+          document.body.classList.remove('rave');
+         else
+          document.body.classList.add('rave');
+         return true;
+        }
+        if (k.hasOwnProperty('raveon'))
+        {
+         document.body.classList.add('rave');
+         return true;
+        }
+        if (k.hasOwnProperty('raveoff'))
+        {
+         if (document.body.classList.contains('rave'))
+          document.body.classList.remove('rave');
+         return true;
+        }
+        let kC = {};
+        let cStyles = k.styles;
+        if (typeof cStyles !== 'object')
+        {
+         if (cStyles === false)
+          return foundAdvCmd;
+         if (cfg.display.kappa.styles.length < 1)
+          return foundAdvCmd;
+         cStyles = cfg.display.kappa.styles;
+        }
+        for (let kS in cStyles)
+        {
+         if (!cStyles.hasOwnProperty(kS))
+          continue;
+         kC[kS] = JSON.parse(JSON.stringify(cStyles[kS]));
+         kC[kS].command = foundKCmd;
+         if (foundKCmd.length === m.length)
+          kC[kS].params = null;
+         else
+          kC[kS].params = m.slice(foundKCmd.length + 1);
+        }
+        let eA = false;
+        if (foundKCmd.length < m.length)
+         eA = _handleDuplicates(await _eListFromCmd(cmd, true));
+        _aLast[_hashCode(k)] = kNow;
+        display.kappa.show(eA, kC);
+        return true;
+       }
+       let foundCmd = false;
+       if (cfg.display.kappa.aliases.includes(m))
+        foundCmd = m;
+       if (foundCmd === false)
+       {
+        for (let i = 0, l = cfg.display.kappa.aliases.length; i < l; i++)
+        {
+         if (m.slice(0, cfg.display.kappa.aliases[i].length + 1) === cfg.display.kappa.aliases[i] + ' ')
+         {
+          foundCmd = cfg.display.kappa.aliases[i];
+          break;
+         }
+        }
+       }
+       if (foundCmd === false)
+        return foundAdvCmd;
+       if ((lv & cfg.display.kappa.access) === 0)
+        return foundAdvCmd;
+       let h = _hashCode(null);
+       if (!_aLast.hasOwnProperty(h))
+        _aLast[h] = 0;
+       if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
+        return true;
+       let a = false;
+       if (foundCmd.length < m.length)
+        a = _handleDuplicates(await _eListFromCmd(cmd, true));
+       _aLast[h] = kNow;
+       display.kappa.show(a);
+       return true;
+      }
+
+      function _hashCode(o)
+      {
+       const s = JSON.stringify(o);
+       let h = 0;
+       for (let i = 0, l = s.length; i < l; i++)
+        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+       return h;
+      }
+
+      return task;
+     }();
+
+     const $event = function()
+     {
+      async function $raid(cmd)
+      {
+       if (!cmd.hasOwnProperty('host_username') || cmd.host_username === null)
+        return;
+       if (!cmd.hasOwnProperty('number_viewers') || cmd.number_viewers === null)
+        return;
+       const c = cmd.number_viewers;
+       const r = shared.findInMaybeRange(cfg.event.kick.raid.raiders, c);
+       if (r === false)
+        return;
+       const dn = cmd.host_username;
+       const u = await _getUserProfile(dn);
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.name))
+        return;
+       if (!cfg.event.kick.raid.originEmotes)
+       {
+        display.kappa.show(false, r, {'%USER%': u.display, '%AMOUNT%': c});
+        return;
+       }
+       const e = await _findEmote_channel(u.display);
+       if (cfg.event.kick.raid.originExtendedEmotes)
+       {
+        if (cfg.display.extended.use7TV)
+        {
+         const r7TV = await thirdparty['7tv'].channelEx('kick', u.id);
+         if (r7TV !== false)
+         {
+          for (let i = 0, l = r7TV.length; i < l; i++)
+          {
+           if ((r7TV[i].vis & thirdparty['7tv'].zweFlag) === thirdparty['7tv'].zweFlag)
+            continue;
+           e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
+          }
+         }
+        }
+       }
+       display.kappa.show(e, r, {'%USER%': u.display, '%AMOUNT%': c});
+      }
+
+      async function $sub(cmd)
+      {
+       if (!cmd.hasOwnProperty('months') || cmd.months === null)
+        return;
+       if (!cmd.hasOwnProperty('username') || cmd.username === null)
+        return;
+       if (cmd.months === 1)
+       {
+        if (!cfg.event.kick.sub.hasOwnProperty('first'))
+         return;
+        if (cfg.event.kick.sub.first === false)
+         return;
+        display.kappa.show(false, cfg.event.kick.sub.first, {'%USER%': cmd.username});
+        return;
+       }
+       if (!cfg.event.kick.sub.hasOwnProperty('resub'))
+        return;
+       const rs = shared.findInMaybeRange(cfg.event.kick.sub.resub, cmd.months);
+       if (rs === false)
+        return;
+       display.kappa.show(false, rs, {'%USER%': cmd.username, '%AMOUNT%': cmd.months});
+      }
+
+      async function $gift(cmd)
+      {
+       if (!cmd.hasOwnProperty('gifter_username') || cmd.gifter_username === null)
+        return;
+       if (!cmd.hasOwnProperty('gifted_usernames') || cmd.gifted_usernames === null)
+        return;
+       const mpmgc = cmd.gifted_usernames.length;
+       if (mpmgc === 1)
+       {
+        if (!cfg.event.kick.sub.hasOwnProperty('gift'))
+         return;
+        if (cfg.event.kick.sub.gift === false)
+         return;
+        display.kappa.show(false, cfg.event.kick.sub.gift, {'%SENDER%': cmd.gifter_username, '%USER%': cmd.gifted_usernames[0]});
+        return;
+       }
+       if (!cfg.event.kick.sub.hasOwnProperty('giftbomb'))
+        return;
+       const gpb = shared.findInMaybeRange(cfg.event.kick.sub.giftbomb, mpmgc);
+       if (gpb === false)
+        return;
+       display.kappa.show(false, gpb, {'%SENDER%': cmd.gifter_username, '%AMOUNT%': mpmgc});
+      }
+
+      async function $ban(cmd)
+      {
+       if (!cmd.hasOwnProperty('user') || cmd.user === null)
+        return;
+       if (cfg.ignore.users !== false && cmd.user.hasOwnProperty('slug') && cmd.user.slug !== null && cfg.ignore.users.includes(cmd.user.slug))
+        return;
+       if (!cmd.user.hasOwnProperty('username') || cmd.user.username === null)
+        return;
+       display.kappa.show(false, cfg.event.kick.ban, {'%USER%': cmd.user.username});
+      }
+
+      async function $timeout(cmd)
+      {
+       if (!cmd.hasOwnProperty('user') || cmd.user === null)
+        return;
+       if (cfg.ignore.users !== false && cmd.user.hasOwnProperty('slug') && cmd.user.slug !== null && cfg.ignore.users.includes(cmd.user.slug))
+        return;
+       if (!cmd.user.hasOwnProperty('username') || cmd.user.username === null)
+        return;
+       if (!cmd.hasOwnProperty('expires_at') || cmd.expires_at === null)
+        return;
+       const tExp = new Date(cmd.expires_at).getTime();
+       const dDur = Math.ceil((tExp - new Date().getTime()) / 1000);
+       const r = shared.findInMaybeRange(cfg.event.kick.timeout, dDur);
+       if (r === false)
+        return;
+       display.kappa.show(false, r, {'%USER%': cmd.user.username, '%AMOUNT%': dDur});
+      }
+
+      function $pollEnd(e)
+      {
+       let vPoll = 0;
+       for (let i = 0, l = e.options.length; i < l; i++)
+       {
+        if (!e.options[i].hasOwnProperty('label') || e.options[i].label === null)
+         continue;
+        if (!e.options[i].hasOwnProperty('votes') || e.options[i].votes === null)
+         continue;
+        vPoll = Math.max(vPoll, e.options[i].votes);
+       }
+       let rPoll = [];
+       for (let i = 0, l = e.options.length; i < l; i++)
+       {
+        if (!e.options[i].hasOwnProperty('label') || e.options[i].label === null)
+         continue;
+        if (!e.options[i].hasOwnProperty('votes') || e.options[i].votes === null)
+         continue;
+        if (e.options[i].votes === vPoll)
+         rPoll.push(e.options[i].label);
+       }
+       let sPoll = 'None';
+       if (rPoll.length > 0)
+        sPoll = rPoll.join(' + ');
+       if (cfg.event.kick.poll !== false && cfg.event.kick.poll.hasOwnProperty('end'))
+        display.kappa.show(false, cfg.event.kick.poll.end, {'%TITLE%': e.title, '%RESULT%': sPoll});
+      }
+
+      return {
+       raid: $raid,
+       sub: $sub,
+       gift: $gift,
+       ban: $ban,
+       timeout: $timeout,
+       pollEnd: $pollEnd
+      };
+     }();
+
+     const _level = function()
+     {
+      const _rFH = 3600000;
+
+      async function task(cmd)
+      {
+       let r = 0x001;
+       if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+        return r;
+       if (!cmd.sender.hasOwnProperty('identity') || cmd.sender.identity === null)
+        return r;
+       if (!cmd.sender.identity.hasOwnProperty('badges') || cmd.sender.identity.badges === null)
+        return r;
+       if (!Array.isArray(cmd.sender.identity.badges))
+        return r;
+       if (cmd.sender.identity.badges.length < 1)
+        return r;
+       for (let i = 0, l = cmd.sender.identity.badges.length; i < l; i++)
+       {
+        if (!cmd.sender.identity.badges[i].hasOwnProperty('type') || cmd.sender.identity.badges[i].type === null)
+         continue;
+        switch (cmd.sender.identity.badges[i].type)
+        {
+         case 'broadcaster':
+          r |= 0x800;
+          break;
+         case 'moderator':
+          r |= 0x400;
+          break;
+         case 'founder':
+          r |= 0x200;
+          break;
+         case 'vip':
+          r |= 0x100;
+          break;
+         case 'og':
+          r |= 0x040;
+          break;
+         case 'subscriber':
+          r |= 0x010;
+          break;
+         case 'verified':
+          r |= 0x008;
+          break;
+         case 'sub_gifter':
+          break;
+         case 'staff':
+          break;
+         default:
+          console.log(cmd.sender.identity.badges[i]);
+        }
+       }
+       /* api-heavy, only check if follower access is allowed and there's a chance it matters */
+       let needF = false;
+       if ((cfg.display.access & 0x002) === 0x002 && (cfg.display.access & 0x001) !== 0x001)
+        needF = true;
+       else if ((cfg.display.kappa.access & 0x002) === 0x002 && (cfg.display.kappa.access & 0x001) !== 0x001)
+        needF = true;
+       else
+       {
+        for (const k of cfg.commands)
+        {
+         if (!k.hasOwnProperty('styles'))
+          continue;
+         if (!k.hasOwnProperty('access'))
+          continue;
+         if ((k.access & 0x002) === 0x002 && (k.access & 0x001) !== 0x001)
+         {
+          needF = true;
+          break;
+         }
+        }
+       }
+       if (needF)
+       {
+        const f = await _checkFollower(cmd);
+        if (f)
+         r |= 0x002;
+       }
+       if ((r & 0x800) === 0x800 && (r & 0x070) !== 0)
+        return r & ~0x070;
+       return r;
+      }
+
+      async function _checkFollower(cmd)
+      {
+       const uID = cmd.sender.id;
+       if (kick.net.fList.hasOwnProperty(uID))
+       {
+        const tDif = new Date().getTime() - kick.net.fList[uID].t;
+        if (tDif < _rFH)
+         return kick.net.fList[uID].value;
+       }
+       const u = await _getUserProfile(cmd.sender.username);
+       if (u === false)
+        return false;
+       if (u.follower !== false)
+       {
+        kick.net.fList[uID] = {value: true, t: new Date().getTime()};
+        return true;
+       }
+       kick.net.fList[uID] = {value: false, t: new Date().getTime()};
+       return false;
+      }
+
+      return task;
+     }();
+
+     function _handleDuplicates(a)
+     {
+      const lA = a.length;
+      if (lA < 1)
+       return a;
+      let r = [];
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === 'c')
+        r.push(a[i]);
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].scope === 'u')
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === 'k' && a[i].scope === 'c')
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].scope === 'c' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === 'k' && a[i].scope === 'g')
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].scope === 'g' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === 'e')
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      return r;
+     }
+
+     function _notDupe(add, pend)
+     {
+      for (let i = 0, l = pend.length; i < l; i++)
+      {
+       if (pend[i].str === add.str)
+        return (pend[i].svc === add.svc);
+      }
+      return true;
+     }
+
+     async function _eListFromCmd(cmd, dup = null)
+     {
+      let r = [];
+      let u = null;
+      if (cmd.hasOwnProperty('sender') && cmd.sender !== null)
+      {
+       if (cmd.sender.hasOwnProperty('slug') && cmd.sender.slug !== null)
+        u = cmd.sender.slug;
+      }
+      if (cfg.ignore.users !== false && u !== false && cfg.ignore.users.includes(u))
+       return r;
+      r = r.concat(kick.parse.content.kick(cmd, dup));
+      if (cfg.display.useEmoji)
+       r = r.concat(await kick.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+      if (cfg.display.extended.use7TV)
+       r = r.concat(kick.parse.content['3rdparty']['7tv'].general(cmd, dup));
+      if (cfg.display.extended.use7TV)
+       kick.parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
+      if (cfg.display.extended.use7TV)
+       kick.parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
+      if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
+      {
+       for (let i = r.length - 1; i >= 0; i--)
+       {
+        let m = r[i].str;
+        if (r[i].svc === 'e')
+         m = String.fromCharCode(parseInt(m, 16));
+        if (cfg.ignore.emotes.includes(m))
+         r.splice(i, 1);
+       }
+      }
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       if (r[i].hasOwnProperty('width') || r[i].hasOwnProperty('height'))
+        continue;
+       if (!r[i].hasOwnProperty('url'))
+        continue;
+       const sz = await shared.ec.get(r[i].url);
+       if (sz === null)
+        continue;
+       r[i].width = sz.width;
+       r[i].height = sz.height;
+      }
+      return r;
+     }
+
+     function $clearCooldowns()
+     {
+      _aLast = {};
+     }
+
+     return {
+      content: $content,
+      line: $line,
+      event: $event,
+      clearCooldowns: $clearCooldowns,
+      uReg: /[^A-Za-z0-9_]/
+     };
+    }();
+
+    const _findEmote_channel = function()
+    {
+     const _rCH = 300000;
+     let _chList = {};
+
+     async function task(chName, n = false, useHyphen = false)
+     {
+      if (n === false && _chList.hasOwnProperty(chName))
+      {
+       const tDif = new Date().getTime() - _chList[chName].t;
+       if (tDif < _rCH)
+        return _chList[chName].value;
+      }
+      const slug = useHyphen === true ? chName.replaceAll('_', '-') : chName;
+      const url = cURLs.api.kick.emotes.replaceAll('%CHANNEL_NAME%', encodeURIComponent(slug));
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
+      {
+       if (r.code === 404 && chName.includes('_'))
+        return _findEmote_channel(chName, n, true);
+       console.log(r.code);
+       console.log(r.data);
+       return false;
+      }
+      const j = r.json;
+      if (j === null)
+       return false;
+      if (!Array.isArray(j))
+       return false;
+      let ret = [];
+      for (let i = 0, l = j.length; i < l; i++)
+      {
+       if (!j[i].hasOwnProperty('id') || j[i].id === null)
+        continue;
+       if (j[i].id === 'Global')
+       {
+        _scrapeGlobal(j[i]);
+        continue;
+       }
+       if (j[i].id === 'Emoji')
+        continue;
+       if (!j[i].hasOwnProperty('emotes') || j[i].emotes === null)
+        continue;
+       if (!Array.isArray(j[i].emotes))
+        continue;
+       for (let e = 0, m = j[i].emotes.length; e < m; e++)
+       {
+        if (cfg.ignore.emotes !== false && j[i].emotes[e].hasOwnProperty('name') && j[i].emotes[e].name !== null && cfg.ignore.emotes.includes(j[i].emotes[e].name))
+         continue;
+        const eURL = cURLs.cdn.kick.emote.replaceAll('%EMOTE_ID%', j[i].emotes[e].id);
+        if (n !== false && j[i].emotes[e].hasOwnProperty('name') && j[i].emotes[e].name !== null)
+        {
+         n[j[i].emotes[e].name] = {
+          scope: 'c',
+          url: eURL,
+          id: j[i].emotes[e].id
+         };
+        }
+        ret.push({url: eURL});
+       }
+       _chList[chName] = {t: new Date().getTime(), value: ret};
+      }
+      return ret;
+     }
+
+     function _scrapeGlobal(d)
+     {
+      if (!d.hasOwnProperty('emotes') || d.emotes === null)
+       return;
+      if (!Array.isArray(d.emotes))
+       return;
+      if (!thirdparty.emotes.hasOwnProperty('kick'))
+       thirdparty.emotes.kick = {};
+      for (let e = 0, m = d.emotes.length; e < m; e++)
+      {
+       if (!d.emotes[e].hasOwnProperty('name') || d.emotes[e].name === null)
+        continue;
+       if (cfg.ignore.emotes !== false && cfg.ignore.emotes.includes(d.emotes[e].name))
+        continue;
+       const eURL = cURLs.cdn.kick.emote.replaceAll('%EMOTE_ID%', d.emotes[e].id);
+       thirdparty.emotes.kick[d.emotes[e].name] = {
+        scope: 'g',
+        url: eURL,
+        id: d.emotes[e].id
+       };
+      }
+     }
+
+     return task;
+    }();
+
+    async function _getUserProfile(dn)
+    {
+     const slug = _usesHyphen === true ? cfg.kick.channel.replaceAll('_', '-') : cfg.kick.channel;
+     const url = cURLs.api.kick.users.replaceAll('%CHANNEL_NAME%', encodeURIComponent(slug)).replaceAll('%USER%', encodeURIComponent(dn));
+     const r = await shared.httpRequest('GET', url);
+     if (!r.success)
+     {
+      if (r.code === 404 && _usesHyphen === 0)
+      {
+       _usesHyphen = true;
+       return _getUserProfile(dn);
+      }
+      return false;
+     }
+     const j = r.json;
+     if (j === null)
+      return false;
+     if (_usesHyphen === 0)
+      _usesHyphen = false;
+     let u = {};
+     if (j.hasOwnProperty('slug') && j.slug !== null)
+      u.name = j.slug;
+     else
+      u.name = dn.toLowerCase();
+     if (j.hasOwnProperty('username') && j.username !== null)
+      u.display = j.username;
+     else
+      u.display = dn;
+     if (j.hasOwnProperty('id') && j.id !== null)
+      u.id = j.id;
+     else
+      u.id = 0;
+     if (j.hasOwnProperty('following_since') && j.following_since !== null)
+      u.follower = j.following_since;
+     else
+      u.follower = false;
+     return u;
+    }
+
+    return {
+     net: $net,
+     parse: $parse
+    };
+   }();
+
    const service = function()
    {
     const $parse = function()
@@ -10955,7 +12450,7 @@
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        return;
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
@@ -10972,7 +12467,7 @@
       }
       if (_ws === null)
        return;
-      if (twitch.net.dead && youtube.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
       {
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -11114,7 +12609,7 @@
       _ws.onclose = null;
       _ws.close();
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        return;
       streamlabs.socket();
      }
@@ -11220,7 +12715,7 @@
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        return;
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
@@ -11237,7 +12732,7 @@
       }
       if (_ws === null)
        return;
-      if (twitch.net.dead && youtube.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
       {
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -11373,7 +12868,7 @@
       _ws.onclose = null;
       _ws.close();
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        return;
       streamelements.socket();
      }
@@ -12289,7 +13784,7 @@
        _ws.onmessage = null;
        _ws.onclose = null;
        _ws = null;
-       if (twitch.net.dead && youtube.net.dead)
+       if (twitch.net.dead && youtube.net.dead && kick.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
@@ -12306,7 +13801,7 @@
        }
        if (_ws === null)
         return;
-       if (twitch.net.dead && youtube.net.dead)
+       if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        {
         _ws.onopen = null;
         _ws.onmessage = null;
@@ -12518,7 +14013,7 @@
        _ws.onclose = null;
        _ws.close();
        _ws = null;
-       if (twitch.net.dead && youtube.net.dead)
+       if (twitch.net.dead && youtube.net.dead && kick.net.dead)
         return;
        thirdparty['7tv'].socket.init();
       }
@@ -12586,6 +14081,8 @@
         thirdparty['7tv'].channel('youtube', youtube.net.channelIDs[i]);
        }
       }
+      if (!kick.net.dead && kick.net.userID !== 0)
+       thirdparty['7tv'].channel('kick', kick.net.userID);
      }
      thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
     }
@@ -13453,6 +14950,23 @@
     };
    }();
 
+   const loginK = function()
+   {
+    function $cfgVals()
+    {
+     if (!cfg.hasOwnProperty('kick'))
+      return 0;
+     let r = 0;
+     if (cfg.kick.hasOwnProperty('channel') && cfg.kick.channel !== false && cfg.kick.channel !== null && cfg.kick.channel !== 'CHANNEL_NAME')
+      r |= 0x01;
+     return r;
+    }
+
+    return {
+     cfgVals: $cfgVals
+    };
+   }();
+
    const startup = function()
    {
     async function task()
@@ -13466,10 +14980,23 @@
       window.localStorage.setItem('emotewall.obs_notfound', '1');
       notice.error(0x09);
      }
+     if ((loginK.cfgVals() & 0x01) !== 0x01)
+      kick.net.dead = true;
+     else
+     {
+      if (await _kick() === false)
+       kick.net.dead = true;
+     }
      const usesT = loginT.use();
      const usesYT = loginYT.use();
      if (usesT === true && usesYT === true)
+     {
+      if (!kick.net.dead)
+       await _7tv();
+      twitch.net.dead = true;
+      youtube.net.dead = true;
       return;
+     }
      shared.clearAddr(false);
      if (usesT !== true && usesYT !== true)
       shared.clearAddr(true);
@@ -13536,6 +15063,16 @@
       youtube.net.subscribers();
      youtube.net.members();
      youtube.net.broadcasts.updateStream();
+     return true;
+    }
+
+    async function _kick()
+    {
+     if ((loginK.cfgVals() & 0x01) !== 0x01)
+      return false;
+     kick.net.socket();
+     if (cfg.event.kick.follow !== false)
+      kick.net.followers();
      return true;
     }
 
@@ -14351,6 +15888,19 @@
     left: 2px;
     content: 'YT';
     color: #FFFFFF;
+    font-size: 14px;
+   }
+   #notices .sKick
+   {
+    background-color: #53FC18;
+   }
+   #notices .sKick:after
+   {
+    position: absolute;
+    top: 0;
+    left: 7px;
+    content: 'K';
+    color: #000000;
     font-size: 14px;
    }
    #notices .tStreamElements
