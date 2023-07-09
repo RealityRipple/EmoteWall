@@ -332,6 +332,10 @@
        useMsg: true,
        bits: 50
       },
+      hypechat: {
+       useMsg: true,
+       level: 1
+      },
       badge: {
        '1': false,
        '100': true
@@ -5507,8 +5511,11 @@
            continue;
           if (cmd.params.length > 1)
            cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
-          if (!await twitch.parse.event.cheer(cmd))
-           twitch.parse.line(cmd);
+          if (await twitch.parse.event.cheer(cmd))
+           continue;
+          if (await twitch.parse.event.hypechat(cmd))
+           continue;
+          twitch.parse.line(cmd);
           break;
          case 'NOTICE':
           if (cmd.params.length > 1 && cmd.params[1] === 'Login authentication failed')
@@ -6533,6 +6540,72 @@
        return true;
       }
 
+      const $hypechat = function()
+      {
+       const _levels = ['UNKNOWN', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'];
+       const _minUSD = [0, 1, 5, 10, 20, 50, 100, 200, 300, 400, 500];
+
+       async function task(cmd)
+       {
+        if (cfg.event.twitch.hypechat === false)
+         return false;
+        if (!cfg.event.twitch.hypechat.hasOwnProperty('level'))
+         return false;
+        if (cfg.event.twitch.hypechat.level === false)
+         return false;
+        const u = _parseUser(cmd, true);
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+         return;
+        if (!cmd.hasOwnProperty('tags'))
+         return false;
+        if (!cmd.tags.hasOwnProperty('pinned-chat-paid-level') || cmd.tags['pinned-chat-paid-level'] === null)
+         return false;
+        const lv = _levels.indexOf(cmd.tags['pinned-chat-paid-level']);
+        if (lv < 1)
+         return false;
+        let p = [];
+        if (!cmd.tags.hasOwnProperty('pinned-chat-paid-is-system-message') || parseInt(cmd.tags['pinned-chat-paid-is-system-message'], 10) !== 1)
+        {
+         if (cfg.event.twitch.cheer.useMsg)
+         {
+          const a = await _eListFromCmd(cmd);
+          p = p.concat(a);
+         }
+         else
+          await twitch.parse.line(cmd);
+         p = _handleDuplicates(p);
+        }
+        if (p.length === 0)
+         p = false;
+        const r = shared.findInMaybeRange(cfg.event.twitch.hypechat.level, lv);
+        if (r === false)
+        {
+         if (p !== false)
+         {
+          display.emote.addToShowList(p);
+          display.emote.showEmotes();
+         }
+         return true;
+        }
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        let amt = _minUSD[lv] + ' USD';
+        if (cmd.tags.hasOwnProperty('pinned-chat-paid-canonical-amount') && cmd.tags['pinned-chat-paid-canonical-amount'] !== null)
+         amt = parseInt(cmd.tags['pinned-chat-paid-canonical-amount'], 10);
+        else if (cmd.tags.hasOwnProperty('pinned-chat-paid-amount') && cmd.tags['pinned-chat-paid-amount'] !== null)
+         amt = parseInt(cmd.tags['pinned-chat-paid-amount'], 10);
+        if (cmd.tags.hasOwnProperty('pinned-chat-paid-exponent') && cmd.tags['pinned-chat-paid-exponent'] !== null)
+         amt = amt / (10 ** parseInt(cmd.tags['pinned-chat-paid-exponent'], 10));
+        if (cmd.tags.hasOwnProperty('pinned-chat-paid-currency') && cmd.tags['pinned-chat-paid-currency'] !== null)
+         amt += ' ' + cmd.tags['pinned-chat-paid-currency'];
+        display.kappa.show(p, r, {'%USER%': dn, '%AMOUNT%': amt});
+        return true;
+       }
+
+       return task;
+      }();
+
       async function $raid(cmd)
       {
        if (cfg.event.twitch.raid === false)
@@ -7093,6 +7166,7 @@
 
       return {
        cheer: $cheer,
+       hypechat: $hypechat,
        raid: $raid,
        sub: $sub,
        badge: $badge,
