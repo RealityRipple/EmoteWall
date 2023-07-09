@@ -2554,9 +2554,9 @@
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, tMS);
         scene.setAttribute('style', s);
-        _eActive++;
+        _eActive += 6;
         document.body.appendChild(scene);
-        _gc.hook(scene, true, true, tMS);
+        _gc.hook(scene, true, 6, tMS);
         shared.doNextFrame(_tMove, tInit, cube, scene, hD, vD, eH);
        }
 
@@ -2735,12 +2735,12 @@
         s += ' --emote-width: ' + eW + 'px;';
         s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
         let iArr = [];
+        _eActive--;
         iArr.push(_addEmoteToDoc(tInit, oK.url, 1, {style: s, classes: ['ktFireworkRocket']}, true, false, {x: cX - eWh, y: cY}));
         if (oK.hasOwnProperty('zwe'))
         {
          for (let i = 0, l = oK.zwe.length; i < l; i++)
          {
-          _eActive++;
           iArr.push(_addEmoteToDoc(tInit, oK.zwe[i].url, 1, {style: s, classes: ['ktFireworkRocket']}, true, false, {x: cX - eWh, y: cY}));
          }
         }
@@ -2774,6 +2774,7 @@
          if (sK.hasOwnProperty('width') && sK.hasOwnProperty('height'))
           eW = sK.width / sK.height * eH;
          const sA = shared.rnd();
+         _eActive--;
          _sparkler(tInit, sK.url, cX, cY, eW, eH, sR, sA);
          if (sK.hasOwnProperty('zwe'))
          {
@@ -2797,6 +2798,7 @@
          if (sK.hasOwnProperty('width') && sK.hasOwnProperty('height'))
           eW = sK.width / sK.height * eH;
          const sA = shared.rnd();
+         _eActive--;
          _sparkler(tInit, sK.url, cX, cY, eW, eH, mR, sA);
          if (sK.hasOwnProperty('zwe'))
          {
@@ -2819,6 +2821,7 @@
          if (sK.hasOwnProperty('width') && sK.hasOwnProperty('height'))
           eW = sK.width / sK.height * eH;
          const sA = shared.rnd();
+         _eActive--;
          _sparkler(tInit, sK.url, cX, cY, eW, eH, lR, sA);
          if (sK.hasOwnProperty('zwe'))
          {
@@ -2897,12 +2900,12 @@
          if (oK.hasOwnProperty('width') && oK.hasOwnProperty('height'))
           eW = oK.width / oK.height * eH;
          const eWh = Math.ceil(eW / 2);
+         _eActive--;
          _sparkler(tInit, oK.url, oX - eWh, oY, eW, eH, r, th);
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, m = oK.zwe.length; j < m; j++)
           {
-           _eActive++;
            _sparkler(tInit, oK.zwe[j].url, oX - eWh, oY, eW, eH, r, th);
           }
          }
@@ -3116,6 +3119,7 @@
         const b1 = _rndFromRange(timing.kappa.Stampede.bunch[1]);
         const b2 = shared.rnd(timing.kappa.Stampede.bunch[2] - b1) + b1;
         const b4 = _rndFromRange(timing.kappa.Stampede.bunch[4]);
+        _eActive += b1 + b2 + iKC + b4;
         const hasB4 = b4 > 0;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time);
         const tSpeed = Math.floor(tMS * timing.kappa.Stampede.speed);
@@ -3160,6 +3164,7 @@
          if (oK.hasOwnProperty('width') && oK.hasOwnProperty('height'))
           eW = oK.width / oK.height * eH;
          const y = bandTop + shared.rnd(bandHeight);
+         _eActive--;
          imgs.push(_run(tInit, oK.url, y, d, sW, eW, eH, maxW));
          if (oK.hasOwnProperty('zwe'))
          {
@@ -3571,9 +3576,8 @@
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, tMS);
         scene.setAttribute('style', s);
-        _eActive++;
         document.body.appendChild(scene);
-        _gc.hook(scene, false, true, tMS);
+        _gc.hook(scene, false, 6, tMS);
         shared.doNextFrame(_tMove, tInit, cube, iR, eH);
        }
 
@@ -3646,7 +3650,6 @@
           {
            for (let j = 0, l = oK.zwe.length; j < l; j++)
            {
-            _eActive++;
             _block(tInit, oK.zwe[j].url, vH, oX, drawn[x] + 1, tPerB, eT, iTime, x, t, sH, eH);
            }
           }
@@ -3711,6 +3714,7 @@
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
+        _eActive++;
         const tMS = Math.floor(iTime * 1000 * timing.kappa.Text.time);
         window.setTimeout(_tDrop, Math.floor(eT + tMS + t / 10), tInit, img, sH, tMS);
         window.setTimeout(_tMove, t, tInit, img, vD);
@@ -3890,16 +3894,18 @@
          c += pyramidDist[i];
         return c;
        case 'Fireworks':
-        const inner = Math.floor(k.count / 8);
-        const outer = inner;
-        const core = k.count - (inner + outer);
+        const inner = Math.max(3, Math.floor(k.count * timing.kappa.Fireworks.quantity.small));
+        const core = Math.floor(k.count * timing.kappa.Fireworks.quantity.medium);
+        const outer = Math.max(3, Math.floor(k.count * timing.kappa.Fireworks.quantity.large));
         return 1 + inner + core + outer;
        case 'Conga':
         const sW = window.innerWidth;
         const sH = window.innerHeight;
         const eH = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
-        const bS = Math.ceil(eH * (5/3));
+        const bS = Math.ceil(eH * timing.kappa.Conga.size);
         return Math.floor(sW / bS);
+       case 'TheCube':
+        return 6;
       }
       return k.count;
      }
@@ -4099,8 +4105,8 @@
       switch (kStyle.style)
       {
        case 'Stampede':
+        _eActive -= waitFor;
         await _list.Stampede(kList, sW, sH, eH, kStyle.count);
-        _eActive -= kStyle.count;
         break;
        case 'Fireworks':
         _list.Fireworks(kList, sW, sH, eHh, kStyle.count);
@@ -4146,7 +4152,6 @@
         _list.Text(kList, sW, sH, sTM, sTT);
         break;
        case 'TheCube':
-        _eActive -= waitFor;
         const cS = Math.min(sW, sH);
         const rC = shared.rnd(lK);
         let sCS = 8 / 10;
@@ -4351,8 +4356,10 @@
        delete _toGC[idx];
        if (i.parentNode !== null)
         document.body.removeChild(i);
-       if (d)
+       if (d === true)
         _eActive--;
+       else if (d !== false && !isNaN(d))
+        _eActive -= d;
       }
       if (!done)
        _tGC = window.setTimeout(_doGC, 500);
@@ -4578,6 +4585,7 @@
      while (imgs.length)
       imgs[0].parentElement.removeChild(imgs[0]);
      twitch.parse.clearCooldowns();
+     _eActive = 0;
     }
 
     return {
