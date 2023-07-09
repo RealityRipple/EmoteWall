@@ -145,6 +145,11 @@
     *
     *  share      Share your YouTube channel on the Emote Wall home page!
     *
+    * kick      Settings related to the Kick login process.
+    *
+    *  channel    The name of the channel to join.
+    *             If FALSE, no connection to Kick will be made.
+    *
     * streamlabs  Settings related to Streamlabs tips.
     *
     *  token      The Socket Token is used in lieu of a password to access the Streamlabs API.
@@ -231,18 +236,18 @@
     *  access     A bitwise flag representing which users' messages show up on the emote wall. Account types are
     *             represented by the following values:
     *
-    *              0x800 = broadcaster              T YT
-    *              0x400 = moderator badge          T YT
-    *              0x200 = founder badge            T
-    *              0x100 = vip badge                T
+    *              0x800 = broadcaster              T YT K
+    *              0x400 = moderator badge          T YT K
+    *              0x200 = founder badge            T    K
+    *              0x100 = vip badge                T    K
     *              0x080 = artist badge             T
-    *              0x040 = tier 3 subscriber badge  T
+    *              0x040 = tier 3 subscriber badge  T    K [K OG]
     *              0x020 = tier 2 subscriber badge  T
-    *              0x010 = tier 1 subscriber badge  T YT [YT Member]
-    *              0x008 = verified user              YT
+    *              0x010 = tier 1 subscriber badge  T YT K [YT Member]
+    *              0x008 = verified user              YT K
     *              0x004 = cheer badge              T
-    *              0x002 = follower                 T YT [YT Subscriber]
-    *              0x001 = stranger                 T YT
+    *              0x002 = follower                 T YT K [YT Subscriber]
+    *              0x001 = stranger                 T YT K
     *
     *             Just put a vertical pipe " | " in between each of the values representing levels of access:
     *
@@ -461,11 +466,11 @@
     *              If FALSE, no kappagen will occur.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
-    *    targetEmotes  A boolean to toggle the use of the target channel's emotes for shoutout kappagens.
-    *                 If TRUE, shoutout kappagens will use channel emotes from the target's channel.
-    *               If FALSE, shoutout kappagens will use your channel's emotes.
+    *     targetEmotes  A boolean to toggle the use of the target channel's emotes for shoutout kappagens.
+    *                  If TRUE, shoutout kappagens will use channel emotes from the target's channel.
+    *              If FALSE, shoutout kappagens will use your channel's emotes.
     *
-    *    targetExtendedEmotes  A boolean to toggle third-party emotes, if targetEmotes is enabled.
+    *     targetExtendedEmotes  A boolean to toggle third-party emotes, if targetEmotes is enabled.
     *
     *    receive   Settings related to kappagens when another channel shouts you out.
     *
@@ -474,15 +479,15 @@
     *              If FALSE, no kappagen will occur.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
-    *    originEmotes  A boolean to toggle the use of the source channel's emotes for shoutout kappagens.
-    *                 If TRUE, shoutout kappagens will use channel emotes from the source's channel.
-    *               If FALSE, shoutout kappagens will use your channel's emotes.
+    *     originEmotes  A boolean to toggle the use of the source channel's emotes for shoutout kappagens.
+    *                  If TRUE, shoutout kappagens will use channel emotes from the source's channel.
+    *              If FALSE, shoutout kappagens will use your channel's emotes.
     *
-    *    originExtendedEmotes  A boolean to toggle third-party emotes, if originEmotes is enabled.
+    *     originExtendedEmotes  A boolean to toggle third-party emotes, if originEmotes is enabled.
     *
     *   tag       Settings related to kappagens when users tag a channel you've tagged in your stream title.
     *
-    *    styles    A user posts a message that starts with '@user'. This value can be a boolean or array.
+    *    styles   A user posts a message that starts with '@user'. This value can be a boolean or array.
     *              If TRUE, a kappagen will occur.
     *              If FALSE, no kappagen will occur.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
@@ -490,11 +495,11 @@
     *    access   A bitwise flag representing which users can trigger this kappagen with a command.
     *             This value will fall back to the general kappagen access value if missing or less than 0.
     *
-    *    targetEmotes  A boolean to toggle the use of the target channel's emotes for tag kappagens.
-    *                 If TRUE, tag kappagens will use channel emotes from the target's channel.
-    *               If FALSE, tag kappagens will use your channel's emotes.
+    *     targetEmotes  A boolean to toggle the use of the target channel's emotes for tag kappagens.
+    *                  If TRUE, tag kappagens will use channel emotes from the target's channel.
+    *              If FALSE, tag kappagens will use your channel's emotes.
     *
-    *    targetExtendedEmotes  A boolean to toggle third-party emotes, if targetEmotes is enabled.
+    *     targetExtendedEmotes  A boolean to toggle third-party emotes, if targetEmotes is enabled.
     *
     *   sub       Settings related to kappagens on a subscribe event.
     *             Note: Sub event booleans can also be arrays of kappa styles. This will override the default list
@@ -770,6 +775,111 @@
     *
     *   supersticker  A user posts a superchat in the channel.
     *                If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *  kick     Settings related to Kick channel events.
+    *
+    *   clear     A boolean to toggle clearing the screen when chat is cleared.
+    *              If TRUE, the emote wall will be cleared when the /clear command is used.
+    *              If FALSE, the emote wall will ignore the /clear command.
+    *
+    *   raid      Settings related to kappagens when being raided (hosted).
+    *
+    *    raiders  A streamer raids the channel with viewers. This value can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on all raids.
+    *              If FALSE, no kappagen will occur on raids.
+    *              If Integer, the value is the minimum raiders required for a raid to trigger a kappagen.
+    *               If 0, no kappagen will occur on raid.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    originEmotes  A boolean to toggle the use of the raiding streamer's channel emotes for raid kappagens.
+    *                 If TRUE, raid kappagens will use channel emotes from the raider's channel.
+    *               If FALSE, raid kappagens will use your channel's emotes.
+    *
+    *    originExtendedEmotes  A boolean to toggle third-party emotes, if originEmotes is enabled.
+    *
+    *   follow    A user follows the channel.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   sub       Settings related to kappagens on a subscribe event.
+    *             Note: Sub event booleans can also be arrays of kappa styles. This will override the default list
+    *                   of kappa styles for the particular event in question.
+    *
+    *    first    A user subscribes for the first time.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    resub    A user resubscribes. This can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on all resubs.
+    *              If FALSE, no kappagen will occur on resubs.
+    *              If Integer, the value is the minimum months required for a resub to trigger a kappagen.
+    *               If 0, no kappagen will occur.
+    *               If 1, a kappagen will occur every month.
+    *               If greater than 1, the number of months subscribed must be greater than or equal to this number
+    *               to trigger a kappagen.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    gift     A user gifts another user a subscription.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    giftbomb  A user gifts multiple subscriptions. This value can be a boolean, integer, or array:
+    *              If TRUE, a kappagen will occur on any random gift.
+    *              If FALSE, no kappagen will occur on giftbombs.
+    *              If Integer, the value is the minimum gifts required for a gift bomb to trigger a kappagen.
+    *               If 0, no kappagen will occur.
+    *               If 1, a kappagen will occur on any random gift.
+    *               If greater than 1, the number of gifted users in a giftbomb must be greater than or equal to
+    *               this number to trigger a kappagen.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '2-4' or '5-9', or an open-maximum range such as '10+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   poll      Settings related to polls.
+    *
+    *    begin    A poll begins in your channel.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *    end      A poll ends in your channel.
+    *              If TRUE, a kappagen will occur.
+    *              If FALSE, no kappagen will occur.
+    *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   timeout   Minimum time for a kappagen when a user is timed out. This value can be a boolean, integer, or
+    *              array:
+    *              If TRUE, a kappagen will occur on all timeouts.
+    *              If FALSE, no kappagen will occur on timeouts.
+    *              If Integer, the value is the minimum seconds required for a timeout to trigger a kappagen.
+    *               If 0, no kappagen will occur on timeouts.
+    *              If Array, each key of the array should be a string containing a range of integers,
+    *              such as '1', '5-30' or '60-180', or an open-maximum range such as '300+'.
+    *              Each value follows the standard rule:
+    *               If TRUE, a kappagen will occur.
+    *               If FALSE, no kappagen will occur.
+    *               If an array of kappa styles, a kappagen of one of the listed styles will occur.
+    *
+    *   ban       A user is banned in the channel.
+    *              If TRUE, a kappagen will occur.
     *              If FALSE, no kappagen will occur.
     *              If an array of kappa styles, a kappagen of one of the listed styles will occur.
     *
