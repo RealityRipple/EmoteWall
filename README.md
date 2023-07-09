@@ -1,5 +1,5 @@
 # RealityRipple's Home-Made Emote Wall
-A home-made emote wall for Twitch.TV, supporting animated Twitch emotes, BetterTTV, FrankerFaceZ, 7TV, and Emojis! Kappagen command and event triggers are also available, with advanced configuration capabilities.
+A home-made emote wall for Twitch.TV, Kick, and YouTube Livestreams, supporting animated Twitch emotes, BetterTTV, FrankerFaceZ, 7TV, and Emojis! Kappagen command and event triggers are also available, with advanced configuration capabilities.
 
 #### Supports
  * Chromium-based browsers
