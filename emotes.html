@@ -6476,6 +6476,9 @@
         return false;
        if (cfg.event.twitch.cheer.bits === false)
         return false;
+       const u = _parseUser(cmd, true);
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        return;
        if (!cmd.hasOwnProperty('tags'))
         return false;
        if (!cmd.tags.hasOwnProperty('bits'))
@@ -6523,9 +6526,6 @@
         display.emote.showEmotes();
         return true;
        }
-       const u = _parseUser(cmd, true);
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
-        return;
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
