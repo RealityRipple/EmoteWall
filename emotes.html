@@ -14950,6 +14950,23 @@
     };
    }();
 
+   const loginK = function()
+   {
+    function $cfgVals()
+    {
+     if (!cfg.hasOwnProperty('kick'))
+      return 0;
+     let r = 0;
+     if (cfg.kick.hasOwnProperty('channel') && cfg.kick.channel !== false && cfg.kick.channel !== null && cfg.kick.channel !== 'CHANNEL_NAME')
+      r |= 0x01;
+     return r;
+    }
+
+    return {
+     cfgVals: $cfgVals
+    };
+   }();
+
    const startup = function()
    {
     async function task()
@@ -14962,6 +14979,13 @@
      {
       window.localStorage.setItem('emotewall.obs_notfound', '1');
       notice.error(0x09);
+     }
+     if ((loginK.cfgVals() & 0x01) !== 0x01)
+      kick.net.dead = true;
+     else
+     {
+      if (await _kick() === false)
+       kick.net.dead = true;
      }
      const usesT = loginT.use();
      const usesYT = loginYT.use();
@@ -15033,6 +15057,16 @@
       youtube.net.subscribers();
      youtube.net.members();
      youtube.net.broadcasts.updateStream();
+     return true;
+    }
+
+    async function _kick()
+    {
+     if ((loginK.cfgVals() & 0x01) !== 0x01)
+      return false;
+     kick.net.socket();
+     if (cfg.event.kick.follow !== false)
+      kick.net.followers();
      return true;
     }
 
