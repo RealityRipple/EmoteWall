@@ -12450,7 +12450,7 @@
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        return;
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
@@ -12467,7 +12467,7 @@
       }
       if (_ws === null)
        return;
-      if (twitch.net.dead && youtube.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
       {
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -12609,7 +12609,7 @@
       _ws.onclose = null;
       _ws.close();
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        return;
       streamlabs.socket();
      }
@@ -12715,7 +12715,7 @@
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        return;
       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
@@ -12732,7 +12732,7 @@
       }
       if (_ws === null)
        return;
-      if (twitch.net.dead && youtube.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
       {
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -12868,7 +12868,7 @@
       _ws.onclose = null;
       _ws.close();
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        return;
       streamelements.socket();
      }
@@ -13784,7 +13784,7 @@
        _ws.onmessage = null;
        _ws.onclose = null;
        _ws = null;
-       if (twitch.net.dead && youtube.net.dead)
+       if (twitch.net.dead && youtube.net.dead && kick.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
@@ -13801,7 +13801,7 @@
        }
        if (_ws === null)
         return;
-       if (twitch.net.dead && youtube.net.dead)
+       if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        {
         _ws.onopen = null;
         _ws.onmessage = null;
@@ -14013,7 +14013,7 @@
        _ws.onclose = null;
        _ws.close();
        _ws = null;
-       if (twitch.net.dead && youtube.net.dead)
+       if (twitch.net.dead && youtube.net.dead && kick.net.dead)
         return;
        thirdparty['7tv'].socket.init();
       }
@@ -14990,7 +14990,13 @@
      const usesT = loginT.use();
      const usesYT = loginYT.use();
      if (usesT === true && usesYT === true)
+     {
+      if (!kick.net.dead)
+       await _7tv();
+      twitch.net.dead = true;
+      youtube.net.dead = true;
       return;
+     }
      shared.clearAddr(false);
      if (usesT !== true && usesYT !== true)
       shared.clearAddr(true);
