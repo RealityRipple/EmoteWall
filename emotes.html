@@ -4925,6 +4925,14 @@
         r.push(v);
         continue;
        }
+       if (thirdparty.emotes.hasOwnProperty('kick') && thirdparty.emotes.kick.hasOwnProperty(s[i]))
+       {
+        v.svc = 'k';
+        v.url = thirdparty.emotes.kick[s[i]].url;
+        v.scope = thirdparty.emotes.kick[s[i]].scope;
+        r.push(v);
+        continue;
+       }
        if (thirdparty.emotes.hasOwnProperty('ffz') && thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope === 'c')
        {
         v.svc = 'f';
@@ -14073,6 +14081,8 @@
         thirdparty['7tv'].channel('youtube', youtube.net.channelIDs[i]);
        }
       }
+      if (!kick.net.dead && kick.net.userID !== 0)
+       thirdparty['7tv'].channel('kick', kick.net.userID);
      }
      thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
     }
