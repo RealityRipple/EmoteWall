@@ -2265,7 +2265,6 @@
        se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php'
       },
       feedback: {
-       eventsub: 'https://realityripple.com/Tools/Twitch/EmoteWall/dangling-eventsub.php',
        ytmonetized: 'https://realityripple.com/Tools/Twitch/EmoteWall/ytsurvey.php',
        yterrors: 'https://realityripple.com/Tools/Twitch/EmoteWall/yterrors.php'
       }
@@ -5807,15 +5806,11 @@
           }
           return;
          }
-         if (r.payload.session.hasOwnProperty('id'))
-          await shared.httpRequest('POST', cURLs.api.rr.feedback.eventsub, {'Content-Type': 'application/x-www-form-urlencoded'}, 'type=new&id=' + encodeURIComponent(twitch.net.eventSubCtl.sessionID), false, false);
          break;
         case 'session_keepalive':
          _wsRetry = 0;
-         await shared.httpRequest('POST', cURLs.api.rr.feedback.eventsub, {'Content-Type': 'application/x-www-form-urlencoded'}, 'type=recv&id=' + encodeURIComponent(twitch.net.eventSubCtl.sessionID), false, false);
          break;
         case 'notification':
-         await shared.httpRequest('POST', cURLs.api.rr.feedback.eventsub, {'Content-Type': 'application/x-www-form-urlencoded'}, 'type=recv&id=' + encodeURIComponent(twitch.net.eventSubCtl.sessionID), false, false);
          if (!r.metadata.hasOwnProperty('subscription_type'))
           return;
          switch (r.metadata.subscription_type)
@@ -6261,10 +6256,6 @@
        {
         if (!d[i].hasOwnProperty('id'))
          continue;
-        if (!d[i].hasOwnProperty('transport'))
-         continue;
-        if (!d[i].transport.hasOwnProperty('session_id'))
-         continue;
         await _unsubscribe(d[i].id);
        }
        window.location.reload();
@@ -6310,11 +6301,7 @@
          case 'websocket_internal_error':
          case 'websocket_network_timeout':
          case 'websocket_network_error':
-          if (!d[i].hasOwnProperty('transport'))
-           continue;
-          if (!d[i].transport.hasOwnProperty('session_id'))
-           continue;
-          await _unsubscribe(d[i].id, d[i].transport.session_id);
+          await _unsubscribe(d[i].id);
           break;
         }
        }
@@ -6349,86 +6336,20 @@
        {
         const eNote = document.getElementById('notice' + 0x1A);
         if (!eNote || !eNote.classList.contains('noticeWarning'))
-        {
-         if (!await _handleDanglingEventSubs())
-          notice.warning(0x1A);
-        }
+         notice.warning(0x1A);
        }
        return false;
       }
 
-      async function _handleDanglingEventSubs()
+      async function _unsubscribe(id)
       {
-       const d = await _getList();
-       if (d.length < 1)
-        return false;
-       let ids = {};
-       for (let i = 0, l = d.length; i < l; i++)
-       {
-        if (!d[i].hasOwnProperty('id'))
-         continue;
-        if (!d[i].hasOwnProperty('status'))
-         continue;
-        if (d[i].status !== 'enabled')
-         continue;
-        if (!d[i].hasOwnProperty('transport'))
-         continue;
-        if (!d[i].transport.hasOwnProperty('method'))
-         continue;
-        if (d[i].transport.method !== 'websocket')
-         continue;
-        if (!d[i].transport.hasOwnProperty('session_id'))
-         continue;
-        if (!Object.keys(ids).includes(d[i].transport.session_id))
-         ids[d[i].transport.session_id] = [];
-        ids[d[i].transport.session_id].push(d[i].id);
-       }
-       if (Object.keys(ids).length < 1)
-        return false;
-       let b = 'type=check&ids=' + encodeURIComponent(Object.keys(ids).join(' '));
-       for (let id in ids)
-       {
-        if (!id.hasOwnProperty(id))
-         continue;
-        b += '&sub' + encodeURIComponent(id) + '=' + encodeURIComponent(ids[id].join(' '));
-       }
-       const r = await shared.httpRequest('POST', cURLs.api.rr.feedback.eventsub, {'Content-Type': 'application/x-www-form-urlencoded'}, b, false);
+       const h = {
+        'Authorization': 'Bearer ' + cfg.twitch.oauth,
+        'Client-Id': cfg.twitch.client
+       };
+       const r = await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', id), h, null, false);
        if (!r.success)
         return false;
-       const j = r.json;
-       if (j === null)
-        return false;
-       if (j.length < 1)
-        return false;
-       console.log(j);
-       for (let i = 0, l = d.length; i < l; i++)
-       {
-        if (!d[i].hasOwnProperty('transport'))
-         continue;
-        if (!d[i].transport.hasOwnProperty('session_id'))
-         continue;
-        if (!j.includes(d[i].transport.session_id))
-         continue;
-        console.log('server gives permission to delete', d[i].id);
-        await _unsubscribe(d[i].id);
-       }
-       return true;
-      }
-
-      async function _unsubscribe(id = false, sessID = false)
-      {
-       if (id !== false)
-       {
-        const h = {
-         'Authorization': 'Bearer ' + cfg.twitch.oauth,
-         'Client-Id': cfg.twitch.client
-        };
-        const r = await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll('%ID%', id), h, null, false);
-        if (!r.success)
-         return false;
-       }
-       if (sessID !== false)
-        await shared.httpRequest('POST', cURLs.api.rr.feedback.eventsub, {'Content-Type': 'application/x-www-form-urlencoded'}, 'type=close&id=' + sessID, false, false);
        return true;
       }
 
