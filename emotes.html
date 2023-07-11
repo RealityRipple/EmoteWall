@@ -14167,13 +14167,27 @@
         r += '    }\n';
        }
        r += '   }\n';
-       h = h.replace('   img\n', r + '   img\n');
+       r += '   html.rave button, html.rave div#notices\n';
+       r += '   {\n';
+       r += '    animation: antirave 3s linear infinite;\n';
+       r += '   }\n';
+       r += '   @keyframes antirave\n';
+       r += '   {\n';
+       for (let i = 0; i <= 100; i += 10)
+       {
+        r += '    ' + i + '%\n';
+        r += '    {\n';
+        r += '     filter: hue-rotate(' + (360 - i * 3.6) + 'deg);\n';
+        r += '    }\n';
+       }
+       r += '   }\n';
+       h = r + h;
       }
       else if (!isNaN(cfg.display.hue))
       {
        const iHue = parseInt(cfg.display.hue, 10);
        if (iHue > 0 && iHue < 360)
-        h = h.replace('   body\n   {\n', '   body\n   {\n    filter: hue-rotate(' + iHue + 'deg);\n');
+        h = '   html\n   {\n    filter: hue-rotate(' + iHue + 'deg);\n   }\n   button, div#notices\n   {\n    filter: hue-rotate(' + (360 - iHue) + 'deg);\n   }' + h;
       }
      }
      let a = '   [data-squash="vertical"]\n';
