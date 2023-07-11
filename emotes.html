@@ -8051,6 +8051,12 @@
         if (j !== null)
         {
          const e = _flatJSON(j);
+         if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAUTHENTICATED')
+         {
+          notice.error(0x21);
+          youtube.net.oAuth.clear(true);
+          return false;
+         }
          console.log(e);
          console.log(j);
         }
