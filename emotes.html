@@ -12821,9 +12821,11 @@
       let _lTimeout = 5000;
       let _tTimeout = false;
       let _okCt = 0;
+      let _recvd = false;
 
       async function $init()
       {
+       _recvd = false;
        _ws = new WebSocket(cURLs.ws['7tv']);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
@@ -12842,7 +12844,8 @@
 
       function _wsClose()
       {
-       notice.error(0xC2);
+       if (!_recvd)
+        notice.error(0xC2);
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -12864,6 +12867,7 @@
 
       function _wsMessage(ev)
       {
+       _recvd = true;
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
