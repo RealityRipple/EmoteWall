@@ -11940,12 +11940,19 @@
      return j;
     }
 
+    function _path()
+    {
+     if (streamelements.cfgHash !== false)
+      return 'streamelements.' + streamelements.cfgHash;
+     return shared.cfgHash + '.streamelements';
+    }
+
     async function $updateOAuth()
     {
-     const lsOAuth = window.localStorage.getItem('streamelements.tips:read.oauth');
-     const lsRefresh = window.localStorage.getItem('streamelements.tips:read.refresh');
-     const lsExpires = window.localStorage.getItem('streamelements.tips:read.expires');
-     const lsRefreshed = window.localStorage.getItem('streamelements.tips:read.refreshed');
+     const lsOAuth = window.localStorage.getItem(_path() + '.oauth');
+     const lsRefresh = window.localStorage.getItem(_path() + '.refresh');
+     const lsExpires = window.localStorage.getItem(_path() + '.expires');
+     const lsRefreshed = window.localStorage.getItem(_path() + '.refreshed');
      if (lsOAuth !== null)
       cfg.streamelements.oauth = lsOAuth;
      if (lsRefresh !== null)
@@ -11972,10 +11979,10 @@
      const ret = await _getOAuthToken(cfg.streamelements.oauth_refresh);
      if (ret === false)
      {
-      window.localStorage.removeItem('streamelements.tips:read.oauth');
-      window.localStorage.removeItem('streamelements.tips:read.refresh');
-      window.localStorage.removeItem('streamelements.tips:read.expires');
-      window.localStorage.removeItem('streamelements.tips:read.refreshed');
+      window.localStorage.removeItem(_path() + '.oauth');
+      window.localStorage.removeItem(_path() + '.refresh');
+      window.localStorage.removeItem(_path() + '.expires');
+      window.localStorage.removeItem(_path() + '.refreshed');
       notice.error(0x71);
       return;
      }
@@ -11983,10 +11990,10 @@
      cfg.streamelements.oauth_refresh = ret.refresh_token;
      cfg.streamelements.oauth_expires = Math.floor(new Date().getTime() / 1000) + ret.expires_in;
      cfg.streamelements.oauth_refreshed = Math.floor(new Date().getTime() / 1000);
-     window.localStorage.setItem('streamelements.tips:read.oauth', cfg.streamelements.oauth);
-     window.localStorage.setItem('streamelements.tips:read.refresh', cfg.streamelements.oauth_refresh);
-     window.localStorage.setItem('streamelements.tips:read.expires', cfg.streamelements.oauth_expires);
-     window.localStorage.setItem('streamelements.tips:read.refreshed', cfg.streamelements.oauth_refreshed);
+     window.localStorage.setItem(_path() + '.oauth', cfg.streamelements.oauth);
+     window.localStorage.setItem(_path() + '.refresh', cfg.streamelements.oauth_refresh);
+     window.localStorage.setItem(_path() + '.expires', cfg.streamelements.oauth_expires);
+     window.localStorage.setItem(_path() + '.refreshed', cfg.streamelements.oauth_refreshed);
     }
 
     function $cfgVals()
@@ -12006,7 +12013,8 @@
     return {
      socket: $socket,
      updateOAuth: $updateOAuth,
-     cfgVals: $cfgVals
+     cfgVals: $cfgVals,
+     cfgHash: false
     };
    }();
 
@@ -13452,7 +13460,8 @@
      clearAddr: $clearAddr,
      doNextFrame: $doNextFrame,
      mspf: $mspf,
-     ec: $ec
+     ec: $ec,
+     cfgHash: false
     };
    }();
 
@@ -13521,7 +13530,9 @@
 
     function $path()
     {
-     return 'twitch.' + _activeScope().join('+');
+     if (loginT.cfgHash !== false)
+      return 'twitch.' + loginT.cfgHash;
+     return shared.cfgHash + '.twitch';
     }
 
     function $cfgVals()
@@ -13753,7 +13764,8 @@
      showIn: $showIn,
      showOut: $showOut,
      path: $path,
-     cfgVals: $cfgVals
+     cfgVals: $cfgVals,
+     cfgHash: false
     };
    }();
 
@@ -13785,7 +13797,9 @@
 
     function $path()
     {
-     return 'youtube.' + _activeScope().join('+');
+     if (loginYT.cfgHash !== false)
+      return 'youtube.' + loginYT.cfgHash;
+     return shared.cfgHash + '.youtube';
     }
 
     function $cfgVals()
@@ -14004,7 +14018,8 @@
      showIn: $showIn,
      showOut: $showOut,
      path: $path,
-     cfgVals: $cfgVals
+     cfgVals: $cfgVals,
+     cfgHash: false
     };
    }();
 
@@ -14029,6 +14044,13 @@
    {
     async function task()
     {
+     shared.cfgHash = (shared.hashCode(cfg) >>> 0).toString(16);
+     if ((loginT.cfgVals() & 0x02) === 0x02)
+      loginT.cfgHash = (shared.hashCode(cfg.twitch.oauth_refresh) >>> 0).toString(16);
+     if ((loginYT.cfgVals() & 0x02) === 0x02)
+      loginYT.cfgHash = (shared.hashCode(cfg.youtube.oauth_refresh) >>> 0).toString(16);
+     if ((streamelements.cfgVals() & 0x02) === 0x02)
+      streamelements.cfgHash = (shared.hashCode(cfg.streamelements.oauth_refresh) >>> 0).toString(16);
      shared.mspf.init();
      if (cfg.display.hasOwnProperty('hue') && cfg.display.hue === 'rave' && !_hasRaveToggle())
       document.documentElement.classList.add('rave');
