@@ -33,6 +33,7 @@ Configuration Information
 
     If you ever stop using this emote wall, please log into Twitch and visit <https://www.twitch.tv/settings/connections>. Under "Other Connections", click the "Disconnect" button next to "RealityRipple's Home-Made Emote Wall".
 
+     - [ ] If `null`, the interactive login process, and Twitch connectivity, will be disabled.
      - [ ] If both `oauth` and `oauth_refresh` are `false` (or missing), the interactive login process will be enabled.
 
   * `scope`  
@@ -69,6 +70,8 @@ Configuration Information
     > - Copy the OAuth Refresh value and paste it into "oauth_refresh:"
 
     If you ever stop using this emote wall, please log into YouTube and visit <https://myaccount.google.com/permissions>. Under "Apps with access to your account", click the "Disconnect" button next to "RealityRipple's Home-Made Emote Wall".
+
+     - [ ] If `null`, the interactive login process, and YouTube connectivity, will be disabled.
      - [ ] If both `oauth` and `oauth_refresh` are `false` (or missing), the interactive login process will be enabled.
 
   * `connect_to`  
