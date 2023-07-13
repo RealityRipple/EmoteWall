@@ -374,6 +374,11 @@ Configuration Information
          - [ ] If `true`, `'Conga'` lines will only show up on the top or bottom three rows to avoid the middle of the screen globally.
          - [ ] If `false`, the setting will default to any more specific avoidMiddle `'Conga'` settings.
 
+  * `statuses`  
+    *Display status notices whenever a connection is made or a connection issue occurs.*
+    - [ ] If `true`, any changes in connectivity will show a notice for a moment.
+    - [ ] If `false`, no status information will be displayed.
+
 * `emote`  
   *Settings related to individual emote display.*
 

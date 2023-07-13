@@ -228,7 +228,8 @@
        time: 5,
        avoidMiddle: false
       }
-     }
+     },
+     statuses: true
     },
     emote: {
      time: 5,
@@ -14347,6 +14348,8 @@
      t += '    transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.TheCube.time) + 'ms;\n';
      t += '   }\n';
      h = h.replace('   [data-squash="vertical"]\n', t + '\n   [data-squash="vertical"]\n');
+     if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === false)
+      h = h.replace('#notices\n   {\n', '#notices\n   {\n    display: none;\n');
      css.innerHTML = h;
     }
 
