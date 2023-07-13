@@ -6391,7 +6391,7 @@
         foundAdvCmd = true;
         if (k.hasOwnProperty('cooldown'))
         {
-         let hK = _hashCode(k);
+         let hK = shared.hashCode(k);
          if (!_aLast.hasOwnProperty(hK))
           _aLast[hK] = 0;
          if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
@@ -6445,7 +6445,7 @@
         let eA = false;
         if (foundKCmd.length < m.length)
          eA = _handleDuplicates(await _eListFromCmd(cmd, true));
-        _aLast[_hashCode(k)] = kNow;
+        _aLast[shared.hashCode(k)] = kNow;
         display.kappa.show(eA, kC);
         return true;
        }
@@ -6467,7 +6467,7 @@
         return foundAdvCmd;
        if ((lv & cfg.display.kappa.access) === 0)
         return foundAdvCmd;
-       let h = _hashCode(null);
+       let h = shared.hashCode(null);
        if (!_aLast.hasOwnProperty(h))
         _aLast[h] = 0;
        if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
@@ -6478,15 +6478,6 @@
        _aLast[h] = kNow;
        display.kappa.show(a);
        return true;
-      }
-
-      function _hashCode(o)
-      {
-       const s = JSON.stringify(o);
-       let h = 0;
-       for (let i = 0, l = s.length; i < l; i++)
-        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-       return h;
       }
 
       return task;
@@ -8711,7 +8702,7 @@
         foundAdvCmd = true;
         if (k.hasOwnProperty('cooldown'))
         {
-         let hK = _hashCode(k);
+         let hK = shared.hashCode(k);
          if (!_aLast.hasOwnProperty(hK))
           _aLast[hK] = 0;
          if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
@@ -8746,7 +8737,7 @@
         let eA = false;
         if (foundKCmd.length < m.length)
          eA = _handleDuplicates(await _eListFromCmd(cmd, true));
-        _aLast[_hashCode(k)] = kNow;
+        _aLast[shared.hashCode(k)] = kNow;
         display.kappa.show(eA, kC);
         return true;
        }
@@ -8768,7 +8759,7 @@
         return foundAdvCmd;
        if ((lv & cfg.display.kappa.access) === 0)
         return foundAdvCmd;
-       let h = _hashCode(null);
+       let h = shared.hashCode(null);
        if (!_aLast.hasOwnProperty(h))
         _aLast[h] = 0;
        if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
@@ -8779,15 +8770,6 @@
        _aLast[h] = kNow;
        display.kappa.show(a);
        return true;
-      }
-
-      function _hashCode(o)
-      {
-       const s = JSON.stringify(o);
-       let h = 0;
-       for (let i = 0, l = s.length; i < l; i++)
-        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-       return h;
       }
 
       return task;
@@ -9738,7 +9720,7 @@
         foundAdvCmd = true;
         if (k.hasOwnProperty('cooldown'))
         {
-         let hK = _hashCode(k);
+         let hK = shared.hashCode(k);
          if (!_aLast.hasOwnProperty(hK))
           _aLast[hK] = 0;
          if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
@@ -9792,7 +9774,7 @@
         let eA = false;
         if (foundKCmd.length < m.length)
          eA = _handleDuplicates(await _eListFromCmd(cmd, true));
-        _aLast[_hashCode(k)] = kNow;
+        _aLast[shared.hashCode(k)] = kNow;
         display.kappa.show(eA, kC);
         return true;
        }
@@ -9814,7 +9796,7 @@
         return foundAdvCmd;
        if ((lv & cfg.display.kappa.access) === 0)
         return foundAdvCmd;
-       let h = _hashCode(null);
+       let h = shared.hashCode(null);
        if (!_aLast.hasOwnProperty(h))
         _aLast[h] = 0;
        if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
@@ -9825,15 +9807,6 @@
        _aLast[h] = kNow;
        display.kappa.show(a);
        return true;
-      }
-
-      function _hashCode(o)
-      {
-       const s = JSON.stringify(o);
-       let h = 0;
-       for (let i = 0, l = s.length; i < l; i++)
-        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-       return h;
       }
 
       return task;
@@ -13187,6 +13160,15 @@
      return Math.floor(f * m);
     }
 
+    function $hashCode(o)
+    {
+     const s = JSON.stringify(o);
+     let h = 0;
+     for (let i = 0, l = s.length; i < l; i++)
+      h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+     return h;
+    }
+
     function $httpRequest(type, url, hdrs = {}, body = null, nocache = true, ret = true)
     {
      const p = new Promise(
@@ -13464,6 +13446,7 @@
 
     return {
      rnd: $rnd,
+     hashCode: $hashCode,
      httpRequest: $httpRequest,
      findInMaybeRange: $findInMaybeRange,
      clearAddr: $clearAddr,
