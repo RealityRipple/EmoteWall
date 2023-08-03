@@ -1671,10 +1671,49 @@
      nID.classList.add('faded');
     }
 
+    function $activeCheck()
+    {
+     if (notice.tHide !== false)
+     {
+      window.clearTimeout(notice.tHide);
+      notice.tHide = false;
+     }
+     let b = document.getElementById('badge');
+     if (!b)
+     {
+      notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      return;
+     }
+     if (!b.dataset.hasOwnProperty('alerts'))
+     {
+      notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      return;
+     }
+     if (b.dataset.alerts !== '0')
+     {
+      notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      return;
+     }
+     if (notice.active !== notice.expect)
+     {
+      notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      return;
+     }
+     const css = document.getElementsByTagName('STYLE')[0];
+     let h = css.innerHTML;
+     h = h.replace('#notices\n   {\n', '#notices\n   {\n    display: none;\n');
+     css.innerHTML = h;
+    }
+
     return {
      info: $info,
      warning: $warning,
-     error: $error
+     error: $error,
+     activeCheck: $activeCheck,
+     expect: 0,
+     active: 0,
+     tHide: false,
+     iHide: 5000
     };
    }();
 
@@ -4733,6 +4772,7 @@
 
       function task(chID = null)
       {
+       notice.expect |= 0x02;
        if (chID !== null)
         twitch.net.eventSubCtl.channelID = chID;
        _ws = new WebSocket(_wsURL);
@@ -4754,6 +4794,12 @@
       function _wsClose()
       {
        notice.error(0x1A);
+       notice.active &= ~0x02;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -4800,6 +4846,12 @@
        if (!r.hasOwnProperty('payload'))
         return;
        notice.info(0x1A);
+       notice.active |= 0x02;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        switch (r.metadata.message_type)
        {
         case 'session_welcome':
@@ -5138,6 +5190,12 @@
       function _wsTimeout()
       {
        notice.error(0x1A);
+       notice.active &= ~0x02;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        _lTimeout = 5000;
        if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
         _wsURL = cURLs.ws.twitch.eventSub;
@@ -5415,6 +5473,7 @@
 
       function task()
       {
+       notice.expect |= 0x01;
        _tPing = 0;
        _firstRS = true;
        _ws = new WebSocket(cURLs.ws.twitch.irc);
@@ -5440,6 +5499,12 @@
       function _wsClose()
       {
        notice.error(0x12);
+       notice.active &= ~0x01;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tPing !== 0)
        {
         window.clearInterval(_tPing);
@@ -5512,6 +5577,12 @@
          continue;
         }
         notice.info(0x12);
+        notice.active |= 0x01;
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
         switch (cmd.command)
         {
          case 'PING':
@@ -5694,6 +5765,12 @@
       function _wsExpire()
       {
        notice.error(0x12);
+       notice.active &= ~0x01;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -5730,6 +5807,12 @@
       function _wsTimeout()
       {
        notice.error(0x12);
+       notice.active &= ~0x01;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tExpire !== false)
        {
         window.clearTimeout(_tExpire);
@@ -7643,9 +7726,21 @@
        if (lStreams === null)
        {
         notice.error(0x22);
+        notice.active &= ~0x08;
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
         return;
        }
        notice.info(0x22);
+       notice.active |= 0x08;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (lStreams === false)
        {
         _tS = window.setTimeout(youtube.net.broadcasts.updateStream, 30 * 1000);
@@ -7884,6 +7979,12 @@
          {
           notice.error(0x22);
           notice.error(0x21);
+          notice.active &= ~0x08;
+          if (notice.tHide !== false)
+          {
+           window.clearTimeout(notice.tHide);
+           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+          }
           return;
          }
         }
@@ -7893,6 +7994,12 @@
         {
          notice.error(0x22);
          notice.error(0x21);
+         notice.active &= ~0x08;
+         if (notice.tHide !== false)
+         {
+          window.clearTimeout(notice.tHide);
+          notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+         }
          return;
         }
         let q = cURLs.api.youtube.livechat.messages.init;
@@ -7941,6 +8048,12 @@
           console.log(j);
          }
          notice.error(0x22);
+         notice.active &= ~0x08;
+         if (notice.tHide !== false)
+         {
+          window.clearTimeout(notice.tHide);
+          notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+         }
          console.log(r.code);
          notice.error(0x29, 'Error Getting Messages: ' + r.code);
          _errorReport('broadcasts.getMessages.start', q, r);
@@ -7949,6 +8062,12 @@
         if (j === null)
          return;
         notice.info(0x22);
+        notice.active |= 0x08;
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
         let minPoll = 1000;
         if (j.hasOwnProperty('pollingIntervalMillis'))
          minPoll = j.pollingIntervalMillis;
@@ -9030,6 +9149,7 @@
 
       async function task()
       {
+       notice.expect |= 0x04;
        if (kick.net.channelID === 0 || kick.net.chatID === 0)
        {
         await _getChIDs();
@@ -9061,6 +9181,12 @@
       function _wsClose()
       {
        notice.error(0x32);
+       notice.active &= ~0x04;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tPing !== 0)
        {
         window.clearInterval(_tPing);
@@ -9209,6 +9335,12 @@
         return;
        const jData = JSON.parse(j.data);
        notice.info(0x32);
+       notice.active |= 0x04;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (j.event.startsWith('pusher:'))
        {
         switch (j.event.slice(7))
@@ -9363,6 +9495,12 @@
       function _wsExpire()
       {
        notice.error(0x32);
+       notice.active &= ~0x04;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_ws === null)
         return;
        if (kick.net.dead === true)
@@ -9389,6 +9527,12 @@
       function _wsTimeout()
       {
        notice.error(0x32);
+       notice.active &= ~0x04;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tExpire !== false)
        {
         window.clearTimeout(_tExpire);
@@ -11470,6 +11614,7 @@
 
      function task()
      {
+      notice.expect |= 0x20;
       _tPing = 0;
       _ws = new WebSocket(cURLs.ws.streamlabs.replaceAll('%TOKEN%', cfg.streamlabs.token));
       _ws.onopen = _wsOpen;
@@ -11538,6 +11683,12 @@
       if (d.length < 1)
        return;
       notice.info(0x82);
+      notice.active |= 0x20;
+      if (notice.tHide !== false)
+      {
+       window.clearTimeout(notice.tHide);
+       notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      }
       switch (d.slice(0, 1))
       {
        case '0':
@@ -11735,6 +11886,7 @@
 
      function task()
      {
+      notice.expect |= 0x10;
       _tPing = 0;
       _ws = new WebSocket(cURLs.ws.streamelements);
       _ws.onopen = _wsOpen;
@@ -11755,6 +11907,12 @@
      function _wsClose()
      {
       notice.error(0x72);
+      notice.active &= ~0x10;
+      if (notice.tHide !== false)
+      {
+       window.clearTimeout(notice.tHide);
+       notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      }
       if (_tTimeout !== false)
       {
        window.clearTimeout(_tTimeout);
@@ -11803,6 +11961,12 @@
       if (d.length < 1)
        return;
       notice.info(0x72);
+      notice.active |= 0x10;
+      if (notice.tHide !== false)
+      {
+       window.clearTimeout(notice.tHide);
+       notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      }
       switch (d.slice(0, 1))
       {
        case '0':
@@ -11906,6 +12070,12 @@
      function _wsTimeout()
      {
       notice.error(0x72);
+      notice.active &= ~0x10;
+      if (notice.tHide !== false)
+      {
+       window.clearTimeout(notice.tHide);
+       notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      }
       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
@@ -12451,6 +12621,7 @@
 
       function $init()
       {
+       notice.expect |= 0x40;
        _ws = new WebSocket(cURLs.ws.bttv);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
@@ -12464,6 +12635,12 @@
        if (_ws.readyState !== 1)
         return;
        notice.info(0xB2);
+       notice.active |= 0x40;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        _ws.onopen = null;
        for (let i = 0, l = _chList.length; i < l; i++)
        {
@@ -12474,6 +12651,12 @@
       function _wsClose()
       {
        notice.error(0xB2);
+       notice.active &= ~0x40;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_ws === null)
         return;
        _ws.onopen = null;
@@ -12819,6 +13002,7 @@
 
       async function $init()
       {
+       notice.expect |= 0x80;
        _recvd = false;
        _ws = new WebSocket(cURLs.ws['7tv']);
        _ws.onopen = _wsOpen;
@@ -12840,6 +13024,12 @@
       {
        if (!_recvd)
         notice.error(0xC2);
+       notice.active &= ~0x80;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -12885,6 +13075,12 @@
        if (!d.hasOwnProperty('d'))
         return;
        notice.info(0xC2);
+       notice.active |= 0x80;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        switch (d.op)
        {
         case 0:
@@ -13068,6 +13264,12 @@
       function _wsTimeout()
       {
        notice.error(0xC2);
+       notice.active &= ~0x80;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        _lTimeout = 5000;
        if (_tTimeout !== false)
        {
@@ -14263,6 +14465,8 @@
      if (cfg.display.hasOwnProperty('hue') && cfg.display.hue === 'rave' && !_hasRaveToggle())
       document.documentElement.classList.add('rave');
      _css();
+     if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === 'init')
+      notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
      if (!window.hasOwnProperty('obsstudio') && !window.localStorage.getItem('emotewall.obs_notfound'))
      {
       window.localStorage.setItem('emotewall.obs_notfound', '1');
@@ -14348,6 +14552,7 @@
       return false;
      if (await youtube.global() === false)
       return false;
+     notice.expect |= 0x08;
      if (cfg.event.youtube.sub !== false)
       youtube.net.subscribers();
      youtube.net.members();
