@@ -13561,6 +13561,21 @@
      return r;
     }
 
+    function $fullVals()
+    {
+     let r = loginT.cfgVals();
+     let lsChannel = window.localStorage.getItem(loginT.path() + '.channel');
+     let lsOAuth = window.localStorage.getItem(loginT.path() + '.oauth');
+     let lsRefresh = window.localStorage.getItem(loginT.path() + '.refresh');
+     if (lsChannel !== null)
+      r |= 0x01;
+     if (lsRefresh !== null)
+      r |= 0x02;
+     if (lsOAuth !== null)
+      r |= 0x04;
+     return r;
+    }
+
     function $use()
     {
      loginT.inUse = false;
@@ -13688,7 +13703,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on Twitch</span>';
-     if (auto && (loginYT.cfgVals() > 0x01 || loginK.cfgVals() > 0))
+     if (auto && (loginYT.fullVals() > 0x01 || loginK.cfgVals() > 0))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
     }
@@ -13783,6 +13798,7 @@
      showOut: $showOut,
      logOut: $logOut,
      path: $path,
+     fullVals: $fullVals,
      cfgVals: $cfgVals,
      cfgHash: false
     };
@@ -13830,6 +13846,15 @@
       r |= 0x02;
      if (cfg.youtube.hasOwnProperty('oauth') && cfg.youtube.oauth !== false && cfg.youtube.oauth !== null && cfg.youtube.oauth !== 'OAUTH_ID')
       r |= 0x04;
+     return r;
+    }
+
+    function $fullVals()
+    {
+     let r = loginYT.cfgVals();
+     let lsRefresh = window.localStorage.getItem(loginYT.path() + '.refresh');
+     if (lsRefresh !== null)
+      r |= 0x02;
      return r;
     }
 
@@ -13949,7 +13974,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginYT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on YouTube</span>';
-     if (auto && (loginT.cfgVals() > 0x01 || loginK.cfgVals() > 0))
+     if (auto && (loginT.fullVals() > 0x01 || loginK.cfgVals() > 0))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
     }
@@ -14044,6 +14069,7 @@
      showOut: $showOut,
      logOut: $logOut,
      path: $path,
+     fullVals: $fullVals,
      cfgVals: $cfgVals,
      cfgHash: false
     };
