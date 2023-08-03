@@ -13703,7 +13703,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on Twitch</span>';
-     if (auto && (loginYT.fullVals() > 0x01 || loginK.cfgVals() > 0))
+     if (auto && (loginYT.fullVals() > 0x01 || loginK.fullVals() > 0))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
     }
@@ -13974,7 +13974,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginYT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on YouTube</span>';
-     if (auto && (loginT.fullVals() > 0x01 || loginK.cfgVals() > 0))
+     if (auto && (loginT.fullVals() > 0x01 || loginK.fullVals() > 0))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
     }
@@ -14077,6 +14077,14 @@
 
    const loginK = function()
    {
+    let _tL = false;
+    const _visTime = 5000;
+
+    function $path()
+    {
+     return shared.cfgHash + '.kick';
+    }
+
     function $cfgVals()
     {
      if (!cfg.hasOwnProperty('kick'))
@@ -14087,7 +14095,155 @@
      return r;
     }
 
+    function $fullVals()
+    {
+     let r = loginK.cfgVals();
+     let lsChannel = window.localStorage.getItem(loginK.path() + '.channel');
+     if (lsChannel !== null)
+      r |= 0x01;
+     return r;
+    }
+
+    function $use()
+    {
+     loginK.inUse = false;
+     if (loginK.cfgVals() === 0x01)
+      return false;
+     loginK.inUse = true;
+     let lsChannel = window.localStorage.getItem(loginK.path() + '.channel');
+     if (lsChannel === null)
+     {
+      loginK.showIn(true);
+      return true;
+     }
+     cfg.kick.channel = lsChannel;
+     loginK.showOut();
+     return false;
+    }
+
+    function $begin()
+    {
+     let r = prompt('Enter your Kick Channel:');
+     if (r === '' || r === false || r === null)
+      return;
+     r = r.toLowerCase();
+     if (r.indexOf('kick.com/') > -1)
+      r = r.slice(r.indexOf('kick.com/') + 9);
+     window.localStorage.setItem(loginK.path() + '.channel', r);
+     window.location.reload();
+    }
+
+    function $showIn(auto = false)
+    {
+     if (document.getElementById('cmdKLogout'))
+      document.body.removeChild(document.getElementById('cmdKLogout'));
+     let cmdLogin = document.createElement('button');
+     cmdLogin.setAttribute('id', 'cmdKLogin');
+     cmdLogin.setAttribute('type', 'button');
+     cmdLogin.classList.add('kick');
+     cmdLogin.classList.add('login');
+     document.addEventListener('mouseover', _fadeInLogin);
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+     cmdLogin.setAttribute('onclick', 'loginK.begin();');
+     cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on Kick</span>';
+     if (auto && (loginYT.fullVals() > 0x01 || loginT.fullVals() > 0x01))
+      cmdLogin.classList.add('hidden');
+     document.body.appendChild(cmdLogin);
+    }
+
+    function _fadeInLogin()
+    {
+     if (document.getElementById('cmdKLogin'))
+      document.getElementById('cmdKLogin').classList.remove('hidden');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+    }
+
+    function _fadeOutLogin()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById('cmdKLogin'))
+      document.getElementById('cmdKLogin').classList.add('hidden');
+    }
+
+    function $showOut(v = false)
+    {
+     if (document.getElementById('cmdKLogin'))
+      document.body.removeChild(document.getElementById('cmdKLogin'));
+     if (document.getElementById('cmdKLogout'))
+      document.body.removeChild(document.getElementById('cmdKLogout'));
+     let cmdLogout = document.createElement('button');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     cmdLogout.setAttribute('id', 'cmdKLogout');
+     cmdLogout.setAttribute('type', 'button');
+     cmdLogout.classList.add('kick');
+     cmdLogout.classList.add('logout');
+     document.addEventListener('mousemove', _fadeInLogout);
+     if (v)
+     {
+      cmdLogout.setAttribute('onclick', 'loginK.begin();');
+      cmdLogout.innerHTML = 'Re-Auth';
+      _tL = window.setTimeout(_fadeOutLogout, _visTime);
+     }
+     else
+     {
+      cmdLogout.setAttribute('onclick', 'loginK.logOut();');
+      cmdLogout.innerHTML = 'Log Out';
+      cmdLogout.classList.add('hidden');
+     }
+     document.body.appendChild(cmdLogout);
+    }
+
+    function $logOut()
+    {
+     window.localStorage.removeItem(loginK.path() + '.channel');
+     window.location.reload();
+    }
+
+    function _fadeInLogout()
+    {
+     if (document.getElementById('cmdKLogout'))
+      document.getElementById('cmdKLogout').classList.remove('hidden');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogout, _visTime);
+    }
+
+    function _fadeOutLogout()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById('cmdKLogout'))
+      document.getElementById('cmdKLogout').classList.add('hidden');
+    }
+
     return {
+     inUse: false,
+     use: $use,
+     begin: $begin,
+     showIn: $showIn,
+     showOut: $showOut,
+     logOut: $logOut,
+     path: $path,
+     fullVals: $fullVals,
      cfgVals: $cfgVals
     };
    }();
@@ -14112,6 +14268,7 @@
       window.localStorage.setItem('emotewall.obs_notfound', '1');
       notice.error(0x09);
      }
+     loginK.use();
      if ((loginK.cfgVals() & 0x01) !== 0x01)
       kick.net.dead = true;
      else
@@ -15143,6 +15300,20 @@
     background-color: #5C16C5;
    }
 
+   button.kick
+   {
+    background-color: #00FF00;
+    color: #000000;
+   }
+   button.kick:focus, button.kick:hover
+   {
+    background-color: #00D000;
+   }
+   button.kick:active
+   {
+    background-color: #60FF60;
+   }
+
    button.youtube
    {
     background-color: #E93223;
@@ -15174,11 +15345,15 @@
    }
    button.login.twitch
    {
-    top: calc(50% - 1em - 1.25em);
+    top: calc(50% - 1em - 2.5em);
+   }
+   button.login.kick
+   {
+    top: calc(50% - 1em);
    }
    button.login.youtube
    {
-    top: calc(50% - 1em + 1.25em);
+    top: calc(50% - 1em + 2.5em);
    }
 
    button.logout
@@ -15193,9 +15368,13 @@
    {
     top: 1em;
    }
-   button.logout.youtube
+   button.logout.kick
    {
     top: 4em;
+   }
+   button.logout.youtube
+   {
+    top: 7em;
    }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
