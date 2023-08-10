@@ -339,6 +339,11 @@ Configuration Information
           *The maximum number of rotations a kappa cube might spin while on screen.*  
           This effectively controls the maximum possible speed at which cubes will rotate.
 
+        * `faces`  
+          *Toggles dynamic faces on cubes, which increases the number of shown emotes, but may make The Cube look less like a cube.*  
+           - [ ] If `true`, The Cube may use different emotes on each face of The Cube.
+           - [ ] If `false`, The Cube will show only one emote on every face of The Cube.
+
       * `Text`  
         *Settings related to Text kappagen.*  
         These settings will be the default for all instances of `'Text'` kapagen.

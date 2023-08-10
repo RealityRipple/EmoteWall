@@ -210,7 +210,8 @@
        'TheCube': {       // Rotate a 3D cube of an emote (no zoom, only fade)
         size: 8/10,
         center: true,
-        rotations: 5
+        rotations: 5,
+        faces: false
        },
        'Text': {          // Show a message         (no fade/zoom; specific-size emotes)
         message: ['HYPE!'],
@@ -3499,7 +3500,7 @@
 
       const $TheCube = function()
       {
-       function task(eInf, sW, sH, eH, bC, iR)
+       function task(kList, sW, sH, eH, bC, iR)
        {
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
@@ -3514,108 +3515,36 @@
         let cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
         cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
-        if (!eInf.hasOwnProperty('zwe') || eInf.zwe.length === 0)
+        const sFaces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+        let eFaces = [];
+        for (let i = 0; i < 6; i++)
         {
-         let cubeF = document.createElement('img');
-         _setImgSrc(cubeF, eInf.url);
-         cubeF.dataset.face = 'front';
-         cube.appendChild(cubeF);
-         let cubeB = document.createElement('img');
-         _setImgSrc(cubeB, eInf.url);
-         cubeB.dataset.face = 'back';
-         cube.appendChild(cubeB);
-         let cubeR = document.createElement('img');
-         _setImgSrc(cubeR, eInf.url);
-         cubeR.dataset.face = 'right';
-         cube.appendChild(cubeR);
-         let cubeL = document.createElement('img');
-         _setImgSrc(cubeL, eInf.url);
-         cubeL.dataset.face = 'left';
-         cube.appendChild(cubeL);
-         let cubeT = document.createElement('img');
-         _setImgSrc(cubeT, eInf.url);
-         cubeT.dataset.face = 'top';
-         cube.appendChild(cubeT);
-         let cubeU = document.createElement('img');
-         _setImgSrc(cubeU, eInf.url);
-         cubeU.dataset.face = 'bottom';
-         cube.appendChild(cubeU);
+         eFaces.push(kList[shared.rnd(kList.length)]);
         }
-        else
+        for (let i = 0; i < 6; i++)
         {
-         const lZ = eInf.zwe.length;
-         let cubeF = document.createElement('div');
-         cubeF.dataset.face = 'front';
-         let pctF = document.createElement('img');
-         _setImgSrc(pctF, eInf.url);
-         cubeF.appendChild(pctF);
-         for (let i = 0; i < lZ; i++)
+         if (!eFaces[i].hasOwnProperty('zwe') || eFaces[i].zwe.length === 0)
          {
-          let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          cubeF.appendChild(pctZ);
+          let iFace = document.createElement('img');
+          _setImgSrc(iFace, eFaces[i].url);
+          iFace.dataset.face = sFaces[i];
+          cube.appendChild(iFace);
          }
-         cube.appendChild(cubeF);
-         let cubeB = document.createElement('div');
-         cubeB.dataset.face = 'back';
-         let pctB = document.createElement('img');
-         _setImgSrc(pctB, eInf.url);
-         cubeB.appendChild(pctB);
-         for (let i = 0; i < lZ; i++)
+         else
          {
-          let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          cubeB.appendChild(pctZ);
+          let dFace = document.createElement('div');
+          dFace.dataset.face = sFaces[i];
+          let pFace = document.createElement('img');
+          _setImgSrc(pFace, eFaces[i].url);
+          dFace.appendChild(pFace);
+          for (let i = 0; i < eFaces[i].zwe.length; i++)
+          {
+           let pctZ = document.createElement('img');
+           _setImgSrc(pctZ, eFaces[i].zwe[i].url);
+           dFace.appendChild(pctZ);
+          }
+          cube.appendChild(dFace);
          }
-         cube.appendChild(cubeB);
-         let cubeR = document.createElement('div');
-         cubeR.dataset.face = 'right';
-         let pctR = document.createElement('img');
-         _setImgSrc(pctR, eInf.url);
-         cubeR.appendChild(pctR);
-         for (let i = 0; i < lZ; i++)
-         {
-          let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          cubeR.appendChild(pctZ);
-         }
-         cube.appendChild(cubeR);
-         let cubeL = document.createElement('div');
-         cubeL.dataset.face = 'left';
-         let pctL = document.createElement('img');
-         _setImgSrc(pctL, eInf.url);
-         cubeL.appendChild(pctL);
-         for (let i = 0; i < lZ; i++)
-         {
-          let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          cubeL.appendChild(pctZ);
-         }
-         cube.appendChild(cubeL);
-         let cubeT = document.createElement('div');
-         cubeT.dataset.face = 'top';
-         let pctT = document.createElement('img');
-         _setImgSrc(pctT, eInf.url);
-         cubeT.appendChild(pctT);
-         for (let i = 0; i < lZ; i++)
-         {
-          let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          cubeT.appendChild(pctZ);
-         }
-         cube.appendChild(cubeT);
-         let cubeU = document.createElement('div');
-         cubeU.dataset.face = 'bottom';
-         let pctU = document.createElement('img');
-         _setImgSrc(pctU, eInf.url);
-         cubeU.appendChild(pctU);
-         for (let i = 0; i < lZ; i++)
-         {
-          let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          cubeU.appendChild(pctZ);
-         }
-         cube.appendChild(cubeU);
         }
         scene.appendChild(cube);
         let h = shared.rnd(sW - eH);
@@ -4209,7 +4138,6 @@
         break;
        case 'TheCube':
         const cS = Math.min(sW, sH);
-        const rC = shared.rnd(lK);
         let sCS = 8 / 10;
         if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('size'))
          sCS = cfg.display.kappa.styles[kStyle.style].size;
@@ -4225,7 +4153,17 @@
          sCR = cfg.display.kappa.styles[kStyle.style].rotations;
         if (kStyle.prefs.hasOwnProperty('rotations'))
          sCR = kStyle.prefs.rotations;
-        _list.TheCube(kList[rC], sW, sH, Math.floor(cS * sCS), sCC, sCR);
+        let bF = false;
+        if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('faces'))
+         bF = cfg.display.kappa.styles[kStyle.style].faces;
+        if (kStyle.prefs.hasOwnProperty('faces'))
+         bF = kStyle.prefs.faces === true;
+        let kUse = []
+        if (bF)
+         kUse = kList;
+        else
+         kUse.push(kList[shared.rnd(lK)]);
+        _list.TheCube(kUse, sW, sH, Math.floor(cS * sCS), sCC, sCR);
         break;
        case 'Burst':
         const oH = _rndFromRange(timing.kappa[kStyle.style].left);
