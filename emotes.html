@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.8.1 BETA
+    * v0.8.2 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -210,7 +210,8 @@
        'TheCube': {       // Rotate a 3D cube of an emote (no zoom, only fade)
         size: 8/10,
         center: true,
-        rotations: 5
+        rotations: 5,
+        faces: false
        },
        'Text': {          // Show a message         (no fade/zoom; specific-size emotes)
         message: ['HYPE!'],
@@ -1076,6 +1077,18 @@
      [0, 1, 0, 0, 0, 0, 1, 1, 0],
      [0, 0, 1, 1, 1, 1, 1, 0, 0]
     ],
+    '>': [
+     [0, 1, 0, 0, 0, 0, 0, 1, 0],
+     [0, 0, 1, 0, 0, 0, 1, 0, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 0, 0, 1, 0, 0, 0, 0]
+    ],
+    '<': [
+     [0, 0, 0, 0, 1, 0, 0, 0, 0],
+     [0, 0, 0, 1, 0, 1, 0, 0, 0],
+     [0, 0, 1, 0, 0, 0, 1, 0, 0],
+     [0, 1, 0, 0, 0, 0, 0, 1, 0]
+    ],
     ':': [
      [0, 0, 1, 0, 0, 1, 0, 0, 0]
     ],
@@ -1659,10 +1672,49 @@
      nID.classList.add('faded');
     }
 
+    function $activeCheck()
+    {
+     if (notice.tHide !== false)
+     {
+      window.clearTimeout(notice.tHide);
+      notice.tHide = false;
+     }
+     let b = document.getElementById('badge');
+     if (!b)
+     {
+      notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      return;
+     }
+     if (!b.dataset.hasOwnProperty('alerts'))
+     {
+      notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      return;
+     }
+     if (b.dataset.alerts !== '0')
+     {
+      notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      return;
+     }
+     if (notice.active !== notice.expect)
+     {
+      notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      return;
+     }
+     const css = document.getElementsByTagName('STYLE')[0];
+     let h = css.innerHTML;
+     h = h.replace('#notices\n   {\n', '#notices\n   {\n    display: none;\n');
+     css.innerHTML = h;
+    }
+
     return {
      info: $info,
      warning: $warning,
-     error: $error
+     error: $error,
+     activeCheck: $activeCheck,
+     expect: 0,
+     active: 0,
+     tHide: false,
+     iHide: 5000
     };
    }();
 
@@ -3448,7 +3500,7 @@
 
       const $TheCube = function()
       {
-       function task(eInf, sW, sH, eH, bC, iR)
+       function task(kList, sW, sH, eH, bC, iR)
        {
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
@@ -3463,108 +3515,36 @@
         let cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
         cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
-        if (!eInf.hasOwnProperty('zwe') || eInf.zwe.length === 0)
+        const sFaces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+        let eFaces = [];
+        for (let i = 0; i < 6; i++)
         {
-         let cubeF = document.createElement('img');
-         _setImgSrc(cubeF, eInf.url);
-         cubeF.dataset.face = 'front';
-         cube.appendChild(cubeF);
-         let cubeB = document.createElement('img');
-         _setImgSrc(cubeB, eInf.url);
-         cubeB.dataset.face = 'back';
-         cube.appendChild(cubeB);
-         let cubeR = document.createElement('img');
-         _setImgSrc(cubeR, eInf.url);
-         cubeR.dataset.face = 'right';
-         cube.appendChild(cubeR);
-         let cubeL = document.createElement('img');
-         _setImgSrc(cubeL, eInf.url);
-         cubeL.dataset.face = 'left';
-         cube.appendChild(cubeL);
-         let cubeT = document.createElement('img');
-         _setImgSrc(cubeT, eInf.url);
-         cubeT.dataset.face = 'top';
-         cube.appendChild(cubeT);
-         let cubeU = document.createElement('img');
-         _setImgSrc(cubeU, eInf.url);
-         cubeU.dataset.face = 'bottom';
-         cube.appendChild(cubeU);
+         eFaces.push(kList[shared.rnd(kList.length)]);
         }
-        else
+        for (let i = 0; i < 6; i++)
         {
-         const lZ = eInf.zwe.length;
-         let cubeF = document.createElement('div');
-         cubeF.dataset.face = 'front';
-         let pctF = document.createElement('img');
-         _setImgSrc(pctF, eInf.url);
-         cubeF.appendChild(pctF);
-         for (let i = 0; i < lZ; i++)
+         if (!eFaces[i].hasOwnProperty('zwe') || eFaces[i].zwe.length === 0)
          {
-          let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          cubeF.appendChild(pctZ);
+          let iFace = document.createElement('img');
+          _setImgSrc(iFace, eFaces[i].url);
+          iFace.dataset.face = sFaces[i];
+          cube.appendChild(iFace);
          }
-         cube.appendChild(cubeF);
-         let cubeB = document.createElement('div');
-         cubeB.dataset.face = 'back';
-         let pctB = document.createElement('img');
-         _setImgSrc(pctB, eInf.url);
-         cubeB.appendChild(pctB);
-         for (let i = 0; i < lZ; i++)
+         else
          {
-          let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          cubeB.appendChild(pctZ);
+          let dFace = document.createElement('div');
+          dFace.dataset.face = sFaces[i];
+          let pFace = document.createElement('img');
+          _setImgSrc(pFace, eFaces[i].url);
+          dFace.appendChild(pFace);
+          for (let i = 0; i < eFaces[i].zwe.length; i++)
+          {
+           let pctZ = document.createElement('img');
+           _setImgSrc(pctZ, eFaces[i].zwe[i].url);
+           dFace.appendChild(pctZ);
+          }
+          cube.appendChild(dFace);
          }
-         cube.appendChild(cubeB);
-         let cubeR = document.createElement('div');
-         cubeR.dataset.face = 'right';
-         let pctR = document.createElement('img');
-         _setImgSrc(pctR, eInf.url);
-         cubeR.appendChild(pctR);
-         for (let i = 0; i < lZ; i++)
-         {
-          let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          cubeR.appendChild(pctZ);
-         }
-         cube.appendChild(cubeR);
-         let cubeL = document.createElement('div');
-         cubeL.dataset.face = 'left';
-         let pctL = document.createElement('img');
-         _setImgSrc(pctL, eInf.url);
-         cubeL.appendChild(pctL);
-         for (let i = 0; i < lZ; i++)
-         {
-          let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          cubeL.appendChild(pctZ);
-         }
-         cube.appendChild(cubeL);
-         let cubeT = document.createElement('div');
-         cubeT.dataset.face = 'top';
-         let pctT = document.createElement('img');
-         _setImgSrc(pctT, eInf.url);
-         cubeT.appendChild(pctT);
-         for (let i = 0; i < lZ; i++)
-         {
-          let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          cubeT.appendChild(pctZ);
-         }
-         cube.appendChild(cubeT);
-         let cubeU = document.createElement('div');
-         cubeU.dataset.face = 'bottom';
-         let pctU = document.createElement('img');
-         _setImgSrc(pctU, eInf.url);
-         cubeU.appendChild(pctU);
-         for (let i = 0; i < lZ; i++)
-         {
-          let pctZ = document.createElement('img');
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          cubeU.appendChild(pctZ);
-         }
-         cube.appendChild(cubeU);
         }
         scene.appendChild(cube);
         let h = shared.rnd(sW - eH);
@@ -4158,7 +4138,6 @@
         break;
        case 'TheCube':
         const cS = Math.min(sW, sH);
-        const rC = shared.rnd(lK);
         let sCS = 8 / 10;
         if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('size'))
          sCS = cfg.display.kappa.styles[kStyle.style].size;
@@ -4174,7 +4153,17 @@
          sCR = cfg.display.kappa.styles[kStyle.style].rotations;
         if (kStyle.prefs.hasOwnProperty('rotations'))
          sCR = kStyle.prefs.rotations;
-        _list.TheCube(kList[rC], sW, sH, Math.floor(cS * sCS), sCC, sCR);
+        let bF = false;
+        if (cfg.display.kappa.styles.hasOwnProperty(kStyle.style) && cfg.display.kappa.styles[kStyle.style].hasOwnProperty('faces'))
+         bF = cfg.display.kappa.styles[kStyle.style].faces;
+        if (kStyle.prefs.hasOwnProperty('faces'))
+         bF = kStyle.prefs.faces === true;
+        let kUse = []
+        if (bF)
+         kUse = kList;
+        else
+         kUse.push(kList[shared.rnd(lK)]);
+        _list.TheCube(kUse, sW, sH, Math.floor(cS * sCS), sCC, sCR);
         break;
        case 'Burst':
         const oH = _rndFromRange(timing.kappa[kStyle.style].left);
@@ -4721,6 +4710,7 @@
 
       function task(chID = null)
       {
+       notice.expect |= 0x02;
        if (chID !== null)
         twitch.net.eventSubCtl.channelID = chID;
        _ws = new WebSocket(_wsURL);
@@ -4742,6 +4732,12 @@
       function _wsClose()
       {
        notice.error(0x1A);
+       notice.active &= ~0x02;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -4788,6 +4784,12 @@
        if (!r.hasOwnProperty('payload'))
         return;
        notice.info(0x1A);
+       notice.active |= 0x02;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        switch (r.metadata.message_type)
        {
         case 'session_welcome':
@@ -5126,6 +5128,12 @@
       function _wsTimeout()
       {
        notice.error(0x1A);
+       notice.active &= ~0x02;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        _lTimeout = 5000;
        if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
         _wsURL = cURLs.ws.twitch.eventSub;
@@ -5403,6 +5411,7 @@
 
       function task()
       {
+       notice.expect |= 0x01;
        _tPing = 0;
        _firstRS = true;
        _ws = new WebSocket(cURLs.ws.twitch.irc);
@@ -5428,6 +5437,12 @@
       function _wsClose()
       {
        notice.error(0x12);
+       notice.active &= ~0x01;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tPing !== 0)
        {
         window.clearInterval(_tPing);
@@ -5500,6 +5515,12 @@
          continue;
         }
         notice.info(0x12);
+        notice.active |= 0x01;
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
         switch (cmd.command)
         {
          case 'PING':
@@ -5682,6 +5703,12 @@
       function _wsExpire()
       {
        notice.error(0x12);
+       notice.active &= ~0x01;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -5718,6 +5745,12 @@
       function _wsTimeout()
       {
        notice.error(0x12);
+       notice.active &= ~0x01;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tExpire !== false)
        {
         window.clearTimeout(_tExpire);
@@ -7631,9 +7664,21 @@
        if (lStreams === null)
        {
         notice.error(0x22);
+        notice.active &= ~0x08;
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
         return;
        }
        notice.info(0x22);
+       notice.active |= 0x08;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (lStreams === false)
        {
         _tS = window.setTimeout(youtube.net.broadcasts.updateStream, 30 * 1000);
@@ -7872,6 +7917,12 @@
          {
           notice.error(0x22);
           notice.error(0x21);
+          notice.active &= ~0x08;
+          if (notice.tHide !== false)
+          {
+           window.clearTimeout(notice.tHide);
+           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+          }
           return;
          }
         }
@@ -7881,6 +7932,12 @@
         {
          notice.error(0x22);
          notice.error(0x21);
+         notice.active &= ~0x08;
+         if (notice.tHide !== false)
+         {
+          window.clearTimeout(notice.tHide);
+          notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+         }
          return;
         }
         let q = cURLs.api.youtube.livechat.messages.init;
@@ -7905,7 +7962,6 @@
           youtube.net.broadcasts.updateStream();
           return;
          }
-         notice.error(0x22);
          if (j !== null)
          {
           const e = _flatJSON(j);
@@ -7929,6 +7985,13 @@
           }
           console.log(j);
          }
+         notice.error(0x22);
+         notice.active &= ~0x08;
+         if (notice.tHide !== false)
+         {
+          window.clearTimeout(notice.tHide);
+          notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+         }
          console.log(r.code);
          notice.error(0x29, 'Error Getting Messages: ' + r.code);
          _errorReport('broadcasts.getMessages.start', q, r);
@@ -7937,6 +8000,12 @@
         if (j === null)
          return;
         notice.info(0x22);
+        notice.active |= 0x08;
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
         let minPoll = 1000;
         if (j.hasOwnProperty('pollingIntervalMillis'))
          minPoll = j.pollingIntervalMillis;
@@ -9018,6 +9087,7 @@
 
       async function task()
       {
+       notice.expect |= 0x04;
        if (kick.net.channelID === 0 || kick.net.chatID === 0)
        {
         await _getChIDs();
@@ -9049,6 +9119,12 @@
       function _wsClose()
       {
        notice.error(0x32);
+       notice.active &= ~0x04;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tPing !== 0)
        {
         window.clearInterval(_tPing);
@@ -9197,6 +9273,12 @@
         return;
        const jData = JSON.parse(j.data);
        notice.info(0x32);
+       notice.active |= 0x04;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (j.event.startsWith('pusher:'))
        {
         switch (j.event.slice(7))
@@ -9351,6 +9433,12 @@
       function _wsExpire()
       {
        notice.error(0x32);
+       notice.active &= ~0x04;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_ws === null)
         return;
        if (kick.net.dead === true)
@@ -9377,6 +9465,12 @@
       function _wsTimeout()
       {
        notice.error(0x32);
+       notice.active &= ~0x04;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tExpire !== false)
        {
         window.clearTimeout(_tExpire);
@@ -11458,6 +11552,7 @@
 
      function task()
      {
+      notice.expect |= 0x20;
       _tPing = 0;
       _ws = new WebSocket(cURLs.ws.streamlabs.replaceAll('%TOKEN%', cfg.streamlabs.token));
       _ws.onopen = _wsOpen;
@@ -11526,6 +11621,12 @@
       if (d.length < 1)
        return;
       notice.info(0x82);
+      notice.active |= 0x20;
+      if (notice.tHide !== false)
+      {
+       window.clearTimeout(notice.tHide);
+       notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      }
       switch (d.slice(0, 1))
       {
        case '0':
@@ -11723,6 +11824,7 @@
 
      function task()
      {
+      notice.expect |= 0x10;
       _tPing = 0;
       _ws = new WebSocket(cURLs.ws.streamelements);
       _ws.onopen = _wsOpen;
@@ -11743,6 +11845,12 @@
      function _wsClose()
      {
       notice.error(0x72);
+      notice.active &= ~0x10;
+      if (notice.tHide !== false)
+      {
+       window.clearTimeout(notice.tHide);
+       notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      }
       if (_tTimeout !== false)
       {
        window.clearTimeout(_tTimeout);
@@ -11791,6 +11899,12 @@
       if (d.length < 1)
        return;
       notice.info(0x72);
+      notice.active |= 0x10;
+      if (notice.tHide !== false)
+      {
+       window.clearTimeout(notice.tHide);
+       notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      }
       switch (d.slice(0, 1))
       {
        case '0':
@@ -11894,6 +12008,12 @@
      function _wsTimeout()
      {
       notice.error(0x72);
+      notice.active &= ~0x10;
+      if (notice.tHide !== false)
+      {
+       window.clearTimeout(notice.tHide);
+       notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+      }
       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
@@ -12439,6 +12559,7 @@
 
       function $init()
       {
+       notice.expect |= 0x40;
        _ws = new WebSocket(cURLs.ws.bttv);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
@@ -12452,6 +12573,12 @@
        if (_ws.readyState !== 1)
         return;
        notice.info(0xB2);
+       notice.active |= 0x40;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        _ws.onopen = null;
        for (let i = 0, l = _chList.length; i < l; i++)
        {
@@ -12462,6 +12589,12 @@
       function _wsClose()
       {
        notice.error(0xB2);
+       notice.active &= ~0x40;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_ws === null)
         return;
        _ws.onopen = null;
@@ -12807,6 +12940,7 @@
 
       async function $init()
       {
+       notice.expect |= 0x80;
        _recvd = false;
        _ws = new WebSocket(cURLs.ws['7tv']);
        _ws.onopen = _wsOpen;
@@ -12828,6 +12962,12 @@
       {
        if (!_recvd)
         notice.error(0xC2);
+       notice.active &= ~0x80;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -12873,6 +13013,12 @@
        if (!d.hasOwnProperty('d'))
         return;
        notice.info(0xC2);
+       notice.active |= 0x80;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        switch (d.op)
        {
         case 0:
@@ -13056,6 +13202,12 @@
       function _wsTimeout()
       {
        notice.error(0xC2);
+       notice.active &= ~0x80;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
        _lTimeout = 5000;
        if (_tTimeout !== false)
        {
@@ -13549,6 +13701,21 @@
      return r;
     }
 
+    function $fullVals()
+    {
+     let r = loginT.cfgVals();
+     let lsChannel = window.localStorage.getItem(loginT.path() + '.channel');
+     let lsOAuth = window.localStorage.getItem(loginT.path() + '.oauth');
+     let lsRefresh = window.localStorage.getItem(loginT.path() + '.refresh');
+     if (lsChannel !== null)
+      r |= 0x01;
+     if (lsRefresh !== null)
+      r |= 0x02;
+     if (lsOAuth !== null)
+      r |= 0x04;
+     return r;
+    }
+
     function $use()
     {
      loginT.inUse = false;
@@ -13676,7 +13843,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on Twitch</span>';
-     if (auto && (loginYT.cfgVals() > 0x01 || loginK.cfgVals() > 0))
+     if (auto && (loginYT.fullVals() > 0x01 || loginK.fullVals() > 0))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
     }
@@ -13771,6 +13938,7 @@
      showOut: $showOut,
      logOut: $logOut,
      path: $path,
+     fullVals: $fullVals,
      cfgVals: $cfgVals,
      cfgHash: false
     };
@@ -13818,6 +13986,15 @@
       r |= 0x02;
      if (cfg.youtube.hasOwnProperty('oauth') && cfg.youtube.oauth !== false && cfg.youtube.oauth !== null && cfg.youtube.oauth !== 'OAUTH_ID')
       r |= 0x04;
+     return r;
+    }
+
+    function $fullVals()
+    {
+     let r = loginYT.cfgVals();
+     let lsRefresh = window.localStorage.getItem(loginYT.path() + '.refresh');
+     if (lsRefresh !== null)
+      r |= 0x02;
      return r;
     }
 
@@ -13937,7 +14114,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginYT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on YouTube</span>';
-     if (auto && (loginT.cfgVals() > 0x01 || loginK.cfgVals() > 0))
+     if (auto && (loginT.fullVals() > 0x01 || loginK.fullVals() > 0))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
     }
@@ -14032,6 +14209,7 @@
      showOut: $showOut,
      logOut: $logOut,
      path: $path,
+     fullVals: $fullVals,
      cfgVals: $cfgVals,
      cfgHash: false
     };
@@ -14039,6 +14217,14 @@
 
    const loginK = function()
    {
+    let _tL = false;
+    const _visTime = 5000;
+
+    function $path()
+    {
+     return shared.cfgHash + '.kick';
+    }
+
     function $cfgVals()
     {
      if (!cfg.hasOwnProperty('kick'))
@@ -14049,7 +14235,155 @@
      return r;
     }
 
+    function $fullVals()
+    {
+     let r = loginK.cfgVals();
+     let lsChannel = window.localStorage.getItem(loginK.path() + '.channel');
+     if (lsChannel !== null)
+      r |= 0x01;
+     return r;
+    }
+
+    function $use()
+    {
+     loginK.inUse = false;
+     if (loginK.cfgVals() === 0x01)
+      return false;
+     loginK.inUse = true;
+     let lsChannel = window.localStorage.getItem(loginK.path() + '.channel');
+     if (lsChannel === null)
+     {
+      loginK.showIn(true);
+      return true;
+     }
+     cfg.kick.channel = lsChannel;
+     loginK.showOut();
+     return false;
+    }
+
+    function $begin()
+    {
+     let r = prompt('Enter your Kick Channel:');
+     if (r === '' || r === false || r === null)
+      return;
+     r = r.toLowerCase();
+     if (r.indexOf('kick.com/') > -1)
+      r = r.slice(r.indexOf('kick.com/') + 9);
+     window.localStorage.setItem(loginK.path() + '.channel', r);
+     window.location.reload();
+    }
+
+    function $showIn(auto = false)
+    {
+     if (document.getElementById('cmdKLogout'))
+      document.body.removeChild(document.getElementById('cmdKLogout'));
+     let cmdLogin = document.createElement('button');
+     cmdLogin.setAttribute('id', 'cmdKLogin');
+     cmdLogin.setAttribute('type', 'button');
+     cmdLogin.classList.add('kick');
+     cmdLogin.classList.add('login');
+     document.addEventListener('mouseover', _fadeInLogin);
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+     cmdLogin.setAttribute('onclick', 'loginK.begin();');
+     cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on Kick</span>';
+     if (auto && (loginYT.fullVals() > 0x01 || loginT.fullVals() > 0x01))
+      cmdLogin.classList.add('hidden');
+     document.body.appendChild(cmdLogin);
+    }
+
+    function _fadeInLogin()
+    {
+     if (document.getElementById('cmdKLogin'))
+      document.getElementById('cmdKLogin').classList.remove('hidden');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+    }
+
+    function _fadeOutLogin()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById('cmdKLogin'))
+      document.getElementById('cmdKLogin').classList.add('hidden');
+    }
+
+    function $showOut(v = false)
+    {
+     if (document.getElementById('cmdKLogin'))
+      document.body.removeChild(document.getElementById('cmdKLogin'));
+     if (document.getElementById('cmdKLogout'))
+      document.body.removeChild(document.getElementById('cmdKLogout'));
+     let cmdLogout = document.createElement('button');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     cmdLogout.setAttribute('id', 'cmdKLogout');
+     cmdLogout.setAttribute('type', 'button');
+     cmdLogout.classList.add('kick');
+     cmdLogout.classList.add('logout');
+     document.addEventListener('mousemove', _fadeInLogout);
+     if (v)
+     {
+      cmdLogout.setAttribute('onclick', 'loginK.begin();');
+      cmdLogout.innerHTML = 'Re-Auth';
+      _tL = window.setTimeout(_fadeOutLogout, _visTime);
+     }
+     else
+     {
+      cmdLogout.setAttribute('onclick', 'loginK.logOut();');
+      cmdLogout.innerHTML = 'Log Out';
+      cmdLogout.classList.add('hidden');
+     }
+     document.body.appendChild(cmdLogout);
+    }
+
+    function $logOut()
+    {
+     window.localStorage.removeItem(loginK.path() + '.channel');
+     window.location.reload();
+    }
+
+    function _fadeInLogout()
+    {
+     if (document.getElementById('cmdKLogout'))
+      document.getElementById('cmdKLogout').classList.remove('hidden');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogout, _visTime);
+    }
+
+    function _fadeOutLogout()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById('cmdKLogout'))
+      document.getElementById('cmdKLogout').classList.add('hidden');
+    }
+
     return {
+     inUse: false,
+     use: $use,
+     begin: $begin,
+     showIn: $showIn,
+     showOut: $showOut,
+     logOut: $logOut,
+     path: $path,
+     fullVals: $fullVals,
      cfgVals: $cfgVals
     };
    }();
@@ -14069,11 +14403,14 @@
      if (cfg.display.hasOwnProperty('hue') && cfg.display.hue === 'rave' && !_hasRaveToggle())
       document.documentElement.classList.add('rave');
      _css();
+     if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === 'init')
+      notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
      if (!window.hasOwnProperty('obsstudio') && !window.localStorage.getItem('emotewall.obs_notfound'))
      {
       window.localStorage.setItem('emotewall.obs_notfound', '1');
       notice.error(0x09);
      }
+     loginK.use();
      if ((loginK.cfgVals() & 0x01) !== 0x01)
       kick.net.dead = true;
      else
@@ -14153,6 +14490,7 @@
       return false;
      if (await youtube.global() === false)
       return false;
+     notice.expect |= 0x08;
      if (cfg.event.youtube.sub !== false)
       youtube.net.subscribers();
      youtube.net.members();
@@ -14373,6 +14711,8 @@
       h = h.replace('button.twitch\n   {\n', 'button.twitch\n   {\n    display: none;\n');
      if (cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null)
       h = h.replace('button.youtube\n   {\n', 'button.youtube\n   {\n    display: none;\n');
+     if (cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null)
+      h = h.replace('button.kick\n   {\n', 'button.kick\n   {\n    display: none;\n');
      css.innerHTML = h;
     }
 
@@ -15105,6 +15445,20 @@
     background-color: #5C16C5;
    }
 
+   button.kick
+   {
+    background-color: #00FF00;
+    color: #000000;
+   }
+   button.kick:focus, button.kick:hover
+   {
+    background-color: #00D000;
+   }
+   button.kick:active
+   {
+    background-color: #60FF60;
+   }
+
    button.youtube
    {
     background-color: #E93223;
@@ -15136,29 +15490,15 @@
    }
    button.login.twitch
    {
-    top: calc(50% - 1em - 1.25em);
+    top: calc(50% - 1em - 2.5em);
    }
-   .notice + button.login.twitch
+   button.login.kick
    {
-    top: calc(100% - 10vmin - 2.5em);
-   }
-   .notice.hiding + button.login.twitch
-   {
-    transition: top 500ms ease-out;
-    top: calc(50% - 1em - 1.25em);
+    top: calc(50% - 1em);
    }
    button.login.youtube
    {
-    top: calc(50% - 1em + 1.25em);
-   }
-   .notice ~ button.login.youtube
-   {
-    top: calc(100% - 10vmin);
-   }
-   .notice.hiding ~ button.login.youtube
-   {
-    transition: top 500ms ease-out;
-    top: calc(50% - 1em + 1.25em);
+    top: calc(50% - 1em + 2.5em);
    }
 
    button.logout
@@ -15169,15 +15509,20 @@
     font-size: 2vmin;
     padding: 0.5em;
    }
-   button#cmdTLogout
+   button.logout.twitch
    {
     top: 1em;
    }
-   button#cmdYTLogout
+   button.logout.kick
    {
     top: 4em;
    }
+   button.logout.youtube
+   {
+    top: 7em;
+   }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="referrer" content="no-referrer" />
  </head>
 </html>

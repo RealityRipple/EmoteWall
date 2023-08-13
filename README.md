@@ -10,7 +10,7 @@ A home-made emote wall for Twitch.TV, Kick, and YouTube Livestreams, supporting 
    * Streamlabs Mobile (if your emotes.html file is hosted on a server)
 
 ## Building
-Simply download the emotes.html file and open it in your favorite text editor. The notes at the beginning of the file will explain how to configure everything. Then add a new Browser source and select the file locally, or upload the file to a webserver and use its URL.
+Simply download the emotes.html file and open it in your favorite text editor. The notes in `CONFIG.md` will explain how to configure everything. Then add a new Browser source and select the file locally, or upload the file to a webserver and use its URL.
 
 ## Download
 You can grab the latest release from the [Official Web Site](//realityripple.com/Tools/Twitch/EmoteWall/), which also includes a GUI Wizard for setting up the configuration.
@@ -33,7 +33,7 @@ Twitch filters out the ZWJ (Zero-Width Joiner) character which is used for mergi
 [Emoji RFC](//gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f)
 
 ### Emote Dimensions
-Emotes that are not square will be shrunk to fit while maintaining the original aspect ratio.
+Emotes that are not square may be shrunk to fit while maintaining the original aspect ratio for certain animations, such as the Pyramids and Text kappagens, and Cubes. Some emote sizes are non-standard and not correctly provided. The dimensions of non-square images are stored in the OBS Browser Source's IndexedDB, so that after the first time the image is displayed, the correct dimensions will be used. This also means that some emotes (notably Twitch's basic smile set) may be squashed the very first time they're displayed.
 
 ### Cheers
 The cheer style will be used for kappagens. If a user cheers 1000 bits in a single 1000 bit emote, then the kappagen will be made of the 1000-bit cheers. However, if the user cheers 1000 bits using multiple smaller cheer emotes, those emotes will be used for the kappagen instead.
@@ -41,12 +41,15 @@ The cheer style will be used for kappagens. If a user cheers 1000 bits in a sing
 ### Kappagen
 Each emote-splosion uses the number of emotes defined in the kappa count preference mentioned above, except Pyramid, which uses a constant number based on the pyramidDist array (below). If the trigger includes specific emotes (via kappagen, cheer, or resub message), the ratio of one emote to another will be maintained. If a user with kappa access posts "!kappagen PunchTrees PunchTrees SSSsss" then two thirds of the emotes in the emote-splosion will be "PunchTrees", and one third will be "SSSsss".
 
+### YouTube support
+YouTube Livestream support is still under active development, and does not currently support Monetized Channel events such as memberships, super chats, or stickers. It will, however, detect and send information on such events to the RealityRipple webserver for development purposes, if you enable the `feedback` option in the configuration. Additionally, due to the myriad limitations in the YouTube API, there is currently no method to load any custom channel emojis, and Google's interest in improving the API seems to be, essentially, nonexistent.
+
 ### OBS
 This emote wall may do better if the browser source has a frame rate limit of 30 or 60. If you use your GPU while streaming, you may wish to disable Browser Source Hardware Acceleration. It may also work better using a smaller screen resolution (such as 720p on a 1080p screen) and then stretching the browser source to fit to the screen using the OBS Transform feature.
 
 ### Inefficiencies
 
-This emote wall uses normal <img> objects rather than a HTML Canvas. While this lowers efficiency, it also adds better GIF file support and allows easier user manipulation.
+This emote wall uses normal &lt;img&gt; objects rather than a HTML Canvas. While this lowers efficiency, it also adds better GIF file support and allows easier user manipulation.
 
 At present, the "zoom in" and "zoom out" feature uses a resource-heavy design. I had hoped the new CSS directive "scale: " would have helped, however it's useless without a "scale-origin" directive to accompany it.
 

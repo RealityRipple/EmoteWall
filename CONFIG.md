@@ -33,7 +33,8 @@ Configuration Information
 
     If you ever stop using this emote wall, please log into Twitch and visit <https://www.twitch.tv/settings/connections>. Under "Other Connections", click the "Disconnect" button next to "RealityRipple's Home-Made Emote Wall".
 
-     - [ ] If both `oauth` and `oauth_refresh` are `false` (or missing), the interactive login process will be enabled.
+     - [ ] If both `oauth` and `oauth_refresh` are `false` (or missing), the Twitch interactive login process will be enabled.
+     - [ ] If `oauth_refresh` is `null`, Twitch support will be effectively disabled.
 
   * `scope`  
     *A list of scopes which the OAuth ID provides access to.*  
@@ -69,7 +70,9 @@ Configuration Information
     > - Copy the OAuth Refresh value and paste it into "oauth_refresh:"
 
     If you ever stop using this emote wall, please log into YouTube and visit <https://myaccount.google.com/permissions>. Under "Apps with access to your account", click the "Disconnect" button next to "RealityRipple's Home-Made Emote Wall".
-     - [ ] If both `oauth` and `oauth_refresh` are `false` (or missing), the interactive login process will be enabled.
+
+     - [ ] If both `oauth` and `oauth_refresh` are `false` (or missing), the YouTube interactive login process will be enabled.
+     - [ ] If `oauth_refresh` is `null`, YouTube support will be effectively disabled.
 
   * `connect_to`  
     *Settings to control which YouTube broadcast to connect to.*
@@ -127,7 +130,8 @@ Configuration Information
 
   * `channel`  
     *The name of the channel to join.*
-     - [ ] If `false`, no connection to Kick will be made.
+     - [ ] If `false` (or missing), the Kick interactive login process will be enabled.
+     - [ ] If `null`, Kick support will be effectively disabled.
 
 * `streamlabs`
   *Settings related to Streamlabs tips.*
@@ -335,6 +339,11 @@ Configuration Information
           *The maximum number of rotations a kappa cube might spin while on screen.*  
           This effectively controls the maximum possible speed at which cubes will rotate.
 
+        * `faces`  
+          *Toggles dynamic faces on cubes, which increases the number of shown emotes, but may make The Cube look less like a cube.*  
+           - [ ] If `true`, The Cube may use different emotes on each face of The Cube.
+           - [ ] If `false`, The Cube will show only one emote on every face of The Cube.
+
       * `Text`  
         *Settings related to Text kappagen.*  
         These settings will be the default for all instances of `'Text'` kapagen.
@@ -373,6 +382,12 @@ Configuration Information
         This setting will be the default for all instances of `'Conga'` kappagen.  
          - [ ] If `true`, `'Conga'` lines will only show up on the top or bottom three rows to avoid the middle of the screen globally.
          - [ ] If `false`, the setting will default to any more specific avoidMiddle `'Conga'` settings.
+
+  * `statuses`  
+    *Toggle the display of connection and error notifications.*  
+     - [ ] If `true`, notifications about server connections will be shown in the top left corner.
+     - [ ] If `"init"`, notifications will only be shown until all connections are successful.
+     - [ ] If `false`, no notifications will be shown.
 
 * `emote`  
   *Settings related to individual emote display.*
