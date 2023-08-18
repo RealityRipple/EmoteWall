@@ -13346,6 +13346,23 @@
      return h;
     }
 
+    function $getHashParams()
+    {
+     const d = function(s) {
+      const a = /\+/g;
+      return decodeURIComponent(s.replace(a, ' '));
+     };
+     let hashParams = {};
+     const r = /([^&;=]+)=?([^&;]*)/g;
+     const q = window.location.hash.substring(1);
+     let e;
+     while ((e = r.exec(q)) !== null)
+     {
+      hashParams[d(e[1])] = d(e[2]);
+     }
+     return hashParams;
+    }
+
     function $httpRequest(type, url, hdrs = {}, body = null, nocache = true, ret = true)
     {
      const p = new Promise(
@@ -13624,6 +13641,7 @@
     return {
      rnd: $rnd,
      hashCode: $hashCode,
+     getHashParams: $getHashParams,
      httpRequest: $httpRequest,
      findInMaybeRange: $findInMaybeRange,
      clearAddr: $clearAddr,
@@ -13746,7 +13764,7 @@
      let lsScope = window.localStorage.getItem(loginT.path() + '.scope');
      if (lsChannel === null || lsRefresh === null)
      {
-      const h = _getHashParams();
+      const h = shared.getHashParams();
       if (!h.hasOwnProperty('channel') || !h.hasOwnProperty('client') || !h.hasOwnProperty('oauth') || !h.hasOwnProperty('oauth_refresh') || !h.hasOwnProperty('scope'))
       {
        loginT.showIn(true);
@@ -13775,23 +13793,6 @@
      cfg.twitch.scope = decodeURIComponent(lsScope).split(' ');
      loginT.showOut();
      return false;
-    }
-
-    function _getHashParams()
-    {
-     const d = function(s) {
-      const a = /\+/g;
-      return decodeURIComponent(s.replace(a, ' '));
-     };
-     let hashParams = {};
-     const r = /([^&;=]+)=?([^&;]*)/g;
-     const q = window.location.hash.substring(1);
-     let e;
-     while ((e = r.exec(q)) !== null)
-     {
-      hashParams[d(e[1])] = d(e[2]);
-     }
-     return hashParams;
     }
 
     function $begin()
@@ -14025,7 +14026,7 @@
      let lsRefresh = window.localStorage.getItem(loginYT.path() + '.refresh');
      if (lsRefresh === null)
      {
-      const h = _getHashParams();
+      const h = shared.getHashParams();
       if (!h.hasOwnProperty('client') || !h.hasOwnProperty('oauth_refresh'))
       {
        loginYT.showIn(true);
@@ -14046,23 +14047,6 @@
      document.title = 'RealityRipple\'s Home-Made Emote Wall';
      loginYT.showOut();
      return false;
-    }
-
-    function _getHashParams()
-    {
-     const d = function(s) {
-      const a = /\+/g;
-      return decodeURIComponent(s.replace(a, ' '));
-     };
-     let hashParams = {};
-     const r = /([^&;=]+)=?([^&;]*)/g;
-     const q = window.location.hash.substring(1);
-     let e;
-     while ((e = r.exec(q)) !== null)
-     {
-      hashParams[d(e[1])] = d(e[2]);
-     }
-     return hashParams;
     }
 
     function $begin()
