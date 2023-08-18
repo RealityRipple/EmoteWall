@@ -1329,6 +1329,23 @@
      youtube: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=%CLIENT_ID%&redirect_uri=%URL%&response_type=code&access_type=offline&scope=%SCOPE%&state=redirto_%ORIGIN%&prompt=consent%20select_account&include_granted_scopes=false'
     }
    };
+   const cScopes = {
+    twitch: {
+     read: 'chat:read',
+     followers: 'moderator:read:followers',
+     shoutouts: 'moderator:read:shoutouts',
+     redemptions: 'channel:read:redemptions',
+     hypetrains: 'channel:read:hype_train',
+     polls: 'channel:read:polls',
+     predictions: 'channel:read:predictions',
+     goals: 'channel:read:goals',
+     charity: 'channel:read:charity'
+    },
+    youtube: {
+     readonly: 'https://www.googleapis.com/auth/youtube.readonly',
+     memberships: 'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
+    }
+   };
 
    const notice = function()
    {
@@ -5178,19 +5195,19 @@
       async function $init()
       {
        const aSubs = [
-        {id: 'channel.follow', v: '2', scope: ['moderator:read:followers'], cfg: ['event.twitch.follow']},
-        {id: 'channel.channel_points_custom_reward_redemption.add', scope: ['channel:read:redemptions'], cfg: false},
-        {id: 'channel.shoutout.create', scope: ['moderator:read:shoutouts'], cfg: ['event.twitch.shoutout.create.styles']},
-        {id: 'channel.shoutout.receive', scope: ['moderator:read:shoutouts'], cfg: ['event.twitch.shoutout.receive.styles']},
-        {id: 'channel.hype_train.begin', scope: ['channel:read:hype_train'], cfg: ['event.twitch.hypetrain.begin']},
-        {id: 'channel.hype_train.end', scope: ['channel:read:hype_train'], cfg: ['event.twitch.hypetrain.success']},
-        {id: 'channel.poll.begin', scope: ['channel:read:polls'], cfg: ['event.twitch.poll.begin']},
-        {id: 'channel.poll.end', scope: ['channel:read:polls'], cfg: ['event.twitch.poll.end']},
-        {id: 'channel.prediction.begin', scope: ['channel:read:predictions'], cfg: ['event.twitch.prediction.begin']},
-        {id: 'channel.prediction.end', scope: ['channel:read:predictions'], cfg: ['event.twitch.prediction.resolved']},
-        {id: 'channel.goal.begin', scope: ['channel:read:goals'], cfg: ['event.twitch.goal.begin']},
-        {id: 'channel.goal.end', scope: ['channel:read:goals'], cfg: ['event.twitch.goal.achieved']},
-        {id: 'channel.charity_campaign.donate', scope: ['channel:read:charity'], cfg: ['event.twitch.charity']},
+        {id: 'channel.follow', v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']},
+        {id: 'channel.channel_points_custom_reward_redemption.add', scope: [cScopes.twitch.redemptions], cfg: false},
+        {id: 'channel.shoutout.create', scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']},
+        {id: 'channel.shoutout.receive', scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']},
+        {id: 'channel.hype_train.begin', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
+        {id: 'channel.hype_train.end', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.success']},
+        {id: 'channel.poll.begin', scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.begin']},
+        {id: 'channel.poll.end', scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.end']},
+        {id: 'channel.prediction.begin', scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.begin']},
+        {id: 'channel.prediction.end', scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.resolved']},
+        {id: 'channel.goal.begin', scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.begin']},
+        {id: 'channel.goal.end', scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.achieved']},
+        {id: 'channel.charity_campaign.donate', scope: [cScopes.twitch.charity], cfg: ['event.twitch.charity']},
         {id: 'channel.update', scope: false, cfg: ['event.twitch.tag.styles']}
        ];
        const aActive = await _cleanAndRecover();
@@ -7745,7 +7762,7 @@
        }
        if ((loginYT.cfgVals() & 0x04) !== 0x04)
         return null;
-       if (!_scope.includes('https://www.googleapis.com/auth/youtube.readonly'))
+       if (!_scope.includes(cScopes.youtube.readonly))
        {
         notice.error(0x21);
         return null;
@@ -7928,7 +7945,7 @@
         }
         if ((loginYT.cfgVals() & 0x04) !== 0x04)
          return;
-        if (!_scope.includes('https://www.googleapis.com/auth/youtube.readonly'))
+        if (!_scope.includes(cScopes.youtube.readonly))
         {
          notice.error(0x22);
          notice.error(0x21);
@@ -8095,7 +8112,7 @@
 
       function task()
       {
-       if (!_scope.includes('https://www.googleapis.com/auth/youtube.readonly'))
+       if (!_scope.includes(cScopes.youtube.readonly))
        {
         notice.error(0x21);
         return;
@@ -8176,7 +8193,7 @@
 
       async function task()
       {
-       if (!_scope.includes('https://www.googleapis.com/auth/youtube.channel-memberships.creator'))
+       if (!_scope.includes(cScopes.youtube.memberships))
        {
         notice.error(0x21);
         return;
@@ -13625,12 +13642,12 @@
     function _activeScope()
     {
      let r = [];
-     r.push('chat:read');
+     r.push(cScopes.twitch.read);
      for (const k of cfg.commands)
      {
       if (!k.hasOwnProperty('redeem') || !Array.isArray(k.redeem) || k.redeem.length < 1)
        continue;
-      r.push('channel:read:redemptions');
+      r.push(cScopes.twitch.redemptions);
       break;
      }
      let needF = false;
@@ -13659,19 +13676,19 @@
       }
      }
      if (needF)
-      r.push('moderator:read:followers');
+      r.push(cScopes.twitch.followers);
      if (cfg.event.twitch.hypetrain !== false && ((cfg.event.twitch.hypetrain.hasOwnProperty('begin') && cfg.event.twitch.hypetrain.begin !== false) || (cfg.event.twitch.hypetrain.hasOwnProperty('success') && cfg.event.twitch.hypetrain.success !== false)))
-      r.push('channel:read:hype_train');
+      r.push(cScopes.twitch.hypetrains);
      if (cfg.event.twitch.goal !== false && ((cfg.event.twitch.goal.hasOwnProperty('begin') && cfg.event.twitch.goal.begin !== false) || (cfg.event.twitch.goal.hasOwnProperty('achieved') && cfg.event.twitch.goal.achieved !== false)))
-      r.push('channel:read:goals');
+      r.push(cScopes.twitch.goals);
      if (cfg.event.twitch.poll !== false && ((cfg.event.twitch.poll.hasOwnProperty('begin') && cfg.event.twitch.poll.begin !== false) || (cfg.event.twitch.poll.hasOwnProperty('end') && cfg.event.twitch.poll.end !== false)))
-      r.push('channel:read:polls');
+      r.push(cScopes.twitch.polls);
      if (cfg.event.twitch.prediction !== false && ((cfg.event.twitch.prediction.hasOwnProperty('begin') && cfg.event.twitch.prediction.begin !== false) || (cfg.event.twitch.prediction.hasOwnProperty('resolved') && cfg.event.twitch.prediction.resolved !== false)))
-      r.push('channel:read:predictions');
+      r.push(cScopes.twitch.predictions);
      if (cfg.event.twitch.charity !== false)
-      r.push('channel:read:charity');
+      r.push(cScopes.twitch.charity);
      if (cfg.event.twitch.shoutout !== false && ((cfg.event.twitch.shoutout.hasOwnProperty('create') && cfg.event.twitch.shoutout.create !== false && cfg.event.twitch.shoutout.create.hasOwnProperty('styles') && cfg.event.twitch.shoutout.create.styles !== false) || (cfg.event.twitch.shoutout.hasOwnProperty('receive') && cfg.event.twitch.shoutout.receive !== false && cfg.event.twitch.shoutout.receive.hasOwnProperty('styles') && cfg.event.twitch.shoutout.receive.styles !== false)))
-      r.push('moderator:read:shoutouts');
+      r.push(cScopes.twitch.shoutouts);
      return r;
     }
 
@@ -13952,7 +13969,7 @@
     function _activeScope()
     {
      let r = [];
-     r.push('https://www.googleapis.com/auth/youtube.readonly');
+     r.push(cScopes.youtube.readonly);
      let hasM = false;
      if ((cfg.event.youtube.member.first === true) || (Array.isArray(cfg.event.youtube.member.first) && cfg.event.youtube.member.first.length > 0))
       hasM = true;
@@ -13961,7 +13978,7 @@
      if ((cfg.event.youtube.member.giftbomb === true) || (typeof cfg.event.youtube.member.giftbomb === 'object' && cfg.event.youtube.member.giftbomb !== null && Object.keys(cfg.event.youtube.member.giftbomb).length > 0))
       hasM = true;
      if (hasM)
-      r.push('https://www.googleapis.com/auth/youtube.channel-memberships.creator');
+      r.push(cScopes.youtube.memberships);
      return r;
     }
 
