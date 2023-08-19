@@ -1260,6 +1260,9 @@
       },
       room: 'https://api.frankerfacez.com/v1/room/id/%CHANNEL_ID%'
      },
+     streamelements: {
+      validate: 'https://api.streamelements.com/oauth2/validate'
+     },
      bttv: {
       emotes: {
        global: 'https://api.betterttv.net/3/cached/emotes/global'
@@ -12310,11 +12313,11 @@
         if (d.slice(1, 2) === '0')
         {
          let a = '';
-         const seCfg = streamelements.cfgVals();
+         const seCfg = streamelements.oAuth.cfgVals();
          if ((seCfg & 0x04) === 0x04)
-          a = JSON.stringify(['authenticate', {'method': 'oauth2', 'token': cfg.streamelements.oauth}]);
+          a = JSON.stringify(['authenticate', {'method': 'oauth2', 'token': streamelements.oAuth.auth.access_token}]);
          else if ((seCfg & 0x01) === 0x01)
-          a = JSON.stringify(['authenticate', {'method': 'jwt', 'token': cfg.streamelements.token}]);
+          a = JSON.stringify(['authenticate', {'method': 'jwt', 'token': streamelements.oAuth.auth.jwt_token}]);
          if (_ws.readyState === 1)
           _ws.send('42' + a);
          return;
@@ -12414,26 +12417,6 @@
      return task;
     }();
 
-    async function _getOAuthToken(t)
-    {
-     const url = cURLs.api.rr.refresh.se;
-     const h = {'Content-Type': 'application/x-www-form-urlencoded'};
-     const b = 'refresh=' + encodeURIComponent(t);
-     const r = await shared.httpRequest('POST', url, h, b, false);
-     if (!r.success)
-      return false;
-     const j = r.json;
-     if (j === null)
-      return false;
-     if (!j.hasOwnProperty('access_token'))
-      return false;
-     if (!j.hasOwnProperty('refresh_token'))
-      return false;
-     if (!j.hasOwnProperty('expires_in'))
-      return false;
-     return j;
-    }
-
     function _path()
     {
      if (streamelements.cfgHash !== false)
@@ -12441,73 +12424,228 @@
      return shared.cfgHash + '.streamelements';
     }
 
-    async function $updateOAuth()
+    const $oAuth = function()
     {
-     const lsOAuth = window.localStorage.getItem(_path() + '.oauth');
-     const lsRefresh = window.localStorage.getItem(_path() + '.refresh');
-     const lsExpires = window.localStorage.getItem(_path() + '.expires');
-     const lsRefreshed = window.localStorage.getItem(_path() + '.refreshed');
-     if (lsOAuth !== null)
-      cfg.streamelements.oauth = lsOAuth;
-     if (lsRefresh !== null)
-      cfg.streamelements.oauth_refresh = lsRefresh;
-     if (lsExpires !== null)
-      cfg.streamelements.oauth_expires = lsExpires;
-     if (lsRefreshed !== null)
-      cfg.streamelements.oauth_refreshed = lsRefreshed;
-     let mustR = true;
-     if (cfg.streamelements.hasOwnProperty('oauth_refreshed') && cfg.streamelements.oauth_refreshed > 0)
+     async function $init()
      {
-      const tokAge = Math.floor(new Date().getTime() / 1000) - cfg.streamelements.oauth_refreshed;
-      if (tokAge < 24 * 60 * 60)
-       mustR = false;
+      if (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== null && cfg.streamelements.token !== 'JWT_TOKEN')
+      {
+       streamelements.cfgHash = false;
+       _genJWT(cfg.streamelements.token);
+       return;
+      }
+      if (cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== null && cfg.streamelements.oauth !== 'OAUTH_ID')
+      {
+       streamelements.cfgHash = (shared.hashCode(cfg.streamelements.oauth) >>> 0).toString(16);
+       _genAccess(cfg.streamelements.oauth);
+       return;
+      }
+      if (cfg.streamelements.hasOwnProperty('oauth_refresh') && cfg.streamelements.oauth_refresh !== null && cfg.streamelements.oauth_refresh !== false && cfg.streamelements.oauth_refresh !== 'OAUTH_REFRESH')
+      {
+       let sRef = cfg.streamelements.oauth_refresh;
+       streamelements.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
+       const lsRef = window.localStorage.getItem(_path() + '.refresh');
+       if (lsRef !== null)
+        sRef = lsRef;
+       const sRet = await _genRefresh(sRef);
+       if (sRet !== false)
+        window.localStorage.setItem(_path() + '.refresh', sRet);
+       else
+        window.localStorage.removeItem(_path() + '.refresh');
+       return;
+      }
+      streamelements.cfgHash = false;
+      const lsRefresh = window.localStorage.getItem(_path() + '.refresh');
+      if (lsRefresh === null)
+      {
+       _populateAuth();
+       return;
+      }
+      const sLRet = await _genRefresh(lsRefresh);
+      if (sLRet !== false)
+       window.localStorage.setItem(_path() + '.refresh', sLRet);
+      else
+       window.localStorage.removeItem(_path() + '.refresh');
      }
-     if (cfg.streamelements.hasOwnProperty('oauth_expires') && cfg.streamelements.oauth_expires > 0)
-     {
-      const expTime = cfg.streamelements.oauth_expires - Math.floor(new Date().getTime() / 1000);
-      if (expTime < 0)
-       mustR = true;
-     }
-     if (!mustR)
-      return;
-     const ret = await _getOAuthToken(cfg.streamelements.oauth_refresh);
-     if (ret === false)
-     {
-      window.localStorage.removeItem(_path() + '.oauth');
-      window.localStorage.removeItem(_path() + '.refresh');
-      window.localStorage.removeItem(_path() + '.expires');
-      window.localStorage.removeItem(_path() + '.refreshed');
-      notice.error(0x71);
-      return;
-     }
-     cfg.streamelements.oauth = ret.access_token;
-     cfg.streamelements.oauth_refresh = ret.refresh_token;
-     cfg.streamelements.oauth_expires = Math.floor(new Date().getTime() / 1000) + ret.expires_in;
-     cfg.streamelements.oauth_refreshed = Math.floor(new Date().getTime() / 1000);
-     window.localStorage.setItem(_path() + '.oauth', cfg.streamelements.oauth);
-     window.localStorage.setItem(_path() + '.refresh', cfg.streamelements.oauth_refresh);
-     window.localStorage.setItem(_path() + '.expires', cfg.streamelements.oauth_expires);
-     window.localStorage.setItem(_path() + '.refreshed', cfg.streamelements.oauth_refreshed);
-    }
 
-    function $cfgVals()
-    {
-     if (!cfg.hasOwnProperty('streamelements'))
-      return 0;
-     let r = 0;
-     if (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== null && cfg.streamelements.token !== 'JWT_TOKEN')
-      r |= 0x01;
-     if (cfg.streamelements.hasOwnProperty('oauth_refresh') && cfg.streamelements.oauth_refresh !== false && cfg.streamelements.oauth_refresh !== null && cfg.streamelements.oauth_refresh !== 'OAUTH_REFRESH')
-      r |= 0x02;
-     if (cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== null && cfg.streamelements.oauth !== 'OAUTH_ID')
-      r |= 0x04;
-     return r;
-    }
+     async function _genJWT(t)
+     {
+      streamelements.oAuth.auth.jwt_token = t;
+      streamelements.oAuth.auth.client_id = false;
+      streamelements.oAuth.auth.channel = false;
+      streamelements.oAuth.auth.access_token = false;
+      streamelements.oAuth.auth.refresh_token = false;
+      streamelements.oAuth.auth.scope = [];
+      streamelements.oAuth.auth.expires = 0;
+      return t;
+     }
+
+     async function _genAccess(a)
+     {
+      const oV = await _validate(a);
+      if (oV === false)
+      {
+       _populateAuth();
+       return false;
+      }
+      streamelements.oAuth.auth.jwt_token = false;
+      streamelements.oAuth.auth.client_id = oV.client_id;
+      streamelements.oAuth.auth.channel = oV.channel_id;
+      streamelements.oAuth.auth.access_token = a;
+      streamelements.oAuth.auth.refresh_token = false;
+      streamelements.oAuth.auth.scope = oV.scopes;
+      streamelements.oAuth.auth.expires = oV.expires_in;
+      return a;
+     }
+
+     async function _genRefresh(r)
+     {
+      const oR = await _refresh(r);
+      if (oR === false)
+      {
+       _populateAuth();
+       return false;
+      }
+      const a = oR.access_token;
+      const r2 = oR.refresh_token;
+      const oV = await _validate(a);
+      if (oV === false)
+      {
+       _populateAuth();
+       return false;
+      }
+      _populateAuth(a, r2, oV);
+      return r2;
+     }
+
+     function _populateAuth(a = null, r = null, j = null)
+     {
+      streamelements.oAuth.auth.time = new Date().getTime();
+      if (a !== null && r !== null && j !== null)
+      {
+       streamelements.oAuth.auth.jwt_token = false;
+       streamelements.oAuth.auth.client_id = j.client_id;
+       streamelements.oAuth.auth.channel = j.channel_id;
+       streamelements.oAuth.auth.scope = j.scopes;
+       streamelements.oAuth.auth.access_token = a;
+       streamelements.oAuth.auth.refresh_token = r;
+       streamelements.oAuth.auth.expires = j.expires_in;
+       return;
+      }
+      streamelements.oAuth.auth.jwt_token = false;
+      streamelements.oAuth.auth.client_id = false;
+      streamelements.oAuth.auth.channel = false;
+      streamelements.oAuth.auth.access_token = false;
+      streamelements.oAuth.auth.refresh_token = false;
+      streamelements.oAuth.auth.scope = [];
+      streamelements.oAuth.auth.expires = 0;
+     }
+
+     async function _refresh(t)
+     {
+      const url = cURLs.api.rr.refresh.se;
+      const h = {'Content-Type': 'application/x-www-form-urlencoded'};
+      const b = 'refresh=' + encodeURIComponent(t);
+      const r = await shared.httpRequest('POST', url, h, b, false);
+      if (!r.success)
+      {
+       console.log(r);
+       notice.error(0x71);
+       return false;
+      }
+      const j = r.json;
+      if (j === null)
+       return false;
+      if (!j.hasOwnProperty('access_token'))
+       return false;
+      if (!j.hasOwnProperty('refresh_token'))
+       return false;
+      if (!j.hasOwnProperty('expires_in'))
+       return false;
+      return j;
+     }
+
+     async function _validate(t)
+     {
+      const url = cURLs.api.streamelements.validate;
+      const h = {'Authorization': 'Bearer ' + t};
+      const r = await shared.httpRequest('GET', url, h, null, false);
+      if (!r.success)
+       return false;
+      const j = r.json;
+      if (j === null)
+       return false;
+      if (!j.hasOwnProperty('channel_id'))
+       return false;
+      if (!j.hasOwnProperty('client_id'))
+       return false;
+      if (!j.hasOwnProperty('scopes'))
+       return false;
+      if (!j.hasOwnProperty('expires_in'))
+       return false;
+      return j;
+     }
+
+     async function $update()
+     {
+      if (streamelements.oAuth.auth.expires > 0)
+      {
+       const nowTime = new Date().getTime();
+       const exTime = streamelements.oAuth.auth.time + (streamelements.oAuth.auth.expires * 1000 * 0.75);
+       if (nowTime < exTime)
+        return;
+      }
+      const r = await _refresh(streamelements.oAuth.auth.refresh_token);
+      if (r === false)
+       return;
+      const sAccess = r.access_token;
+      const sRefresh = r.refresh_token;
+      const v = await _validate(sAccess);
+      if (v === false)
+      {
+       _populateAuth();
+       return;
+      }
+      _populateAuth(sAccess, sRefresh, v);
+      if (sRefresh !== streamelements.oAuth.auth.refresh_token)
+       window.localStorage.setItem(_path() + '.refresh', sRefresh);
+     }
+
+     function $cfgVals()
+     {
+      let r = 0;
+      let lsRefresh = window.localStorage.getItem(_path() + '.refresh');
+      if (lsRefresh !== null)
+       r |= 0x02;
+      if (streamelements.oAuth.auth.jwt_token !== false)
+       r |= 0x01;
+      if (streamelements.oAuth.auth.refresh_token !== false)
+       r |= 0x02;
+      if (streamelements.oAuth.auth.access_token !== false)
+       r |= 0x04;
+      return r;
+     }
+
+     return {
+      init: $init,
+      update: $update,
+      cfgVals: $cfgVals,
+      auth: {
+       client_id: false,
+       channel: false,
+       jwt_token: false,
+       access_token: false,
+       refresh_token: false,
+       scope: [],
+       time: 0,
+       expires: 0
+      }
+     };
+    }();
 
     return {
      socket: $socket,
-     updateOAuth: $updateOAuth,
-     cfgVals: $cfgVals,
+     oAuth: $oAuth,
      cfgHash: false
     };
    }();
@@ -14624,8 +14762,7 @@
      await twitch.net.oAuth.init();
      await youtube.net.oAuth.init();
      kick.net.oAuth.init();
-     if ((streamelements.cfgVals() & 0x02) === 0x02)
-      streamelements.cfgHash = (shared.hashCode(cfg.streamelements.oauth_refresh) >>> 0).toString(16);
+     await streamelements.oAuth.init();
      shared.mspf.init();
      if (cfg.display.hasOwnProperty('hue') && cfg.display.hue === 'rave' && !_hasRaveToggle())
       document.documentElement.classList.add('rave');
@@ -14723,13 +14860,15 @@
 
     async function _streamelements()
     {
-     let seCfg = streamelements.cfgVals();
+     let seCfg = streamelements.oAuth.cfgVals();
      if (seCfg === 0)
       return;
      if ((seCfg & 0x02) === 0x02)
-      await streamelements.updateOAuth();
-     seCfg = streamelements.cfgVals();
-     if ((seCfg & 0x01) !== 0x01 && (seCfg & 0x04) !== 0x04)
+     {
+      await streamelements.oAuth.update();
+      seCfg = streamelements.oAuth.cfgVals();
+     }
+     if ((seCfg & (0x04 | 0x01)) === 0x00)
       return;
      streamelements.socket();
     }
