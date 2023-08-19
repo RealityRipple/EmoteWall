@@ -6,14 +6,6 @@ Configuration Information
 
   > **NOTE**: OAuth refresh tokens expire automatically (usually after around half a year). If you don't use the Emote Wall for around this long, you may have to log in again. Regular OAuth tokens expire much sooner (usually after 60 days). If you use the manual oauth method, please make sure to update these values on a regular basis.
 
-  * `channel`  
-    *The name of the channel to join. Also used to choose an IRC nickname.*  
-     - [ ] If `false`, the interactive login process will be enabled.
-
-  * `client`  
-    *The Client ID value is used to track which third-party project is accessing your account.*  
-    This emote wall does not require a constant ID, and will work with whatever tool you use to get an OAuth ID (see below).
-
   * `oauth`   
     *The OAuth ID value is used in lieu of a password to access the Twitch API.*  
     By default, this value is not required.  
@@ -36,10 +28,6 @@ Configuration Information
      - [ ] If both `oauth` and `oauth_refresh` are `false` (or missing), the Twitch interactive login process will be enabled.
      - [ ] If `oauth_refresh` is `null`, Twitch support will be effectively disabled.
 
-  * `scope`  
-    *A list of scopes which the OAuth ID provides access to.*  
-    Please make sure this list reflects any scope selections you made while creating the token above.
-
   * `share`  
     *Share your Twitch channel on the Emote Wall home page!*
 
@@ -47,10 +35,6 @@ Configuration Information
     *Settings related to the YouTube login process.*
 
   > **NOTE**: OAuth tokens expire automatically (usually after 60 days). Please make sure to update these values on a regular basis, if not using the interactive login process.
-
-  * `client`  
-    *The Client ID value is used to track which third-party project is accessing your account.*  
-    This emote wall does not require a constant ID, and will work with whatever tool you use to get an OAuth ID (see below).
 
   * `oauth`  
     *The OAuth ID value is used in lieu of a password to access the Google API.*  
