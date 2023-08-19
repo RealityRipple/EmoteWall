@@ -1440,6 +1440,14 @@
       case 0x22:
        _setNotice(e, 'noticeError sYouTube', 'Disconnected');
        break;
+      case 0x23:
+       if (typeof loginYT !== 'undefined' && loginYT.inUse)
+       {
+        loginYT.showOut(true);
+        window.setTimeout(function(){loginYT.showIn();}, 15500);
+       }
+       _setNotice(e, 'noticeError sYouTube', 'Streaming Not Available<br>Your YouTube account does not have streaming enabled.');
+       break;
       case 0x28:
        _setNotice(e, 'noticeError sYouTube', 'YouTube Rate Limit Exceeded<br>You have sent too many requests. Please wait a while.');
        break;
@@ -7888,7 +7896,9 @@
         await youtube.net.oAuth.update();
         if ((youtube.net.oAuth.cfgVals() & 0x04) !== 0x04)
         {
+         notice.error(0x22);
          notice.error(0x21);
+         youtube.net.dead = true;
          return null;
         }
        }
@@ -7896,7 +7906,9 @@
         return null;
        if (!youtube.net.oAuth.auth.scope.includes(cScopes.youtube.readonly))
        {
+        notice.error(0x22);
         notice.error(0x21);
+        youtube.net.dead = true;
         return null;
        }
        let h = {
@@ -7913,8 +7925,18 @@
          console.log(e);
          if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAUTHENTICATED')
          {
+          notice.error(0x22);
           notice.error(0x21);
           youtube.net.oAuth.clear(true);
+          youtube.net.dead = true;
+          return null;
+         }
+         if (e.hasOwnProperty('error.message') && e['error.message'] === 'The user is not enabled for live streaming.')
+         {
+          notice.error(0x22);
+          notice.error(0x23);
+          youtube.net.oAuth.clear(true);
+          youtube.net.dead = true;
           return null;
          }
          console.log(j);
@@ -8059,6 +8081,8 @@
         if (_tM.hasOwnProperty(chatID) && _tM[chatID] !== false)
          window.clearTimeout(_tM[chatID]);
         _tM[chatID] = false;
+        if (youtube.net.dead)
+         return;
         if ((youtube.net.oAuth.cfgVals() & 0x02) === 0x02)
         {
          await youtube.net.oAuth.update();
@@ -8066,6 +8090,7 @@
          {
           notice.error(0x22);
           notice.error(0x21);
+          youtube.net.dead = true;
           notice.active &= ~0x08;
           if (notice.tHide !== false)
           {
@@ -8082,6 +8107,7 @@
          notice.error(0x22);
          notice.error(0x21);
          notice.active &= ~0x08;
+         youtube.net.dead = true;
          if (notice.tHide !== false)
          {
           window.clearTimeout(notice.tHide);
@@ -8246,7 +8272,9 @@
       {
        if (!youtube.net.oAuth.auth.scope.includes(cScopes.youtube.readonly))
        {
+        notice.error(0x22);
         notice.error(0x21);
+        youtube.net.dead = true;
         return;
        }
        _tS = window.setTimeout(_detect, _rSC);
@@ -8254,6 +8282,8 @@
 
       async function _detect()
       {
+       if (youtube.net.dead)
+        return;
        if (_tS === false)
         return;
        window.clearTimeout(_tS);
@@ -8283,8 +8313,10 @@
          const e = _flatJSON(j);
          if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAUTHENTICATED')
          {
+          notice.error(0x22);
           notice.error(0x21);
           youtube.net.oAuth.clear(true);
+          youtube.net.dead = true;
           return false;
          }
          console.log(e);
@@ -8369,6 +8401,8 @@
 
       async function _detect(mID)
       {
+       if (youtube.net.dead)
+        return;
        if (_tS === false)
         return;
        window.clearTimeout(_tS);
@@ -8587,12 +8621,15 @@
           switch(e.error_description)
           {
            case 'Token has been expired or revoked.':
+            notice.error(0x22);
             notice.error(0x21);
             youtube.net.oAuth.clear(true);
+            youtube.net.dead = true;
             return false;
            case 'Bad Request':
             notice.error(0x29, 'The server did not like the request.');
             youtube.net.oAuth.clear(false);
+            youtube.net.dead = true;
             return false;
           }
          }
