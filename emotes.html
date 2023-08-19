@@ -5926,14 +5926,14 @@
         loginT.inUse = false;
         let sRef = cfg.twitch.oauth_refresh;
         loginT.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
-        const lsRef = window.localStorage.getItem(loginT.path() + '.refresh');
+        const lsRef = shared.storage.getItem(loginT.path() + '.refresh');
         if (lsRef !== null)
          sRef = lsRef;
         const sRet = await _genRefresh(sRef);
         if (sRet !== false)
-         window.localStorage.setItem(loginT.path() + '.refresh', sRet);
+         shared.storage.setItem(loginT.path() + '.refresh', sRet);
         else
-         window.localStorage.removeItem(loginT.path() + '.refresh');
+         shared.storage.removeItem(loginT.path() + '.refresh');
         return;
        }
        loginT.inUse = true;
@@ -5943,12 +5943,12 @@
        {
         const sHRet = await _genRefresh(h.oauth_refresh);
         if (sHRet !== false)
-         window.localStorage.setItem(loginT.path() + '.refresh', sHRet);
+         shared.storage.setItem(loginT.path() + '.refresh', sHRet);
         else
-         window.localStorage.removeItem(loginT.path() + '.refresh');
+         shared.storage.removeItem(loginT.path() + '.refresh');
         return;
        }
-       const lsRefresh = window.localStorage.getItem(loginT.path() + '.refresh');
+       const lsRefresh = shared.storage.getItem(loginT.path() + '.refresh');
        if (lsRefresh === null)
        {
         _populateAuth();
@@ -5956,9 +5956,9 @@
        }
        const sLRet = await _genRefresh(lsRefresh);
        if (sLRet !== false)
-        window.localStorage.setItem(loginT.path() + '.refresh', sLRet);
+        shared.storage.setItem(loginT.path() + '.refresh', sLRet);
        else
-        window.localStorage.removeItem(loginT.path() + '.refresh');
+        shared.storage.removeItem(loginT.path() + '.refresh');
       }
 
       async function _genAccess(a)
@@ -6091,7 +6091,7 @@
        }
        _populateAuth(sAccess, sRefresh, v);
        if (sRefresh !== twitch.net.oAuth.auth.refresh_token)
-        window.localStorage.setItem(loginT.path() + '.refresh', sRefresh);
+        shared.storage.setItem(loginT.path() + '.refresh', sRefresh);
       }
 
       async function $reinit()
@@ -6110,13 +6110,13 @@
       function $clear()
       {
        _populateAuth();
-       window.localStorage.removeItem(loginT.path() + '.refresh');
+       shared.storage.removeItem(loginT.path() + '.refresh');
       }
 
       function $cfgVals()
       {
        let r = 0;
-       let lsRefresh = window.localStorage.getItem(loginT.path() + '.refresh');
+       let lsRefresh = shared.storage.getItem(loginT.path() + '.refresh');
        if (lsRefresh !== null)
         r |= 0x02;
        if (twitch.net.oAuth.auth.refresh_token !== false)
@@ -8512,14 +8512,14 @@
         loginYT.inUse = false;
         let sRef = cfg.youtube.oauth_refresh;
         loginYT.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
-        const lsRef = window.localStorage.getItem(loginYT.path() + '.refresh');
+        const lsRef = shared.storage.getItem(loginYT.path() + '.refresh');
         if (lsRef !== null)
          sRef = lsRef;
         const sRet = await _genRefresh(sRef);
         if (sRet !== false)
-         window.localStorage.setItem(loginYT.path() + '.refresh', sRet);
+         shared.storage.setItem(loginYT.path() + '.refresh', sRet);
         else
-         window.localStorage.removeItem(loginYT.path() + '.refresh');
+         shared.storage.removeItem(loginYT.path() + '.refresh');
         return;
        }
        loginYT.inUse = true;
@@ -8529,12 +8529,12 @@
        {
         const sHRet = await _genRefresh(h.oauth_refresh);
         if (sHRet !== false)
-         window.localStorage.setItem(loginYT.path() + '.refresh', sHRet);
+         shared.storage.setItem(loginYT.path() + '.refresh', sHRet);
         else
-         window.localStorage.removeItem(loginYT.path() + '.refresh');
+         shared.storage.removeItem(loginYT.path() + '.refresh');
         return;
        }
-       const lsRefresh = window.localStorage.getItem(loginYT.path() + '.refresh');
+       const lsRefresh = shared.storage.getItem(loginYT.path() + '.refresh');
        if (lsRefresh === null)
        {
         _populateAuth();
@@ -8542,9 +8542,9 @@
        }
        const sLRet = await _genRefresh(lsRefresh);
        if (sLRet !== false)
-        window.localStorage.setItem(loginYT.path() + '.refresh', sLRet);
+        shared.storage.setItem(loginYT.path() + '.refresh', sLRet);
        else
-        window.localStorage.removeItem(loginYT.path() + '.refresh');
+        shared.storage.removeItem(loginYT.path() + '.refresh');
       }
 
       async function _genAccess(a)
@@ -8699,19 +8699,19 @@
        }
        _populateAuth(sAccess, sRefresh, v);
        if (sRefresh !== youtube.net.oAuth.auth.refresh_token)
-        window.localStorage.setItem(loginYT.path() + '.refresh', sRefresh);
+        shared.storage.setItem(loginYT.path() + '.refresh', sRefresh);
       }
 
       function $clear()
       {
        _populateAuth();
-       window.localStorage.removeItem(loginYT.path() + '.refresh');
+       shared.storage.removeItem(loginYT.path() + '.refresh');
       }
 
       function $cfgVals()
       {
        let r = 0;
-       let lsRefresh = window.localStorage.getItem(loginYT.path() + '.refresh');
+       let lsRefresh = shared.storage.getItem(loginYT.path() + '.refresh');
        if (lsRefresh !== null)
         r |= 0x02;
        if (youtube.net.oAuth.auth.refresh_token !== false)
@@ -9974,7 +9974,7 @@
         return;
        }
        loginK.inUse = true;
-       const lsChannel = window.localStorage.getItem(loginK.path() + '.channel');
+       const lsChannel = shared.storage.getItem(loginK.path() + '.channel');
        if (lsChannel === null)
        {
         _populateAuth();
@@ -12444,18 +12444,18 @@
       {
        let sRef = cfg.streamelements.oauth_refresh;
        streamelements.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
-       const lsRef = window.localStorage.getItem(_path() + '.refresh');
+       const lsRef = shared.storage.getItem(_path() + '.refresh');
        if (lsRef !== null)
         sRef = lsRef;
        const sRet = await _genRefresh(sRef);
        if (sRet !== false)
-        window.localStorage.setItem(_path() + '.refresh', sRet);
+        shared.storage.setItem(_path() + '.refresh', sRet);
        else
-        window.localStorage.removeItem(_path() + '.refresh');
+        shared.storage.removeItem(_path() + '.refresh');
        return;
       }
       streamelements.cfgHash = false;
-      const lsRefresh = window.localStorage.getItem(_path() + '.refresh');
+      const lsRefresh = shared.storage.getItem(_path() + '.refresh');
       if (lsRefresh === null)
       {
        _populateAuth();
@@ -12463,9 +12463,9 @@
       }
       const sLRet = await _genRefresh(lsRefresh);
       if (sLRet !== false)
-       window.localStorage.setItem(_path() + '.refresh', sLRet);
+       shared.storage.setItem(_path() + '.refresh', sLRet);
       else
-       window.localStorage.removeItem(_path() + '.refresh');
+       shared.storage.removeItem(_path() + '.refresh');
      }
 
      async function _genJWT(t)
@@ -12608,13 +12608,13 @@
       }
       _populateAuth(sAccess, sRefresh, v);
       if (sRefresh !== streamelements.oAuth.auth.refresh_token)
-       window.localStorage.setItem(_path() + '.refresh', sRefresh);
+       shared.storage.setItem(_path() + '.refresh', sRefresh);
      }
 
      function $cfgVals()
      {
       let r = 0;
-      let lsRefresh = window.localStorage.getItem(_path() + '.refresh');
+      let lsRefresh = shared.storage.getItem(_path() + '.refresh');
       if (lsRefresh !== null)
        r |= 0x02;
       if (streamelements.oAuth.auth.jwt_token !== false)
@@ -14135,6 +14135,198 @@
      };
     }();
 
+    const $storage = function()
+    {
+     function $getItem(key)
+     {
+      if (_ls.has())
+       return _ls.getItem(key);
+      if (_cookie.has())
+       return _cookie.getItem(key);
+      return null;
+     }
+
+     function $setItem(key, value)
+     {
+      if (_ls.has())
+       _ls.setItem(key, value);
+      else if (_cookie.has())
+       _cookie.setItem(key, value);
+     }
+
+     function $removeItem(key)
+     {
+      if (_ls.has())
+       _ls.removeItem(key);
+      else if (_cookie.has())
+       _cookie.removeItem(key);
+     }
+     
+     const _ls = function()
+     {
+      let _has = null;
+
+      function $has()
+      {
+       if (_has !== null)
+        return _has;
+       if (!window.hasOwnProperty('localStorage'))
+       {
+        _has = false;
+        return false;
+       }
+       if (typeof window.localStorage === 'undefined')
+       {
+        _has = false;
+        return false;
+       }
+       if (window.localStorage === null)
+       {
+        _has = false;
+        return false;
+       }
+       const testK = 'testing.key';
+       const testV = 'testing.val';
+       window.localStorage.setItem(testK, testV);
+       const retV = window.localStorage.getItem(testK);
+       window.localStorage.removeItem(testK);
+       if (testV !== retV)
+       {
+        _has = false;
+        return false;
+       }
+       _has = true;
+       return true;
+      }
+
+      function $get(key)
+      {
+       if (!_ls.has())
+        return null;
+       return window.localStorage.getItem(key);
+      }
+
+      function $set(key, value)
+      {
+       if (!_ls.has())
+        return;
+       window.localStorage.setItem(key, value);
+      }
+
+      function $remove(key)
+      {
+       if (!_ls.has())
+        return;
+       window.localStorage.removeItem(key);
+      }
+
+      return {
+       has: $has,
+       getItem: $get,
+       setItem: $set,
+       removeItem: $remove
+      };
+     }();
+
+     const _cookie = function()
+     {
+      let _has = null;
+
+      function $has()
+      {
+       if (_has !== null)
+        return _has;
+       if (!('cookie' in document))
+       {
+        _has = false;
+        return false;
+       }
+       if (typeof document.cookie !== 'string')
+       {
+        _has = false;
+        return false;
+       }
+       const testK = 'testing.key';
+       const testV = 'testing.val';
+       document.cookie = testK + '=' + encodeURIComponent(testV) + ';max-age=10';
+       let retV = null;
+       const cTrimmed = document.cookie.replaceAll(/\s*;\s*/g, ';');
+       const cCookies = cTrimmed.split(';');
+       for (let i = 0; i < cCookies.length; i++)
+       {
+        const kv = cCookies[i].split('=');
+        if (kv[0] === testK)
+        {
+         retV = decodeURIComponent(kv[1]);
+         break;
+        }
+       }
+       document.cookie = testK + '=;max-age=0';
+       if (testV !== retV)
+       {
+        _has = false;
+        return false;
+       }
+       _has = true;
+       return true;
+      }
+
+      function $get(key)
+      {
+       if (!_cookie.has())
+        return null;
+       let r = null;
+       const cTrimmed = document.cookie.replaceAll(/\s*;\s*/g, ';');
+       const cCookies = cTrimmed.split(';');
+       for (let i = 0; i < cCookies.length; i++)
+       {
+        const kv = cCookies[i].split('=');
+        if (kv[0] === key)
+         r = decodeURIComponent(kv[1]);
+        _cookie.setItem(kv[0], decodeURIComponent(kv[1]));
+       }
+       return r;
+      }
+
+      function $set(key, value, age = 34560000)
+      {
+       if (!_cookie.has())
+        return;
+       document.cookie = key + '=' + encodeURIComponent(value) + ';max-age=' + age;
+      }
+
+      function $remove(key)
+      {
+       if (!_cookie.has())
+        return;
+       const cTrimmed = document.cookie.replaceAll(/\s*;\s*/g, ';');
+       const cCookies = cTrimmed.split(';');
+       for (let i = 0; i < cCookies.length; i++)
+       {
+        const kv = cCookies[i].split('=');
+        if (kv[0] === key)
+        {
+         _cookie.setItem(kv[0], '', 0);
+         break;
+        }
+       }
+      }
+
+      return {
+       has: $has,
+       getItem: $get,
+       setItem: $set,
+       removeItem: $remove
+      };
+     }();
+
+     return {
+      getItem: $getItem,
+      setItem: $setItem,
+      removeItem: $removeItem
+     };
+    }();
+
     return {
      rnd: $rnd,
      hashCode: $hashCode,
@@ -14145,6 +14337,7 @@
      doNextFrame: $doNextFrame,
      mspf: $mspf,
      ec: $ec,
+     storage: $storage,
      cfgHash: false
     };
    }();
@@ -14639,7 +14832,7 @@
      r = r.toLowerCase();
      if (r.indexOf('kick.com/') > -1)
       r = r.slice(r.indexOf('kick.com/') + 9);
-     window.localStorage.setItem(loginK.path() + '.channel', r);
+     shared.storage.setItem(loginK.path() + '.channel', r);
      window.location.reload();
     }
 
@@ -14718,7 +14911,7 @@
 
     function $logOut()
     {
-     window.localStorage.removeItem(loginK.path() + '.channel');
+     shared.storage.removeItem(loginK.path() + '.channel');
      window.location.reload();
     }
 
@@ -14771,9 +14964,9 @@
      _css();
      if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === 'init')
       notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
-     if (!window.hasOwnProperty('obsstudio') && !window.localStorage.getItem('emotewall.obs_notfound'))
+     if (!window.hasOwnProperty('obsstudio') && !shared.storage.getItem('emotewall.obs_notfound'))
      {
-      window.localStorage.setItem('emotewall.obs_notfound', '1');
+      shared.storage.setItem('emotewall.obs_notfound', '1');
       notice.error(0x09);
      }
      loginT.use();
