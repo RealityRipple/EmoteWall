@@ -14776,45 +14776,47 @@
       window.localStorage.setItem('emotewall.obs_notfound', '1');
       notice.error(0x09);
      }
+     loginT.use();
+     loginYT.use();
      loginK.use();
-     if ((kick.net.oAuth.cfgVals() & 0x01) !== 0x01)
-      kick.net.dead = true;
-     else
-     {
-      if (await _kick() === false)
-       kick.net.dead = true;
-     }
-     const usesT = loginT.use();
-     const usesYT = loginYT.use();
-     if (usesT === true && usesYT === true)
-     {
-      if (!kick.net.dead)
-       await _7tv();
-      twitch.net.dead = true;
-      youtube.net.dead = true;
-      return;
-     }
+     const bT = (twitch.net.oAuth.cfgVals() & 0x04) === 0x04;
+     const bYT = (youtube.net.oAuth.cfgVals() & 0x04) === 0x04;
+     const bK = (kick.net.oAuth.cfgVals() & 0x01) === 0x01;
+     const nT = cfg.hasOwnProperty('twitch') && cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null;
+     const nYT = cfg.hasOwnProperty('youtube') && cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null;
+     //const nK = cfg.hasOwnProperty('kick') && cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null;
      shared.clearAddr(false);
-     if (usesT !== true && usesYT !== true)
+     if ((bT | nT) & (bYT | nYT))
       shared.clearAddr(true);
-     _streamlabs();
-     await _streamelements();
-     await _bttv();
-     await _7tv();
-     if ((twitch.net.oAuth.cfgVals() & 0x04) === 0x04)
+     if (bT | bYT | bK)
+     {
+      _streamlabs();
+      await _streamelements();
+      await _7tv();
+     }
+     if (bT | bYT)
+      await _bttv();
+     if (bT)
      {
       if (await _twitch() === false)
        twitch.net.dead = true;
      }
      else
       twitch.net.dead = true;
-     if ((youtube.net.oAuth.cfgVals() & 0x04) === 0x04)
+     if (bYT)
      {
       if (await _youtube() === false)
        youtube.net.dead = true;
      }
      else
       youtube.net.dead = true;
+     if (bK)
+     {
+      if (await _kick() === false)
+       kick.net.dead = true;
+     }
+     else
+      kick.net.dead = true;
     }
 
     async function _twitch()
