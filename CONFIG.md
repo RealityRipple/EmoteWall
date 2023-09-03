@@ -418,8 +418,18 @@ Configuration Information
       *The maximum height of an emote, in pixels.*
 
     * `variation`  
-      *An integer variable that determines how often occasional random large or small emotes show up.*
+      *Settings related to how often occasional random large or small emotes show up.*  
       - [ ] If `false`, no variations will occur.
+      - [ ] If Integer, the chance that an emote will show up at double or half its size (as a ratio of 1:1:n, that is 1 chance it's double, 1 chance it's half, and n chance it's standard).
+      - [ ] If Object:
+        * `chance`  
+          *An integer variable that determines how often occasional random large or small emotes show up.*  
+          This value fills the same role as the `variation` Integer option above, but with a ratio based on the `range` value.
+
+        * `range`  
+          *An array of probabilities for different sizes*  
+          Each entry in the parent array has 1 chance, making the denominator equal to the count of items in `range` plus the value of `chance`.  
+          Each entry must be a decimal value; suggested range between "0.1" and "3.0". This value will be the number by which the emote size will be multiplied. "0.5" is equal to half size, "2.0" is equal to double size.
 
   * `cube`  
     *Settings related to The Cube emote.*
