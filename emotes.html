@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.8.3 BETA
+    * v0.8.4 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -1775,14 +1775,25 @@
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
-        variationSize = shared.rnd(cfg.emote.size.variation + 2);
-        if (variationSize !== 0 && variationSize !== 2)
-         variationSize = 1;
+        if (typeof cfg.emote.size.variation === 'number')
+        {
+         let chances = [];
+         chances.push(0.5);
+         chances.push(2);
+         for (let i = 0; i < cfg.emote.size.variation; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
+        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+        {
+         let chances = [];
+         chances.push(...cfg.emote.size.variation.range);
+         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
        }
-       if (variationSize === 0)
-        eH = Math.ceil(eH / 2);
-       else if (variationSize === 2)
-        eH = eH * 2;
+       eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
         eW = eInf.width / eInf.height * eH;
@@ -1813,14 +1824,25 @@
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
-        variationSize = shared.rnd(cfg.emote.size.variation + 2);
-        if (variationSize !== 0 && variationSize !== 2)
-         variationSize = 1;
+        if (typeof cfg.emote.size.variation === 'number')
+        {
+         let chances = [];
+         chances.push(0.5);
+         chances.push(2);
+         for (let i = 0; i < cfg.emote.size.variation; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
+        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+        {
+         let chances = [];
+         chances.push(...cfg.emote.size.variation.range);
+         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
        }
-       if (variationSize === 0)
-        eH = Math.ceil(eH / 2);
-       else if (variationSize === 2)
-        eH = eH * 2;
+       eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
         eW = eInf.width / eInf.height * eH;
@@ -1869,14 +1891,25 @@
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
-        variationSize = shared.rnd(cfg.emote.size.variation + 2);
-        if (variationSize !== 0 && variationSize !== 2)
-         variationSize = 1;
+        if (typeof cfg.emote.size.variation === 'number')
+        {
+         let chances = [];
+         chances.push(0.5);
+         chances.push(2);
+         for (let i = 0; i < cfg.emote.size.variation; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
+        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+        {
+         let chances = [];
+         chances.push(...cfg.emote.size.variation.range);
+         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
        }
-       if (variationSize === 0)
-        eH = Math.ceil(eH / 2);
-       else if (variationSize === 2)
-        eH = eH * 2;
+       eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
         eW = eInf.width / eInf.height * eH;
@@ -1936,14 +1969,25 @@
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
         {
-         variationSize = shared.rnd(cfg.emote.size.variation + 2);
-         if (variationSize !== 0 && variationSize !== 2)
-          variationSize = 1;
+         if (typeof cfg.emote.size.variation === 'number')
+         {
+          let chances = [];
+          chances.push(0.5);
+          chances.push(2);
+          for (let i = 0; i < cfg.emote.size.variation; i++)
+           chances.push(1);
+          variationSize = chances[shared.rnd(chances.length)];
+         }
+         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+         {
+          let chances = [];
+          chances.push(...cfg.emote.size.variation.range);
+          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+           chances.push(1);
+          variationSize = chances[shared.rnd(chances.length)];
+         }
         }
-        if (variationSize === 0)
-         eH = Math.ceil(eH / 2);
-        else if (variationSize === 2)
-         eH = eH * 2;
+        eH = Math.ceil(eH * variationSize);
         let eW = eH;
         if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
          eW = eInf.width / eInf.height * eH;
@@ -2021,14 +2065,25 @@
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
-        variationSize = shared.rnd(cfg.emote.size.variation + 2);
-        if (variationSize !== 0 && variationSize !== 2)
-         variationSize = 1;
+        if (typeof cfg.emote.size.variation === 'number')
+        {
+         let chances = [];
+         chances.push(0.5);
+         chances.push(2);
+         for (let i = 0; i < cfg.emote.size.variation; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
+        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+        {
+         let chances = [];
+         chances.push(...cfg.emote.size.variation.range);
+         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
        }
-       if (variationSize === 0)
-        eH = Math.ceil(eH / 2);
-       else if (variationSize === 2)
-        eH = eH * 2;
+       eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
         eW = eInf.width / eInf.height * eH;
@@ -2084,14 +2139,25 @@
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
-        variationSize = shared.rnd(cfg.emote.size.variation + 2);
-        if (variationSize !== 0 && variationSize !== 2)
-         variationSize = 1;
+        if (typeof cfg.emote.size.variation === 'number')
+        {
+         let chances = [];
+         chances.push(0.5);
+         chances.push(2);
+         for (let i = 0; i < cfg.emote.size.variation; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
+        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+        {
+         let chances = [];
+         chances.push(...cfg.emote.size.variation.range);
+         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
        }
-       if (variationSize === 0)
-        eH = Math.ceil(eH / 2);
-       else if (variationSize === 2)
-        eH = eH * 2;
+       eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
         eW = eInf.width / eInf.height * eH;
@@ -2152,14 +2218,25 @@
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
         {
-         variationSize = shared.rnd(cfg.emote.size.variation + 2);
-         if (variationSize !== 0 && variationSize !== 2)
-          variationSize = 1;
+         if (typeof cfg.emote.size.variation === 'number')
+         {
+          let chances = [];
+          chances.push(0.5);
+          chances.push(2);
+          for (let i = 0; i < cfg.emote.size.variation; i++)
+           chances.push(1);
+          variationSize = chances[shared.rnd(chances.length)];
+         }
+         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+         {
+          let chances = [];
+          chances.push(...cfg.emote.size.variation.range);
+          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+           chances.push(1);
+          variationSize = chances[shared.rnd(chances.length)];
+         }
         }
-        if (variationSize === 0)
-         eH = Math.ceil(eH / 2);
-        else if (variationSize === 2)
-         eH = eH * 2;
+        eH = Math.ceil(eH * variationSize);
         let eW = eH;
         if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
          eW = eInf.width / eInf.height * eH;
@@ -2311,14 +2388,25 @@
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
-        variationSize = shared.rnd(cfg.emote.size.variation + 2);
-        if (variationSize !== 0 && variationSize !== 2)
-         variationSize = 1;
+        if (typeof cfg.emote.size.variation === 'number')
+        {
+         let chances = [];
+         chances.push(0.5);
+         chances.push(2);
+         for (let i = 0; i < cfg.emote.size.variation; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
+        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+        {
+         let chances = [];
+         chances.push(...cfg.emote.size.variation.range);
+         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
        }
-       if (variationSize === 0)
-        eH = Math.ceil(eH / 2);
-       else if (variationSize === 2)
-        eH = eH * 2;
+       eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
         eW = eInf.width / eInf.height * eH;
@@ -2373,14 +2461,25 @@
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
         {
-         variationSize = shared.rnd(cfg.emote.size.variation + 2);
-         if (variationSize !== 0 && variationSize !== 2)
-          variationSize = 1;
+         if (typeof cfg.emote.size.variation === 'number')
+         {
+          let chances = [];
+          chances.push(0.5);
+          chances.push(2);
+          for (let i = 0; i < cfg.emote.size.variation; i++)
+           chances.push(1);
+          variationSize = chances[shared.rnd(chances.length)];
+         }
+         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+         {
+          let chances = [];
+          chances.push(...cfg.emote.size.variation.range);
+          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+           chances.push(1);
+          variationSize = chances[shared.rnd(chances.length)];
+         }
         }
-        if (variationSize === 0)
-         eH = Math.ceil(eH / 2);
-        else if (variationSize === 2)
-         eH = eH * 2;
+        eH = Math.ceil(eH * variationSize);
         let eW = eH;
         if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
          eW = eInf.width / eInf.height * eH;
@@ -2491,14 +2590,25 @@
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
         {
-         variationSize = shared.rnd(cfg.emote.size.variation + 2);
-         if (variationSize !== 0 && variationSize !== 2)
-          variationSize = 1;
+         if (typeof cfg.emote.size.variation === 'number')
+         {
+          let chances = [];
+          chances.push(0.5);
+          chances.push(2);
+          for (let i = 0; i < cfg.emote.size.variation; i++)
+           chances.push(1);
+          variationSize = chances[shared.rnd(chances.length)];
+         }
+         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+         {
+          let chances = [];
+          chances.push(...cfg.emote.size.variation.range);
+          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+           chances.push(1);
+          variationSize = chances[shared.rnd(chances.length)];
+         }
         }
-        if (variationSize === 0)
-         eH = Math.ceil(eH / 2);
-        else if (variationSize === 2)
-         eH = eH * 2;
+        eH = Math.ceil(eH * variationSize);
         const eHh = Math.ceil(eH / 2);
         const nHh = eHh * -1;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time);
@@ -2662,14 +2772,25 @@
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
-        variationSize = shared.rnd(cfg.emote.size.variation + 2);
-        if (variationSize !== 0 && variationSize !== 2)
-         variationSize = 1;
+        if (typeof cfg.emote.size.variation === 'number')
+        {
+         let chances = [];
+         chances.push(0.5);
+         chances.push(2);
+         for (let i = 0; i < cfg.emote.size.variation; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
+        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+        {
+         let chances = [];
+         chances.push(...cfg.emote.size.variation.range);
+         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          chances.push(1);
+         variationSize = chances[shared.rnd(chances.length)];
+        }
        }
-       if (variationSize === 0)
-        eH = Math.ceil(eH / 2);
-       else if (variationSize === 2)
-        eH = eH * 2;
+       eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
         eW = eInf.width / eInf.height * eH;
@@ -4437,12 +4558,8 @@
      c.push('emote');
      if (attrs.hasOwnProperty('classes'))
       c.push(...attrs.classes);
-     if (variationSize === 0)
-      c.push('eHalf');
-     else if (variationSize === 2)
-      c.push('eDouble');
-     else
-      c.push('eNorm');
+     let rV = variationSize.toFixed(3).replace('.', '_');
+     c.push('eSize-' + rV);
      img.classList.add(...c);
      _setImgSrc(img, uri);
      if (attrs.hasOwnProperty('style'))
@@ -6277,6 +6394,8 @@
         let sc = 'c';
         if (thirdparty.emotes.twitch.hasOwnProperty(sName) && thirdparty.emotes.twitch[sName].hasOwnProperty('scope'))
          sc = thirdparty.emotes.twitch[sName].scope;
+        if (eID === '80393')
+         sc = 'u';
         let l = eVals.length;
         if (dup === false)
          l = 1;
@@ -9398,8 +9517,8 @@
       let _wsRetry = 0;
       let _firstRS = true;
       let _ws = null;
-      const _lPing = 30000;
-      const _lTimeout = 35000;
+      let _lPing = 30000;
+      let _lTimeout = 120000;
       const _lExpire = 5000;
       let _tTimeout = false;
       let _tExpire = false;
@@ -9487,7 +9606,6 @@
         window.clearInterval(_tPing);
         _tPing = 0;
        }
-       _tPing = window.setInterval(_wsPing, _lPing);
        if (_ws === null)
         return;
        if (kick.net.dead)
@@ -9504,8 +9622,6 @@
         _ws = null;
         return;
        }
-       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
-       _wsRetry = 0;
        const j = JSON.parse(ev.data);
        if (!j.hasOwnProperty('event') || j.event === null)
         return;
@@ -9521,11 +9637,6 @@
            {
             window.clearTimeout(_tExpire);
             _tExpire = false;
-           }
-           if (_tTimeout !== false)
-           {
-            window.clearTimeout(_tTimeout);
-            _tTimeout = false;
            }
            _ws.onmessage = null;
            _ws.onclose = null;
@@ -9544,11 +9655,6 @@
            {
             window.clearTimeout(_tExpire);
             _tExpire = false;
-           }
-           if (_tTimeout !== false)
-           {
-            window.clearTimeout(_tTimeout);
-            _tTimeout = false;
            }
            _ws.onmessage = null;
            _ws.onclose = null;
@@ -9569,11 +9675,6 @@
             window.clearTimeout(_tExpire);
             _tExpire = false;
            }
-           if (_tTimeout !== false)
-           {
-            window.clearTimeout(_tTimeout);
-            _tTimeout = false;
-           }
            _ws.onmessage = null;
            _ws.onclose = null;
            _ws.close();
@@ -9592,6 +9693,9 @@
        }
        if (!j.hasOwnProperty('data') || j.data === null)
         return;
+       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+       _tPing = window.setInterval(_wsPing, _lPing);
+       _wsRetry = 0;
        const jData = JSON.parse(j.data);
        notice.info(0x32);
        notice.active |= 0x04;
@@ -9606,23 +9710,30 @@
         {
          case 'pong':
           return;
+         case 'ping':
+          _ws.send(JSON.stringify({event: 'pusher:pong', data: {}}));
+          return;
          case 'connection_established':
+          _lTimeout = 120000;
+          _lPing = 30000;
           if (jData.hasOwnProperty('activity_timeout') && jData.activity_timeout !== null)
           {
-           if (_tTimeout !== false)
-           {
-            window.clearTimeout(_tTimeout);
-            _tTimeout = false;
-           }
-           _tTimeout = window.setTimeout(_wsTimeout, jData.activity_timeout);
-           if (_tPing !== 0)
-           {
-            window.clearInterval(_tPing);
-            _tPing = 0;
-           }
-           _tPing = window.setInterval(_wsPing, Math.floor(jData.activity_timeout / 2) * 1000);
+           _lTimeout = jData.activity_timeout * 1000;
+           _lPing = Math.floor(_lTimeout / 2);
           }
-          _ws.send(JSON.stringify({event:'pusher:subscribe', data: {auth: '', channel: 'chatrooms.' + kick.net.chatID + '.v2'}}));
+          if (_tTimeout !== false)
+          {
+           window.clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+          if (_tPing !== 0)
+          {
+           window.clearInterval(_tPing);
+           _tPing = 0;
+          }
+          _tPing = window.setInterval(_wsPing, _lPing);
+          _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'chatrooms.' + kick.net.chatID + '.v2'}}));
           return;
         }
         console.log('unknown pusher event:', j.event.slice(7), jData);
@@ -9797,10 +9908,17 @@
         window.clearTimeout(_tExpire);
         _tExpire = false;
        }
+       _lTimeout = 120000;
+       _lPing = 30000;
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
+       }
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
        }
        if (_ws === null)
         return;
@@ -15254,6 +15372,39 @@
       h = h.replace('button.youtube\n   {\n', 'button.youtube\n   {\n    display: none;\n');
      if (cfg.hasOwnProperty('kick') && cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null)
       h = h.replace('button.kick\n   {\n', 'button.kick\n   {\n    display: none;\n');
+     if (cfg.emote.size.variation !== false && typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+     {
+      let v = '   .eSize-1_000\n';
+      v += '   {\n';
+      v += '    --zoom-height: var(--emote-height);\n';
+      v += '    --zoom-width: var(--emote-width);\n';
+      v += '   }\n';
+      v += '   .eSize-0_500\n';
+      v += '   {\n';
+      v += '    --zoom-height: calc(var(--emote-height) / 2);\n';
+      v += '    --zoom-width: calc(var(--emote-width) / 2);\n';
+      v += '   }\n';
+      v += '   .eSize-2_000\n';
+      v += '   {\n';
+      v += '    --zoom-height: calc(var(--emote-height) * 2);\n';
+      v += '    --zoom-width: calc(var(--emote-width) * 2);\n';
+      v += '   }\n';
+      let v2 = '   .eSize-1_000\n';
+      v2 += '   {\n';
+      v2 += '    --zoom-height: var(--emote-height);\n';
+      v2 += '    --zoom-width: var(--emote-width);\n';
+      v2 += '   }\n';
+      for (let i = 0; i < cfg.emote.size.variation.range.length; i++)
+      {
+       let rV = cfg.emote.size.variation.range[i].toFixed(3);
+       v2 += '   .eSize-' + rV.replace('.', '_') + '\n';
+       v2 += '   {\n';
+       v2 += '    --zoom-height: calc(var(--emote-height) * ' + rV + ');\n';
+       v2 += '    --zoom-width: calc(var(--emote-width) * ' + rV + ');\n';
+       v2 += '   }\n';
+      }
+      h = h.replace(v, v2);
+     }
      css.innerHTML = h;
     }
 
@@ -15623,17 +15774,17 @@
     }
    }
 
-   .eNorm
+   .eSize-1_000
    {
     --zoom-height: var(--emote-height);
     --zoom-width: var(--emote-width);
    }
-   .eHalf
+   .eSize-0_500
    {
     --zoom-height: calc(var(--emote-height) / 2);
     --zoom-width: calc(var(--emote-width) / 2);
    }
-   .eDouble
+   .eSize-2_000
    {
     --zoom-height: calc(var(--emote-height) * 2);
     --zoom-width: calc(var(--emote-width) * 2);
