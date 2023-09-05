@@ -9517,8 +9517,8 @@
       let _wsRetry = 0;
       let _firstRS = true;
       let _ws = null;
-      const _lPing = 30000;
-      const _lTimeout = 35000;
+      let _lPing = 30000;
+      let _lTimeout = 120000;
       const _lExpire = 5000;
       let _tTimeout = false;
       let _tExpire = false;
@@ -9606,7 +9606,6 @@
         window.clearInterval(_tPing);
         _tPing = 0;
        }
-       _tPing = window.setInterval(_wsPing, _lPing);
        if (_ws === null)
         return;
        if (kick.net.dead)
@@ -9623,8 +9622,6 @@
         _ws = null;
         return;
        }
-       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
-       _wsRetry = 0;
        const j = JSON.parse(ev.data);
        if (!j.hasOwnProperty('event') || j.event === null)
         return;
@@ -9640,11 +9637,6 @@
            {
             window.clearTimeout(_tExpire);
             _tExpire = false;
-           }
-           if (_tTimeout !== false)
-           {
-            window.clearTimeout(_tTimeout);
-            _tTimeout = false;
            }
            _ws.onmessage = null;
            _ws.onclose = null;
@@ -9663,11 +9655,6 @@
            {
             window.clearTimeout(_tExpire);
             _tExpire = false;
-           }
-           if (_tTimeout !== false)
-           {
-            window.clearTimeout(_tTimeout);
-            _tTimeout = false;
            }
            _ws.onmessage = null;
            _ws.onclose = null;
@@ -9688,11 +9675,6 @@
             window.clearTimeout(_tExpire);
             _tExpire = false;
            }
-           if (_tTimeout !== false)
-           {
-            window.clearTimeout(_tTimeout);
-            _tTimeout = false;
-           }
            _ws.onmessage = null;
            _ws.onclose = null;
            _ws.close();
@@ -9711,6 +9693,9 @@
        }
        if (!j.hasOwnProperty('data') || j.data === null)
         return;
+       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+       _tPing = window.setInterval(_wsPing, _lPing);
+       _wsRetry = 0;
        const jData = JSON.parse(j.data);
        notice.info(0x32);
        notice.active |= 0x04;
@@ -9725,23 +9710,30 @@
         {
          case 'pong':
           return;
+         case 'ping':
+          _ws.send(JSON.stringify({event: 'pusher:pong', data: {}}));
+          return;
          case 'connection_established':
+          _lTimeout = 120000;
+          _lPing = 30000;
           if (jData.hasOwnProperty('activity_timeout') && jData.activity_timeout !== null)
           {
-           if (_tTimeout !== false)
-           {
-            window.clearTimeout(_tTimeout);
-            _tTimeout = false;
-           }
-           _tTimeout = window.setTimeout(_wsTimeout, jData.activity_timeout);
-           if (_tPing !== 0)
-           {
-            window.clearInterval(_tPing);
-            _tPing = 0;
-           }
-           _tPing = window.setInterval(_wsPing, Math.floor(jData.activity_timeout / 2) * 1000);
+           _lTimeout = jData.activity_timeout * 1000;
+           _lPing = Math.floor(_lTimeout / 2);
           }
-          _ws.send(JSON.stringify({event:'pusher:subscribe', data: {auth: '', channel: 'chatrooms.' + kick.net.chatID + '.v2'}}));
+          if (_tTimeout !== false)
+          {
+           window.clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+          if (_tPing !== 0)
+          {
+           window.clearInterval(_tPing);
+           _tPing = 0;
+          }
+          _tPing = window.setInterval(_wsPing, _lPing);
+          _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'chatrooms.' + kick.net.chatID + '.v2'}}));
           return;
         }
         console.log('unknown pusher event:', j.event.slice(7), jData);
@@ -9916,10 +9908,17 @@
         window.clearTimeout(_tExpire);
         _tExpire = false;
        }
+       _lTimeout = 120000;
+       _lPing = 30000;
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
+       }
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
        }
        if (_ws === null)
         return;
