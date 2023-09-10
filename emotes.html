@@ -7596,6 +7596,8 @@
         if (tDif < _rFH)
          return twitch.net.fList[uID].value;
        }
+       if (!twitch.net.oAuth.auth.scope.includes(cScopes.twitch.followers))
+        return false;
        const url = cURLs.api.twitch.channels.followers.replaceAll('%USER_ID%', uID).replaceAll('%CHANNEL_ID%', cmd.tags['room-id']);
        const h = {
         'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
