@@ -1204,8 +1204,10 @@
      kick: 'wss://ws-us2.pusher.com/app/eb1d5f283081a78b932c?protocol=7&client=js&version=7.6.0&flash=false',
      streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket&token=%TOKEN%',
      streamelements: 'wss://realtime.streamelements.com/socket.io/?transport=websocket',
-     bttv: 'wss://sockets.betterttv.net/ws',
-     '7tv': 'wss://events.7tv.io/v3'
+     bttv: 'wss://sockets.betterttv.net/ws'
+    },
+    sse: {
+     '7tv': 'https://events.7tv.io/v3'
     },
     api: {
      twitch: {
@@ -5741,7 +5743,7 @@
             if (cfg.display.extended.use7TV)
             {
              thirdparty['7tv'].channel('twitch', twitch.net.channelID);
-             await thirdparty['7tv'].socket.join('twitch', twitch.net.channelID);
+             await thirdparty['7tv'].events('twitch', twitch.net.channelID);
             }
             if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
              thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
@@ -7596,8 +7598,6 @@
         if (tDif < _rFH)
          return twitch.net.fList[uID].value;
        }
-       if (!twitch.net.oAuth.auth.scope.includes(cScopes.twitch.followers))
-        return false;
        const url = cURLs.api.twitch.channels.followers.replaceAll('%USER_ID%', uID).replaceAll('%CHANNEL_ID%', cmd.tags['room-id']);
        const h = {
         'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
@@ -7979,7 +7979,7 @@
          if (cfg.display.extended.use7TV)
          {
           thirdparty['7tv'].channel('youtube', lStreams[i].channel);
-          await thirdparty['7tv'].socket.join('youtube', lStreams[i].channel);
+          await thirdparty['7tv'].events('youtube', lStreams[i].channel);
          }
          if (cfg.display.extended.useBTTV)
           thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
@@ -9759,7 +9759,7 @@
            if (cfg.display.extended.use7TV && kick.net.userID !== 0)
            {
             thirdparty['7tv'].channel('kick', kick.net.userID);
-            await thirdparty['7tv'].socket.join('kick', kick.net.userID);
+            await thirdparty['7tv'].events('kick', kick.net.userID);
             thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
            }
           }
@@ -13558,44 +13558,62 @@
       return j.user.id;
      }
 
-     const $socket = function()
+     const $events = function()
      {
       const _lDelay = 500;
       let _wsRetry = 0;
       let _wsR_RL = 0;
       let _wsR_M = 0;
-      let _chList = [];
-      let _ws = null;
-      let _sess = null;
+      let _chList = {};
+      let _sse = null;
       let _lTimeout = 5000;
       let _tTimeout = false;
       let _okCt = 0;
-      let _recvd = false;
 
-      async function $init()
+      function _init()
       {
+       let p = '';
+       for (const acct in _chList)
+       {
+        if (!_chList.hasOwnProperty(acct))
+         continue;
+        if (p !== '')
+         p += ',';
+        p += 'user.*<object_id=' + acct + '>,emote.*<object_id=' + acct + '>,emote_set.*<object_id=' + acct + '>';
+       }
+       if (p.length === 0)
+        return;
        notice.expect |= 0x80;
-       _recvd = false;
-       _ws = new WebSocket(cURLs.ws['7tv']);
-       _ws.onopen = _wsOpen;
-       _ws.onclose = _wsClose;
-       _ws.onmessage = _wsMessage;
+       let uri = cURLs.sse['7tv'] + '@' + encodeURIComponent(p);
+       if (_sse !== null)
+       {
+        _sse.close();
+        _sse = null;
+       }
+       _sse = new EventSource(uri);
+       _sse.addEventListener('open', _sseOpen);
+       _sse.addEventListener('error', _sseError);
+       _sse.addEventListener('dispatch', _sseMessage);
+       _sse.addEventListener('hello', _sseMessage);
+       _sse.addEventListener('heartbeat', _sseMessage);
+       _sse.addEventListener('reconnect', _sseMessage);
+       _sse.addEventListener('ack', _sseMessage);
+       _sse.addEventListener('end of stream', _sseMessage);
       }
 
-      function _wsOpen()
+      function _sseOpen()
       {
-       if (_ws === null)
+       if (_sse === null)
         return;
-       if (_ws.readyState !== 1)
+       if (_sse.readyState !== 1)
         return;
-       _ws.onopen = null;
-       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+       _sse.removeEventListener('open', _sseOpen);
+       _tTimeout = window.setTimeout(_sseTimeout, _lTimeout);
       }
 
-      function _wsClose()
+      function _sseError()
       {
-       if (!_recvd)
-        notice.error(0xC2);
+       notice.error(0xC2);
        notice.active &= ~0x80;
        if (notice.tHide !== false)
        {
@@ -13607,44 +13625,52 @@
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
-       if (_ws === null)
+       if (_sse === null)
         return;
-       _ws.onopen = null;
-       _ws.onmessage = null;
-       _ws.onclose = null;
-       _ws = null;
+       _sse.removeEventListener('open', _sseOpen);
+       _sse.removeEventListener('error', _sseError);
+       _sse.removeEventListener('dispatch', _sseMessage);
+       _sse.removeEventListener('hello', _sseMessage);
+       _sse.removeEventListener('heartbeat', _sseMessage);
+       _sse.removeEventListener('reconnect', _sseMessage);
+       _sse.removeEventListener('ack', _sseMessage);
+       _sse.removeEventListener('end of stream', _sseMessage);
+       _sse.close();
+       _sse = null;
        if (twitch.net.dead && youtube.net.dead && kick.net.dead)
         return;
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(thirdparty['7tv'].socket.init, wsWait);
+       window.setTimeout(_init, wsWait);
       }
 
-      function _wsMessage(ev)
+      function _sseMessage(ev)
       {
-       _recvd = true;
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
-       if (_ws === null)
+       if (_sse === null)
         return;
        if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        {
-        _ws.onopen = null;
-        _ws.onmessage = null;
-        _ws.onclose = null;
-        _ws.close();
-        _ws = null;
+        _sse.removeEventListener('open', _sseOpen);
+        _sse.removeEventListener('error', _sseError);
+        _sse.removeEventListener('dispatch', _sseMessage);
+        _sse.removeEventListener('hello', _sseMessage);
+        _sse.removeEventListener('heartbeat', _sseMessage);
+        _sse.removeEventListener('reconnect', _sseMessage);
+        _sse.removeEventListener('ack', _sseMessage);
+        _sse.removeEventListener('end of stream', _sseMessage);
+        _sse.close();
+        _sse = null;
         return;
        }
-       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
-       const d = JSON.parse(ev.data);
-       if (!d.hasOwnProperty('op') || d.op === null)
-        return;
-       if (!d.hasOwnProperty('d'))
+       _tTimeout = window.setTimeout(_sseTimeout, _lTimeout);
+       const d = ('data' in ev) ? JSON.parse(ev.data) : null;
+       if (!('type' in ev))
         return;
        notice.info(0xC2);
        notice.active |= 0x80;
@@ -13653,128 +13679,111 @@
         window.clearTimeout(notice.tHide);
         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
        }
-       switch (d.op)
+       switch (ev.type)
        {
-        case 0:
+        case 'dispatch':
          if (thirdparty.timer !== false)
           window.clearTimeout(thirdparty.timer);
          thirdparty.timer = window.setTimeout(thirdparty.reload, _lDelay);
          break;
-        case 1:
-         if (d.d === null)
+        case 'hello':
+         if (d === null)
           return;
          _okCt = 0;
-         if (_sess !== null)
+         if (d.hasOwnProperty('heartbeat_interval') && d.heartbeat_interval !== null)
          {
-          if (_ws.readyState === 1)
-           _ws.send(JSON.stringify({'op': 34, 'd': {'session_id': _sess}}));
-         }
-         else
-         {
-          for (let i = 0, l = _chList.length; i < l; i++)
-          {
-           _wsSub(_chList[i].acct);
-          }
-         }
-         if (d.d.hasOwnProperty('session_id') && d.d.session_id !== null)
-          _sess = d.d.session_id;
-         if (d.d.hasOwnProperty('heartbeat_interval') && d.d.heartbeat_interval !== null)
-         {
-          _lTimeout = parseInt(d.d.heartbeat_interval, 10) * 3;
+          _lTimeout = parseInt(d.heartbeat_interval, 10) * 3;
           if (_tTimeout !== false)
           {
            window.clearTimeout(_tTimeout);
            _tTimeout = false;
           }
-          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+          _tTimeout = window.setTimeout(_sseTimeout, _lTimeout);
          }
          break;
-        case 2:
-         if (_okCt !== 3)
+        case 'heartbeat':
+         const needCt = Object.keys(_chList).length * 3;
+         if (_okCt !== needCt)
          {
           if (_tTimeout !== false)
           {
            window.clearTimeout(_tTimeout);
            _tTimeout = false;
           }
-          _ws.onopen = null;
-          _ws.onmessage = null;
-          _ws.onclose = null;
-          _ws.close();
-          _ws = null;
+          _sse.removeEventListener('open', _sseOpen);
+          _sse.removeEventListener('error', _sseError);
+          _sse.removeEventListener('dispatch', _sseMessage);
+          _sse.removeEventListener('hello', _sseMessage);
+          _sse.removeEventListener('heartbeat', _sseMessage);
+          _sse.removeEventListener('reconnect', _sseMessage);
+          _sse.removeEventListener('ack', _sseMessage);
+          _sse.removeEventListener('end of stream', _sseMessage);
+          _sse.close();
+          _sse = null;
           const wsRedo = Math.floor(wWS ** (1 + _wsRetry) * 1000);
           if (_wsRetry < 2)
            _wsRetry += 0.2;
-          window.setTimeout(thirdparty['7tv'].socket.init, wsRedo);
+          window.setTimeout(_init, wsRedo);
           return;
          }
          _wsRetry = 0;
          _wsR_RL = 0;
          _wsR_M = 0;
          break;
-        case 5:
-         if (d.d === null)
+        case 'ack':
+         if (d === null)
           return;
-         if (!d.d.hasOwnProperty('command') || d.d.command === null)
+         if (!d.hasOwnProperty('command') || d.command === null)
           return;
-         switch (d.d.command)
+         switch (d.command)
          {
-          case 'RESUME':
-           if (!d.d.hasOwnProperty('data') || d.d.data === null)
-            return;
-           if (!d.d.data.hasOwnProperty('success'))
-            return;
-           if (d.d.data.success === false || d.d.data.success === null)
-           {
-            for (let i = 0, l = _chList.length; i < l; i++)
-            {
-             _wsSub(_chList[i].acct);
-            }
-           }
-           else
-           {
-            if (!d.d.data.hasOwnProperty('subscriptions_restored') || d.d.data.subscriptions_restored === null)
-             return;
-            if (d.d.data.subscriptions_restored !== _chList.length * 3)
-            {
-             if (d.d.data.subscriptions_restored > 0)
-             {
-              for (let i = 0, l = _chList.length; i < l; i++)
-              {
-               _wsUnsub(_chList[i].acct);
-              }
-             }
-             for (let i = 0, l = _chList.length; i < l; i++)
-             {
-              _wsSub(_chList[i].acct);
-             }
-            }
-            else
-             _okCt = d.d.data.subscriptions_restored;
-           }
-           break;
           case 'SUBSCRIBE':
            _okCt++;
            break;
          }
          break;
-        case 7:
-         if (d.d === null)
+        case 'reconnect':
+         if (d === null)
           return;
          if (_tTimeout !== false)
          {
           window.clearTimeout(_tTimeout);
           _tTimeout = false;
          }
-         _ws.onopen = null;
-         _ws.onmessage = null;
-         _ws.onclose = null;
-         _ws.close();
-         _ws = null;
-         let wsWait = _lDelay;
-         if (d.d.hasOwnProperty('code') && d.d.code !== null)
+         _sse.removeEventListener('open', _sseOpen);
+         _sse.removeEventListener('error', _sseError);
+         _sse.removeEventListener('dispatch', _sseMessage);
+         _sse.removeEventListener('hello', _sseMessage);
+         _sse.removeEventListener('heartbeat', _sseMessage);
+         _sse.removeEventListener('reconnect', _sseMessage);
+         _sse.removeEventListener('ack', _sseMessage);
+         _sse.removeEventListener('end of stream', _sseMessage);
+         _sse.close();
+         _sse = null;
+         window.setTimeout(_init, _lDelay);
+         break;
+        case 'end of stream':
+         if (d === null)
+          return;
+         if (_tTimeout !== false)
          {
-          switch (d.d.code)
+          window.clearTimeout(_tTimeout);
+          _tTimeout = false;
+         }
+         _sse.removeEventListener('open', _sseOpen);
+         _sse.removeEventListener('error', _sseError);
+         _sse.removeEventListener('dispatch', _sseMessage);
+         _sse.removeEventListener('hello', _sseMessage);
+         _sse.removeEventListener('heartbeat', _sseMessage);
+         _sse.removeEventListener('reconnect', _sseMessage);
+         _sse.removeEventListener('ack', _sseMessage);
+         _sse.removeEventListener('end of stream', _sseMessage);
+         _sse.close();
+         _sse = null;
+         let wsWait = _lDelay;
+         if (d.hasOwnProperty('code') && d.code !== null)
+         {
+          switch (d.code)
           {
            case 4001:
            case 4002:
@@ -13783,7 +13792,6 @@
            case 4009:
            case 4010:
            case 4011:
-            _sess = null;
             return;
            case 4005:
             wsWait = Math.floor((5 ** (1 + _wsR_RL) / 5) * 60 * 1000);
@@ -13806,34 +13814,12 @@
             break;
           }
          }
-         window.setTimeout(thirdparty['7tv'].socket.init, wsWait);
+         window.setTimeout(_init, wsWait);
          break;
        }
       }
 
-      function _wsUnsub(accID)
-      {
-       if (_ws === null)
-        return;
-       if (_ws.readyState !== 1)
-        return;
-       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'user.*', 'condition': {'object_id': accID}}}));
-       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote.*', 'condition': {'object_id': accID}}}));
-       _ws.send(JSON.stringify({'op': 36, 'd': {'type':'emote_set.*', 'condition': {'object_id': accID}}}));
-      }
-
-      function _wsSub(accID)
-      {
-       if (_ws === null)
-        return;
-       if (_ws.readyState !== 1)
-        return;
-       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'user.*', 'condition': {'object_id': accID}}}));
-       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote.*', 'condition': {'object_id': accID}}}));
-       _ws.send(JSON.stringify({'op': 35, 'd': {'type':'emote_set.*', 'condition': {'object_id': accID}}}));
-      }
-
-      function _wsTimeout()
+      function _sseTimeout()
       {
        notice.error(0xC2);
        notice.active &= ~0x80;
@@ -13848,55 +13834,50 @@
         window.clearTimeout(_tTimeout);
         _tTimeout = false;
        }
-       if (_ws === null)
+       if (_sse === null)
         return;
-       _ws.onopen = null;
-       _ws.onmessage = null;
-       _ws.onclose = null;
-       _ws.close();
-       _ws = null;
+       _sse.removeEventListener('open', _sseOpen);
+       _sse.removeEventListener('error', _sseError);
+       _sse.removeEventListener('dispatch', _sseMessage);
+       _sse.removeEventListener('hello', _sseMessage);
+       _sse.removeEventListener('heartbeat', _sseMessage);
+       _sse.removeEventListener('reconnect', _sseMessage);
+       _sse.removeEventListener('ack', _sseMessage);
+       _sse.removeEventListener('end of stream', _sseMessage);
+       _sse.close();
+       _sse = null;
        if (twitch.net.dead && youtube.net.dead && kick.net.dead)
         return;
-       thirdparty['7tv'].socket.init();
+       _init();
       }
 
       async function $join(svcName, chID)
       {
-       for (let i = 0, l = _chList.length; i < l; i++)
-       {
-        if (_chList[i].ch.includes(chID))
-         return;
-       }
        const accID = await _load7TV_channelID(svcName, chID);
        if (accID === false)
         return;
-       for (let i = 0, l = _chList.length; i < l; i++)
+       if (_chList.hasOwnProperty(accID))
        {
-        if (_chList[i].acct === accID)
-        {
-         _chList[i].ch.push(chID);
-         return;
-        }
+        if (!_chList[accID].hasOwnProperty(svcName))
+         _chList[accID][svcName] = [];
+        if (!_chList[accID][svcName].includes(chID))
+         _chList[accID][svcName].push(chID);
+        return;
        }
-       _chList.push({ch: [chID], acct: accID});
-       if (_ws === null)
-        return;
-       if (_ws.readyState !== 1)
-        return;
-       _wsSub(accID);
+       _chList[accID] = {};
+       _chList[accID][svcName] = [];
+       _chList[accID][svcName].push(chID);
+       _init();
       }
 
-      return {
-       init: $init,
-       join: $join
-      };
+      return $join;
      }();
 
      return {
       global: $global,
       channel: $channel,
       channelEx: $channelEx,
-      socket: $socket,
+      events: $events,
       zweFlag: 0x100
      };
     }();
@@ -15209,7 +15190,6 @@
     {
      if (!cfg.display.extended.use7TV)
       return;
-     thirdparty['7tv'].socket.init();
      await thirdparty['7tv'].global();
     }
 
