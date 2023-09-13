@@ -1344,8 +1344,8 @@
    {
     const _visTime = 5000;
     const _errTime = 15000;
-    let _states = {};
-    let _timers = {};
+    const _states = {};
+    const _timers = {};
 
     function $info(i)
     {
@@ -1493,9 +1493,9 @@
     {
      if (document.getElementById('notices'))
       return;
-     let n = document.createElement('div');
+     const n = document.createElement('div');
      n.setAttribute('id', 'notices');
-     let b = document.createElement('div');
+     const b = document.createElement('div');
      b.setAttribute('id', 'badge');
      b.dataset.alerts = 0;
      b.innerHTML = b.dataset.alerts;
@@ -1505,10 +1505,10 @@
 
     function _setNotice(id, state, msg, t = 0)
     {
-     let n = document.getElementById('notices');
+     const n = document.getElementById('notices');
      if (!n)
       return;
-     let b = document.getElementById('badge');
+     const b = document.getElementById('badge');
      if (!b)
       return;
      b.classList.remove('fade');
@@ -1552,7 +1552,7 @@
 
     function _clearNoticeBegin(id)
     {
-     let nID = document.getElementById('notice' + id);
+     const nID = document.getElementById('notice' + id);
      if (!nID)
       return;
      nID.classList.add('hide');
@@ -1568,14 +1568,14 @@
       window.clearTimeout(_timers[id]);
       _timers[id] = false;
      }
-     let n = document.getElementById('notices');
+     const n = document.getElementById('notices');
      if (!n)
       return;
-     let nID = document.getElementById('notice' + id);
+     const nID = document.getElementById('notice' + id);
      if (!nID)
       return;
      n.removeChild(nID);
-     let b = document.getElementById('badge');
+     const b = document.getElementById('badge');
      if (!b)
       return;
      b.dataset.alerts--;
@@ -1584,7 +1584,7 @@
 
     function _hideNotice(id)
     {
-     let nID = document.getElementById('notice' + id);
+     const nID = document.getElementById('notice' + id);
      if (!nID)
       return;
      nID.classList.add('fader');
@@ -1593,7 +1593,7 @@
      if (_timers[id] !== false)
       window.clearTimeout(_timers[id]);
      _timers[id] = window.setTimeout(_fadeOutEnd, 500, id);
-     let n = document.getElementById('notices');
+     const n = document.getElementById('notices');
      if (!n)
       return;
      let hasVis = false;
@@ -1608,7 +1608,7 @@
      }
      if (!hasVis)
      {
-      let b = document.getElementById('badge');
+      const b = document.getElementById('badge');
       if (!b)
        return;
       b.classList.add('fader');
@@ -1626,7 +1626,7 @@
 
     function _fadeInNotice(id)
     {
-     let nID = document.getElementById('notice' + id);
+     const nID = document.getElementById('notice' + id);
      if (!nID)
       return;
      nID.classList.remove('faded');
@@ -1636,7 +1636,7 @@
      if (!nID.classList.contains('fader'))
       return;
      _timers[id] = window.setTimeout(_fadeOutNotice, _visTime, id);
-     let b = document.getElementById('badge');
+     const b = document.getElementById('badge');
      if (!b)
       return;
      b.classList.remove('fade');
@@ -1644,7 +1644,7 @@
 
     function _fadeOutNotice(id)
     {
-     let nID = document.getElementById('notice' + id);
+     const nID = document.getElementById('notice' + id);
      if (!nID)
       return;
      if (_timers[id] !== false)
@@ -1653,7 +1653,7 @@
       return;
      _timers[id] = window.setTimeout(_fadeOutEnd, 500, id);
      nID.classList.add('fade');
-     let n = document.getElementById('notices');
+     const n = document.getElementById('notices');
      if (!n)
       return;
      let hasVis = false;
@@ -1668,7 +1668,7 @@
      }
      if (!hasVis)
      {
-      let b = document.getElementById('badge');
+      const b = document.getElementById('badge');
       if (!b)
        return;
       b.classList.add('fade');
@@ -1677,7 +1677,7 @@
 
     function _fadeOutEnd(id)
     {
-     let nID = document.getElementById('notice' + id);
+     const nID = document.getElementById('notice' + id);
      if (!nID)
       return;
      if (_timers[id] !== false)
@@ -1697,7 +1697,7 @@
       window.clearTimeout(notice.tHide);
       notice.tHide = false;
      }
-     let b = document.getElementById('badge');
+     const b = document.getElementById('badge');
      if (!b)
      {
       notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
@@ -1762,7 +1762,7 @@
 
     const $emote = function()
     {
-     let _toShow = [];
+     const _toShow = [];
 
      let _tEmote = false;
 
@@ -1779,7 +1779,7 @@
        {
         if (typeof cfg.emote.size.variation === 'number')
         {
-         let chances = [];
+         const chances = [];
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
@@ -1788,7 +1788,7 @@
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
         {
-         let chances = [];
+         const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
           chances.push(1);
@@ -1828,7 +1828,7 @@
        {
         if (typeof cfg.emote.size.variation === 'number')
         {
-         let chances = [];
+         const chances = [];
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
@@ -1837,7 +1837,7 @@
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
         {
-         let chances = [];
+         const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
           chances.push(1);
@@ -1867,8 +1867,8 @@
          th = shared.rnd() * _cRadius;
         }
        }
-       let hD = Math.floor(h + r * Math.cos(th));
-       let vD = Math.floor(v + r * Math.sin(th));
+       const hD = Math.floor(h + r * Math.cos(th));
+       const vD = Math.floor(v + r * Math.sin(th));
        let s = '--emote-height: ' + eH + 'px;';
        s += ' --emote-width: ' + eW + 'px;';
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time);
@@ -1895,7 +1895,7 @@
        {
         if (typeof cfg.emote.size.variation === 'number')
         {
-         let chances = [];
+         const chances = [];
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
@@ -1904,7 +1904,7 @@
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
         {
-         let chances = [];
+         const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
           chances.push(1);
@@ -1925,12 +1925,12 @@
         s += ' offset-path: path("M 0 ' + v + ' L 0 ' + Math.floor(v * 0.05) + '") ;';
        else
         s += ' offset-path: path("M 0 ' + v + ' L 0 -' + eH + '") ;';
-       let aNames = [];
-       let aDelays = [];
-       let aDurs = [];
-       let aTimings = [];
-       let aFills = [];
-       let aIters = [];
+       const aNames = [];
+       const aDelays = [];
+       const aDurs = [];
+       const aTimings = [];
+       const aFills = [];
+       const aIters = [];
        if (shared.rnd(2) === 0)
         aNames.push('wiggleL');
        else
@@ -1973,7 +1973,7 @@
         {
          if (typeof cfg.emote.size.variation === 'number')
          {
-          let chances = [];
+          const chances = [];
           chances.push(0.5);
           chances.push(2);
           for (let i = 0; i < cfg.emote.size.variation; i++)
@@ -1982,7 +1982,7 @@
          }
          else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
          {
-          let chances = [];
+          const chances = [];
           chances.push(...cfg.emote.size.variation.range);
           for (let i = 0; i < cfg.emote.size.variation.chance; i++)
            chances.push(1);
@@ -2007,9 +2007,9 @@
         s += ' --emote-width: ' + eW + 'px;';
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-        let bX = h;
-        let bY = v;
-        let iArr = [];
+        const bX = h;
+        const bY = v;
+        const iArr = [];
         iArr.push(_addEmoteToDoc(tInit, eInf.url, variationSize, {style: s}, true, {time: tMS}));
         if (eInf.hasOwnProperty('zwe'))
         {
@@ -2069,7 +2069,7 @@
        {
         if (typeof cfg.emote.size.variation === 'number')
         {
-         let chances = [];
+         const chances = [];
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
@@ -2078,7 +2078,7 @@
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
         {
-         let chances = [];
+         const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
           chances.push(1);
@@ -2097,13 +2097,13 @@
        s += ' left: ' + h + 'px;';
        s += ' --emote-height: ' + eH + 'px;';
        s += ' --emote-width: ' + eW + 'px;';
-       let aNames = [];
-       let aDelays = [];
-       let aDurs = [];
-       let aTimings = [];
-       let aFills = [];
-       let aIters = [];
-       let dsO = {};
+       const aNames = [];
+       const aDelays = [];
+       const aDurs = [];
+       const aTimings = [];
+       const aFills = [];
+       const aIters = [];
+       const dsO = {};
        if (h + eWh > sWm)
        {
         dsO.origin = 'right';
@@ -2143,7 +2143,7 @@
        {
         if (typeof cfg.emote.size.variation === 'number')
         {
-         let chances = [];
+         const chances = [];
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
@@ -2152,7 +2152,7 @@
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
         {
-         let chances = [];
+         const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
           chances.push(1);
@@ -2168,13 +2168,13 @@
        let s = 'left: ' + h + 'px;';
        s += ' --emote-height: ' + eH + 'px;';
        s += ' --emote-width: ' + eW + 'px;';
-       let aNames = [];
-       let aDelays = [];
-       let aDurs = [];
-       let aTimings = [];
-       let aFills = [];
-       let aIters = [];
-       let dsO = {};
+       const aNames = [];
+       const aDelays = [];
+       const aDurs = [];
+       const aTimings = [];
+       const aFills = [];
+       const aIters = [];
+       const dsO = {};
        if (shared.rnd(2) === 0)
        {
         dsO.origin = 'topleft';
@@ -2222,7 +2222,7 @@
         {
          if (typeof cfg.emote.size.variation === 'number')
          {
-          let chances = [];
+          const chances = [];
           chances.push(0.5);
           chances.push(2);
           for (let i = 0; i < cfg.emote.size.variation; i++)
@@ -2231,7 +2231,7 @@
          }
          else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
          {
-          let chances = [];
+          const chances = [];
           chances.push(...cfg.emote.size.variation.range);
           for (let i = 0; i < cfg.emote.size.variation.chance; i++)
            chances.push(1);
@@ -2250,16 +2250,16 @@
         s += ' left: ' + h + 'px;';
         s += ' --emote-height: ' + eH + 'px;';
         s += ' --emote-width: ' + eW + 'px;';
-        let dests = [];
+        const dests = [];
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Crazy.time);
         const rate = Math.sqrt(timing.display.Crazy.distance ** 2 / 2) / tMS;
-        let traj = {x: 0, y: 0};
+        const traj = {x: 0, y: 0};
         while (traj.x === 0 && traj.y === 0)
         {
          traj.x = shared.rnd() * (rate * 2) - rate;
          traj.y = shared.rnd() * (rate * 2) - rate;
         }
-        let pos = {x: h, y: v, t: 0};
+        const pos = {x: h, y: v, t: 0};
         let lastT = 0;
         let bCt = 0;
         const sqTime = Math.floor(tMS * timing.display.Crazy.squash.time * 2);
@@ -2302,7 +2302,7 @@
         }
         dests.push({x: pos.x, y: pos.y, t: pos.t - lastT, w: 0});
         s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-        let iArr = [];
+        const iArr = [];
         iArr.push(_addEmoteToDoc(tInit, eInf.url, variationSize, {style: s}, true, {space: false, time: tMS}));
         if (eInf.hasOwnProperty('zwe'))
         {
@@ -2311,7 +2311,7 @@
           iArr.push(_addEmoteToDoc(tInit, eInf.zwe[i].url, variationSize, {style: s}, true, {space: false, time: tMS}));
          }
         }
-        let d = 0;
+        const d = 0;
         const lA = iArr.length;
         const lD = dests.length;
         shared.doNextFrame(_tLoop, tInit, lA, iArr, lD, dests, d);
@@ -2392,7 +2392,7 @@
        {
         if (typeof cfg.emote.size.variation === 'number')
         {
-         let chances = [];
+         const chances = [];
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
@@ -2401,7 +2401,7 @@
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
         {
-         let chances = [];
+         const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
           chances.push(1);
@@ -2417,12 +2417,12 @@
        let s = 'left: ' + h + 'px;';
        s += ' --emote-height: ' + eH + 'px;';
        s += ' --emote-width: ' + eW + 'px;';
-       let aNames = [];
-       let aDelays = [];
-       let aDurs = [];
-       let aTimings = [];
-       let aFills = [];
-       let aIters = [];
+       const aNames = [];
+       const aDelays = [];
+       const aDurs = [];
+       const aTimings = [];
+       const aFills = [];
+       const aIters = [];
        switch (shared.rnd(3))
        {
         case 0:
@@ -2465,7 +2465,7 @@
         {
          if (typeof cfg.emote.size.variation === 'number')
          {
-          let chances = [];
+          const chances = [];
           chances.push(0.5);
           chances.push(2);
           for (let i = 0; i < cfg.emote.size.variation; i++)
@@ -2474,7 +2474,7 @@
          }
          else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
          {
-          let chances = [];
+          const chances = [];
           chances.push(...cfg.emote.size.variation.range);
           for (let i = 0; i < cfg.emote.size.variation.chance; i++)
            chances.push(1);
@@ -2504,12 +2504,12 @@
         if (h > 0)
          r = '-360';
         s2 += ' transform: translate(' + hD + 'px, ' + (sH - dH) + 'px) rotate(' + r + 'deg);';
-        let aNames = [];
-        let aDelays = [];
-        let aDurs = [];
-        let aTimings = [];
-        let aFills = [];
-        let aIters = [];
+        const aNames = [];
+        const aDelays = [];
+        const aDurs = [];
+        const aTimings = [];
+        const aFills = [];
+        const aIters = [];
         if (cfg.emote.out.fade)
         {
          const fOut = _tAnim.fade.out / 100;
@@ -2542,7 +2542,7 @@
          aIters.push('1');
         }
         s2 += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
-        let iArr = [];
+        const iArr = [];
         iArr.push(_addEmoteToDoc(tInit, eInf.url, variationSize, {style: s, classes: ['etThrowTwist']}, true, {space: false, time: tMS}));
         if (eInf.hasOwnProperty('zwe'))
         {
@@ -2587,14 +2587,14 @@
          tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        let scene = document.createElement('div');
+        const scene = document.createElement('div');
         scene.setAttribute('class', 'scene fit cube');
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
         {
          if (typeof cfg.emote.size.variation === 'number')
          {
-          let chances = [];
+          const chances = [];
           chances.push(0.5);
           chances.push(2);
           for (let i = 0; i < cfg.emote.size.variation; i++)
@@ -2603,7 +2603,7 @@
          }
          else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
          {
-          let chances = [];
+          const chances = [];
           chances.push(...cfg.emote.size.variation.range);
           for (let i = 0; i < cfg.emote.size.variation.chance; i++)
            chances.push(1);
@@ -2614,32 +2614,32 @@
         const eHh = Math.ceil(eH / 2);
         const nHh = eHh * -1;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time);
-        let cube = document.createElement('div');
+        const cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
         cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
         if (!eInf.hasOwnProperty('zwe') || eInf.zwe.length === 0)
         {
-         let cubeF = document.createElement('img');
+         const cubeF = document.createElement('img');
          _setImgSrc(cubeF, eInf.url);
          cubeF.dataset.face = 'front';
          cube.appendChild(cubeF);
-         let cubeB = document.createElement('img');
+         const cubeB = document.createElement('img');
          _setImgSrc(cubeB, eInf.url);
          cubeB.dataset.face = 'back';
          cube.appendChild(cubeB);
-         let cubeR = document.createElement('img');
+         const cubeR = document.createElement('img');
          _setImgSrc(cubeR, eInf.url);
          cubeR.dataset.face = 'right';
          cube.appendChild(cubeR);
-         let cubeL = document.createElement('img');
+         const cubeL = document.createElement('img');
          _setImgSrc(cubeL, eInf.url);
          cubeL.dataset.face = 'left';
          cube.appendChild(cubeL);
-         let cubeT = document.createElement('img');
+         const cubeT = document.createElement('img');
          _setImgSrc(cubeT, eInf.url);
          cubeT.dataset.face = 'top';
          cube.appendChild(cubeT);
-         let cubeU = document.createElement('img');
+         const cubeU = document.createElement('img');
          _setImgSrc(cubeU, eInf.url);
          cubeU.dataset.face = 'bottom';
          cube.appendChild(cubeU);
@@ -2647,74 +2647,74 @@
         else
         {
          const lZ = eInf.zwe.length;
-         let cubeF = document.createElement('div');
+         const cubeF = document.createElement('div');
          cubeF.dataset.face = 'front';
-         let pctF = document.createElement('img');
+         const pctF = document.createElement('img');
          _setImgSrc(pctF, eInf.url);
          cubeF.appendChild(pctF);
          for (let i = 0; i < lZ; i++)
          {
-          let pctZ = document.createElement('img');
+          const pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
           cubeF.appendChild(pctZ);
          }
          cube.appendChild(cubeF);
-         let cubeB = document.createElement('div');
+         const cubeB = document.createElement('div');
          cubeB.dataset.face = 'back';
-         let pctB = document.createElement('img');
+         const pctB = document.createElement('img');
          _setImgSrc(pctB, eInf.url);
          cubeB.appendChild(pctB);
          for (let i = 0; i < lZ; i++)
          {
-          let pctZ = document.createElement('img');
+          const pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
           cubeB.appendChild(pctZ);
          }
          cube.appendChild(cubeB);
-         let cubeR = document.createElement('div');
+         const cubeR = document.createElement('div');
          cubeR.dataset.face = 'right';
-         let pctR = document.createElement('img');
+         const pctR = document.createElement('img');
          _setImgSrc(pctR, eInf.url);
          cubeR.appendChild(pctR);
          for (let i = 0; i < lZ; i++)
          {
-          let pctZ = document.createElement('img');
+          const pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
           cubeR.appendChild(pctZ);
          }
          cube.appendChild(cubeR);
-         let cubeL = document.createElement('div');
+         const cubeL = document.createElement('div');
          cubeL.dataset.face = 'left';
-         let pctL = document.createElement('img');
+         const pctL = document.createElement('img');
          _setImgSrc(pctL, eInf.url);
          cubeL.appendChild(pctL);
          for (let i = 0; i < lZ; i++)
          {
-          let pctZ = document.createElement('img');
+          const pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
           cubeL.appendChild(pctZ);
          }
          cube.appendChild(cubeL);
-         let cubeT = document.createElement('div');
+         const cubeT = document.createElement('div');
          cubeT.dataset.face = 'top';
-         let pctT = document.createElement('img');
+         const pctT = document.createElement('img');
          _setImgSrc(pctT, eInf.url);
          cubeT.appendChild(pctT);
          for (let i = 0; i < lZ; i++)
          {
-          let pctZ = document.createElement('img');
+          const pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
           cubeT.appendChild(pctZ);
          }
          cube.appendChild(cubeT);
-         let cubeU = document.createElement('div');
+         const cubeU = document.createElement('div');
          cubeU.dataset.face = 'bottom';
-         let pctU = document.createElement('img');
+         const pctU = document.createElement('img');
          _setImgSrc(pctU, eInf.url);
          cubeU.appendChild(pctU);
          for (let i = 0; i < lZ; i++)
          {
-          let pctZ = document.createElement('img');
+          const pctZ = document.createElement('img');
           _setImgSrc(pctZ, eInf.zwe[i].url);
           cubeU.appendChild(pctZ);
          }
@@ -2730,8 +2730,8 @@
         {
          th = shared.rnd() * _cRadius;
         }
-        let hD = Math.floor(h + r * Math.cos(th));
-        let vD = Math.floor(v + r * Math.sin(th));
+        const hD = Math.floor(h + r * Math.cos(th));
+        const vD = Math.floor(v + r * Math.sin(th));
         let s = '--emote-height: ' + eH + 'px;';
         s += ' --emote-width: ' + eH + 'px;';
         s += ' --cube-depth: ' + eHh + 'px;';
@@ -2776,7 +2776,7 @@
        {
         if (typeof cfg.emote.size.variation === 'number')
         {
-         let chances = [];
+         const chances = [];
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
@@ -2785,7 +2785,7 @@
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
         {
-         let chances = [];
+         const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
           chances.push(1);
@@ -2810,12 +2810,12 @@
        s += ' --emote-width: ' + eW + 'px;';
        s += ' transform: translateX(' + h + 'px);';
        s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY * sH + shared.rnd(sB / 2)) + ' L 0 ' + (sH + eH) + '");';
-       let aNames = [];
-       let aDelays = [];
-       let aDurs = [];
-       let aTimings = [];
-       let aFills = [];
-       let aIters = [];
+       const aNames = [];
+       const aDelays = [];
+       const aDurs = [];
+       const aTimings = [];
+       const aFills = [];
+       const aIters = [];
        aNames.push('offsetPath');
        aDelays.push('0s');
        aDurs.push(tMS + 'ms');
@@ -2855,7 +2855,7 @@
       const eH = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
       document.documentElement.style.setProperty('--height', sH + 'px');
       document.documentElement.style.setProperty('--width', sW + 'px');
-      let style = cfg.display.styles[shared.rnd(cfg.display.styles.length)];
+      const style = cfg.display.styles[shared.rnd(cfg.display.styles.length)];
       if (style === undefined)
        return;
       display.emote.list[style](e, sW, sH, eH);
@@ -2889,7 +2889,7 @@
 
      function $addToShowList(p)
      {
-      _toShow = _toShow.concat(p);
+      _toShow.push(...p);
      }
 
      return {
@@ -2901,8 +2901,8 @@
 
     const $kappa = function()
     {
-     let _toKappa = [];
-     let _conga = [];
+     const _toKappa = [];
+     const _conga = [];
      const _dKappa = 500;
 
      let _tKappa = false;
@@ -2930,7 +2930,7 @@
         let s = '--emote-height: ' + eH + 'px;';
         s += ' --emote-width: ' + eW + 'px;';
         s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
-        let iArr = [];
+        const iArr = [];
         _eActive--;
         iArr.push(_addEmoteToDoc(tInit, oK.url, 1, {style: s, classes: ['ktFireworkRocket']}, true, false, {x: cX - eWh, y: cY}));
         if (oK.hasOwnProperty('zwe'))
@@ -3072,7 +3072,7 @@
         let th = shared.rnd() * _cRadius;
         const o = shared.rnd(2) === 0;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time);
-        let sA = _kAcTime(iKC, tMS);
+        const sA = _kAcTime(iKC, tMS);
         if (sA.ct > timing.kappa.Spiral.bulk)
          sA.ct = timing.kappa.Spiral.bulk;
         for (let i = 0; i < iKC; i++)
@@ -3134,7 +3134,7 @@
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        let drawn = [];
+        const drawn = [];
         let ct = 0;
         const lP = pyramidDist.length;
         const eH = sW / lP;
@@ -3176,7 +3176,7 @@
        {
         if (_iTitanic > tInit)
          return;
-        let img = document.createElement('img');
+        const img = document.createElement('img');
         img.setAttribute('class', 'emote fit ktPyramid');
         _setImgSrc(img, url);
         const h = Math.floor(eH * x);
@@ -3221,7 +3221,7 @@
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        let drawn = [];
+        const drawn = [];
         let ct = 0;
         const lP = pyramidDist.length;
         const eH = Math.min(sW / lP, Math.floor(sW * cfg.emote.size.ratio.small), Math.floor(sH * cfg.emote.size.ratio.small));
@@ -3264,7 +3264,7 @@
        {
         if (_iTitanic > tInit)
          return;
-        let img = document.createElement('img');
+        const img = document.createElement('img');
         img.setAttribute('class', 'emote fit ktSmallPyramid');
         _setImgSrc(img, url);
         const h = oX + eH * x;
@@ -3336,7 +3336,7 @@
         await _stampede(tInit, kList, b2, t2, false, bandTop, bandHeight, d, sW, eH, maxW);
         if (_iTitanic > tInit)
          return;
-        let sA = _kAcTime(iKC, tMS);
+        const sA = _kAcTime(iKC, tMS);
         if (sA.ct > timing.kappa.Stampede.maxdensity)
          sA.ct = timing.kappa.Stampede.maxdensity;
         await _stampede(tInit, kList, iKC, hasB4, sA, bandTop, bandHeight, d, sW, eH, maxW);
@@ -3350,7 +3350,7 @@
        {
         if (_iTitanic > tInit)
          return;
-        let imgs = [];
+        const imgs = [];
         for (let i = 0; i < ct; i++)
         {
          if (_iTitanic > tInit)
@@ -3487,14 +3487,14 @@
           unique = true;
         }
         _conga.push({row: v, done: false});
-        let urls = [];
-        let zurls = [];
+        const urls = [];
+        const zurls = [];
         const ct = Math.floor(sW / bS);
         for (let i = 0; i < ct; i++)
         {
          const oK = kList[shared.rnd(kList.length)];
          urls.push(oK.url);
-         let oZ = [];
+         const oZ = [];
          if (oK.hasOwnProperty('zwe'))
          {
           for (let j = 0, l = oK.zwe.length; j < l; j++)
@@ -3506,12 +3506,12 @@
         }
         const d = v / seg % 2 === 0;
         const xtra = Math.floor((sW - ct * bS) / 2);
-        let imgs = [];
-        let zimgs = [];
+        const imgs = [];
+        const zimgs = [];
         for (let i = 0; i < ct; i++)
         {
          imgs.push(_dance(tInit, urls[i], i, sW, v, eH, bS, ct, d, xtra));
-         let oZ = [];
+         const oZ = [];
          for (let j = 0, l = zurls[i].length; j < l; j++)
          {
           oZ.push(_dance(tInit, zurls[i][j], i, sW, v, eH, bS, ct, d, xtra));
@@ -3581,9 +3581,9 @@
        {
         if (_iTitanic > tInit)
          return;
-        let box = document.createElement('div');
+        const box = document.createElement('div');
         box.setAttribute('class', 'scene ktCongaIn');
-        let img = document.createElement('img');
+        const img = document.createElement('img');
         img.setAttribute('class', 'dancer fit');
         _setImgSrc(img, url);
         let s = '--emote-height: ' + eH + 'px;';
@@ -3648,14 +3648,14 @@
         const nHh = eHh * -1;
         const sWm = Math.ceil(sW / 2);
         const sHm = Math.ceil(sH / 2);
-        let scene = document.createElement('div');
+        const scene = document.createElement('div');
         scene.setAttribute('class', 'scene fit cube kappa');
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.TheCube.time);
-        let cube = document.createElement('div');
+        const cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
         cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
         const sFaces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
-        let eFaces = [];
+        const eFaces = [];
         for (let i = 0; i < 6; i++)
         {
          eFaces.push(kList[shared.rnd(kList.length)]);
@@ -3664,21 +3664,21 @@
         {
          if (!eFaces[i].hasOwnProperty('zwe') || eFaces[i].zwe.length === 0)
          {
-          let iFace = document.createElement('img');
+          const iFace = document.createElement('img');
           _setImgSrc(iFace, eFaces[i].url);
           iFace.dataset.face = sFaces[i];
           cube.appendChild(iFace);
          }
          else
          {
-          let dFace = document.createElement('div');
+          const dFace = document.createElement('div');
           dFace.dataset.face = sFaces[i];
-          let pFace = document.createElement('img');
+          const pFace = document.createElement('img');
           _setImgSrc(pFace, eFaces[i].url);
           dFace.appendChild(pFace);
           for (let j = 0; j < eFaces[i].zwe.length; j++)
           {
-           let pctZ = document.createElement('img');
+           const pctZ = document.createElement('img');
            _setImgSrc(pctZ, eFaces[i].zwe[j].url);
            dFace.appendChild(pctZ);
           }
@@ -3735,7 +3735,7 @@
         const msgDist = _buildMsgArr(sMsg);
         let ct = 0;
         let ctT = 0;
-        let drawn = [];
+        const drawn = [];
         const lM = msgDist.length;
         for (let x = 0; x < lM; x++)
         {
@@ -3785,8 +3785,8 @@
 
        function _buildMsgArr(s)
        {
-        let o = [];
-        let spc = [];
+        const o = [];
+        const spc = [];
         if (_mL === 0)
         {
          for (let i = 0, k = Object.keys(alnumDist), l = k.length; i < l; i++)
@@ -3824,7 +3824,7 @@
        {
         if (_iTitanic > tInit)
          return;
-        let img = document.createElement('img');
+        const img = document.createElement('img');
         img.setAttribute('class', 'emote fit');
         _setImgSrc(img, url);
         const h = oX + eH * x;
@@ -3885,7 +3885,7 @@
       let tC = cfg.display.kappa.count;
       if (k !== false)
        tC = _getKappaCountEstimate(k);
-      let cM = Math.max(cfg.emote.max, tC);
+      const cM = Math.max(cfg.emote.max, tC);
       return _eActive + tC < cM;
      }
 
@@ -3910,7 +3910,7 @@
       while ((e = _toKappa.shift()) !== undefined)
       {
        nK = false;
-       let a = {};
+       const a = {};
        a[e.style] = e.prefs;
        display.kappa.show(e.list, a, e.params);
        if (_toKappa.length < 1)
@@ -3930,7 +3930,7 @@
 
      function _getNextKappa(k)
      {
-      let a = [];
+      const a = [];
       a[k.style] = k.prefs;
       return _getNextKappaEx(a, k.params);
      }
@@ -4036,11 +4036,11 @@
 
      async function _StringArrayToEmoteArray(s)
      {
-      let r = [];
+      const r = [];
       let idx = 0;
       for (let i = 0, l = s.length; i < l; i++)
       {
-       let v = {};
+       const v = {};
        v.str = s[i];
        v.pos = idx;
        idx += s[i].length + 1;
@@ -4455,7 +4455,7 @@
 
     const _gc = function()
     {
-     let _toGC = {};
+     const _toGC = {};
 
      let _tGC = false;
 
@@ -4555,12 +4555,12 @@
     {
      if (_iTitanic > tInit)
       return;
-     let img = document.createElement('img');
-     let c = [];
+     const img = document.createElement('img');
+     const c = [];
      c.push('emote');
      if (attrs.hasOwnProperty('classes'))
       c.push(...attrs.classes);
-     let rV = variationSize.toFixed(3).replace('.', '_');
+     const rV = variationSize.toFixed(3).replace('.', '_');
      c.push('eSize-' + rV);
      img.classList.add(...c);
      _setImgSrc(img, uri);
@@ -4707,10 +4707,10 @@
     {
      _iTitanic = new Date().getTime();
      display.kappa.hide();
-     let cubes = document.getElementsByClassName('scene');
+     const cubes = document.getElementsByClassName('scene');
      while (cubes.length)
       cubes[0].parentElement.removeChild(cubes[0]);
-     let imgs = document.getElementsByTagName('img');
+     const imgs = document.getElementsByTagName('img');
      while (imgs.length)
       imgs[0].parentElement.removeChild(imgs[0]);
      twitch.parse.clearCooldowns();
@@ -4726,7 +4726,7 @@
 
    const twitch = function()
    {
-    let _rList = {};
+    const _rList = {};
     let _aTagged = {};
 
     const $net = function()
@@ -4756,7 +4756,7 @@
        if (!set.hasOwnProperty('tiers'))
         continue;
        const prefix = set.prefix;
-       let tierList = [];
+       const tierList = [];
        for (let i = set.tiers.length - 1; i >= 0; i--)
        {
         if (!set.tiers[i].hasOwnProperty('min_bits'))
@@ -4840,7 +4840,7 @@
       let _oldWS = null;
       let _lTimeout = 5000;
       let _tTimeout = false;
-      const _lOldTimeout = 10000;
+      let _lOldTimeout = 10000;
       let _tOldTimeout = false;
 
       function task(chID = null)
@@ -5330,7 +5330,7 @@
        ];
        const aActive = await _cleanAndRecover();
        let didSomething = aActive.length > 0;
-       let toHandle = [];
+       const toHandle = [];
        for (let i = 0, l = aSubs.length; i < l; i++)
        {
         toHandle.push(_handleSub(aSubs[i], aActive));
@@ -5359,7 +5359,7 @@
         let found = true;
         for (let i = 0, l = sub.cfg.length; i < l; i++)
         {
-         let aPref = sub.cfg[i].split('.');
+         const aPref = sub.cfg[i].split('.');
          let cPref = cfg;
          found = true;
          for (let j = 0, m = aPref.length; j < m; j++)
@@ -5436,7 +5436,7 @@
        const d = await _getList();
        if (d.length < 1)
         return;
-       let unList = [];
+       const unList = [];
        for (let i = 0, l = d.length; i < l; i++)
        {
         if (!d[i].hasOwnProperty('id'))
@@ -5453,8 +5453,8 @@
        const d = await _getList();
        if (d.length < 1)
         return [];
-       let rList = [];
-       let unList = [];
+       const rList = [];
+       const unList = [];
        for (let i = 0, l = d.length; i < l; i++)
        {
         if (!d[i].hasOwnProperty('id'))
@@ -5500,7 +5500,7 @@
 
       async function $subscribe(type, version = '1')
       {
-       let d = {
+       const d = {
         'type': type,
         'version': version,
         'condition': {'broadcaster_user_id': twitch.net.eventSubCtl.channelID},
@@ -5663,7 +5663,7 @@
        {
         if (data[i].length === 0)
          continue;
-        let cmd = twitch.parse.message(data[i]);
+        const cmd = twitch.parse.message(data[i]);
         if (cmd === false)
         {
          console.log('Unparsed IRC Command: ', data[i]);
@@ -5947,7 +5947,7 @@
        cList = r;
       else
       {
-       for (let n in thirdparty.emotes.twitch)
+       for (const n in thirdparty.emotes.twitch)
        {
         if (!thirdparty.emotes.twitch[n].hasOwnProperty('scope'))
          continue;
@@ -6018,7 +6018,7 @@
      async function _addToChannelTitleTags(title)
      {
       const tReg = /(?:^| )(?:@([A-Za-z0-9_]+))/g;
-      let tList = [];
+      const tList = [];
       let match = '';
       while ((match = tReg.exec(title)) !== null)
       {
@@ -6027,7 +6027,7 @@
       if (tList.length < 1)
        return;
       _aTagged = {};
-      let pList = [];
+      const pList = [];
       for (let i = 0, l = tList.length; i < l; i++)
       {
        if (tList[i][1].length < 1)
@@ -6263,7 +6263,7 @@
       function $cfgVals()
       {
        let r = 0;
-       let lsRefresh = shared.storage.getItem(loginT.path() + '.refresh');
+       const lsRefresh = shared.storage.getItem(loginT.path() + '.refresh');
        if (lsRefresh !== null)
         r |= 0x02;
        if (twitch.net.oAuth.auth.refresh_token !== false)
@@ -6309,7 +6309,7 @@
      function _parseUser(cmd, latinOnly = false)
      {
       let data = cmd.prefix;
-      let ret = {};
+      const ret = {};
       if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('display-name'))
        ret['display-name'] = cmd.tags['display-name'];
       const gReg = new RegExp(twitch.parse.uReg, 'g');
@@ -6333,7 +6333,7 @@
 
      function $message(line)
      {
-      let cmd = {};
+      const cmd = {};
       if (line.slice(0, 1) === '@')
       {
        line = line.slice(1);
@@ -6412,7 +6412,7 @@
        const e = cmd.tags.emotes.split('/');
        if (dup === null)
         dup = cfg.display.duplicates;
-       let ret = [];
+       const ret = [];
        for (let i = 0, n = e.length; i < n; i++)
        {
         const eID = e[i].slice(0, e[i].indexOf(':'));
@@ -6615,7 +6615,7 @@
        _rList[lnID].cmds.push(cmd);
        if (_rList[lnID].name === false)
         return true;
-       let pList = [];
+       const pList = [];
        while (_rList[lnID].cmds.length > 0)
        {
         pList.push(twitch.parse.event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift()));
@@ -6737,7 +6737,7 @@
         foundAdvCmd = true;
         if (k.hasOwnProperty('cooldown'))
         {
-         let hK = shared.hashCode(k);
+         const hK = shared.hashCode(k);
          if (!_aLast.hasOwnProperty(hK))
           _aLast[hK] = 0;
          if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
@@ -6767,7 +6767,7 @@
           document.documentElement.classList.remove('rave');
          return true;
         }
-        let kC = {};
+        const kC = {};
         let cStyles = k.styles;
         if (typeof cStyles !== 'object')
         {
@@ -6777,7 +6777,7 @@
           return foundAdvCmd;
          cStyles = cfg.display.kappa.styles;
         }
-        for (let kS in cStyles)
+        for (const kS in cStyles)
         {
          if (!cStyles.hasOwnProperty(kS))
           continue;
@@ -6813,7 +6813,7 @@
         return foundAdvCmd;
        if ((lv & cfg.display.kappa.access) === 0)
         return foundAdvCmd;
-       let h = shared.hashCode(null);
+       const h = shared.hashCode(null);
        if (!_aLast.hasOwnProperty(h))
         _aLast[h] = 0;
        if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
@@ -6877,7 +6877,7 @@
        if (cfg.event.twitch.cheer.useMsg)
        {
         const a = await _eListFromCmd(cmd);
-        p = p.concat(a);
+        p.push(...a);
        }
        else
         await twitch.parse.line(cmd);
@@ -6927,7 +6927,7 @@
          if (cfg.event.twitch.cheer.useMsg)
          {
           const a = await _eListFromCmd(cmd);
-          p = p.concat(a);
+          p.push(...a);
          }
          else
           await twitch.parse.line(cmd);
@@ -7038,7 +7038,7 @@
 
       const $sub = function()
       {
-       let _bList = {
+       const _bList = {
         bombs: [],
         bulk: [],
         check: []
@@ -7312,7 +7312,7 @@
          continue;
         if (!k.redeem.includes(title))
          continue;
-        let kC = k.styles;
+        const kC = k.styles;
         if (cmd === false)
         {
          display.kappa.show(false, kC);
@@ -7489,7 +7489,7 @@
          continue;
         vPoll = Math.max(vPoll, e.choices[i].votes);
        }
-       let rPoll = [];
+       const rPoll = [];
        for (let i = 0, l = e.choices.length; i < l; i++)
        {
         if (!e.choices[i].hasOwnProperty('title'))
@@ -7660,7 +7660,7 @@
 
       function _jSplit(s, sep, limit)
       {
-       let arr = [];
+       const arr = [];
        let v = '';
        for (let i = 0, l = s.length; i < l; i++)
        {
@@ -7688,7 +7688,7 @@
       const lA = a.length;
       if (lA < 1)
        return a;
-      let r = [];
+      const r = [];
       for (let i = 0; i < lA; i++)
       {
        if (a[i].svc === 'c')
@@ -7757,25 +7757,25 @@
 
      async function _eListFromCmd(cmd, dup = null)
      {
-      let r = [];
+      const r = [];
       const u = _parseUser(cmd, true);
       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
        return r;
-      r = r.concat(twitch.parse.content.twitch(cmd, dup));
+      r.push(...twitch.parse.content.twitch(cmd, dup));
       if (cfg.display.useEmoji)
-       r = r.concat(await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+       r.push(...await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
       if (cfg.display.extended.useFFZ)
       {
-       r = r.concat(twitch.parse.content['3rdparty'].ffz.general(cmd, dup));
-       r = r.concat(twitch.parse.content['3rdparty'].ffz.user.general(cmd, dup));
+       r.push(...twitch.parse.content['3rdparty'].ffz.general(cmd, dup));
+       r.push(...twitch.parse.content['3rdparty'].ffz.user.general(cmd, dup));
       }
       if (cfg.display.extended.useBTTV)
       {
-       r = r.concat(twitch.parse.content['3rdparty'].bttv.general(cmd, dup));
-       r = r.concat(twitch.parse.content['3rdparty'].bttv.user.general(cmd, dup));
+       r.push(...twitch.parse.content['3rdparty'].bttv.general(cmd, dup));
+       r.push(...twitch.parse.content['3rdparty'].bttv.user.general(cmd, dup));
       }
       if (cfg.display.extended.use7TV)
-       r = r.concat(twitch.parse.content['3rdparty']['7tv'].general(cmd, dup));
+       r.push(...twitch.parse.content['3rdparty']['7tv'].general(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
        twitch.parse.content['3rdparty'].ffz.zwe(r, cmd, 1, dup);
@@ -7844,7 +7844,7 @@
     const _findEmote_channel = function()
     {
      const _rCH = 300000;
-     let _chList = {};
+     const _chList = {};
 
      async function task(chID, n = false)
      {
@@ -7879,7 +7879,7 @@
        return false;
       if (!Array.isArray(j.data))
        return false;
-      let ret = [];
+      const ret = [];
       for (let i = 0, l = j.data.length; i < l; i++)
       {
        if (!j.data[i].hasOwnProperty('id'))
@@ -7961,8 +7961,8 @@
     {
      const $broadcasts = function()
      {
-      let _aC = [];
-      let _tS = false;
+      const _aC = [];
+      let  _tS = false;
 
       async function $updateStream()
       {
@@ -8065,11 +8065,11 @@
         youtube.net.dead = true;
         return null;
        }
-       let h = {
+       const h = {
         'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
         'Accept': 'application/json'
        };
-       let r = await shared.httpRequest('GET', cURLs.api.youtube.broadcasts, h);
+       const r = await shared.httpRequest('GET', cURLs.api.youtube.broadcasts, h);
        const j = r.json;
        if (!r.success)
        {
@@ -8112,7 +8112,7 @@
         return false;
        if (!Array.isArray(j.items))
         return false;
-       let lcList = [];
+       const lcList = [];
        if (cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('title') && cfg.youtube.connect_to.title !== false && cfg.youtube.connect_to.title !== '')
        {
         for (let i = 0, l = j.items.length; i < l; i++)
@@ -8228,7 +8228,7 @@
 
       const $getMessages = function()
       {
-       let _tM = [];
+       const _tM = [];
 
        async function $start(chatID, page = false)
        {
@@ -8277,11 +8277,11 @@
         }
         q = q.replaceAll('%CHAT_ID%', encodeURIComponent(chatID));
         q = q.replaceAll('%PART%', encodeURIComponent('snippet,authorDetails'));
-        let h = {
+        const h = {
          'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
          'Accept': 'application/json'
         };
-        let r = await shared.httpRequest('GET', q, h);
+        const r = await shared.httpRequest('GET', q, h);
         const j = r.json;
         if (!r.success)
         {
@@ -8489,7 +8489,7 @@
        _uLS = j.items[0].subscriberSnippet.channelId;
        if (findU === false)
         return false;
-       let s = [];
+       const s = [];
        for (let i = 0, l = j.items.length; i < l; i++)
        {
         if (j.items[i].subscriberSnippet.channelId === findU)
@@ -8624,7 +8624,7 @@
        _uLS = j.items[0].snippet.memberDetails.channelId;
        if (findU === false)
         return false;
-       let s = [];
+       const s = [];
        for (let i = 0, l = j.items.length; i < l; i++)
        {
         const uID = j.items[i].snippet.memberDetails.channelId;
@@ -8862,7 +8862,7 @@
       function $cfgVals()
       {
        let r = 0;
-       let lsRefresh = shared.storage.getItem(loginYT.path() + '.refresh');
+       const lsRefresh = shared.storage.getItem(loginYT.path() + '.refresh');
        if (lsRefresh !== null)
         r |= 0x02;
        if (youtube.net.oAuth.auth.refresh_token !== false)
@@ -8890,7 +8890,7 @@
 
      function _flatJSON(j, r = {}, p = '')
      {
-      for (let k in j)
+      for (const k in j)
       {
        if (typeof j[k] !== 'object')
         r[p + k] = j[k];
@@ -8912,7 +8912,7 @@
 
     const $parse = function()
     {
-     let _aLast = {};
+     const _aLast = {};
 
      function _parseUser(cmd)
      {
@@ -8920,7 +8920,7 @@
        return false;
       if (!cmd.authorDetails.hasOwnProperty('displayName'))
        return false;
-      let ret = {};
+      const ret = {};
       ret['display-name'] = cmd.authorDetails.displayName;
       if (cmd.authorDetails.hasOwnProperty('channelId'))
        ret.id = cmd.authorDetails.channelId;
@@ -8956,7 +8956,7 @@
          return [];
         msg = msg.toLowerCase();
         const emSeg = /(:[a-z\-]+:)/g;
-        let emList = [];
+        const emList = [];
         let match = '';
         while ((match = emSeg.exec(msg)) !== null)
         {
@@ -8964,7 +8964,7 @@
         }
         if (emList.length === 0)
          return [];
-        let ret = [];
+        const ret = [];
         if (dup === null)
          dup = cfg.display.duplicates;
         if (dup === false)
@@ -9243,7 +9243,7 @@
         foundAdvCmd = true;
         if (k.hasOwnProperty('cooldown'))
         {
-         let hK = shared.hashCode(k);
+         const hK = shared.hashCode(k);
          if (!_aLast.hasOwnProperty(hK))
           _aLast[hK] = 0;
          if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
@@ -9254,7 +9254,7 @@
          display.eraseAll();
          return true;
         }
-        let kC = {};
+        const kC = {};
         let cStyles = k.styles;
         if (typeof cStyles !== 'object')
         {
@@ -9264,7 +9264,7 @@
           return foundAdvCmd;
          cStyles = cfg.display.kappa.styles;
         }
-        for (let kS in cStyles)
+        for (const kS in cStyles)
         {
          if (!cStyles.hasOwnProperty(kS))
           continue;
@@ -9300,7 +9300,7 @@
         return foundAdvCmd;
        if ((lv & cfg.display.kappa.access) === 0)
         return foundAdvCmd;
-       let h = shared.hashCode(null);
+       const h = shared.hashCode(null);
        if (!_aLast.hasOwnProperty(h))
         _aLast[h] = 0;
        if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
@@ -9350,7 +9350,7 @@
       const lA = a.length;
       if (lA < 1)
        return a;
-      let r = [];
+      const r = [];
       for (let i = 0; i < lA; i++)
       {
        if (a[i].scope === 'u')
@@ -9404,25 +9404,25 @@
 
      async function _eListFromCmd(cmd, dup = null)
      {
-      let r = [];
+      const r = [];
       const u = _parseUser(cmd, true);
       if (u !== false && cfg.ignore.users !== false && cfg.ignore.users.includes(u.displayName))
        return r;
-      r = r.concat(youtube.parse.content.youtube(cmd, dup));
+      r.push(...youtube.parse.content.youtube(cmd, dup));
       if (cfg.display.useEmoji)
-       r = r.concat(await youtube.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+       r.push(...await youtube.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
       if (cfg.display.extended.useFFZ)
       {
-       r = r.concat(youtube.parse.content['3rdparty'].ffz.general(cmd, dup));
-       r = r.concat(youtube.parse.content['3rdparty'].ffz.user.general(cmd, dup));
+       r.push(...youtube.parse.content['3rdparty'].ffz.general(cmd, dup));
+       r.push(...youtube.parse.content['3rdparty'].ffz.user.general(cmd, dup));
       }
       if (cfg.display.extended.useBTTV)
       {
-       r = r.concat(youtube.parse.content['3rdparty'].bttv.general(cmd, dup));
-       r = r.concat(youtube.parse.content['3rdparty'].bttv.user.general(cmd, dup));
+       r.push(...youtube.parse.content['3rdparty'].bttv.general(cmd, dup));
+       r.push(...youtube.parse.content['3rdparty'].bttv.user.general(cmd, dup));
       }
       if (cfg.display.extended.use7TV)
-       r = r.concat(youtube.parse.content['3rdparty']['7tv'].general(cmd, dup));
+       r.push(...youtube.parse.content['3rdparty']['7tv'].general(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
        youtube.parse.content['3rdparty'].ffz.zwe(r, cmd, 1, dup);
@@ -10084,7 +10084,7 @@
        cList = r;
       else
       {
-       for (let n in thirdparty.emotes.kick)
+       for (const n in thirdparty.emotes.kick)
        {
         if (!thirdparty.emotes.kick[n].hasOwnProperty('scope'))
          continue;
@@ -10199,9 +10199,9 @@
        if (dup === false)
         dup = 1;
        const emSeg = /(\[emote:(\d+):([^\]]*)\])/gu;
-       let ret = [];
-       let ids = [];
-       let emList = [];
+       const ret = [];
+       const ids = [];
+       const emList = [];
        let match = '';
        while ((match = emSeg.exec(m)) !== null)
        {
@@ -10341,7 +10341,7 @@
         foundAdvCmd = true;
         if (k.hasOwnProperty('cooldown'))
         {
-         let hK = shared.hashCode(k);
+         const hK = shared.hashCode(k);
          if (!_aLast.hasOwnProperty(hK))
           _aLast[hK] = 0;
          if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
@@ -10371,7 +10371,7 @@
           document.documentElement.classList.remove('rave');
          return true;
         }
-        let kC = {};
+        const kC = {};
         let cStyles = k.styles;
         if (typeof cStyles !== 'object')
         {
@@ -10381,7 +10381,7 @@
           return foundAdvCmd;
          cStyles = cfg.display.kappa.styles;
         }
-        for (let kS in cStyles)
+        for (const kS in cStyles)
         {
          if (!cStyles.hasOwnProperty(kS))
           continue;
@@ -10417,7 +10417,7 @@
         return foundAdvCmd;
        if ((lv & cfg.display.kappa.access) === 0)
         return foundAdvCmd;
-       let h = shared.hashCode(null);
+       const h = shared.hashCode(null);
        if (!_aLast.hasOwnProperty(h))
         _aLast[h] = 0;
        if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
@@ -10561,7 +10561,7 @@
          continue;
         vPoll = Math.max(vPoll, e.options[i].votes);
        }
-       let rPoll = [];
+       const rPoll = [];
        for (let i = 0, l = e.options.length; i < l; i++)
        {
         if (!e.options[i].hasOwnProperty('label') || e.options[i].label === null)
@@ -10701,7 +10701,7 @@
       const lA = a.length;
       if (lA < 1)
        return a;
-      let r = [];
+      const r = [];
       for (let i = 0; i < lA; i++)
       {
        if (a[i].svc === 'c')
@@ -10770,7 +10770,7 @@
 
      async function _eListFromCmd(cmd, dup = null)
      {
-      let r = [];
+      const r = [];
       let u = null;
       if (cmd.hasOwnProperty('sender') && cmd.sender !== null)
       {
@@ -10779,11 +10779,11 @@
       }
       if (cfg.ignore.users !== false && u !== false && cfg.ignore.users.includes(u))
        return r;
-      r = r.concat(kick.parse.content.kick(cmd, dup));
+      r.push(...kick.parse.content.kick(cmd, dup));
       if (cfg.display.useEmoji)
-       r = r.concat(await kick.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+       r.push(...await kick.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
       if (cfg.display.extended.use7TV)
-       r = r.concat(kick.parse.content['3rdparty']['7tv'].general(cmd, dup));
+       r.push(...kick.parse.content['3rdparty']['7tv'].general(cmd, dup));
       if (cfg.display.extended.use7TV)
        kick.parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
       if (cfg.display.extended.use7TV)
@@ -10831,7 +10831,7 @@
     const _findEmote_channel = function()
     {
      const _rCH = 300000;
-     let _chList = {};
+     const _chList = {};
 
      async function task(chName, n = false, useHyphen = false)
      {
@@ -10857,7 +10857,7 @@
        return false;
       if (!Array.isArray(j))
        return false;
-      let ret = [];
+      const ret = [];
       for (let i = 0, l = j.length; i < l; i++)
       {
        if (!j[i].hasOwnProperty('id') || j[i].id === null)
@@ -10938,7 +10938,7 @@
       return false;
      if (_usesHyphen === 0)
       _usesHyphen = false;
-     let u = {};
+     const u = {};
      if (j.hasOwnProperty('slug') && j.slug !== null)
       u.name = j.slug;
      else
@@ -10972,12 +10972,12 @@
      {
       const $emoji = function()
       {
-       let _uList = {};
+       const _uList = {};
 
        async function task(msg, set, dup = null)
        {
         const emSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
-        let emList = [];
+        const emList = [];
         let match = '';
         while ((match = emSeg.exec(msg)) !== null)
         {
@@ -11002,7 +11002,7 @@
         if (set === true)
          set = 'twemoji';
         const uri = cURLs.cdn.ffz.emoji.replaceAll('%SET_ID%', set);
-        let addList = {};
+        const addList = {};
         function __uriOf(c, u)
         {
          if (c.slice(-5) !== '-fe0f')
@@ -11051,8 +11051,8 @@
         }
         async function __parseEm(emI)
         {
-         let ret = [];
-         let cpList = [];
+         const ret = [];
+         const cpList = [];
          for (const c of emI[0])
          {
           const p = c.codePointAt(0).toString(16).padStart(4, '0');
@@ -11139,13 +11139,13 @@
          }
          return ret;
         }
-        let pList = [];
+        const pList = [];
         for (let i = 0, l = emList.length; i < l; i++)
         {
          pList.push(__parseEm(emList[i]));
         }
-        let resp = await Promise.allSettled(pList);
-        let rets = [];
+        const resp = await Promise.allSettled(pList);
+        const rets = [];
         for (let i = 0, l = resp.length; i < l; i++)
         {
          if (resp[i].status !== 'fulfilled')
@@ -11198,8 +11198,8 @@
          const m = msg.split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
-         let ret = [];
-         let addList = {};
+         const ret = [];
+         const addList = {};
          for (let i = 0, l = m.length; i < l; i++)
          {
           if (!thirdparty.emotes.ffz.hasOwnProperty(m[i]))
@@ -11236,7 +11236,7 @@
          const m = msg.split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
-         let addList = {};
+         const addList = {};
          for (let i = 0, n = m.length; i < n; i++)
          {
           if (!thirdparty.emotes.zwe.ffz.hasOwnProperty(m[i]))
@@ -11349,8 +11349,8 @@
            return [];
           if (dup === null)
            dup = cfg.display.duplicates;
-          let ret = [];
-          let addList = {};
+          const ret = [];
+          const addList = {};
           for (let i = 0, l = m.length; i < l; i++)
           {
            if (!thirdparty.emotes.ffzU[usr].hasOwnProperty(m[i]))
@@ -11389,7 +11389,7 @@
           const m = msg.split(' ');
           if (dup === null)
            dup = cfg.display.duplicates;
-          let addList = {};
+          const addList = {};
           for (let i = 0, n = m.length; i < n; i++)
           {
            if (!thirdparty.emotes.zwe.ffzU[usr].hasOwnProperty(m[i]))
@@ -11518,8 +11518,8 @@
          const m = msg.split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
-         let ret = [];
-         let addList = {};
+         const ret = [];
+         const addList = {};
          for (let i = 0, l = m.length; i < l; i++)
          {
           if (!thirdparty.emotes.bttv.hasOwnProperty(m[i]))
@@ -11556,7 +11556,7 @@
          const m = msg.split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
-         let addList = {};
+         const addList = {};
          for (let i = 0, n = m.length; i < n; i++)
          {
           if (!thirdparty.emotes.zwe.bttv.hasOwnProperty(m[i]))
@@ -11669,8 +11669,8 @@
           const m = msg.split(' ');
           if (dup === null)
            dup = cfg.display.duplicates;
-          let ret = [];
-          let addList = {};
+          const ret = [];
+          const addList = {};
           for (let i = 0, l = m.length; i < l; i++)
           {
            if (!thirdparty.emotes.bttvU[usr].hasOwnProperty(m[i]))
@@ -11709,7 +11709,7 @@
           const m = msg.split(' ');
           if (dup === null)
            dup = cfg.display.duplicates;
-          let addList = {};
+          const addList = {};
           for (let i = 0, n = m.length; i < n; i++)
           {
            if (!thirdparty.emotes.zwe.bttvU[usr].hasOwnProperty(m[i]))
@@ -11838,8 +11838,8 @@
          const m = msg.split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
-         let ret = [];
-         let addList = {};
+         const ret = [];
+         const addList = {};
          for (let i = 0, l = m.length; i < l; i++)
          {
           if (!thirdparty.emotes['7tv'].hasOwnProperty(m[i]))
@@ -11876,7 +11876,7 @@
          const m = msg.split(' ');
          if (dup === null)
           dup = cfg.display.duplicates;
-         let addList = {};
+         const addList = {};
          for (let i = 0, n = m.length; i < n; i++)
          {
           if (!thirdparty.emotes.zwe['7tv'].hasOwnProperty(m[i]))
@@ -12239,8 +12239,8 @@
          return;
         if (!o[1].hasOwnProperty('message'))
          return;
-        let rD = [];
-        let rP = [];
+        const rD = [];
+        const rP = [];
         for (let i = 0, l = o[1].message.length; i < l; i++)
         {
          if (!o[1].message[i].hasOwnProperty('amount'))
@@ -12783,7 +12783,7 @@
      function $cfgVals()
      {
       let r = 0;
-      let lsRefresh = shared.storage.getItem(_path() + '.refresh');
+      const lsRefresh = shared.storage.getItem(_path() + '.refresh');
       if (lsRefresh !== null)
        r |= 0x02;
       if (streamelements.oAuth.auth.jwt_token !== false)
@@ -12885,10 +12885,10 @@
     {
      function _readFFZ_URL(entry)
      {
-      let g = entry.animated ?? entry.urls ?? false;
+      const g = entry.animated ?? entry.urls ?? false;
       if (g === false)
        return false;
-      let find = ['4', '2', '1'];
+      const find = ['4', '2', '1'];
       for (let i = 0, l = find.length; i < l; i++)
       {
        if (!g.hasOwnProperty(find[i]))
@@ -12915,7 +12915,7 @@
        return false;
       if (!j.hasOwnProperty('sets'))
        return false;
-      let usedSets = [];
+      const usedSets = [];
       if (j.hasOwnProperty('default_sets'))
       {
        for (let i = 0, l = j.default_sets.length; i < l; i++)
@@ -13029,7 +13029,7 @@
        return false;
       if (!j.hasOwnProperty('sets'))
        return false;
-      let ret = [];
+      const ret = [];
       for (const set in j.sets)
       {
        if (!j.sets[set].hasOwnProperty('emoticons'))
@@ -13175,7 +13175,7 @@
       const j = r.json;
       if (j === null)
        return false;
-      let ret = [];
+      const ret = [];
       if (j.hasOwnProperty('channelEmotes'))
       {
        for (let i = 0, l = j.channelEmotes.length; i < l; i++)
@@ -13237,7 +13237,7 @@
      const $socket = function()
      {
       let _wsRetry = 0;
-      let _chList = [];
+      const _chList = [];
       let _ws = null;
 
       function $init()
@@ -13453,7 +13453,7 @@
        return false;
       if (!Array.isArray(entry.host.files))
        return false;
-      let g = [];
+      const g = [];
       let findFormat = 'WEBP';
       if (typeof cfg.display.extended.use7TV === 'string')
        findFormat = cfg.display.extended.use7TV.toUpperCase();
@@ -13477,7 +13477,7 @@
       }
       if (g.length < 1)
        return false;
-      let find = ['4', '3', '2', '1'];
+      const find = ['4', '3', '2', '1'];
       for (let i = 0, l = find.length; i < l; i++)
       {
        for (let j = 0, m = g.length; j < m; j++)
@@ -13546,7 +13546,7 @@
        return false;
       if (!Array.isArray(j.emote_set.emotes))
        return false;
-      let ret = [];
+      const ret = [];
       for (let i = 0, l = j.emote_set.emotes.length; i < l; i++)
       {
        if (!j.emote_set.emotes[i].hasOwnProperty('data') || j.emote_set.emotes[i].data === null)
@@ -13613,7 +13613,7 @@
       let _wsRetry = 0;
       let _wsR_RL = 0;
       let _wsR_M = 0;
-      let _chList = {};
+      const _chList = {};
       let _sse = null;
       let _lTimeout = 5000;
       let _tTimeout = false;
@@ -13633,7 +13633,7 @@
        if (p.length === 0)
         return;
        notice.expect |= 0x80;
-       let uri = cURLs.sse['7tv'] + '@' + encodeURIComponent(p);
+       const uri = cURLs.sse['7tv'] + '@' + encodeURIComponent(p);
        if (_sse !== null)
        {
         _sse.close();
@@ -13974,7 +13974,7 @@
    {
     function $rnd(m)
     {
-     let r = new Uint32Array(1);
+     const r = new Uint32Array(1);
      window.crypto.getRandomValues(r);
      const f = r[0] / 4294967295;
      if (m === undefined)
@@ -13999,7 +13999,7 @@
       const a = /\+/g;
       return decodeURIComponent(s.replace(a, ' '));
      };
-     let hashParams = {};
+     const hashParams = {};
      const r = /([^&;=]+)=?([^&;]*)/g;
      const q = window.location.hash.substring(1);
      let e;
@@ -14113,7 +14113,7 @@
 
     function $doNextFrame(cb)
     {
-     let a = [];
+     const a = [];
      for (let i = 1, l = arguments.length; i < l; i++)
      {
       a.push(arguments[i]);
@@ -14135,7 +14135,7 @@
     const $mspf = function()
     {
      let _init = 0;
-     let _avg = [];
+     const _avg = [];
 
      function $init()
      {
@@ -14254,7 +14254,7 @@
           return;
          }
          const s = tx.objectStore(_tblName);
-         let g = s.get(url);
+         const g = s.get(url);
          g.onerror = function()
          {
           dbr.close();
@@ -14499,7 +14499,7 @@
 
     function _activeScope()
     {
-     let r = [];
+     const r = [];
      r.push(cScopes.twitch.read);
      for (const k of cfg.commands)
      {
@@ -14632,7 +14632,7 @@
      if (document.getElementById('cmdTLogout'))
       document.body.removeChild(document.getElementById('cmdTLogout'));
      twitch.net.oAuth.clear();
-     let cmdLogin = document.createElement('button');
+     const cmdLogin = document.createElement('button');
      cmdLogin.setAttribute('id', 'cmdTLogin');
      cmdLogin.setAttribute('type', 'button');
      cmdLogin.classList.add('twitch');
@@ -14673,7 +14673,7 @@
     {
      if (document.getElementById('cmdTLogout'))
       document.body.removeChild(document.getElementById('cmdTLogout'));
-     let cmdLogout = document.createElement('button');
+     const cmdLogout = document.createElement('button');
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -14747,7 +14747,7 @@
 
     function _activeScope()
     {
-     let r = [];
+     const r = [];
      r.push(cScopes.youtube.readonly);
      let hasM = false;
      if ((cfg.event.youtube.member.first === true) || (Array.isArray(cfg.event.youtube.member.first) && cfg.event.youtube.member.first.length > 0))
@@ -14843,7 +14843,7 @@
      if (document.getElementById('cmdYTLogout'))
       document.body.removeChild(document.getElementById('cmdYTLogout'));
      youtube.net.oAuth.clear(true);
-     let cmdLogin = document.createElement('button');
+     const cmdLogin = document.createElement('button');
      cmdLogin.setAttribute('id', 'cmdYTLogin');
      cmdLogin.setAttribute('type', 'button');
      cmdLogin.classList.add('youtube');
@@ -14884,7 +14884,7 @@
     {
      if (document.getElementById('cmdYTLogout'))
       document.body.removeChild(document.getElementById('cmdYTLogout'));
-     let cmdLogout = document.createElement('button');
+     const cmdLogout = document.createElement('button');
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -14990,7 +14990,7 @@
     {
      if (document.getElementById('cmdKLogout'))
       document.body.removeChild(document.getElementById('cmdKLogout'));
-     let cmdLogin = document.createElement('button');
+     const cmdLogin = document.createElement('button');
      cmdLogin.setAttribute('id', 'cmdKLogin');
      cmdLogin.setAttribute('type', 'button');
      cmdLogin.classList.add('kick');
@@ -15033,7 +15033,7 @@
       document.body.removeChild(document.getElementById('cmdKLogin'));
      if (document.getElementById('cmdKLogout'))
       document.body.removeChild(document.getElementById('cmdKLogout'));
-     let cmdLogout = document.createElement('button');
+     const cmdLogout = document.createElement('button');
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -15131,7 +15131,7 @@
      shared.clearAddr(false);
      if ((bT | nT) & (bYT | nYT))
       shared.clearAddr(true);
-     let scks = [];
+     const scks = [];
      if (bT | bYT | bK)
      {
       scks.push(_streamlabs());
@@ -15430,7 +15430,7 @@
       v2 += '   }\n';
       for (let i = 0; i < cfg.emote.size.variation.range.length; i++)
       {
-       let rV = cfg.emote.size.variation.range[i].toFixed(3);
+       const rV = cfg.emote.size.variation.range[i].toFixed(3);
        v2 += '   .eSize-' + rV.replace('.', '_') + '\n';
        v2 += '   {\n';
        v2 += '    --zoom-height: calc(var(--emote-height) * ' + rV + ');\n';
