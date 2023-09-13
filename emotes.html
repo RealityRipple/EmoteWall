@@ -5330,10 +5330,24 @@
        ];
        const aActive = await _cleanAndRecover();
        let didSomething = aActive.length > 0;
+       let toHandle = [];
        for (let i = 0, l = aSubs.length; i < l; i++)
        {
-        if (await _handleSub(aSubs[i], aActive) !== false)
-         didSomething = true;
+        toHandle.push(_handleSub(aSubs[i], aActive));
+       }
+       if (toHandle.length > 0)
+       {
+        const handled = await Promise.allSettled(toHandle);
+        for (let i = 0, l = handled.length; i < l; i++)
+        {
+         if (handled[i].status !== 'fulfilled')
+          continue;
+         if (handled[i].value !== false)
+         {
+          didSomething = true;
+          break;
+         }
+        }
        }
        return didSomething;
       }
@@ -5422,12 +5436,15 @@
        const d = await _getList();
        if (d.length < 1)
         return;
+       let unList = [];
        for (let i = 0, l = d.length; i < l; i++)
        {
         if (!d[i].hasOwnProperty('id'))
          continue;
-        await _unsubscribe(d[i].id);
+        unList.push(_unsubscribe(d[i].id));
        }
+       if (unList.length > 0)
+        await Promise.allSettled(unList);
        window.location.reload();
       }
 
@@ -5437,6 +5454,7 @@
        if (d.length < 1)
         return [];
        let rList = [];
+       let unList = [];
        for (let i = 0, l = d.length; i < l; i++)
        {
         if (!d[i].hasOwnProperty('id'))
@@ -5471,10 +5489,12 @@
          case 'websocket_internal_error':
          case 'websocket_network_timeout':
          case 'websocket_network_error':
-          await _unsubscribe(d[i].id);
+          unList.push(_unsubscribe(d[i].id));
           break;
         }
        }
+       if (unList.length > 0)
+        await Promise.allSettled(unList);
        return rList;
       }
 
