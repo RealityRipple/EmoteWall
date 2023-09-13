@@ -6615,10 +6615,12 @@
        _rList[lnID].cmds.push(cmd);
        if (_rList[lnID].name === false)
         return true;
+       let pList = [];
        while (_rList[lnID].cmds.length > 0)
        {
-        await twitch.parse.event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift());
+        pList.push(twitch.parse.event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift()));
        }
+       await Promise.allSettled(pList);
        return true;
       }
 
