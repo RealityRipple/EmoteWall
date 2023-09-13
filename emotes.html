@@ -8076,6 +8076,32 @@
         if (j !== null)
         {
          const e = _flatJSON(j);
+         if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAVAILABLE')
+         {
+          if (_aC.length !== 0)
+           return false;
+          notice.error(0x22);
+          notice.active &= ~0x08;
+          if (notice.tHide !== false)
+          {
+           window.clearTimeout(notice.tHide);
+           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+          }
+          return false;
+         }
+         if (e.hasOwnProperty('error.status') && e['error.status'] === 'INTERNAL')
+         {
+          if (_aC.length !== 0)
+           return false;
+          notice.error(0x22);
+          notice.active &= ~0x08;
+          if (notice.tHide !== false)
+          {
+           window.clearTimeout(notice.tHide);
+           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+          }
+          return false;
+         }
          console.log(e);
          if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAUTHENTICATED')
          {
