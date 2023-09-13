@@ -10974,10 +10974,23 @@
         let ret = [];
         const uri = cURLs.cdn.ffz.emoji.replaceAll('%SET_ID%', set);
         let addList = {};
+        function __uriOf(c, u)
+        {
+         if (c.slice(-5) !== '-fe0f')
+          return c;
+         if (u === 1)
+          return c.slice(0, -5);
+         if (u === 2)
+         {
+          if (c.match(/-200d-264[0|2]-/) || c.match(/-200d-269[5|6]-/) || c.match(/-200d-26a7/) || c.match(/-200d-2620/) || c.match(/-200d-2708/) || c.match(/-200d-2744/) || c.match(/-200d-1f5e8/))
+           return c;
+          return c.slice(0, -5);
+         }
+         return c;
+        }
         function __showEmoji(c, p)
         {
-         if (c.slice(-5) === '-fe0f' && !c.match(/-200d-264[0|2]-/) && !c.match(/-200d-269[5|6]-/) && !c.match(/-200d-26a7/) && !c.match(/-200d-2620/) && !c.match(/-200d-2708/))
-          c = c.slice(0, -5);
+         c = __uriOf(c, 2);
          if (!addList.hasOwnProperty(c))
           addList[c] = 0;
          else
@@ -11054,7 +11067,6 @@
           else
            cpList.push(p);
          }
-         let found = false;
          const lP = cpList.length;
          if (lP === 1)
          {
@@ -11064,18 +11076,7 @@
            __showCrew(emList[i].index);
            continue;
           }
-          let tU;
-          if (s.slice(-5) === '-fe0f')
-          {
-           if (s.match(/-200d-264[0|2]-/) || s.match(/-200d-264[0|2]-/) || s.match(/-200d-26a7/) || s.match(/-200d-2620/) || s.match(/-200d-2708/))
-            tU = uri + s + '.png';
-           else
-            tU = uri + s.slice(0, -5) + '.png';
-          }
-          else
-           tU = uri + s + '.png';
-          found = await _checkURL(tU);
-          if (found)
+          if (await _checkURL(uri + __uriOf(s, 2) + '.png'))
           {
            __showEmoji(s, emList[i].index);
            continue;
@@ -11083,12 +11084,7 @@
           while (s.includes('-'))
           {
            s = s.slice(0, s.lastIndexOf('-'));
-           if (s.slice(-5) === '-fe0f')
-            tU = uri + s.slice(0, -5) + '.png';
-           else
-            tU = uri + s + '.png';
-           found = await _checkURL(tU);
-           if (found)
+           if (await _checkURL(uri + __uriOf(s, 1) + '.png'))
            {
             __showEmoji(s, emList[i].index);
             break;
@@ -11100,8 +11096,7 @@
          for (let j = 0; j < lP; j++)
          {
           p += cpList[j].replaceAll(/[^\-]/g, '').length + 1;
-          found = await _checkURL(uri + cpList[j] + '.png');
-          if (found)
+          if (await _checkURL(uri + __uriOf(cpList[j], 0) + '.png'))
            __showEmoji(cpList[j], p);
          }
         }
