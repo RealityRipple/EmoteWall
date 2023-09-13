@@ -10971,7 +10971,6 @@
          dup = cfg.display.duplicates;
         if (set === true)
          set = 'twemoji';
-        let ret = [];
         const uri = cURLs.cdn.ffz.emoji.replaceAll('%SET_ID%', set);
         let addList = {};
         function __uriOf(c, u)
@@ -11001,8 +11000,7 @@
            return false;
          }
          addList[c]++;
-         ret.push({svc: 'e', url: uri + c + '.png', str: c, pos: p});
-         return true;
+         return {svc: 'e', url: uri + c + '.png', str: c, pos: p};
         }
         function __showCrew(p)
         {
@@ -11019,13 +11017,13 @@
          const svgC = shared.rnd(18);
          const svgCSS = '.st0{fill:#484C4D;}.st1{fill:#' + crewColors[svgC][0] + ';}.st2{fill:#A3D3E3;}.st3{opacity:0.5;fill:#' + crewColors[svgC][1] + ';}.st4{opacity:0.45;fill:#5B7882;}.st5{fill:#FFFFFF;}' + (shared.rnd(2) === 1 ? 'svg{transform: scaleX(-1);}' : '');
          const crew = crewSVG.replace('%CSS%', encodeURIComponent(svgCSS));
-         ret.push({svc: 'e', url: crew, str: '0d9e', pos: p});
-         return true;
+         return {svc: 'e', url: crew, str: '0d9e', pos: p};
         }
-        for (let i = 0, l = emList.length; i < l; i++)
+        async function __parseEm(emI)
         {
+         let ret = [];
          let cpList = [];
-         for (const c of emList[i][0])
+         for (const c of emI[0])
          {
           const p = c.codePointAt(0).toString(16).padStart(4, '0');
           if (cpList.length === 0)
@@ -11073,34 +11071,60 @@
           let s = cpList[0];
           if (s === '0d9e')
           {
-           __showCrew(emList[i].index);
-           continue;
+           const r = __showCrew(emI.index);
+           if (r !== false)
+            ret.push(r);
+           return ret;
           }
           if (await _checkURL(uri + __uriOf(s, 2) + '.png'))
           {
-           __showEmoji(s, emList[i].index);
-           continue;
+           const r = __showEmoji(s, emI.index);
+           if (r !== false)
+            ret.push(r);
+           return ret;
           }
           while (s.includes('-'))
           {
            s = s.slice(0, s.lastIndexOf('-'));
            if (await _checkURL(uri + __uriOf(s, 1) + '.png'))
            {
-            __showEmoji(s, emList[i].index);
+            const r = __showEmoji(s, emI.index);
+            if (r !== false)
+             ret.push(r);
             break;
            }
           }
-          continue;
+          return ret;
          }
-         let p = emList[i].index;
+         let p = emI.index;
          for (let j = 0; j < lP; j++)
          {
           p += cpList[j].replaceAll(/[^\-]/g, '').length + 1;
           if (await _checkURL(uri + __uriOf(cpList[j], 0) + '.png'))
-           __showEmoji(cpList[j], p);
+          {
+           const r = __showEmoji(cpList[j], p);
+           if (r !== false)
+            ret.push(r);
+          }
          }
+         return ret;
         }
-        return ret;
+        let pList = [];
+        for (let i = 0, l = emList.length; i < l; i++)
+        {
+         pList.push(__parseEm(emList[i]));
+        }
+        let resp = await Promise.allSettled(pList);
+        let rets = [];
+        for (let i = 0, l = resp.length; i < l; i++)
+        {
+         if (resp[i].status !== 'fulfilled')
+          continue;
+         if (resp[i].value.length === 0)
+          continue;
+         rets.push(...resp[i].value);
+        }
+        return rets;
        }
 
        function _checkURL(url)
