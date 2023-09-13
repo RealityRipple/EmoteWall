@@ -6027,11 +6027,19 @@
       if (tList.length < 1)
        return;
       _aTagged = {};
+      let pList = [];
       for (let i = 0, l = tList.length; i < l; i++)
       {
        if (tList[i][1].length < 1)
         continue;
-       let u = await twitch.net.userInfo(tList[i][1]);
+       pList.push(twitch.net.userInfo(tList[i][1]));
+      }
+      const rList = await Promise.allSettled(pList);
+      for (let i = 0, l = rList.length; i < l; i++)
+      {
+       if (rList[i].status !== 'fulfilled')
+        continue;
+       const u = rList[i].value;
        if (u === false)
         continue;
        if (!u.hasOwnProperty('id'))
