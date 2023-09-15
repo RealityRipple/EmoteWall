@@ -1357,28 +1357,28 @@
      _buildNotices();
      switch (i)
      {
-      case 0x12:
+      case notice.Type.TWITCH_IRC:
        _setNotice(i, 'noticeInfo sTwitch', 'IRC Connected', 5);
        break;
-      case 0x1A:
+      case notice.Type.TWITCH_EVENTSUB:
        _setNotice(i, 'noticeInfo sTwitch', 'EventSub Connected', 5);
        break;
-      case 0x22:
+      case notice.Type.YOUTUBE_NETWORK:
        _setNotice(i, 'noticeInfo sYouTube', 'Connected', 5);
        break;
-      case 0x32:
+      case notice.Type.KICK_NETWORK:
        _setNotice(i, 'noticeInfo sKick', 'Connected', 5);
        break;
-      case 0x72:
+      case notice.Type.STREAMELEMENTS_NETWORK:
        _setNotice(i, 'noticeInfo tStreamElements', 'Connected', 5);
        break;
-      case 0x82:
+      case notice.Type.STREAMLABS_NETWORK:
        _setNotice(i, 'noticeInfo tStreamlabs', 'Connected', 5);
        break;
-      case 0xB2:
+      case notice.Type.BTTV_NETWORK:
        _setNotice(i, 'noticeInfo eBTTV', 'Connected', 5);
        break;
-      case 0xC2:
+      case notice.Type['7TV_NETWORK']:
        _setNotice(i, 'noticeInfo e7TV', 'Connected', 5);
        break;
      }
@@ -1394,7 +1394,7 @@
      _buildNotices();
      switch (w)
      {
-      case 0x1A:
+      case notice.Type.TWITCH_EVENTSUB:
        _setNotice(w, 'noticeWarning sTwitch', 'Too Many Instances<br>Please use existing (reference) copies wherever possible.', 20);
        break;
      }
@@ -1410,13 +1410,13 @@
      _buildNotices();
      switch (e)
      {
-      case 0x01:
+      case notice.Type.GLOBAL_CFG:
        _setNotice(e, 'noticeError global', 'Corrupted Configuration');
        break;
-      case 0x09:
+      case notice.Type.GLOBAL_OBS:
        _setNotice(e, 'noticeError global', 'OBS Not Detected<br>Please see <a href="https://www.youtube.com/watch?v=1hnsN4RZ3ng" target="_blank" title="Adding Emote Wall to OBS">this &quot;How to&quot; video</a> on adding the Emote Wall to OBS.');
        break;
-      case 0x11:
+      case notice.Type.TWITCH_TOKEN:
        if (typeof loginT !== 'undefined' && loginT.inUse)
        {
         _setNotice(e, 'noticeError sTwitch', 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
@@ -1426,13 +1426,13 @@
        else
         _setNotice(e, 'noticeError sTwitch', 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
        break;
-      case 0x12:
+      case notice.Type.TWITCH_IRC:
        _setNotice(e, 'noticeError sTwitch', 'IRC Disconnected');
        break;
-      case 0x1A:
+      case notice.Type.TWITCH_EVENTSUB:
        _setNotice(e, 'noticeError sTwitch', 'EventSub Disconnected');
        break;
-      case 0x21:
+      case notice.Type.YOUTUBE_TOKEN:
        if (typeof loginYT !== 'undefined' && loginYT.inUse)
        {
         _setNotice(e, 'noticeError sYouTube', 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
@@ -1442,10 +1442,10 @@
        else
         _setNotice(e, 'noticeError sYouTube', 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
        break;
-      case 0x22:
+      case notice.Type.YOUTUBE_NETWORK:
        _setNotice(e, 'noticeError sYouTube', 'Disconnected');
        break;
-      case 0x23:
+      case notice.Type.YOUTUBE_ACCOUNT:
        if (typeof loginYT !== 'undefined' && loginYT.inUse)
        {
         loginYT.showOut(true);
@@ -1453,37 +1453,37 @@
        }
        _setNotice(e, 'noticeError sYouTube', 'Streaming Not Available<br>Your YouTube account does not have streaming enabled.');
        break;
-      case 0x28:
+      case notice.Type.YOUTUBE_RATELIMIT:
        _setNotice(e, 'noticeError sYouTube', 'YouTube Rate Limit Exceeded<br>You have sent too many requests. Please wait a while.');
        break;
-      case 0x29:
+      case notice.Type.YOUTUBE_UNKNOWN:
        _setNotice(e, 'noticeError sYouTube', 'Unhandled YouTube Error<br>' + sMsg);
        break;
-      case 0x31:
+      case notice.Type.KICK_NAME:
        _setNotice(e, 'noticeError sKick', 'Connection Rejected<br>Please check your Kick channel name.');
        break;
-      case 0x32:
+      case notice.Type.KICK_NETWORK:
        _setNotice(e, 'noticeError sKick', 'Disconnected');
        break;
-      case 0x39:
+      case notice.Type.KICK_UNKNOWN:
        _setNotice(e, 'noticeError sKick', 'Kick Connection Error<br>' + sMsg);
        break;
-      case 0x71:
+      case notice.Type.STREAMELEMENTS_TOKEN:
        _setNotice(e, 'noticeError tStreamElements', 'OAuth Token Rejected<br>Please update your StreamElements OAuth Token.');
        break;
-      case 0x72:
+      case notice.Type.STREAMELEMENTS_NETWORK:
        _setNotice(e, 'noticeError tStreamElements', 'Disconnected');
        break;
-      case 0x81:
+      case notice.Type.STREAMLABS_TOKEN:
        _setNotice(e, 'noticeError tStreamlabs', 'Socket Token Rejected<br>Please update your StreamLabs Socket Token.');
        break;
-      case 0x82:
+      case notice.Type.STREAMLABS_NETWORK:
        _setNotice(e, 'noticeError tStreamlabs', 'Disconnected');
        break;
-      case 0xB2:
+      case notice.Type.BTTV_NETWORK:
        _setNotice(e, 'noticeError eBTTV', 'Disconnected');
        break;
-      case 0xC2:
+      case notice.Type['7TV_NETWORK']:
        _setNotice(e, 'noticeError e7TV', 'Disconnected');
        break;
      }
@@ -1524,13 +1524,13 @@
      }
      if (!hasFader)
       b.classList.remove('fader');
-     let nID = document.getElementById('notice' + id);
+     let nID = document.getElementById('notice' + id.description);
      if (!nID)
      {
       b.dataset.alerts++;
       b.innerHTML = b.dataset.alerts;
       nID = document.createElement('div');
-      nID.setAttribute('id', 'notice' + id);
+      nID.setAttribute('id', 'notice' + id.description);
       n.appendChild(nID);
      }
      nID.setAttribute('class', 'noticeLine ' + state);
@@ -1552,7 +1552,7 @@
 
     function _clearNoticeBegin(id)
     {
-     const nID = document.getElementById('notice' + id);
+     const nID = document.getElementById('notice' + id.description);
      if (!nID)
       return;
      nID.classList.add('hide');
@@ -1571,7 +1571,7 @@
      const n = document.getElementById('notices');
      if (!n)
       return;
-     const nID = document.getElementById('notice' + id);
+     const nID = document.getElementById('notice' + id.description);
      if (!nID)
       return;
      n.removeChild(nID);
@@ -1584,7 +1584,7 @@
 
     function _hideNotice(id)
     {
-     const nID = document.getElementById('notice' + id);
+     const nID = document.getElementById('notice' + id.description);
      if (!nID)
       return;
      nID.classList.add('fader');
@@ -1626,7 +1626,7 @@
 
     function _fadeInNotice(id)
     {
-     const nID = document.getElementById('notice' + id);
+     const nID = document.getElementById('notice' + id.description);
      if (!nID)
       return;
      nID.classList.remove('faded');
@@ -1644,7 +1644,7 @@
 
     function _fadeOutNotice(id)
     {
-     const nID = document.getElementById('notice' + id);
+     const nID = document.getElementById('notice' + id.description);
      if (!nID)
       return;
      if (_timers[id] !== false)
@@ -1677,7 +1677,7 @@
 
     function _fadeOutEnd(id)
     {
-     const nID = document.getElementById('notice' + id);
+     const nID = document.getElementById('notice' + id.description);
      if (!nID)
       return;
      if (_timers[id] !== false)
@@ -1732,14 +1732,45 @@
      expect: 0,
      active: 0,
      tHide: false,
-     iHide: 5000
+     iHide: 5000,
+     Type: Object.freeze({
+      GLOBAL_CFG: Symbol(0x01),
+      GLOBAL_OBS: Symbol(0x09),
+      TWITCH_TOKEN: Symbol(0x11),
+      TWITCH_IRC: Symbol(0x12),
+      TWITCH_EVENTSUB: Symbol(0x1A),
+      YOUTUBE_TOKEN: Symbol(0x21),
+      YOUTUBE_NETWORK: Symbol(0x22),
+      YOUTUBE_ACCOUNT: Symbol(0x23),
+      YOUTUBE_RATELIMIT: Symbol(0x28),
+      YOUTUBE_UNKNOWN: Symbol(0x29),
+      KICK_NAME: Symbol(0x31),
+      KICK_NETWORK: Symbol(0x32),
+      KICK_UNKNOWN: Symbol(0x39),
+      STREAMELEMENTS_TOKEN: Symbol(0x71),
+      STREAMELEMENTS_NETWORK: Symbol(0x72),
+      STREAMLABS_TOKEN: Symbol(0x81),
+      STREAMLABS_NETWORK: Symbol(0x82),
+      BTTV_NETWORK: Symbol(0xB2),
+      '7TV_NETWORK': Symbol(0xC2)
+     }),
+     Connection: Object.freeze({
+      TWITCH_IRC: 0x01,
+      TWITCH_EVENTSUB: 0x02,
+      KICK: 0x04,
+      YOUTUBE: 0x08,
+      STREAMELEMENTS: 0x10,
+      STREAMLABS: 0x20,
+      BTTV: 0x40,
+      '7TV': 0x80
+     })
     };
    }();
 
    if (typeof cfg === 'undefined')
    {
     document.title = 'Emote Wall Configuration Error';
-    window.addEventListener('load', function(){notice.error(0x01);});
+    window.addEventListener('load', function(){notice.error(notice.Type.GLOBAL_CFG);});
     throw new Error('Corrupted Configuration detected.');
    }
    document.title = 'RealityRipple\'s Home-Made Emote Wall';
@@ -4851,7 +4882,7 @@
 
       function task(chID = null)
       {
-       notice.expect |= 0x02;
+       notice.expect |= notice.Connection.TWITCH_EVENTSUB;
        if (chID !== null)
         twitch.net.eventSubCtl.channelID = chID;
        _ws = new WebSocket(_wsURL);
@@ -4872,8 +4903,8 @@
 
       function _wsClose()
       {
-       notice.error(0x1A);
-       notice.active &= ~0x02;
+       notice.error(notice.Type.TWITCH_EVENTSUB);
+       notice.active &= ~notice.Connection.TWITCH_EVENTSUB;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -4924,8 +4955,8 @@
         return;
        if (!r.hasOwnProperty('payload'))
         return;
-       notice.info(0x1A);
-       notice.active |= 0x02;
+       notice.info(notice.Type.TWITCH_EVENTSUB);
+       notice.active |= notice.Connection.TWITCH_EVENTSUB;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -5268,8 +5299,8 @@
 
       function _wsTimeout()
       {
-       notice.error(0x1A);
-       notice.active &= ~0x02;
+       notice.error(notice.Type.TWITCH_EVENTSUB);
+       notice.active &= ~notice.Connection.TWITCH_EVENTSUB;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -5530,9 +5561,9 @@
         return true;
        if (r.code === 429)
        {
-        const eNote = document.getElementById('notice' + 0x1A);
+        const eNote = document.getElementById('notice' + notice.Type.TWITCH_EVENTSUB.description);
         if (!eNote || !eNote.classList.contains('noticeWarning'))
-         notice.warning(0x1A);
+         notice.warning(notice.Type.TWITCH_EVENTSUB);
        }
        return false;
       }
@@ -5572,7 +5603,7 @@
 
       function task()
       {
-       notice.expect |= 0x01;
+       notice.expect |= notice.Connection.TWITCH_IRC;
        _tPing = 0;
        _firstRS = true;
        _ws = new WebSocket(cURLs.ws.twitch.irc);
@@ -5597,8 +5628,8 @@
 
       function _wsClose()
       {
-       notice.error(0x12);
-       notice.active &= ~0x01;
+       notice.error(notice.Type.TWITCH_IRC);
+       notice.active &= ~notice.Connection.TWITCH_IRC;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -5675,8 +5706,8 @@
          console.log('Unparsed IRC Command: ', data[i]);
          continue;
         }
-        notice.info(0x12);
-        notice.active |= 0x01;
+        notice.info(notice.Type.TWITCH_IRC);
+        notice.active |= notice.Connection.TWITCH_IRC;
         if (notice.tHide !== false)
         {
          window.clearTimeout(notice.tHide);
@@ -5687,11 +5718,11 @@
          case 'PING':
           if (_ws.readyState === 1)
            _ws.send('PONG ' + cmd.params[0]);
-          if ((twitch.net.oAuth.cfgVals() & 0x02) === 0x02)
+          if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN)
           {
            await twitch.net.oAuth.update();
-           if ((twitch.net.oAuth.cfgVals() & 0x04) !== 0x04)
-            notice.error(0x11);
+           if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
+            notice.error(notice.Type.TWITCH_TOKEN);
           }
           break;
          case 'PRIVMSG':
@@ -5733,7 +5764,7 @@
             return;
            }
            twitch.net.dead = true;
-           notice.error(0x11);
+           notice.error(notice.Type.TWITCH_TOKEN);
            if (!loginT.inUse)
             twitch.net.oAuth.clear();
           }
@@ -5863,8 +5894,8 @@
 
       function _wsExpire()
       {
-       notice.error(0x12);
-       notice.active &= ~0x01;
+       notice.error(notice.Type.TWITCH_IRC);
+       notice.active &= ~notice.Connection.TWITCH_IRC;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -5905,8 +5936,8 @@
 
       function _wsTimeout()
       {
-       notice.error(0x12);
-       notice.active &= ~0x01;
+       notice.error(notice.Type.TWITCH_IRC);
+       notice.active &= ~notice.Connection.TWITCH_IRC;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -6179,7 +6210,7 @@
        {
         if (r.code === 401)
         {
-         notice.error(0x11);
+         notice.error(notice.Type.TWITCH_TOKEN);
          twitch.net.oAuth.clear();
         }
         return false;
@@ -6203,7 +6234,7 @@
        {
         if (r.code === 401)
         {
-         notice.error(0x11);
+         notice.error(notice.Type.TWITCH_TOKEN);
          twitch.net.oAuth.clear();
         }
         return false;
@@ -6249,11 +6280,11 @@
 
       async function $reinit()
       {
-       if ((twitch.net.oAuth.cfgVals() & 0x02) === 0x02)
+       if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN)
        {
         twitch.net.oAuth.auth.expires = 0;
         await twitch.net.oAuth.update();
-        if ((twitch.net.oAuth.cfgVals() & 0x04) === 0x04)
+        if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN)
          return true;
         twitch.net.oAuth.clear();
        }
@@ -6271,11 +6302,11 @@
        let r = 0;
        const lsRefresh = shared.storage.getItem(loginT.path() + '.refresh');
        if (lsRefresh !== null)
-        r |= 0x02;
+        r |= shared.cfgVal.REFRESH_TOKEN;
        if (twitch.net.oAuth.auth.refresh_token !== false)
-        r |= 0x02;
+        r |= shared.cfgVal.REFRESH_TOKEN;
        if (twitch.net.oAuth.auth.access_token !== false)
-        r |= 0x04;
+        r |= shared.cfgVal.ACCESS_TOKEN;
        return r;
       }
 
@@ -6692,7 +6723,7 @@
          {
           for (let i = 0, l = r7TV.length; i < l; i++)
           {
-           if ((r7TV[i].vis & thirdparty['7tv'].zweFlag) === thirdparty['7tv'].zweFlag)
+           if ((r7TV[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
             continue;
            e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
           }
@@ -6707,12 +6738,13 @@
       {
        const kNow = new Date().getTime();
        const m = cmd.params[1].toLowerCase();
-       let foundAdvCmd = false;
-       if (m === '!cesc' && (lv & 0xC00) !== 0)
+       const accessModBC = twitch.Access.MODERATOR | twitch.Access.BROADCASTER;
+       if (m === '!cesc' && (lv & accessModBC) !== 0)
        {
         shared.ec.clear();
         return;
        }
+       let foundAdvCmd = false;
        for (const k of cfg.commands)
        {
         if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase') && !k.hasOwnProperty('rave') && !k.hasOwnProperty('raveon') && !k.hasOwnProperty('raveoff'))
@@ -7032,7 +7064,7 @@
          {
           for (let i = 0, l = r7TV.length; i < l; i++)
           {
-           if ((r7TV[i].vis & thirdparty['7tv'].zweFlag) === thirdparty['7tv'].zweFlag)
+           if ((r7TV[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
             continue;
            e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
           }
@@ -7413,7 +7445,7 @@
          {
           for (let i = 0, l = r7TV.length; i < l; i++)
           {
-           if ((r7TV[i].vis & thirdparty['7tv'].zweFlag) === thirdparty['7tv'].zweFlag)
+           if ((r7TV[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
             continue;
            e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
           }
@@ -7474,7 +7506,7 @@
          {
           for (let i = 0, l = r7TV.length; i < l; i++)
           {
-           if ((r7TV[i].vis & thirdparty['7tv'].zweFlag) === thirdparty['7tv'].zweFlag)
+           if ((r7TV[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
             continue;
            e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
           }
@@ -7550,11 +7582,11 @@
 
       async function task(cmd)
       {
-       let r = 0x001;
+       let r = twitch.Access.STRANGER;
        if (cmd.tags.hasOwnProperty('mod') && cmd.tags.mod === '1')
-        r |= 0x400;
+        r |= twitch.Access.MODERATOR;
        if (cmd.tags.hasOwnProperty('vip') && cmd.tags.vip === '1')
-        r |= 0x100;
+        r |= twitch.Access.VIP;
        if (cmd.tags.hasOwnProperty('badges'))
        {
         const badges = cmd.tags.badges.split(',');
@@ -7564,40 +7596,40 @@
          switch (bData[0])
          {
           case 'broadcaster':
-           r |= 0x800;
+           r |= twitch.Access.BROADCASTER;
            break;
           case 'moderator':
-           r |= 0x400;
+           r |= twitch.Access.MODERATOR;
            break;
           case 'vip':
-           r |= 0x100;
+           r |= twitch.Access.VIP;
            break;
           case 'artist-badge':
-           r |= 0x080;
+           r |= twitch.Access.ARTIST;
            break;
           case 'founder':
-           r |= 0x200;
+           r |= twitch.Access.FOUNDER;
            break;
           case 'bits':
-           r |= 0x004;
+           r |= twitch.Access.CHEERER;
            break;
           case 'subscriber':
            const badge = parseInt(bData[1], 10);
            if (badge < 2000)
-            r |= 0x010;
+            r |= twitch.Access.SUBSCRIBER_T1;
            else if (badge < 3000)
-            r |= 0x020;
+            r |= twitch.Access.SUBSCRIBER_T2;
            else
-            r |= 0x040;
+            r |= twitch.Access.SUBSCRIBER_T3;
            break;
          }
         }
        }
        /* api-heavy, only check if follower access is allowed and there's a chance it matters */
        let needF = false;
-       if ((cfg.display.access & 0x002) === 0x002 && (cfg.display.access & 0x001) !== 0x001)
+       if ((cfg.display.access & twitch.Access.FOLLOWER) === twitch.Access.FOLLOWER && (cfg.display.access & twitch.Access.STRANGER) !== twitch.Access.STRANGER)
         needF = true;
-       else if ((cfg.display.kappa.access & 0x002) === 0x002 && (cfg.display.kappa.access & 0x001) !== 0x001)
+       else if ((cfg.display.kappa.access & twitch.Access.FOLLOWER) === twitch.Access.FOLLOWER && (cfg.display.kappa.access & twitch.Access.STRANGER) !== twitch.Access.STRANGER)
         needF = true;
        else
        {
@@ -7607,7 +7639,7 @@
           continue;
          if (!k.hasOwnProperty('access'))
           continue;
-         if ((k.access & 0x002) === 0x002 && (k.access & 0x001) !== 0x001)
+         if ((k.access & twitch.Access.FOLLOWER) === twitch.Access.FOLLOWER && (k.access & twitch.Access.STRANGER) !== twitch.Access.STRANGER)
          {
           needF = true;
           break;
@@ -7618,10 +7650,11 @@
        {
         const f = await _checkFollower(cmd);
         if (f)
-         r |= 0x002;
+         r |= twitch.Access.FOLLOWER;
        }
-       if ((r & 0x800) === 0x800 && (r & 0x070) !== 0)
-        return r & ~0x070;
+       const accessSub = twitch.Access.SUBSCRIBER_T1 | twitch.Access.SUBSCRIBER_T2 | twitch.Access.SUBSCRIBER_T3;
+       if ((r & twitch.Access.BROADCASTER) === twitch.Access.BROADCASTER && (r & accessSub) !== 0)
+        return r & ~accessSub;
        return r;
       }
 
@@ -7646,7 +7679,7 @@
         {
          if (await twitch.net.oAuth.reinit())
           return _checkFollower(cmd);
-         notice.error(0x11);
+         notice.error(notice.Type.TWITCH_TOKEN);
          if (!loginT.inUse)
           twitch.net.oAuth.clear();
         }
@@ -7872,7 +7905,7 @@
        {
         if (await twitch.net.oAuth.reinit())
          return _findEmote_channel(chID, n);
-        notice.error(0x11);
+        notice.error(notice.Type.TWITCH_TOKEN);
         if (!loginT.inUse)
          twitch.net.oAuth.clear();
        }
@@ -7926,7 +7959,7 @@
       {
        if (await twitch.net.oAuth.reinit())
         return twitch.global();
-       notice.error(0x11);
+       notice.error(notice.Type.TWITCH_TOKEN);
        if (!loginT.inUse)
         twitch.net.oAuth.clear();
       }
@@ -7957,7 +7990,20 @@
     return {
      net: $net,
      parse: $parse,
-     global: $global
+     global: $global,
+     Access: Object.freeze({
+      STRANGER: 0x001,
+      FOLLOWER: 0x002,
+      CHEERER: 0x004,
+      SUBSCRIBER_T1: 0x010,
+      SUBSCRIBER_T2: 0x020,
+      SUBSCRIBER_T3: 0x040,
+      ARTIST: 0x080,
+      VIP: 0x100,
+      FOUNDER: 0x200,
+      MODERATOR: 0x400,
+      BROADCASTER: 0x800
+     })
     };
    }();
 
@@ -7980,8 +8026,8 @@
        const lStreams = await _getActiveStreams();
        if (lStreams === null)
        {
-        notice.error(0x22);
-        notice.active &= ~0x08;
+        notice.error(notice.Type.YOUTUBE_NETWORK);
+        notice.active &= ~notice.Connection.YOUTUBE;
         if (notice.tHide !== false)
         {
          window.clearTimeout(notice.tHide);
@@ -7989,8 +8035,8 @@
         }
         return;
        }
-       notice.info(0x22);
-       notice.active |= 0x08;
+       notice.info(notice.Type.YOUTUBE_NETWORK);
+       notice.active |= notice.Connection.YOUTUBE;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -8051,23 +8097,23 @@
 
       async function _getActiveStreams()
       {
-       if ((youtube.net.oAuth.cfgVals() & 0x02) === 0x02)
+       if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN)
        {
         await youtube.net.oAuth.update();
-        if ((youtube.net.oAuth.cfgVals() & 0x04) !== 0x04)
+        if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
         {
-         notice.error(0x22);
-         notice.error(0x21);
+         notice.error(notice.Type.YOUTUBE_NETWORK);
+         notice.error(notice.Type.YOUTUBE_TOKEN);
          youtube.net.dead = true;
          return null;
         }
        }
-       if ((youtube.net.oAuth.cfgVals() & 0x04) !== 0x04)
+       if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
         return null;
        if (!youtube.net.oAuth.auth.scope.includes(cScopes.youtube.readonly))
        {
-        notice.error(0x22);
-        notice.error(0x21);
+        notice.error(notice.Type.YOUTUBE_NETWORK);
+        notice.error(notice.Type.YOUTUBE_TOKEN);
         youtube.net.dead = true;
         return null;
        }
@@ -8086,8 +8132,8 @@
          {
           if (_aC.length !== 0)
            return false;
-          notice.error(0x22);
-          notice.active &= ~0x08;
+          notice.error(notice.Type.YOUTUBE_NETWORK);
+          notice.active &= ~notice.Connection.YOUTUBE;
           if (notice.tHide !== false)
           {
            window.clearTimeout(notice.tHide);
@@ -8099,8 +8145,8 @@
          {
           if (_aC.length !== 0)
            return false;
-          notice.error(0x22);
-          notice.active &= ~0x08;
+          notice.error(notice.Type.YOUTUBE_NETWORK);
+          notice.active &= ~notice.Connection.YOUTUBE;
           if (notice.tHide !== false)
           {
            window.clearTimeout(notice.tHide);
@@ -8111,16 +8157,16 @@
          console.log(e);
          if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAUTHENTICATED')
          {
-          notice.error(0x22);
-          notice.error(0x21);
+          notice.error(notice.Type.YOUTUBE_NETWORK);
+          notice.error(notice.Type.YOUTUBE_TOKEN);
           youtube.net.oAuth.clear(true);
           youtube.net.dead = true;
           return null;
          }
          if (e.hasOwnProperty('error.message') && e['error.message'] === 'The user is not enabled for live streaming.')
          {
-          notice.error(0x22);
-          notice.error(0x23);
+          notice.error(notice.Type.YOUTUBE_NETWORK);
+          notice.error(notice.Type.YOUTUBE_ACCOUNT);
           youtube.net.oAuth.clear(true);
           youtube.net.dead = true;
           return null;
@@ -8128,7 +8174,7 @@
          console.log(j);
         }
         console.log(r.code);
-        notice.error(0x29, 'Error Getting Streams: ' + r.code);
+        notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Streams: ' + r.code);
         _errorReport('broadcasts._getActiveStreams', cURLs.api.youtube.broadcasts, r);
         return null;
        }
@@ -8269,15 +8315,15 @@
         _tM[chatID] = false;
         if (youtube.net.dead)
          return;
-        if ((youtube.net.oAuth.cfgVals() & 0x02) === 0x02)
+        if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN)
         {
          await youtube.net.oAuth.update();
-         if ((youtube.net.oAuth.cfgVals() & 0x04) !== 0x04)
+         if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
          {
-          notice.error(0x22);
-          notice.error(0x21);
+          notice.error(notice.Type.YOUTUBE_NETWORK);
+          notice.error(notice.Type.YOUTUBE_TOKEN);
           youtube.net.dead = true;
-          notice.active &= ~0x08;
+          notice.active &= ~notice.Connection.YOUTUBE;
           if (notice.tHide !== false)
           {
            window.clearTimeout(notice.tHide);
@@ -8286,13 +8332,13 @@
           return;
          }
         }
-        if ((youtube.net.oAuth.cfgVals() & 0x04) !== 0x04)
+        if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
          return;
         if (!youtube.net.oAuth.auth.scope.includes(cScopes.youtube.readonly))
         {
-         notice.error(0x22);
-         notice.error(0x21);
-         notice.active &= ~0x08;
+         notice.error(notice.Type.YOUTUBE_NETWORK);
+         notice.error(notice.Type.YOUTUBE_TOKEN);
+         notice.active &= ~notice.Connection.YOUTUBE;
          youtube.net.dead = true;
          if (notice.tHide !== false)
          {
@@ -8319,7 +8365,7 @@
         {
          if (r.code === 404)
          {
-          notice.info(0x22);
+          notice.info(notice.Type.YOUTUBE_NETWORK);
           youtube.net.broadcasts.updateStream();
           return;
          }
@@ -8329,7 +8375,7 @@
           console.log(e);
           if (e.hasOwnProperty('error.errors.0.reason') && e['error.errors.0.reason'] === 'quotaExceeded')
           {
-           notice.error(0x28);
+           notice.error(notice.Type.YOUTUBE_RATELIMIT);
            return;
           }
           if (e.hasOwnProperty('error.errors.0.reason') && e['error.errors.0.reason'] === 'liveChatEnded')
@@ -8346,22 +8392,22 @@
           }
           console.log(j);
          }
-         notice.error(0x22);
-         notice.active &= ~0x08;
+         notice.error(notice.Type.YOUTUBE_NETWORK);
+         notice.active &= ~notice.Connection.YOUTUBE;
          if (notice.tHide !== false)
          {
           window.clearTimeout(notice.tHide);
           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
          }
          console.log(r.code);
-         notice.error(0x29, 'Error Getting Messages: ' + r.code);
+         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Messages: ' + r.code);
          _errorReport('broadcasts.getMessages.start', q, r);
          return;
         }
         if (j === null)
          return;
-        notice.info(0x22);
-        notice.active |= 0x08;
+        notice.info(notice.Type.YOUTUBE_NETWORK);
+        notice.active |= notice.Connection.YOUTUBE;
         if (notice.tHide !== false)
         {
          window.clearTimeout(notice.tHide);
@@ -8458,8 +8504,8 @@
       {
        if (!youtube.net.oAuth.auth.scope.includes(cScopes.youtube.readonly))
        {
-        notice.error(0x22);
-        notice.error(0x21);
+        notice.error(notice.Type.YOUTUBE_NETWORK);
+        notice.error(notice.Type.YOUTUBE_TOKEN);
         youtube.net.dead = true;
         return;
        }
@@ -8499,8 +8545,8 @@
          const e = _flatJSON(j);
          if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAUTHENTICATED')
          {
-          notice.error(0x22);
-          notice.error(0x21);
+          notice.error(notice.Type.YOUTUBE_NETWORK);
+          notice.error(notice.Type.YOUTUBE_TOKEN);
           youtube.net.oAuth.clear(true);
           youtube.net.dead = true;
           return false;
@@ -8509,7 +8555,7 @@
          console.log(j);
         }
         console.log(r.code);
-        notice.error(0x29, 'Error Getting Subscribers: ' + r.code);
+        notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Subscribers: ' + r.code);
         _errorReport('subscribers._getChange', url, r);
         return false;
        }
@@ -8574,7 +8620,7 @@
          console.log(j);
         }
         console.log(r.code);
-        notice.error(0x29, 'Error Getting Members: ' + r.code);
+        notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Members: ' + r.code);
         _errorReport('members._init', url, r);
         return false;
        }
@@ -8643,7 +8689,7 @@
          console.log(j);
         }
         console.log(r.code);
-        notice.error(0x29, 'Unknown Error Getting Members: ' + r.code);
+        notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Unknown Error Getting Members: ' + r.code);
         _errorReport('members._getChange', url, r);
         return false;
        }
@@ -8807,13 +8853,13 @@
           switch(e.error_description)
           {
            case 'Token has been expired or revoked.':
-            notice.error(0x22);
-            notice.error(0x21);
+            notice.error(notice.Type.YOUTUBE_NETWORK);
+            notice.error(notice.Type.YOUTUBE_TOKEN);
             youtube.net.oAuth.clear(true);
             youtube.net.dead = true;
             return false;
            case 'Bad Request':
-            notice.error(0x29, 'The server did not like the request.');
+            notice.error(notice.Type.YOUTUBE_UNKNOWN, 'The server did not like the request.');
             youtube.net.oAuth.clear(false);
             youtube.net.dead = true;
             return false;
@@ -8822,7 +8868,7 @@
          console.log(j);
         }
         console.log(r.code);
-        notice.error(0x29, 'Error Getting OAuth Token: ' + r.code);
+        notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting OAuth Token: ' + r.code);
         _errorReport('oAuth._getToken', url, r);
         return false;
        }
@@ -8841,7 +8887,7 @@
        {
         if (r.code === 400)
         {
-         notice.error(0x11);
+         notice.error(notice.Type.TWITCH_TOKEN);
          youtube.net.oAuth.clear();
         }
         return false;
@@ -8896,11 +8942,11 @@
        let r = 0;
        const lsRefresh = shared.storage.getItem(loginYT.path() + '.refresh');
        if (lsRefresh !== null)
-        r |= 0x02;
+        r |= shared.cfgVal.REFRESH_TOKEN;
        if (youtube.net.oAuth.auth.refresh_token !== false)
-        r |= 0x02;
+        r |= shared.cfgVal.REFRESH_TOKEN;
        if (youtube.net.oAuth.auth.access_token !== false)
-        r |= 0x04;
+        r |= shared.cfgVal.ACCESS_TOKEN;
        return r;
       }
 
@@ -9352,7 +9398,7 @@
      {
       function task(cmd)
       {
-       let r = 0x001;
+       let r = youtube.Access.STRANGER;
        if (!cmd.hasOwnProperty('authorDetails'))
        {
         console.log('no author details in', cmd);
@@ -9360,17 +9406,19 @@
        }
        const author = cmd.authorDetails;
        if (author.hasOwnProperty('isChatOwner') && author.isChatOwner !== false)
-        r |= 0x800;
+        r |= youtube.Access.BROADCASTER;
        if (author.hasOwnProperty('isChatModerator') && author.isChatModerator !== false)
-        r |= 0x400;
+        r |= youtube.Access.MODERATOR;
        if (author.hasOwnProperty('isChatSponsor') && author.isChatSponsor !== false)
-        r |= 0x010;
+        r |= youtube.Access.MEMBER;
        if (author.hasOwnProperty('isMember') && author.isMember !== false)
-        r |= 0x010;
+        r |= youtube.Access.MEMBER;
        if (author.hasOwnProperty('isVerified') && author.isVerified !== false)
-        r |= 0x008;
+        r |= youtube.Access.VERIFIED;
        if (author.hasOwnProperty('isSubscriber') && author.isSubscriber !== false)
-        r |= 0x002;
+        r |= youtube.Access.SUBSCRIBER;
+       if ((r & youtube.Access.BROADCASTER) === youtube.Access.BROADCASTER && (r & youtube.Access.MEMBER) !== 0)
+        return r & ~youtube.Access.MEMBER;
        return r;
       }
 
@@ -9566,7 +9614,15 @@
     return {
      net: $net,
      parse: $parse,
-     global: $global
+     global: $global,
+     Access: Object.freeze({
+      STRANGER: 0x001,
+      SUBSCRIBER: 0x002,
+      VERIFIED: 0x008,
+      MEMBER: 0x010,
+      MODERATOR: 0x400,
+      BROADCASTER: 0x800
+     })
     };
    }();
 
@@ -9591,13 +9647,13 @@
 
       async function task()
       {
-       notice.expect |= 0x04;
+       notice.expect |= notice.Connection.KICK;
        if (kick.net.channelID === 0 || kick.net.chatID === 0)
        {
         await _getChIDs();
         if (kick.net.channelID === 0 || kick.net.chatID === 0)
         {
-         notice.error(0x31);
+         notice.error(notice.Type.KICK_NAME);
          kick.net.dead = true;
          return;
         }
@@ -9622,8 +9678,8 @@
 
       function _wsClose()
       {
-       notice.error(0x32);
-       notice.active &= ~0x04;
+       notice.error(notice.Type.KICK_NETWORK);
+       notice.active &= ~notice.Connection.KICK;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -9709,8 +9765,8 @@
            if (kick.net.dead === true)
             return;
            if (j.data.hasOwnProperty('message') && j.data.message !== null)
-            notice.error(0x39, j.data.message);
-           notice.error(0x32);
+            notice.error(notice.Type.KICK_UNKNOWN, j.data.message);
+           notice.error(notice.Type.KICK_NETWORK);
            return;
           }
           else if (j.data.code >= 4100 && j.data.code <= 4199)
@@ -9761,8 +9817,8 @@
        _tPing = window.setInterval(_wsPing, _lPing);
        _wsRetry = 0;
        const jData = JSON.parse(j.data);
-       notice.info(0x32);
-       notice.active |= 0x04;
+       notice.info(notice.Type.KICK_NETWORK);
+       notice.active |= notice.Connection.KICK;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -9928,8 +9984,8 @@
 
       function _wsExpire()
       {
-       notice.error(0x32);
-       notice.active &= ~0x04;
+       notice.error(notice.Type.KICK_NETWORK);
+       notice.active &= ~notice.Connection.KICK;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -9960,8 +10016,8 @@
 
       function _wsTimeout()
       {
-       notice.error(0x32);
-       notice.active &= ~0x04;
+       notice.error(notice.Type.KICK_NETWORK);
+       notice.active &= ~notice.Connection.KICK;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -10180,7 +10236,7 @@
       {
        let r = 0;
        if (kick.net.oAuth.auth.channel !== false)
-        r |= 0x01;
+        r |= shared.cfgVal.CHANNEL;
        return r;
       }
 
@@ -10496,7 +10552,7 @@
          {
           for (let i = 0, l = r7TV.length; i < l; i++)
           {
-           if ((r7TV[i].vis & thirdparty['7tv'].zweFlag) === thirdparty['7tv'].zweFlag)
+           if ((r7TV[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
             continue;
            e.push({url: r7TV[i].url, width: r7TV[i].width, height: r7TV[i].height});
           }
@@ -10626,7 +10682,7 @@
 
       async function task(cmd)
       {
-       let r = 0x001;
+       let r = kick.Access.STRANGER;
        if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
         return r;
        if (!cmd.sender.hasOwnProperty('identity') || cmd.sender.identity === null)
@@ -10644,25 +10700,25 @@
         switch (cmd.sender.identity.badges[i].type)
         {
          case 'broadcaster':
-          r |= 0x800;
+          r |= kick.Access.BROADCASTER;
           break;
          case 'moderator':
-          r |= 0x400;
+          r |= kick.Access.MODERATOR;
           break;
          case 'founder':
-          r |= 0x200;
+          r |= kick.Access.FOUNDER;
           break;
          case 'vip':
-          r |= 0x100;
+          r |= kick.Access.VIP;
           break;
          case 'og':
-          r |= 0x040;
+          r |= kick.Access.OG;
           break;
          case 'subscriber':
-          r |= 0x010;
+          r |= kick.Access.SUBSCRIBER;
           break;
          case 'verified':
-          r |= 0x008;
+          r |= kick.Access.VERIFIED;
           break;
          case 'sub_gifter':
           break;
@@ -10674,9 +10730,9 @@
        }
        /* api-heavy, only check if follower access is allowed and there's a chance it matters */
        let needF = false;
-       if ((cfg.display.access & 0x002) === 0x002 && (cfg.display.access & 0x001) !== 0x001)
+       if ((cfg.display.access & kick.Access.FOLLOWER) === kick.Access.FOLLOWER && (cfg.display.access & kick.Access.STRANGER) !== kick.Access.STRANGER)
         needF = true;
-       else if ((cfg.display.kappa.access & 0x002) === 0x002 && (cfg.display.kappa.access & 0x001) !== 0x001)
+       else if ((cfg.display.kappa.access & kick.Access.FOLLOWER) === kick.Access.FOLLOWER && (cfg.display.kappa.access & kick.Access.STRANGER) !== kick.Access.STRANGER)
         needF = true;
        else
        {
@@ -10686,7 +10742,7 @@
           continue;
          if (!k.hasOwnProperty('access'))
           continue;
-         if ((k.access & 0x002) === 0x002 && (k.access & 0x001) !== 0x001)
+         if ((k.access & kick.Access.FOLLOWER) === kick.Access.FOLLOWER && (k.access & kick.Access.STRANGER) !== kick.Access.STRANGER)
          {
           needF = true;
           break;
@@ -10697,10 +10753,10 @@
        {
         const f = await _checkFollower(cmd);
         if (f)
-         r |= 0x002;
+         r |= kick.Access.FOLLOWER;
        }
-       if ((r & 0x800) === 0x800 && (r & 0x070) !== 0)
-        return r & ~0x070;
+       if ((r & kick.Access.BROADCASTER) === kick.Access.BROADCASTER && (r & kick.Access.SUBSCRIBER) !== 0)
+        return r & ~kick.Access.SUBSCRIBER;
        return r;
       }
 
@@ -10992,7 +11048,18 @@
 
     return {
      net: $net,
-     parse: $parse
+     parse: $parse,
+     Access: Object.freeze({
+      STRANGER: 0x001,
+      FOLLOWER: 0x002,
+      VERIFIED: 0x008,
+      SUBSCRIBER: 0x010,
+      OG: 0x040,
+      VIP: 0x100,
+      FOUNDER: 0x200,
+      MODERATOR: 0x400,
+      BROADCASTER: 0x800
+     })
     };
    }();
 
@@ -12130,7 +12197,7 @@
 
      function task()
      {
-      notice.expect |= 0x20;
+      notice.expect |= notice.Connection.STREAMLABS;
       _tPing = 0;
       _ws = new WebSocket(cURLs.ws.streamlabs.replaceAll('%TOKEN%', cfg.streamlabs.token));
       _ws.onopen = _wsOpen;
@@ -12150,7 +12217,7 @@
 
      function _wsClose()
      {
-      notice.error(0x82);
+      notice.error(notice.Type.STREAMLABS_NETWORK);
       if (_tPing !== 0)
       {
        window.clearInterval(_tPing);
@@ -12198,8 +12265,8 @@
       const d = ev.data;
       if (d.length < 1)
        return;
-      notice.info(0x82);
-      notice.active |= 0x20;
+      notice.info(notice.Type.STREAMLABS_NETWORK);
+      notice.active |= notice.Connection.STREAMLABS;
       if (notice.tHide !== false)
       {
        window.clearTimeout(notice.tHide);
@@ -12239,8 +12306,8 @@
         {
          if (d.slice(1, 2) === '4')
          {
-          notice.error(0x81);
-          notice.error(0x82);
+          notice.error(notice.Type.STREAMLABS_TOKEN);
+          notice.error(notice.Type.STREAMLABS_NETWORK);
           _lTimeout = 5000;
           if (_tTimeout !== false)
           {
@@ -12313,7 +12380,7 @@
 
      function _wsTimeout()
      {
-      notice.error(0x82);
+      notice.error(notice.Type.STREAMLABS_NETWORK);
       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
@@ -12346,7 +12413,7 @@
       return 0;
      let r = 0;
      if (cfg.streamlabs.hasOwnProperty('token') && cfg.streamlabs.token !== false && cfg.streamlabs.token !== null && cfg.streamlabs.token !== 'SOCKET_TOKEN')
-      r |= 0x01;
+      r |= shared.cfgVal.ACCESS_TOKEN;
      return r;
     }
 
@@ -12402,7 +12469,7 @@
 
      function task()
      {
-      notice.expect |= 0x10;
+      notice.expect |= notice.Connection.STREAMELEMENTS;
       _tPing = 0;
       _ws = new WebSocket(cURLs.ws.streamelements);
       _ws.onopen = _wsOpen;
@@ -12422,8 +12489,8 @@
 
      function _wsClose()
      {
-      notice.error(0x72);
-      notice.active &= ~0x10;
+      notice.error(notice.Type.STREAMELEMENTS_NETWORK);
+      notice.active &= ~notice.Connection.STREAMELEMENTS;
       if (notice.tHide !== false)
       {
        window.clearTimeout(notice.tHide);
@@ -12476,8 +12543,8 @@
       const d = ev.data;
       if (d.length < 1)
        return;
-      notice.info(0x72);
-      notice.active |= 0x10;
+      notice.info(notice.Type.STREAMELEMENTS_NETWORK);
+      notice.active |= notice.Connection.STREAMELEMENTS;
       if (notice.tHide !== false)
       {
        window.clearTimeout(notice.tHide);
@@ -12515,9 +12582,9 @@
         {
          let a = '';
          const seCfg = streamelements.oAuth.cfgVals();
-         if ((seCfg & 0x04) === 0x04)
+         if ((seCfg & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN)
           a = JSON.stringify(['authenticate', {'method': 'oauth2', 'token': streamelements.oAuth.auth.access_token}]);
-         else if ((seCfg & 0x01) === 0x01)
+         else if ((seCfg & shared.cfgVal.JWT_TOKEN) === shared.cfgVal.JWT_TOKEN)
           a = JSON.stringify(['authenticate', {'method': 'jwt', 'token': streamelements.oAuth.auth.jwt_token}]);
          if (_ws.readyState === 1)
           _ws.send('42' + a);
@@ -12532,8 +12599,8 @@
          return;
         if (o[0] === 'unauthorized')
         {
-         notice.error(0x71);
-         notice.error(0x72);
+         notice.error(notice.Type.STREAMELEMENTS_TOKEN);
+         notice.error(notice.Type.STREAMELEMENTS_NETWORK);
          _lTimeout = 5000;
          if (_tTimeout !== false)
          {
@@ -12585,8 +12652,8 @@
 
      function _wsTimeout()
      {
-      notice.error(0x72);
-      notice.active &= ~0x10;
+      notice.error(notice.Type.STREAMELEMENTS_NETWORK);
+      notice.active &= ~notice.Connection.STREAMELEMENTS;
       if (notice.tHide !== false)
       {
        window.clearTimeout(notice.tHide);
@@ -12751,7 +12818,7 @@
       if (!r.success)
       {
        console.log(r);
-       notice.error(0x71);
+       notice.error(notice.Type.STREAMELEMENTS_TOKEN);
        return false;
       }
       const j = r.json;
@@ -12817,13 +12884,13 @@
       let r = 0;
       const lsRefresh = shared.storage.getItem(_path() + '.refresh');
       if (lsRefresh !== null)
-       r |= 0x02;
+       r |= shared.cfgVal.REFRESH_TOKEN;
       if (streamelements.oAuth.auth.jwt_token !== false)
-       r |= 0x01;
+       r |= shared.cfgVal.JWT_TOKEN;
       if (streamelements.oAuth.auth.refresh_token !== false)
-       r |= 0x02;
+       r |= shared.cfgVal.REFRESH_TOKEN;
       if (streamelements.oAuth.auth.access_token !== false)
-       r |= 0x04;
+       r |= shared.cfgVal.ACCESS_TOKEN;
       return r;
      }
 
@@ -12976,7 +13043,7 @@
          h = j.sets[set].emoticons[i].height;
         if (j.sets[set].emoticons[i].hasOwnProperty('modifier') && j.sets[set].emoticons[i].modifier === true)
         {
-         if (j.sets[set].emoticons[i].hasOwnProperty('modifier_flags') && (j.sets[set].emoticons[i].modifier_flags & 0x01) === 0x01)
+         if (j.sets[set].emoticons[i].hasOwnProperty('modifier_flags') && (j.sets[set].emoticons[i].modifier_flags & thirdparty.ffz.Modifier.HIDDEN) === thirdparty.ffz.Modifier.HIDDEN)
           continue;
          if (cfg.display.extended.useZWE)
           _addEmote(thirdparty.emotes.zwe.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, w, h, true);
@@ -13020,7 +13087,7 @@
           h = j.sets[set].emoticons[i].height;
          if (j.sets[set].emoticons[i].hasOwnProperty('modifier') && j.sets[set].emoticons[i].modifier === true)
          {
-          if (j.sets[set].emoticons[i].hasOwnProperty('modifier_flags') && (j.sets[set].emoticons[i].modifier_flags & 0x01) === 0x01)
+          if (j.sets[set].emoticons[i].hasOwnProperty('modifier_flags') && (j.sets[set].emoticons[i].modifier_flags & thirdparty.ffz.Modifier.HIDDEN) === thirdparty.ffz.Modifier.HIDDEN)
            continue;
           if (cfg.display.extended.useZWE)
           {
@@ -13108,7 +13175,7 @@
       {
        if (r[i].modifier !== false)
        {
-        if ((r[i].modifier & 0x01) === 0x01)
+        if ((r[i].modifier & thirdparty.ffz.Modifier.HIDDEN) === thirdparty.ffz.Modifier.HIDDEN)
          continue;
         if (cfg.display.extended.useZWE)
          _addEmote(thirdparty.emotes.zwe.ffz, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height, true);
@@ -13123,7 +13190,10 @@
      return {
       global: $global,
       channel: $channel,
-      channelEx: $channelEx
+      channelEx: $channelEx,
+      Modifier: Object.freeze({
+       HIDDEN: 0x01
+      })
      };
     }();
 
@@ -13275,7 +13345,7 @@
 
       function $init()
       {
-       notice.expect |= 0x40;
+       notice.expect |= notice.Connection.BTTV;
        _ws = new WebSocket(cURLs.ws.bttv);
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
@@ -13288,8 +13358,8 @@
         return;
        if (_ws.readyState !== 1)
         return;
-       notice.info(0xB2);
-       notice.active |= 0x40;
+       notice.info(notice.Type.BTTV_NETWORK);
+       notice.active |= notice.Connection.BTTV;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -13304,8 +13374,8 @@
 
       function _wsClose()
       {
-       notice.error(0xB2);
-       notice.active &= ~0x40;
+       notice.error(notice.Type.BTTV_NETWORK);
+       notice.active &= ~notice.Connection.BTTV;
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -13552,7 +13622,7 @@
        const jInf = _read7tv_URL(j.emotes[i].data);
        if (jInf === false)
         continue;
-       if (j.emotes[i].data.hasOwnProperty('flags') && j.emotes[i].data.flags !== null && (j.emotes[i].data.flags & thirdparty['7tv'].zweFlag) === thirdparty['7tv'].zweFlag)
+       if (j.emotes[i].data.hasOwnProperty('flags') && j.emotes[i].data.flags !== null && (j.emotes[i].data.flags & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
        {
         if (cfg.display.extended.useZWE)
          _addEmote(thirdparty.emotes.zwe['7tv'], 'g', j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, jInf.width, jInf.height, true);
@@ -13612,7 +13682,7 @@
        return false;
       for (let i = 0, l = r.length; i < l; i++)
       {
-       if ((r[i].vis & thirdparty['7tv'].zweFlag) === thirdparty['7tv'].zweFlag)
+       if ((r[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
        {
         if (cfg.display.extended.useZWE)
          _addEmote(thirdparty.emotes.zwe['7tv'], 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height, true);
@@ -13665,7 +13735,7 @@
        }
        if (p.length === 0)
         return;
-       notice.expect |= 0x80;
+       notice.expect |= notice.Connection['7TV'];
        const uri = cURLs.sse['7tv'] + '@' + encodeURIComponent(p);
        if (_sse !== null)
        {
@@ -13695,8 +13765,8 @@
 
       function _sseError()
       {
-       notice.error(0xC2);
-       notice.active &= ~0x80;
+       notice.error(notice.Type['7TV_NETWORK']);
+       notice.active &= ~notice.Connection['7TV'];
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -13754,8 +13824,8 @@
        const d = ('data' in ev) ? JSON.parse(ev.data) : null;
        if (!('type' in ev))
         return;
-       notice.info(0xC2);
-       notice.active |= 0x80;
+       notice.info(notice.Type['7TV_NETWORK']);
+       notice.active |= notice.Connection['7TV'];
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -13903,8 +13973,8 @@
 
       function _sseTimeout()
       {
-       notice.error(0xC2);
-       notice.active &= ~0x80;
+       notice.error(notice.Type['7TV_NETWORK']);
+       notice.active &= ~notice.Connection['7TV'];
        if (notice.tHide !== false)
        {
         window.clearTimeout(notice.tHide);
@@ -13960,7 +14030,9 @@
       channel: $channel,
       channelEx: $channelEx,
       events: $events,
-      zweFlag: 0x100
+      Modifier: Object.freeze({
+       ZWE: 0x100
+      })
      };
     }();
 
@@ -14521,7 +14593,13 @@
      mspf: $mspf,
      ec: $ec,
      storage: $storage,
-     cfgHash: false
+     cfgHash: false,
+     cfgVal: Object.freeze({
+      CHANNEL: 0x01,
+      REFRESH_TOKEN: 0x02,
+      ACCESS_TOKEN: 0x04,
+      JWT_TOKEN: 0x08
+     })
     };
    }();
 
@@ -14546,9 +14624,9 @@
       needF = true;
      else
      {
-      if ((cfg.display.access & 0x002) === 0x002 && (cfg.display.access & 0x001) !== 0x001)
+      if ((cfg.display.access & twitch.Access.FOLLOWER) === twitch.Access.FOLLOWER && (cfg.display.access & twitch.Access.STRANGER) !== twitch.Access.STRANGER)
        needF = true;
-      else if ((cfg.display.kappa.access & 0x002) === 0x002 && (cfg.display.kappa.access & 0x001) !== 0x001)
+      else if ((cfg.display.kappa.access & twitch.Access.FOLLOWER) === twitch.Access.FOLLOWER && (cfg.display.kappa.access & twitch.Access.STRANGER) !== twitch.Access.STRANGER)
        needF = true;
       else
       {
@@ -14558,7 +14636,7 @@
          continue;
         if (!k.hasOwnProperty('access'))
          continue;
-        if ((k.access & 0x002) === 0x002 && (k.access & 0x001) !== 0x001)
+        if ((k.access & twitch.Access.FOLLOWER) === twitch.Access.FOLLOWER && (k.access & twitch.Access.STRANGER) !== twitch.Access.STRANGER)
         {
          needF = true;
          break;
@@ -14599,7 +14677,7 @@
     {
      if (loginT.inUse === false)
       return false;
-     if ((twitch.net.oAuth.cfgVals() & 0x04) === 0x04)
+     if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN)
      {
       loginT.showOut();
       return false;
@@ -14674,7 +14752,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on Twitch</span>';
-     if (auto && ((youtube.net.oAuth.cfgVals() & 0x04) === 0x04 || (kick.net.oAuth.cfgVals() & 0x01) === 0x01))
+     if (auto && ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
     }
@@ -14810,7 +14888,7 @@
     {
      if (loginYT.inUse === false)
       return false;
-     if ((youtube.net.oAuth.cfgVals() & 0x04) === 0x04)
+     if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN)
      {
       loginYT.showOut();
       return false;
@@ -14885,7 +14963,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginYT.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on YouTube</span>';
-     if (auto && ((twitch.net.oAuth.cfgVals() & 0x04) === 0x04 || (kick.net.oAuth.cfgVals() & 0x01) === 0x01))
+     if (auto && ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
     }
@@ -14998,7 +15076,7 @@
     {
      if (loginK.inUse === false)
       return false;
-     if ((kick.net.oAuth.cfgVals() & 0x01) === 0x01)
+     if ((kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL)
      {
       loginK.showOut();
       return false;
@@ -15032,7 +15110,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginK.begin();');
      cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on Kick</span>';
-     if (auto && ((youtube.net.oAuth.cfgVals() & 0x04) === 0x04 || (twitch.net.oAuth.cfgVals() & 0x04) === 0x04))
+     if (auto && ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
     }
@@ -15150,14 +15228,14 @@
      if (!window.hasOwnProperty('obsstudio') && !shared.storage.getItem('emotewall.obs_notfound'))
      {
       shared.storage.setItem('emotewall.obs_notfound', '1');
-      notice.error(0x09);
+      notice.error(notice.Type.GLOBAL_OBS);
      }
      loginT.use();
      loginYT.use();
      loginK.use();
-     const bT = (twitch.net.oAuth.cfgVals() & 0x04) === 0x04;
-     const bYT = (youtube.net.oAuth.cfgVals() & 0x04) === 0x04;
-     const bK = (kick.net.oAuth.cfgVals() & 0x01) === 0x01;
+     const bT = (twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
+     const bYT = (youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
+     const bK = (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL;
      const nT = cfg.hasOwnProperty('twitch') && cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null;
      const nYT = cfg.hasOwnProperty('youtube') && cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null;
      //const nK = cfg.hasOwnProperty('kick') && cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null;
@@ -15200,7 +15278,7 @@
 
     async function _twitch()
     {
-     if ((twitch.net.oAuth.cfgVals() & 0x04) !== 0x04)
+     if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
       return false;
      if (await twitch.global() === false)
       return false;
@@ -15211,11 +15289,11 @@
 
     async function _youtube()
     {
-     if ((youtube.net.oAuth.cfgVals() & 0x04) !== 0x04)
+     if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
       return false;
      if (await youtube.global() === false)
       return false;
-     notice.expect |= 0x08;
+     notice.expect |= notice.Connection.YOUTUBE;
      if (cfg.event.youtube.sub !== false)
       youtube.net.subscribers();
      youtube.net.members();
@@ -15225,7 +15303,7 @@
 
     async function _kick()
     {
-     if ((kick.net.oAuth.cfgVals() & 0x01) !== 0x01)
+     if ((kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) !== shared.cfgVal.CHANNEL)
       return false;
      kick.net.socket();
      if (cfg.event.kick.follow !== false)
@@ -15236,7 +15314,7 @@
     function _streamlabs()
     {
      const slCfg = streamlabs.cfgVals();
-     if ((slCfg & 0x01) !== 0x01)
+     if ((slCfg & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
       return;
      streamlabs.socket();
     }
@@ -15246,12 +15324,12 @@
      let seCfg = streamelements.oAuth.cfgVals();
      if (seCfg === 0)
       return;
-     if ((seCfg & 0x02) === 0x02)
+     if ((seCfg & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN)
      {
       await streamelements.oAuth.update();
       seCfg = streamelements.oAuth.cfgVals();
      }
-     if ((seCfg & (0x04 | 0x01)) === 0x00)
+     if ((seCfg & (shared.cfgVal.ACCESS_TOKEN | shared.cfgVal.JWT_TOKEN)) === 0)
       return;
      streamelements.socket();
     }
