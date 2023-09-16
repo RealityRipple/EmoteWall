@@ -1355,31 +1355,32 @@
      if (!_timers.hasOwnProperty(i))
       _timers[i] = false;
      _buildNotices();
+     const tInfo = 5;
      switch (i)
      {
       case notice.Type.TWITCH_IRC:
-       _setNotice(i, 'noticeInfo sTwitch', 'IRC Connected', 5);
+       _setNotice(i, 'noticeInfo sTwitch', 'IRC Connected', tInfo);
        break;
       case notice.Type.TWITCH_EVENTSUB:
-       _setNotice(i, 'noticeInfo sTwitch', 'EventSub Connected', 5);
+       _setNotice(i, 'noticeInfo sTwitch', 'EventSub Connected', tInfo);
        break;
       case notice.Type.YOUTUBE_NETWORK:
-       _setNotice(i, 'noticeInfo sYouTube', 'Connected', 5);
+       _setNotice(i, 'noticeInfo sYouTube', 'Connected', tInfo);
        break;
       case notice.Type.KICK_NETWORK:
-       _setNotice(i, 'noticeInfo sKick', 'Connected', 5);
+       _setNotice(i, 'noticeInfo sKick', 'Connected', tInfo);
        break;
       case notice.Type.STREAMELEMENTS_NETWORK:
-       _setNotice(i, 'noticeInfo tStreamElements', 'Connected', 5);
+       _setNotice(i, 'noticeInfo tStreamElements', 'Connected', tInfo);
        break;
       case notice.Type.STREAMLABS_NETWORK:
-       _setNotice(i, 'noticeInfo tStreamlabs', 'Connected', 5);
+       _setNotice(i, 'noticeInfo tStreamlabs', 'Connected', tInfo);
        break;
       case notice.Type.BTTV_NETWORK:
-       _setNotice(i, 'noticeInfo eBTTV', 'Connected', 5);
+       _setNotice(i, 'noticeInfo eBTTV', 'Connected', tInfo);
        break;
       case notice.Type['7TV_NETWORK']:
-       _setNotice(i, 'noticeInfo e7TV', 'Connected', 5);
+       _setNotice(i, 'noticeInfo e7TV', 'Connected', tInfo);
        break;
      }
     }
@@ -1392,10 +1393,11 @@
      if (!_timers.hasOwnProperty(w))
       _timers[w] = false;
      _buildNotices();
+     const tWarn = 20;
      switch (w)
      {
       case notice.Type.TWITCH_EVENTSUB:
-       _setNotice(w, 'noticeWarning sTwitch', 'Too Many Instances<br>Please use existing (reference) copies wherever possible.', 20);
+       _setNotice(w, 'noticeWarning sTwitch', 'Too Many Instances<br>Please use existing (reference) copies wherever possible.', tWarn);
        break;
      }
     }
@@ -1408,6 +1410,7 @@
      if (!_timers.hasOwnProperty(e))
       _timers[e] = false;
      _buildNotices();
+     const tRetry = 15500;
      switch (e)
      {
       case notice.Type.GLOBAL_CFG:
@@ -1421,7 +1424,7 @@
        {
         _setNotice(e, 'noticeError sTwitch', 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
         loginT.showOut(true);
-        window.setTimeout(function(){loginT.showIn();}, 15500);
+        window.setTimeout(function(){loginT.showIn();}, tRetry);
        }
        else
         _setNotice(e, 'noticeError sTwitch', 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
@@ -1437,7 +1440,7 @@
        {
         _setNotice(e, 'noticeError sYouTube', 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
         loginYT.showOut(true);
-        window.setTimeout(function(){loginYT.showIn();}, 15500);
+        window.setTimeout(function(){loginYT.showIn();}, tRetry);
        }
        else
         _setNotice(e, 'noticeError sYouTube', 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
@@ -1449,7 +1452,7 @@
        if (typeof loginYT !== 'undefined' && loginYT.inUse)
        {
         loginYT.showOut(true);
-        window.setTimeout(function(){loginYT.showIn();}, 15500);
+        window.setTimeout(function(){loginYT.showIn();}, tRetry);
        }
        _setNotice(e, 'noticeError sYouTube', 'Streaming Not Available<br>Your YouTube account does not have streaming enabled.');
        break;
