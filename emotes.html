@@ -5695,233 +5695,270 @@
        window.setTimeout(twitch.net.irc, wsWait);
       }
 
-      async function _wsMessage(ev)
+      const _wsMessage = function()
       {
-       if (_tTimeout !== false)
+       async function wsMessage(ev)
        {
-        window.clearTimeout(_tTimeout);
-        _tTimeout = false;
+        if (_tTimeout !== false)
+        {
+         window.clearTimeout(_tTimeout);
+         _tTimeout = false;
+        }
+        if (_tPing !== 0)
+        {
+         window.clearInterval(_tPing);
+         _tPing = 0;
+        }
+        _tPing = window.setInterval(_wsPing, _lPing);
+        if (_ws === null)
+         return;
+        if (twitch.net.dead)
+        {
+         if (_tExpire !== false)
+         {
+          window.clearTimeout(_tExpire);
+          _tExpire = false;
+         }
+         _ws.onopen = null;
+         _ws.onmessage = null;
+         _ws.onclose = null;
+         _ws.close();
+         _ws = null;
+         return;
+        }
+        _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+        _wsRetry = 0;
+        const data = ev.data.split('\r\n');
+        for (let i = 0, l = data.length; i < l; i++)
+        {
+         if (data[i].length === 0)
+          continue;
+         const cmd = twitch.parse.message(data[i]);
+         if (cmd === false)
+          continue;
+         notice.info(notice.Type.TWITCH_IRC);
+         notice.active |= notice.Connection.TWITCH_IRC;
+         if (notice.tHide !== false)
+         {
+          window.clearTimeout(notice.tHide);
+          notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+         }
+         switch (cmd.command)
+         {
+          case 'PING':
+           await _PING(cmd);
+           break;
+          case 'PRIVMSG':
+           await _PRIVMSG(cmd);
+           break;
+          case 'NOTICE':
+           if (await _NOTICE(cmd))
+            return;
+           break;
+          case 'ROOMSTATE':
+           await _ROOMSTATE(cmd);
+           break;
+          case 'USERNOTICE':
+           _USERNOTICE(cmd);
+           break;
+          case 'CLEARCHAT':
+           await _CLEARCHAT(cmd);
+           break;
+          case 'RECONNECT':
+           _RECONNECT();
+           return;
+         }
+        }
        }
-       if (_tPing !== 0)
+
+       async function _PING(cmd)
        {
-        window.clearInterval(_tPing);
-        _tPing = 0;
+        if (_ws.readyState === 1)
+         _ws.send('PONG ' + cmd.params[0]);
+        if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.REFRESH_TOKEN) !== shared.cfgVal.REFRESH_TOKEN)
+         return;
+        await twitch.net.oAuth.update();
+        if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
+         notice.error(notice.Type.TWITCH_TOKEN);
        }
-       _tPing = window.setInterval(_wsPing, _lPing);
-       if (_ws === null)
-        return;
-       if (twitch.net.dead)
+
+       async function _PRIVMSG(cmd)
+       {
+        if (document.visibilityState === 'hidden')
+         return;
+        if (cmd.params.length > 1)
+         cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
+        if (await twitch.parse.event.cheer(cmd))
+         return;
+        if (await twitch.parse.event.hypechat(cmd))
+         return;
+        twitch.parse.line(cmd);
+       }
+
+       async function _NOTICE(cmd)
+       {
+        if (cmd.params.length < 2)
+         return false;
+        if (cmd.params[1] !== 'Login authentication failed')
+         return false;
+        if (_tExpire !== false)
+        {
+         window.clearTimeout(_tExpire);
+         _tExpire = false;
+        }
+        if (_tTimeout !== false)
+        {
+         window.clearTimeout(_tTimeout);
+         _tTimeout = false;
+        }
+        if (_tPing !== 0)
+        {
+         window.clearInterval(_tPing);
+         _tPing = 0;
+        }
+        _ws.onmessage = null;
+        _ws.onclose = null;
+        _ws.close();
+        _ws = null;
+        if (await twitch.net.oAuth.reinit())
+        {
+         window.setTimeout(twitch.net.irc, 1000);
+         return true;
+        }
+        twitch.net.dead = true;
+        notice.error(notice.Type.TWITCH_TOKEN);
+        if (!loginT.inUse)
+         twitch.net.oAuth.clear();
+        return false;
+       }
+
+       async function _ROOMSTATE(cmd)
+       {
+        if (!cmd.hasOwnProperty('tags'))
+         return;
+        if (!cmd.tags.hasOwnProperty('room-id'))
+         return;
+        const newID = twitch.net.channelID !== cmd.tags['room-id'];
+        twitch.net.channelID = cmd.tags['room-id'];
+        if (!_firstRS)
+         return;
+        if (_tExpire !== false)
+        {
+         window.clearTimeout(_tExpire);
+         _tExpire = false;
+        }
+        _firstRS = false;
+        if (!newID)
+         return;
+        await _loadEmote_channel(twitch.net.channelID);
+        await _loadCheer_channel(twitch.net.channelID);
+        if (cfg.event.twitch.tag.hasOwnProperty('styles') && cfg.event.twitch.tag.styles !== false)
+         await _getChannelTitleTags(twitch.net.channelID);
+        if (cfg.display.extended.useFFZ)
+         thirdparty.ffz.channel(twitch.net.channelID);
+        if (cfg.display.extended.useBTTV)
+        {
+         thirdparty.bttv.channel('twitch', twitch.net.channelID);
+         thirdparty.bttv.socket.join('twitch', twitch.net.channelID);
+        }
+        if (cfg.display.extended.use7TV)
+        {
+         thirdparty['7tv'].channel('twitch', twitch.net.channelID);
+         await thirdparty['7tv'].events('twitch', twitch.net.channelID);
+        }
+        if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
+         thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
+        if (cfg.display.extended.useBTTV)
+         thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
+        _eventSub(twitch.net.channelID);
+       }
+
+       function _USERNOTICE(cmd)
+       {
+        if (document.visibilityState === 'hidden')
+         return;
+        if (!cmd.hasOwnProperty('tags'))
+         return;
+        if (!cmd.tags.hasOwnProperty('msg-id'))
+         return;
+        if (cmd.params.length > 1)
+         cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
+        switch (cmd.tags['msg-id'])
+        {
+         case 'raid':
+          twitch.parse.event.raid(cmd);
+          break;
+         case 'sub':
+         case 'resub':
+         case 'subgift':
+         case 'submysterygift':
+         case 'giftpaidupgrade':
+         case 'primepaidupgrade':
+          twitch.parse.event.sub(cmd);
+          break;
+         case 'bitsbadgetier':
+          twitch.parse.event.badge(cmd);
+          break;
+         default:
+          if (cmd.params.length > 1)
+           twitch.parse.line(cmd);
+          break;
+        }
+       }
+
+       async function _CLEARCHAT(cmd)
+       {
+        switch (cmd.params.length)
+        {
+         case 1:
+          if (cfg.event.twitch.clear)
+           display.eraseAll();
+          break;
+         case 2:
+          if (document.visibilityState === 'hidden')
+           return;
+          if (cmd.tags.hasOwnProperty('ban-duration'))
+          {
+           if (cfg.event.twitch.timeout !== false)
+           await twitch.parse.event.timeout(cmd);
+          }
+          else
+          {
+           if (cfg.event.twitch.ban !== false)
+            await twitch.parse.event.ban(cmd);
+          }
+          break;
+        }
+       }
+
+       function _RECONNECT()
        {
         if (_tExpire !== false)
         {
          window.clearTimeout(_tExpire);
          _tExpire = false;
         }
-        _ws.onopen = null;
+        if (_tTimeout !== false)
+        {
+         window.clearTimeout(_tTimeout);
+         _tTimeout = false;
+        }
+        if (_tPing !== 0)
+        {
+         window.clearInterval(_tPing);
+         _tPing = 0;
+        }
         _ws.onmessage = null;
         _ws.onclose = null;
         _ws.close();
         _ws = null;
-        return;
+        if (twitch.net.dead === true)
+         return;
+        window.setTimeout(twitch.net.irc, 1000);
        }
-       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
-       _wsRetry = 0;
-       const data = ev.data.split('\r\n');
-       for (let i = 0, l = data.length; i < l; i++)
-       {
-        if (data[i].length === 0)
-         continue;
-        const cmd = twitch.parse.message(data[i]);
-        if (cmd === false)
-        {
-         console.log('Unparsed IRC Command: ', data[i]);
-         continue;
-        }
-        notice.info(notice.Type.TWITCH_IRC);
-        notice.active |= notice.Connection.TWITCH_IRC;
-        if (notice.tHide !== false)
-        {
-         window.clearTimeout(notice.tHide);
-         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
-        }
-        switch (cmd.command)
-        {
-         case 'PING':
-          if (_ws.readyState === 1)
-           _ws.send('PONG ' + cmd.params[0]);
-          if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN)
-          {
-           await twitch.net.oAuth.update();
-           if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
-            notice.error(notice.Type.TWITCH_TOKEN);
-          }
-          break;
-         case 'PRIVMSG':
-          if (document.visibilityState === 'hidden')
-           continue;
-          if (cmd.params.length > 1)
-           cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
-          if (await twitch.parse.event.cheer(cmd))
-           continue;
-          if (await twitch.parse.event.hypechat(cmd))
-           continue;
-          twitch.parse.line(cmd);
-          break;
-         case 'NOTICE':
-          if (cmd.params.length > 1 && cmd.params[1] === 'Login authentication failed')
-          {
-           if (_tExpire !== false)
-           {
-            window.clearTimeout(_tExpire);
-            _tExpire = false;
-           }
-           if (_tTimeout !== false)
-           {
-            window.clearTimeout(_tTimeout);
-            _tTimeout = false;
-           }
-           if (_tPing !== 0)
-           {
-            window.clearInterval(_tPing);
-            _tPing = 0;
-           }
-           _ws.onmessage = null;
-           _ws.onclose = null;
-           _ws.close();
-           _ws = null;
-           if (await twitch.net.oAuth.reinit())
-           {
-            window.setTimeout(twitch.net.irc, 1000);
-            return;
-           }
-           twitch.net.dead = true;
-           notice.error(notice.Type.TWITCH_TOKEN);
-           if (!loginT.inUse)
-            twitch.net.oAuth.clear();
-          }
-          break;
-         case 'ROOMSTATE':
-          if (!cmd.hasOwnProperty('tags'))
-           continue;
-          if (!cmd.tags.hasOwnProperty('room-id'))
-           continue;
-          const newID = twitch.net.channelID !== cmd.tags['room-id'];
-          twitch.net.channelID = cmd.tags['room-id'];
-          if (_firstRS)
-          {
-           if (_tExpire !== false)
-           {
-            window.clearTimeout(_tExpire);
-            _tExpire = false;
-           }
-           _firstRS = false;
-           if (newID)
-           {
-            await _loadEmote_channel(twitch.net.channelID);
-            await _loadCheer_channel(twitch.net.channelID);
-            if (cfg.event.twitch.tag.hasOwnProperty('styles') && cfg.event.twitch.tag.styles !== false)
-             await _getChannelTitleTags(twitch.net.channelID);
-            if (cfg.display.extended.useFFZ)
-             thirdparty.ffz.channel(twitch.net.channelID);
-            if (cfg.display.extended.useBTTV)
-            {
-             thirdparty.bttv.channel('twitch', twitch.net.channelID);
-             thirdparty.bttv.socket.join('twitch', twitch.net.channelID);
-            }
-            if (cfg.display.extended.use7TV)
-            {
-             thirdparty['7tv'].channel('twitch', twitch.net.channelID);
-             await thirdparty['7tv'].events('twitch', twitch.net.channelID);
-            }
-            if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
-             thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
-            if (cfg.display.extended.useBTTV)
-             thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
-            _eventSub(twitch.net.channelID);
-           }
-          }
-          break;
-         case 'USERNOTICE':
-          if (document.visibilityState === 'hidden')
-           continue;
-          if (!cmd.hasOwnProperty('tags'))
-           continue;
-          if (!cmd.tags.hasOwnProperty('msg-id'))
-           continue;
-          if (cmd.params.length > 1)
-           cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
-          switch (cmd.tags['msg-id'])
-          {
-           case 'raid':
-            twitch.parse.event.raid(cmd);
-            break;
-           case 'sub':
-           case 'resub':
-           case 'subgift':
-           case 'submysterygift':
-           case 'giftpaidupgrade':
-           case 'primepaidupgrade':
-            twitch.parse.event.sub(cmd);
-            break;
-           case 'bitsbadgetier':
-            twitch.parse.event.badge(cmd);
-            break;
-           default:
-            if (cmd.params.length > 1)
-             twitch.parse.line(cmd);
-            break;
-          }
-          break;
-         case 'CLEARCHAT':
-          switch (cmd.params.length)
-          {
-           case 1:
-            if (cfg.event.twitch.clear)
-             display.eraseAll();
-            break;
-           case 2:
-            if (document.visibilityState === 'hidden')
-             continue;
-            if (cmd.tags.hasOwnProperty('ban-duration'))
-            {
-             if (cfg.event.twitch.timeout !== false)
-             await twitch.parse.event.timeout(cmd);
-            }
-            else
-            {
-             if (cfg.event.twitch.ban !== false)
-              await twitch.parse.event.ban(cmd);
-            }
-            break;
-          }
-          break;
-         case 'RECONNECT':
-          if (_tExpire !== false)
-          {
-           window.clearTimeout(_tExpire);
-           _tExpire = false;
-          }
-          if (_tTimeout !== false)
-          {
-           window.clearTimeout(_tTimeout);
-           _tTimeout = false;
-          }
-          if (_tPing !== 0)
-          {
-           window.clearInterval(_tPing);
-           _tPing = 0;
-          }
-          _ws.onmessage = null;
-          _ws.onclose = null;
-          _ws.close();
-          _ws = null;
-          if (twitch.net.dead === true)
-           return;
-          window.setTimeout(twitch.net.irc, 1000);
-          break;
-        }
-       }
-      }
+
+       return wsMessage;
+      }();
 
       function _wsExpire()
       {
