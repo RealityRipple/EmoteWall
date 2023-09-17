@@ -1260,7 +1260,10 @@
       set: {
        global: 'https://api.frankerfacez.com/v1/set/global'
       },
-      room: 'https://api.frankerfacez.com/v1/room/id/%CHANNEL_ID%'
+      room: {
+       twitch: 'https://api.frankerfacez.com/v1/room/id/%CHANNEL_ID%',
+       youtube: 'https://api.frankerfacez.com/v1/room/yt/%CHANNEL_ID%'
+      }
      },
      streamelements: {
       validate: 'https://api.streamelements.com/oauth2/validate'
@@ -5855,7 +5858,7 @@
         if (cfg.event.twitch.tag.hasOwnProperty('styles') && cfg.event.twitch.tag.styles !== false)
          await _getChannelTitleTags(twitch.net.channelID);
         if (cfg.display.extended.useFFZ)
-         thirdparty.ffz.channel(twitch.net.channelID);
+         thirdparty.ffz.channel('twitch', twitch.net.channelID);
         if (cfg.display.extended.useBTTV)
         {
          thirdparty.bttv.channel('twitch', twitch.net.channelID);
@@ -7751,7 +7754,7 @@
     {
      if (!cfg.display.extended.useFFZ)
       return [];
-     const rFFZ = await thirdparty.ffz.channelEx(chID);
+     const rFFZ = await thirdparty.ffz.channelEx('twitch', chID);
      if (rFFZ === false)
       return [];
      const e = [];
@@ -7906,6 +7909,8 @@
         if (!youtube.net.channelIDs.includes(lStreams[i].channel))
         {
          youtube.net.channelIDs.push(lStreams[i].channel);
+         if (cfg.display.extended.useFFZ)
+          thirdparty.ffz.channel('youtube', lStreams[i].channel);
          if (cfg.display.extended.useBTTV)
          {
           thirdparty.bttv.channel('youtube', lStreams[i].channel);
@@ -13013,9 +13018,9 @@
       return true;
      }
 
-     async function $channelEx(chID)
+     async function $channelEx(svcName, chID)
      {
-      const url = cURLs.api.ffz.room.replaceAll('%CHANNEL_ID%', chID);
+      const url = cURLs.api.ffz.room[svcName].replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest('GET', url);
       if (!r.success)
        return false;
@@ -13056,7 +13061,7 @@
       return ret;
      }
 
-     async function $channel(chID)
+     async function $channel(svcName, chID)
      {
       if (!thirdparty.emotes.hasOwnProperty('ffz'))
        thirdparty.emotes.ffz = {};
@@ -13064,7 +13069,7 @@
        thirdparty.emotes.zwe = {};
       if (!thirdparty.emotes.zwe.hasOwnProperty('ffz'))
        thirdparty.emotes.zwe.ffz = {};
-      const r = await thirdparty.ffz.channelEx(chID);
+      const r = await thirdparty.ffz.channelEx(svcName, chID);
       if (r === false)
        return false;
       for (let i = 0, l = r.length; i < l; i++)
@@ -13941,7 +13946,14 @@
      if (cfg.display.extended.useFFZ)
      {
       if (!twitch.net.dead && twitch.net.channelID !== 0)
-       thirdparty.ffz.channel(twitch.net.channelID);
+       thirdparty.ffz.channel('twitch', twitch.net.channelID);
+      if (!youtube.net.dead && youtube.net.channelIDs.length > 0)
+      {
+       for (let i = 0, l = youtube.net.channelIDs.length; i < l; i++)
+       {
+        thirdparty.ffz.channel('youtube', youtube.net.channelIDs[i]);
+       }
+      }
      }
      if (cfg.display.extended.use7TV)
      {
@@ -15146,7 +15158,10 @@
       scks.push(_7tv());
      }
      if (bT | bYT)
+     {
+      scks.push(_ffz());
       scks.push(_bttv());
+     }
      if (scks.length > 0)
       await Promise.allSettled(scks);
      if (bT)
@@ -15178,7 +15193,6 @@
       return false;
      if (await twitch.global() === false)
       return false;
-     await _ffz();
      twitch.net.irc();
      return true;
     }
