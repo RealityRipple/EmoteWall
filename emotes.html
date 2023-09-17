@@ -6157,6 +6157,8 @@
 
      const $oAuth = function()
      {
+      const _pathRefresh = '.refresh';
+
       async function $init()
       {
        if (cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null)
@@ -6178,14 +6180,14 @@
         loginT.inUse = false;
         let sRef = cfg.twitch.oauth_refresh;
         loginT.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
-        const lsRef = shared.storage.getItem(loginT.path() + '.refresh');
+        const lsRef = shared.storage.getItem(loginT.path() + _pathRefresh);
         if (lsRef !== null)
          sRef = lsRef;
         const sRet = await _genRefresh(sRef);
         if (sRet !== false)
-         shared.storage.setItem(loginT.path() + '.refresh', sRet);
+         shared.storage.setItem(loginT.path() + _pathRefresh, sRet);
         else
-         shared.storage.removeItem(loginT.path() + '.refresh');
+         shared.storage.removeItem(loginT.path() + _pathRefresh);
         return;
        }
        loginT.inUse = true;
@@ -6195,12 +6197,12 @@
        {
         const sHRet = await _genRefresh(h.oauth_refresh);
         if (sHRet !== false)
-         shared.storage.setItem(loginT.path() + '.refresh', sHRet);
+         shared.storage.setItem(loginT.path() + _pathRefresh, sHRet);
         else
-         shared.storage.removeItem(loginT.path() + '.refresh');
+         shared.storage.removeItem(loginT.path() + _pathRefresh);
         return;
        }
-       const lsRefresh = shared.storage.getItem(loginT.path() + '.refresh');
+       const lsRefresh = shared.storage.getItem(loginT.path() + _pathRefresh);
        if (lsRefresh === null)
        {
         _populateAuth();
@@ -6208,9 +6210,9 @@
        }
        const sLRet = await _genRefresh(lsRefresh);
        if (sLRet !== false)
-        shared.storage.setItem(loginT.path() + '.refresh', sLRet);
+        shared.storage.setItem(loginT.path() + _pathRefresh, sLRet);
        else
-        shared.storage.removeItem(loginT.path() + '.refresh');
+        shared.storage.removeItem(loginT.path() + _pathRefresh);
       }
 
       async function _genAccess(a)
@@ -6343,7 +6345,7 @@
        }
        _populateAuth(sAccess, sRefresh, v);
        if (sRefresh !== twitch.net.oAuth.auth.refresh_token)
-        shared.storage.setItem(loginT.path() + '.refresh', sRefresh);
+        shared.storage.setItem(loginT.path() + _pathRefresh, sRefresh);
       }
 
       async function $reinit()
@@ -6362,13 +6364,13 @@
       function $clear()
       {
        _populateAuth();
-       shared.storage.removeItem(loginT.path() + '.refresh');
+       shared.storage.removeItem(loginT.path() + _pathRefresh);
       }
 
       function $cfgVals()
       {
        let r = 0;
-       const lsRefresh = shared.storage.getItem(loginT.path() + '.refresh');
+       const lsRefresh = shared.storage.getItem(loginT.path() + _pathRefresh);
        if (lsRefresh !== null)
         r |= shared.cfgVal.REFRESH_TOKEN;
        if (twitch.net.oAuth.auth.refresh_token !== false)
@@ -8788,6 +8790,8 @@
 
      const $oAuth = function()
      {
+      const _pathRefresh = '.refresh';
+
       async function $init()
       {
        if (cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null)
@@ -8809,14 +8813,14 @@
         loginYT.inUse = false;
         let sRef = cfg.youtube.oauth_refresh;
         loginYT.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
-        const lsRef = shared.storage.getItem(loginYT.path() + '.refresh');
+        const lsRef = shared.storage.getItem(loginYT.path() + _pathRefresh);
         if (lsRef !== null)
          sRef = lsRef;
         const sRet = await _genRefresh(sRef);
         if (sRet !== false)
-         shared.storage.setItem(loginYT.path() + '.refresh', sRet);
+         shared.storage.setItem(loginYT.path() + _pathRefresh, sRet);
         else
-         shared.storage.removeItem(loginYT.path() + '.refresh');
+         shared.storage.removeItem(loginYT.path() + _pathRefresh);
         return;
        }
        loginYT.inUse = true;
@@ -8826,12 +8830,12 @@
        {
         const sHRet = await _genRefresh(h.oauth_refresh);
         if (sHRet !== false)
-         shared.storage.setItem(loginYT.path() + '.refresh', sHRet);
+         shared.storage.setItem(loginYT.path() + _pathRefresh, sHRet);
         else
-         shared.storage.removeItem(loginYT.path() + '.refresh');
+         shared.storage.removeItem(loginYT.path() + _pathRefresh);
         return;
        }
-       const lsRefresh = shared.storage.getItem(loginYT.path() + '.refresh');
+       const lsRefresh = shared.storage.getItem(loginYT.path() + _pathRefresh);
        if (lsRefresh === null)
        {
         _populateAuth();
@@ -8839,9 +8843,9 @@
        }
        const sLRet = await _genRefresh(lsRefresh);
        if (sLRet !== false)
-        shared.storage.setItem(loginYT.path() + '.refresh', sLRet);
+        shared.storage.setItem(loginYT.path() + _pathRefresh, sLRet);
        else
-        shared.storage.removeItem(loginYT.path() + '.refresh');
+        shared.storage.removeItem(loginYT.path() + _pathRefresh);
       }
 
       async function _genAccess(a)
@@ -8996,19 +9000,19 @@
        }
        _populateAuth(sAccess, sRefresh, v);
        if (sRefresh !== youtube.net.oAuth.auth.refresh_token)
-        shared.storage.setItem(loginYT.path() + '.refresh', sRefresh);
+        shared.storage.setItem(loginYT.path() + _pathRefresh, sRefresh);
       }
 
       function $clear()
       {
        _populateAuth();
-       shared.storage.removeItem(loginYT.path() + '.refresh');
+       shared.storage.removeItem(loginYT.path() + _pathRefresh);
       }
 
       function $cfgVals()
       {
        let r = 0;
-       const lsRefresh = shared.storage.getItem(loginYT.path() + '.refresh');
+       const lsRefresh = shared.storage.getItem(loginYT.path() + _pathRefresh);
        if (lsRefresh !== null)
         r |= shared.cfgVal.REFRESH_TOKEN;
        if (youtube.net.oAuth.auth.refresh_token !== false)
@@ -12762,6 +12766,8 @@
 
     const $oAuth = function()
     {
+     const _pathRefresh = '.refresh';
+
      async function $init()
      {
       if (cfg.streamelements.hasOwnProperty('token') && cfg.streamelements.token !== false && cfg.streamelements.token !== null && cfg.streamelements.token !== 'JWT_TOKEN')
@@ -12780,18 +12786,18 @@
       {
        let sRef = cfg.streamelements.oauth_refresh;
        streamelements.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
-       const lsRef = shared.storage.getItem(_path() + '.refresh');
+       const lsRef = shared.storage.getItem(_path() + _pathRefresh);
        if (lsRef !== null)
         sRef = lsRef;
        const sRet = await _genRefresh(sRef);
        if (sRet !== false)
-        shared.storage.setItem(_path() + '.refresh', sRet);
+        shared.storage.setItem(_path() + _pathRefresh, sRet);
        else
-        shared.storage.removeItem(_path() + '.refresh');
+        shared.storage.removeItem(_path() + _pathRefresh);
        return;
       }
       streamelements.cfgHash = false;
-      const lsRefresh = shared.storage.getItem(_path() + '.refresh');
+      const lsRefresh = shared.storage.getItem(_path() + _pathRefresh);
       if (lsRefresh === null)
       {
        _populateAuth();
@@ -12799,9 +12805,9 @@
       }
       const sLRet = await _genRefresh(lsRefresh);
       if (sLRet !== false)
-       shared.storage.setItem(_path() + '.refresh', sLRet);
+       shared.storage.setItem(_path() + _pathRefresh, sLRet);
       else
-       shared.storage.removeItem(_path() + '.refresh');
+       shared.storage.removeItem(_path() + _pathRefresh);
      }
 
      async function _genJWT(t)
@@ -12944,13 +12950,13 @@
       }
       _populateAuth(sAccess, sRefresh, v);
       if (sRefresh !== streamelements.oAuth.auth.refresh_token)
-       shared.storage.setItem(_path() + '.refresh', sRefresh);
+       shared.storage.setItem(_path() + _pathRefresh, sRefresh);
      }
 
      function $cfgVals()
      {
       let r = 0;
-      const lsRefresh = shared.storage.getItem(_path() + '.refresh');
+      const lsRefresh = shared.storage.getItem(_path() + _pathRefresh);
       if (lsRefresh !== null)
        r |= shared.cfgVal.REFRESH_TOKEN;
       if (streamelements.oAuth.auth.jwt_token !== false)
