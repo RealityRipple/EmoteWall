@@ -10260,6 +10260,8 @@
         return;
        const dn = cmd.host_username;
        const u = await _getUserProfile(dn);
+       if (u === false)
+        return;
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.name))
         return;
        if (!cfg.event.kick.raid.originEmotes)
@@ -10731,7 +10733,7 @@
      return e;
     }
 
-    async function _getUserProfile(dn)
+    async function _getUserProfile(dn, retry = false)
     {
      const slug = _usesHyphen === true ? kick.net.oAuth.auth.channel.replaceAll('_', '-') : kick.net.oAuth.auth.channel;
      const url = cURLs.api.kick.users.replaceAll('%CHANNEL_NAME%', encodeURIComponent(slug)).replaceAll('%USER%', encodeURIComponent(dn));
@@ -10742,6 +10744,11 @@
       {
        _usesHyphen = true;
        return _getUserProfile(dn);
+      }
+      if (retry === false)
+      {
+       if (r.code === 0 && r.data === '')
+        return _getUserProfile(dn, true);
       }
       return false;
      }
