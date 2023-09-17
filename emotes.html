@@ -9470,273 +9470,355 @@
        window.setTimeout(kick.net.socket, wsWait);
       }
 
-      async function _wsMessage(ev)
+      const _wsMessage = function()
       {
-       if (_tTimeout !== false)
+       async function $c_wsMessage(ev)
        {
-        window.clearTimeout(_tTimeout);
-        _tTimeout = false;
+        if (_tTimeout !== false)
+        {
+         window.clearTimeout(_tTimeout);
+         _tTimeout = false;
+        }
+        if (_tPing !== 0)
+        {
+         window.clearInterval(_tPing);
+         _tPing = 0;
+        }
+        if (_ws === null)
+         return;
+        if (kick.net.dead)
+        {
+         if (_tExpire !== false)
+         {
+          window.clearTimeout(_tExpire);
+          _tExpire = false;
+         }
+         _ws.onopen = null;
+         _ws.onmessage = null;
+         _ws.onclose = null;
+         _ws.close();
+         _ws = null;
+         return;
+        }
+        const j = JSON.parse(ev.data);
+        if (!j.hasOwnProperty('event') || j.event === null)
+         return;
+        if (j.event === 'pusher:error')
+        {
+         _pusher_error(j);
+         return;
+        }
+        if (!j.hasOwnProperty('data') || j.data === null)
+         return;
+        _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+        _tPing = window.setInterval(_wsPing, _lPing);
+        _wsRetry = 0;
+        notice.info(notice.Type.KICK_NETWORK);
+        notice.active |= notice.Connection.KICK;
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
+        if (j.event.startsWith('pusher:'))
+        {
+         _pusher(j);
+         return;
+        }
+        if (j.event.startsWith('pusher_internal:'))
+        {
+         await _pusher_internal(j);
+         return;
+        }
+        if (j.event.startsWith('App\\Events\\'))
+        {
+         await _App_Events(j);
+         return;
+        }
+        const jData = JSON.parse(j.data);
+        console.log('unknown event:', j.event, jData);
        }
-       if (_tPing !== 0)
+
+       function _pusher_error(j)
        {
-        window.clearInterval(_tPing);
-        _tPing = 0;
-       }
-       if (_ws === null)
-        return;
-       if (kick.net.dead)
-       {
+        if (!j.hasOwnProperty('data'))
+        {
+         console.log(j);
+         return;
+        }
+        if (j.data === null)
+        {
+         console.log(j);
+         return;
+        }
+        if (!j.data.hasOwnProperty('code'))
+        {
+         console.log(j);
+         return;
+        }
+        if (j.data.code === null)
+        {
+         console.log(j);
+         return;
+        }
         if (_tExpire !== false)
         {
          window.clearTimeout(_tExpire);
          _tExpire = false;
         }
-        _ws.onopen = null;
         _ws.onmessage = null;
         _ws.onclose = null;
         _ws.close();
         _ws = null;
-        return;
-       }
-       const j = JSON.parse(ev.data);
-       if (!j.hasOwnProperty('event') || j.event === null)
-        return;
-       if (j.event === 'pusher:error')
-       {
-        if (j.hasOwnProperty('data') && j.data !== null)
+        if (kick.net.dead === true)
+         return;
+        if (j.data.code >= 4000 && j.data.code <= 4099)
         {
-         if (j.data.hasOwnProperty('code') && j.data.code !== null)
+         if (j.data.hasOwnProperty('message') && j.data.message !== null)
+          notice.error(notice.Type.KICK_UNKNOWN, j.data.message);
+         notice.error(notice.Type.KICK_NETWORK);
+         return;
+        }
+        if (j.data.code >= 4100 && j.data.code <= 4199)
+        {
+         const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+         if (_wsRetry < 2)
+          _wsRetry += 0.2;
+         window.setTimeout(kick.net.socket, wsWait);
+         return;
+        }
+        if (j.data.code >= 4200 && j.data.code <= 4299)
+        {
+         window.setTimeout(kick.net.socket, 200);
+         return;
+        }
+        console.log(j);
+       }
+
+       const _pusher = function()
+       {
+        function $c_pusher(j)
+        {
+         const jData = JSON.parse(j.data);
+         switch (j.event.slice(7))
          {
-          if (j.data.code >= 4000 && j.data.code <= 4099)
-          {
-           if (_tExpire !== false)
-           {
-            window.clearTimeout(_tExpire);
-            _tExpire = false;
-           }
-           _ws.onmessage = null;
-           _ws.onclose = null;
-           _ws.close();
-           _ws = null;
-           if (kick.net.dead === true)
-            return;
-           if (j.data.hasOwnProperty('message') && j.data.message !== null)
-            notice.error(notice.Type.KICK_UNKNOWN, j.data.message);
-           notice.error(notice.Type.KICK_NETWORK);
+          case 'pong':
            return;
-          }
-          else if (j.data.code >= 4100 && j.data.code <= 4199)
-          {
-           if (_tExpire !== false)
-           {
-            window.clearTimeout(_tExpire);
-            _tExpire = false;
-           }
-           _ws.onmessage = null;
-           _ws.onclose = null;
-           _ws.close();
-           _ws = null;
-           if (kick.net.dead === true)
-            return;
-           const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
-           if (_wsRetry < 2)
-            _wsRetry += 0.2;
-           window.setTimeout(kick.net.socket, wsWait);
+          case 'ping':
+           _ws.send(JSON.stringify({event: 'pusher:pong', data: {}}));
            return;
-          }
-          else if (j.data.code >= 4200 && j.data.code <= 4299)
-          {
-           if (_tExpire !== false)
-           {
-            window.clearTimeout(_tExpire);
-            _tExpire = false;
-           }
-           _ws.onmessage = null;
-           _ws.onclose = null;
-           _ws.close();
-           _ws = null;
-           if (kick.net.dead === true)
-            return;
-           window.setTimeout(kick.net.socket, 200);
+          case 'connection_established':
+           _connection_established(jData);
            return;
-          }
          }
-         console.log(j.data);
+         console.log('unknown pusher event:', j.event.slice(7), jData);
         }
-        else
-         console.log(j);
-        return;
-       }
-       if (!j.hasOwnProperty('data') || j.data === null)
-        return;
-       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
-       _tPing = window.setInterval(_wsPing, _lPing);
-       _wsRetry = 0;
-       const jData = JSON.parse(j.data);
-       notice.info(notice.Type.KICK_NETWORK);
-       notice.active |= notice.Connection.KICK;
-       if (notice.tHide !== false)
-       {
-        window.clearTimeout(notice.tHide);
-        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
-       }
-       if (j.event.startsWith('pusher:'))
-       {
-        switch (j.event.slice(7))
+
+        function _connection_established(jData)
         {
-         case 'pong':
-          return;
-         case 'ping':
-          _ws.send(JSON.stringify({event: 'pusher:pong', data: {}}));
-          return;
-         case 'connection_established':
-          _lTimeout = 120000;
-          _lPing = 30000;
-          if (jData.hasOwnProperty('activity_timeout') && jData.activity_timeout !== null)
-          {
-           _lTimeout = jData.activity_timeout * 1000;
-           _lPing = Math.floor(_lTimeout / 2);
-          }
-          if (_tTimeout !== false)
-          {
-           window.clearTimeout(_tTimeout);
-           _tTimeout = false;
-          }
-          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
-          if (_tPing !== 0)
-          {
-           window.clearInterval(_tPing);
-           _tPing = 0;
-          }
-          _tPing = window.setInterval(_wsPing, _lPing);
-          _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'chatrooms.' + kick.net.chatID + '.v2'}}));
-          return;
+         _lTimeout = 120000;
+         _lPing = 30000;
+         if (jData.hasOwnProperty('activity_timeout') && jData.activity_timeout !== null)
+         {
+          _lTimeout = jData.activity_timeout * 1000;
+          _lPing = Math.floor(_lTimeout / 2);
+         }
+         if (_tTimeout !== false)
+         {
+          window.clearTimeout(_tTimeout);
+          _tTimeout = false;
+         }
+         _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+         if (_tPing !== 0)
+         {
+          window.clearInterval(_tPing);
+          _tPing = 0;
+         }
+         _tPing = window.setInterval(_wsPing, _lPing);
+         _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'chatrooms.' + kick.net.chatID + '.v2'}}));
         }
-        console.log('unknown pusher event:', j.event.slice(7), jData);
-        return;
-       }
-       if (j.event.startsWith('pusher_internal:'))
+
+        return $c_pusher;
+       }();
+
+       const _pusher_internal = function()
        {
-        switch (j.event.slice(16))
+        async function $c_pusher_internal(j)
         {
-         case 'subscription_succeeded':
-          if (!j.hasOwnProperty('channel') || j.channel === null)
+         const jData = JSON.parse(j.data);
+         switch (j.event.slice(16))
+         {
+          case 'subscription_succeeded':
+           await _subscription_succeded(j);
            return;
-          if (j.channel === 'chatrooms.' + kick.net.chatID + '.v2')
-          {
-           if (_tExpire !== false)
-           {
-            window.clearTimeout(_tExpire);
-            _tExpire = false;
-           }
-           await _loadEmote_channel(kick.net.oAuth.auth.channel);
-           if (cfg.display.extended.use7TV && kick.net.userID !== 0)
-           {
-            thirdparty['7tv'].channel('kick', kick.net.userID);
-            await thirdparty['7tv'].events('kick', kick.net.userID);
-            thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
-           }
-          }
-          return;
+         }
+         console.log('unknown internal pusher event:', j.event.slice(16), jData);
         }
-        console.log('unknown internal pusher event:', j.event.slice(16), jData);
-        return;
-       }
-       if (j.event.startsWith('App\\Events\\'))
-       {
-        switch (j.event.slice(11))
+
+        async function _subscription_succeded(j)
         {
-         case 'ChatMessageEvent':
-          if (document.visibilityState === 'hidden')
-           return;
-          kick.parse.line(jData);
+         if (!j.hasOwnProperty('channel') || j.channel === null)
           return;
-         case 'UserBannedEvent':
-          if (document.visibilityState === 'hidden')
+         if (j.channel !== 'chatrooms.' + kick.net.chatID + '.v2')
+          return;
+         if (_tExpire !== false)
+         {
+          window.clearTimeout(_tExpire);
+          _tExpire = false;
+         }
+         await _loadEmote_channel(kick.net.oAuth.auth.channel);
+         if (cfg.display.extended.use7TV && kick.net.userID !== 0)
+         {
+          thirdparty['7tv'].channel('kick', kick.net.userID);
+          await thirdparty['7tv'].events('kick', kick.net.userID);
+          thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
+         }
+        }
+
+        return $c_pusher_internal;
+       }();
+
+       const _App_Events = function()
+       {
+        async function $c_App_Events(j)
+        {
+         const jData = JSON.parse(j.data);
+         switch (j.event.slice(11))
+         {
+          case 'ChatMessageEvent':
+           _ChatMessageEvent(jData);
            return;
-          if (jData.hasOwnProperty('expires_at') && jData.expires_at !== null)
+          case 'UserBannedEvent':
+           await _UserBannedEvent(jData);
+           return;
+          case 'StreamHostEvent':
+           _StreamHostEvent(jData);
+           return;
+          case 'SubscriptionEvent':
+           _SubscriptionEvent(jData);
+           return;
+          case 'GiftedSubscriptionsEvent':
+           _GiftedSubscriptionsEvent(jData);
+           return;
+          case 'PollUpdateEvent':
+           _PollUpdateEvent(jData);
+           return;
+          case 'PollDeleteEvent':
+           _PollDeleteEvent();
+           return;
+          case 'ChatroomClearEvent':
+           _ChatroomClearEvent();
+           return;
+         }
+         console.log('unhandled app event:', j.event.slice(11), jData);
+        }
+
+        function _ChatMessageEvent(jData)
+        {
+         if (document.visibilityState === 'hidden')
+          return;
+         kick.parse.line(jData);
+        }
+
+        async function _UserBannedEvent(jData)
+        {
+         if (document.visibilityState === 'hidden')
+          return;
+         if (jData.hasOwnProperty('expires_at') && jData.expires_at !== null)
+         {
+          if (cfg.event.kick.timeout !== false)
+           await kick.parse.event.timeout(jData);
+         }
+         else
+         {
+          if (cfg.event.kick.ban !== false)
+           await kick.parse.event.ban(jData);
+         }
+        }
+
+        function _StreamHostEvent(jData)
+        {
+         if (jData.optional_message !== '')
+          console.log(jData.host_username + ' hosted for ' + jData.number_viewers + ' viewers with the message: ' + jData.optional_message);
+         if (document.visibilityState === 'hidden')
+          return;
+         kick.parse.event.raid(jData);
+        }
+
+        function _SubscriptionEvent(jData)
+        {
+         if (document.visibilityState === 'hidden')
+          return;
+         kick.parse.event.sub(jData);
+        }
+
+        function _GiftedSubscriptionsEvent(jData)
+        {
+         if (document.visibilityState === 'hidden')
+          return;
+         kick.parse.event.gift(jData);
+        }
+
+        function _PollUpdateEvent(jData)
+        {
+         if (cfg.event.kick.poll === false)
+          return;
+         if ((!cfg.event.kick.poll.hasOwnProperty('begin') || cfg.event.kick.poll.begin === false) && (!cfg.event.kick.poll.hasOwnProperty('end') || cfg.event.kick.poll.end === false))
+          return;
+         if (!jData.hasOwnProperty('poll') || jData.poll === null)
+          return;
+         if (!jData.poll.hasOwnProperty('remaining') || jData.poll.remaining === null)
+          return;
+         if (_tPoll !== false)
+         {
+          window.clearTimeout(_tPoll);
+          _tPoll = false;
+         }
+         _tPoll = window.setTimeout(
+          function()
           {
-           if (cfg.event.kick.timeout !== false)
-            await kick.parse.event.timeout(jData);
-          }
-          else
-          {
-           if (cfg.event.kick.ban !== false)
-            await kick.parse.event.ban(jData);
-          }
-          return;
-         case 'StreamHostEvent':
-          if (jData.optional_message !== '')
-           console.log(jData.host_username + ' hosted for ' + jData.number_viewers + ' viewers with the message: ' + jData.optional_message);
-          if (document.visibilityState === 'hidden')
-           return;
-          kick.parse.event.raid(jData);
-          return;
-         case 'SubscriptionEvent':
-          if (document.visibilityState === 'hidden')
-           return;
-          kick.parse.event.sub(jData);
-          return;
-         case 'GiftedSubscriptionsEvent':
-          if (document.visibilityState === 'hidden')
-           return;
-          kick.parse.event.gift(jData);
-          return;
-         case 'PollUpdateEvent':
-          if (cfg.event.kick.poll === false)
-           return;
-          if ((!cfg.event.kick.poll.hasOwnProperty('begin') || cfg.event.kick.poll.begin === false) && (!cfg.event.kick.poll.hasOwnProperty('end') || cfg.event.kick.poll.end === false))
-           return;
-          if (!jData.hasOwnProperty('poll') || jData.poll === null)
-           return;
-          if (!jData.poll.hasOwnProperty('remaining') || jData.poll.remaining === null)
-           return;
-          if (_tPoll !== false)
-          {
-           window.clearTimeout(_tPoll);
+           kick.parse.event.pollEnd(jData.poll);
            _tPoll = false;
-          }
-          _tPoll = window.setTimeout(
-           function()
-           {
-            kick.parse.event.pollEnd(jData.poll);
-            _tPoll = false;
-           },
-           jData.poll.remaining * 1000
-          );
-          if (!jData.poll.hasOwnProperty('duration') || jData.poll.duration === null)
+          },
+          jData.poll.remaining * 1000
+         );
+         if (!jData.poll.hasOwnProperty('duration') || jData.poll.duration === null)
+          return;
+         if (jData.poll.duration === jData.poll.remaining)
+         {
+          if (!cfg.event.kick.poll.hasOwnProperty('begin'))
            return;
-          if (jData.poll.duration === jData.poll.remaining)
-          {
-           if (!cfg.event.kick.poll.hasOwnProperty('begin'))
-            return;
-           if (cfg.event.kick.poll.begin === false)
-            return;
-           if (document.visibilityState === 'hidden')
-            return;
-           if (!jData.poll.hasOwnProperty('title') || jData.poll.title === null)
-            return;
-           display.kappa.show(false, cfg.event.kick.poll.begin, {'%TITLE%': jData.poll.title});
+          if (cfg.event.kick.poll.begin === false)
            return;
-          }
+          if (document.visibilityState === 'hidden')
+           return;
+          if (!jData.poll.hasOwnProperty('title') || jData.poll.title === null)
+           return;
+          display.kappa.show(false, cfg.event.kick.poll.begin, {'%TITLE%': jData.poll.title});
           return;
-         case 'PollDeleteEvent':
-          if (_tPoll !== false)
-          {
-           window.clearTimeout(_tPoll);
-           _tPoll = false;
-          }
-          return;
-         case 'ChatroomClearEvent':
-          if (cfg.event.kick.clear)
-           display.eraseAll();
-          return;
+         }
         }
-        console.log('unhandled app event:', j.event.slice(11), jData);
-        return;
-       }
-       console.log('unknown event:', j.event, jData);
-      }
+
+        function _PollDeleteEvent()
+        {
+         if (_tPoll !== false)
+         {
+          window.clearTimeout(_tPoll);
+          _tPoll = false;
+         }
+        }
+
+        function _ChatroomClearEvent()
+        {
+         if (cfg.event.kick.clear)
+          display.eraseAll();
+        }
+
+        return $c_App_Events;
+       }();
+
+       return $c_wsMessage;
+      }();
 
       function _wsExpire()
       {
