@@ -4771,6 +4771,30 @@
 
     const $net = function()
     {
+     function _findBestURL(imgs)
+     {
+      const themes = ['dark', 'light'];
+      const anims = ['animated', 'static'];
+      const sizes = ['4', '3', '2', '1.5', '1'];
+      for (const theme of themes)
+      {
+       if (!imgs.hasOwnProperty(theme))
+        continue;
+       for (const anim of anims)
+       {
+        if (!imgs[theme].hasOwnProperty(anim))
+         continue;
+        for (const size of sizes)
+        {
+         if (!imgs[theme][anim].hasOwnProperty(size))
+          continue;
+         return imgs[theme][anim][size];
+        }
+       }
+      }
+      return false;
+     }
+
      async function _loadCheer_channel(chID)
      {
       if (!thirdparty.emotes.hasOwnProperty('cheer'))
@@ -4804,66 +4828,8 @@
         if (!set.tiers[i].hasOwnProperty('images'))
          continue;
         const amt = set.tiers[i].min_bits;
-        let img = null;
-        if (set.tiers[i].images.hasOwnProperty('dark'))
-        {
-         if (set.tiers[i].images.dark.hasOwnProperty('animated'))
-         {
-          if (set.tiers[i].images.dark.animated.hasOwnProperty('4'))
-           img = set.tiers[i].images.dark.animated['4'];
-          else if (set.tiers[i].images.dark.animated.hasOwnProperty('3'))
-           img = set.tiers[i].images.dark.animated['3'];
-          else if (set.tiers[i].images.dark.animated.hasOwnProperty('2'))
-           img = set.tiers[i].images.dark.animated['2'];
-          else if (set.tiers[i].images.dark.animated.hasOwnProperty('1.5'))
-           img = set.tiers[i].images.dark.animated['1.5'];
-          else if (set.tiers[i].images.dark.animated.hasOwnProperty('1'))
-           img = set.tiers[i].images.dark.animated['1'];
-         }
-         else if (set.tiers[i].images.dark.hasOwnProperty('static'))
-         {
-          if (set.tiers[i].images.dark.static.hasOwnProperty('4'))
-           img = set.tiers[i].images.dark.static['4'];
-          else if (set.tiers[i].images.dark.static.hasOwnProperty('3'))
-           img = set.tiers[i].images.dark.static['3'];
-          else if (set.tiers[i].images.dark.static.hasOwnProperty('2'))
-           img = set.tiers[i].images.dark.static['2'];
-          else if (set.tiers[i].images.dark.static.hasOwnProperty('1.5'))
-           img = set.tiers[i].images.dark.static['1.5'];
-          else if (set.tiers[i].images.dark.static.hasOwnProperty('1'))
-           img = set.tiers[i].images.dark.static['1'];
-         }
-        }
-        else if (set.tiers[i].images.hasOwnProperty('light'))
-        {
-         if (set.tiers[i].images.light.hasOwnProperty('animated'))
-         {
-          if (set.tiers[i].images.light.animated.hasOwnProperty('4'))
-           img = set.tiers[i].images.light.animated['4'];
-          else if (set.tiers[i].images.light.animated.hasOwnProperty('3'))
-           img = set.tiers[i].images.light.animated['3'];
-          else if (set.tiers[i].images.light.animated.hasOwnProperty('2'))
-           img = set.tiers[i].images.light.animated['2'];
-          else if (set.tiers[i].images.light.animated.hasOwnProperty('1.5'))
-           img = set.tiers[i].images.light.animated['1.5'];
-          else if (set.tiers[i].images.light.animated.hasOwnProperty('1'))
-           img = set.tiers[i].images.light.animated['1'];
-         }
-         else if (set.tiers[i].images.light.hasOwnProperty('static'))
-         {
-          if (set.tiers[i].images.light.static.hasOwnProperty('4'))
-           img = set.tiers[i].images.light.static['4'];
-          else if (set.tiers[i].images.light.static.hasOwnProperty('3'))
-           img = set.tiers[i].images.light.static['3'];
-          else if (set.tiers[i].images.light.static.hasOwnProperty('2'))
-           img = set.tiers[i].images.light.static['2'];
-          else if (set.tiers[i].images.light.static.hasOwnProperty('1.5'))
-           img = set.tiers[i].images.light.static['1.5'];
-          else if (set.tiers[i].images.light.static.hasOwnProperty('1'))
-           img = set.tiers[i].images.light.static['1'];
-         }
-        }
-        if (img === null)
+        const img = _findBestURL(set.tiers[i].images);
+        if (img === false)
          continue;
         tierList.push({min: amt, img: img});
        }
