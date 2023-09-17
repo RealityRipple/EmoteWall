@@ -4753,7 +4753,7 @@
      const imgs = document.getElementsByTagName('img');
      while (imgs.length)
       imgs[0].parentElement.removeChild(imgs[0]);
-     twitch.parse.clearCooldowns();
+     service.parse.clearCooldowns();
      _eActive = 0;
     }
 
@@ -6411,8 +6411,6 @@
 
     const $parse = function()
     {
-     let _aLast = {};
-
      function _parseUser(cmd, latinOnly = false)
      {
       let data = cmd.prefix;
@@ -6806,132 +6804,10 @@
 
       async function _parseCommand(cmd, lv)
       {
-       const kNow = new Date().getTime();
        const m = cmd.params[1].toLowerCase();
+       const a = _handleDuplicates(await _eListFromCmd(cmd, true));
        const accessModBC = twitch.Access.MODERATOR | twitch.Access.BROADCASTER;
-       if (m === '!cesc' && (lv & accessModBC) !== 0)
-       {
-        shared.ec.clear();
-        return;
-       }
-       let foundAdvCmd = false;
-       for (const k of cfg.commands)
-       {
-        if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase') && !k.hasOwnProperty('rave') && !k.hasOwnProperty('raveon') && !k.hasOwnProperty('raveoff'))
-         continue;
-        if (!k.hasOwnProperty('aliases'))
-         continue;
-        let foundKCmd = false;
-        if (k.aliases.includes(m))
-         foundKCmd = m;
-        if (foundKCmd === false)
-        {
-         for (let i = 0, l = k.aliases.length; i < l; i++)
-         {
-          if (m.slice(0, k.aliases[i].length + 1) === k.aliases[i] + ' ')
-          {
-           foundKCmd = k.aliases[i];
-           break;
-          }
-         }
-        }
-        if (foundKCmd === false)
-         continue;
-        let kAccess = cfg.display.kappa.access;
-        if (k.hasOwnProperty('access'))
-         kAccess = k.access;
-        if ((lv & kAccess) === 0)
-         continue;
-        foundAdvCmd = true;
-        if (k.hasOwnProperty('cooldown'))
-        {
-         const hK = Symbol.for(JSON.stringify(k));
-         if (!_aLast.hasOwnProperty(hK))
-          _aLast[hK] = 0;
-         if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
-          continue;
-        }
-        if (k.hasOwnProperty('erase'))
-        {
-         display.eraseAll();
-         return true;
-        }
-        if (k.hasOwnProperty('rave'))
-        {
-         if (document.documentElement.classList.contains('rave'))
-          document.documentElement.classList.remove('rave');
-         else
-          document.documentElement.classList.add('rave');
-         return true;
-        }
-        if (k.hasOwnProperty('raveon'))
-        {
-         document.documentElement.classList.add('rave');
-         return true;
-        }
-        if (k.hasOwnProperty('raveoff'))
-        {
-         if (document.documentElement.classList.contains('rave'))
-          document.documentElement.classList.remove('rave');
-         return true;
-        }
-        const kC = {};
-        let cStyles = k.styles;
-        if (typeof cStyles !== 'object')
-        {
-         if (cStyles === false)
-          return foundAdvCmd;
-         if (cfg.display.kappa.styles.length < 1)
-          return foundAdvCmd;
-         cStyles = cfg.display.kappa.styles;
-        }
-        for (const kS in cStyles)
-        {
-         if (!cStyles.hasOwnProperty(kS))
-          continue;
-         kC[kS] = JSON.parse(JSON.stringify(cStyles[kS]));
-         kC[kS].command = foundKCmd;
-         if (foundKCmd.length === m.length)
-          kC[kS].params = null;
-         else
-          kC[kS].params = m.slice(foundKCmd.length + 1);
-        }
-        let eA = false;
-        if (foundKCmd.length < m.length)
-         eA = _handleDuplicates(await _eListFromCmd(cmd, true));
-        _aLast[Symbol.for(JSON.stringify(k))] = kNow;
-        display.kappa.show(eA, kC);
-        return true;
-       }
-       let foundCmd = false;
-       if (cfg.display.kappa.aliases.includes(m))
-        foundCmd = m;
-       if (foundCmd === false)
-       {
-        for (let i = 0, l = cfg.display.kappa.aliases.length; i < l; i++)
-        {
-         if (m.slice(0, cfg.display.kappa.aliases[i].length + 1) === cfg.display.kappa.aliases[i] + ' ')
-         {
-          foundCmd = cfg.display.kappa.aliases[i];
-          break;
-         }
-        }
-       }
-       if (foundCmd === false)
-        return foundAdvCmd;
-       if ((lv & cfg.display.kappa.access) === 0)
-        return foundAdvCmd;
-       const h = Symbol.for(null);
-       if (!_aLast.hasOwnProperty(h))
-        _aLast[h] = 0;
-       if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
-        return true;
-       let a = false;
-       if (foundCmd.length < m.length)
-        a = _handleDuplicates(await _eListFromCmd(cmd, true));
-       _aLast[h] = kNow;
-       display.kappa.show(a);
-       return true;
+       return service.parse.line.parseCommand(m, lv, accessModBC, a);
       }
 
       return task;
@@ -7935,17 +7811,11 @@
       return r;
      }
 
-     function $clearCooldowns()
-     {
-      _aLast = {};
-     }
-
      return {
       message: $message,
       content: $content,
       line: $line,
       event: $event,
-      clearCooldowns: $clearCooldowns,
       uReg: /[^A-Za-z0-9_]/
      };
     }();
@@ -9062,8 +8932,6 @@
 
     const $parse = function()
     {
-     const _aLast = {};
-
      function _parseUser(cmd)
      {
       if (!cmd.hasOwnProperty('authorDetails'))
@@ -9360,107 +9228,10 @@
 
       async function _parseCommand(cmd, lv)
       {
-       const kNow = new Date().getTime();
        const m = _getMessage(cmd).toLowerCase();
-       let foundAdvCmd = false;
-       for (const k of cfg.commands)
-       {
-        if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase'))
-         continue;
-        if (!k.hasOwnProperty('aliases'))
-         continue;
-        let foundKCmd = false;
-        if (k.aliases.includes(m))
-         foundKCmd = m;
-        if (foundKCmd === false)
-        {
-         for (let i = 0, l = k.aliases.length; i < l; i++)
-         {
-          if (m.slice(0, k.aliases[i].length + 1) === k.aliases[i] + ' ')
-          {
-           foundKCmd = k.aliases[i];
-           break;
-          }
-         }
-        }
-        if (foundKCmd === false)
-         continue;
-        let kAccess = cfg.display.kappa.access;
-        if (k.hasOwnProperty('access'))
-         kAccess = k.access;
-        if ((lv & kAccess) === 0)
-         continue;
-        foundAdvCmd = true;
-        if (k.hasOwnProperty('cooldown'))
-        {
-         const hK = Symbol.for(JSON.stringify(k));
-         if (!_aLast.hasOwnProperty(hK))
-          _aLast[hK] = 0;
-         if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
-          continue;
-        }
-        if (k.hasOwnProperty('erase'))
-        {
-         display.eraseAll();
-         return true;
-        }
-        const kC = {};
-        let cStyles = k.styles;
-        if (typeof cStyles !== 'object')
-        {
-         if (cStyles === false)
-          return foundAdvCmd;
-         if (cfg.display.kappa.styles.length < 1)
-          return foundAdvCmd;
-         cStyles = cfg.display.kappa.styles;
-        }
-        for (const kS in cStyles)
-        {
-         if (!cStyles.hasOwnProperty(kS))
-          continue;
-         kC[kS] = JSON.parse(JSON.stringify(cStyles[kS]));
-         kC[kS].command = foundKCmd;
-         if (foundKCmd.length === m.length)
-          kC[kS].params = null;
-         else
-          kC[kS].params = m.slice(foundKCmd.length + 1);
-        }
-        let eA = false;
-        if (foundKCmd.length < m.length)
-         eA = _handleDuplicates(await _eListFromCmd(cmd, true));
-        _aLast[Symbol.for(JSON.stringify(k))] = kNow;
-        display.kappa.show(eA, kC);
-        return true;
-       }
-       let foundCmd = false;
-       if (cfg.display.kappa.aliases.includes(m))
-        foundCmd = m;
-       if (foundCmd === false)
-       {
-        for (let i = 0, l = cfg.display.kappa.aliases.length; i < l; i++)
-        {
-         if (m.slice(0, cfg.display.kappa.aliases[i].length + 1) === cfg.display.kappa.aliases[i] + ' ')
-         {
-          foundCmd = cfg.display.kappa.aliases[i];
-          break;
-         }
-        }
-       }
-       if (foundCmd === false)
-        return foundAdvCmd;
-       if ((lv & cfg.display.kappa.access) === 0)
-        return foundAdvCmd;
-       const h = Symbol.for(null);
-       if (!_aLast.hasOwnProperty(h))
-        _aLast[h] = 0;
-       if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
-        return true;
-       let a = false;
-       if (foundCmd.length < m.length)
-        a = _handleDuplicates(await _eListFromCmd(cmd, true));
-       _aLast[h] = kNow;
-       display.kappa.show(a);
-       return true;
+       const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+       const accessModBC = youtube.Access.MODERATOR | youtube.Access.BROADCASTER;
+       return service.parse.line.parseCommand(m, lv, accessModBC, a);
       }
 
       return task;
@@ -10337,8 +10108,6 @@
 
     const $parse = function()
     {
-     let _aLast = {};
-
      const $content = function()
      {
       async function $emoji(cmd, set, dup = null)
@@ -10468,126 +10237,10 @@
 
       async function _parseCommand(cmd, lv)
       {
-       const kNow = new Date().getTime();
        const m = cmd.content.toLowerCase();
-       let foundAdvCmd = false;
-       for (const k of cfg.commands)
-       {
-        if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase') && !k.hasOwnProperty('rave') && !k.hasOwnProperty('raveon') && !k.hasOwnProperty('raveoff'))
-         continue;
-        if (!k.hasOwnProperty('aliases'))
-         continue;
-        let foundKCmd = false;
-        if (k.aliases.includes(m))
-         foundKCmd = m;
-        if (foundKCmd === false)
-        {
-         for (let i = 0, l = k.aliases.length; i < l; i++)
-         {
-          if (m.slice(0, k.aliases[i].length + 1) === k.aliases[i] + ' ')
-          {
-           foundKCmd = k.aliases[i];
-           break;
-          }
-         }
-        }
-        if (foundKCmd === false)
-         continue;
-        let kAccess = cfg.display.kappa.access;
-        if (k.hasOwnProperty('access'))
-         kAccess = k.access;
-        if ((lv & kAccess) === 0)
-         continue;
-        foundAdvCmd = true;
-        if (k.hasOwnProperty('cooldown'))
-        {
-         const hK = Symbol.for(JSON.stringify(k));
-         if (!_aLast.hasOwnProperty(hK))
-          _aLast[hK] = 0;
-         if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
-          continue;
-        }
-        if (k.hasOwnProperty('erase'))
-        {
-         display.eraseAll();
-         return true;
-        }
-        if (k.hasOwnProperty('rave'))
-        {
-         if (document.documentElement.classList.contains('rave'))
-          document.documentElement.classList.remove('rave');
-         else
-          document.documentElement.classList.add('rave');
-         return true;
-        }
-        if (k.hasOwnProperty('raveon'))
-        {
-         document.documentElement.classList.add('rave');
-         return true;
-        }
-        if (k.hasOwnProperty('raveoff'))
-        {
-         if (document.documentElement.classList.contains('rave'))
-          document.documentElement.classList.remove('rave');
-         return true;
-        }
-        const kC = {};
-        let cStyles = k.styles;
-        if (typeof cStyles !== 'object')
-        {
-         if (cStyles === false)
-          return foundAdvCmd;
-         if (cfg.display.kappa.styles.length < 1)
-          return foundAdvCmd;
-         cStyles = cfg.display.kappa.styles;
-        }
-        for (const kS in cStyles)
-        {
-         if (!cStyles.hasOwnProperty(kS))
-          continue;
-         kC[kS] = JSON.parse(JSON.stringify(cStyles[kS]));
-         kC[kS].command = foundKCmd;
-         if (foundKCmd.length === m.length)
-          kC[kS].params = null;
-         else
-          kC[kS].params = m.slice(foundKCmd.length + 1);
-        }
-        let eA = false;
-        if (foundKCmd.length < m.length)
-         eA = _handleDuplicates(await _eListFromCmd(cmd, true));
-        _aLast[Symbol.for(JSON.stringify(k))] = kNow;
-        display.kappa.show(eA, kC);
-        return true;
-       }
-       let foundCmd = false;
-       if (cfg.display.kappa.aliases.includes(m))
-        foundCmd = m;
-       if (foundCmd === false)
-       {
-        for (let i = 0, l = cfg.display.kappa.aliases.length; i < l; i++)
-        {
-         if (m.slice(0, cfg.display.kappa.aliases[i].length + 1) === cfg.display.kappa.aliases[i] + ' ')
-         {
-          foundCmd = cfg.display.kappa.aliases[i];
-          break;
-         }
-        }
-       }
-       if (foundCmd === false)
-        return foundAdvCmd;
-       if ((lv & cfg.display.kappa.access) === 0)
-        return foundAdvCmd;
-       const h = Symbol.for(null);
-       if (!_aLast.hasOwnProperty(h))
-        _aLast[h] = 0;
-       if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
-        return true;
-       let a = false;
-       if (foundCmd.length < m.length)
-        a = _handleDuplicates(await _eListFromCmd(cmd, true));
-       _aLast[h] = kNow;
-       display.kappa.show(a);
-       return true;
+       const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+       const accessModBC = kick.Access.MODERATOR | kick.Access.BROADCASTER;
+       return service.parse.line.parseCommand(m, lv, accessModBC, a);
       }
 
       return task;
@@ -10974,16 +10627,10 @@
       return r;
      }
 
-     function $clearCooldowns()
-     {
-      _aLast = {};
-     }
-
      return {
       content: $content,
       line: $line,
       event: $event,
-      clearCooldowns: $clearCooldowns,
       uReg: /[^A-Za-z0-9_]/
      };
     }();
@@ -11139,6 +10786,8 @@
    {
     const $parse = function()
     {
+     let _aLast = {};
+
      const $content = function()
      {
       const $emoji = function()
@@ -12173,8 +11822,181 @@
       };
      }();
 
+     const $line = function()
+     {
+      const $parseCommand = function()
+      {
+       async function task(msg, lv, cacheAccess, eA = false)
+       {
+        const kNow = new Date().getTime();
+        if (msg === '!cesc' && (lv & cacheAccess) !== 0)
+        {
+         shared.ec.clear();
+         return true;
+        }
+        let foundAdvCmd = false;
+        for (const k of cfg.commands)
+        {
+         const r = await _adv(msg, lv, k, kNow, eA);
+         if (r.done === true)
+          return r.ret;
+         if (r.found)
+          foundAdvCmd = true;
+        }
+        let foundCmd = false;
+        if (cfg.display.kappa.aliases.includes(msg))
+         foundCmd = msg;
+        if (foundCmd === false)
+        {
+         for (let i = 0, l = cfg.display.kappa.aliases.length; i < l; i++)
+         {
+          if (msg.slice(0, cfg.display.kappa.aliases[i].length + 1) === cfg.display.kappa.aliases[i] + ' ')
+          {
+           foundCmd = cfg.display.kappa.aliases[i];
+           break;
+          }
+         }
+        }
+        if (foundCmd === false)
+         return foundAdvCmd;
+        if ((lv & cfg.display.kappa.access) === 0)
+         return foundAdvCmd;
+        const h = Symbol.for(null);
+        if (!_aLast.hasOwnProperty(h))
+         _aLast[h] = 0;
+        if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
+         return true;
+        let a = false;
+        if (foundCmd.length < msg.length)
+         a = eA;
+        _aLast[h] = kNow;
+        display.kappa.show(a);
+        return true;
+       }
+
+       async function _adv(msg, lv, k, kNow, eA = false)
+       {
+        const r = {
+         done: false,
+         ret: false,
+         found: false
+        };
+        if (!k.hasOwnProperty('styles') && !k.hasOwnProperty('erase') && !k.hasOwnProperty('rave') && !k.hasOwnProperty('raveon') && !k.hasOwnProperty('raveoff'))
+         return r;
+        if (!k.hasOwnProperty('aliases'))
+         return r;
+        let foundKCmd = false;
+        if (k.aliases.includes(msg))
+         foundKCmd = msg;
+        if (foundKCmd === false)
+        {
+         for (let i = 0, l = k.aliases.length; i < l; i++)
+         {
+          if (msg.slice(0, k.aliases[i].length + 1) === k.aliases[i] + ' ')
+          {
+           foundKCmd = k.aliases[i];
+           break;
+          }
+         }
+        }
+        if (foundKCmd === false)
+         return r;
+        let kAccess = cfg.display.kappa.access;
+        if (k.hasOwnProperty('access'))
+         kAccess = k.access;
+        if ((lv & kAccess) === 0)
+         return r;
+        r.found = true;
+        if (k.hasOwnProperty('cooldown'))
+        {
+         const hK = Symbol.for(JSON.stringify(k));
+         if (!_aLast.hasOwnProperty(hK))
+          _aLast[hK] = 0;
+         if (k.cooldown !== 0 && kNow - _aLast[hK] < k.cooldown * 1000)
+          return r;
+        }
+        r.done = true;
+        if (k.hasOwnProperty('erase'))
+        {
+         display.eraseAll();
+         r.ret = true;
+         return r;
+        }
+        if (k.hasOwnProperty('rave'))
+        {
+         if (document.documentElement.classList.contains('rave'))
+          document.documentElement.classList.remove('rave');
+         else
+          document.documentElement.classList.add('rave');
+         r.ret = true;
+         return r;
+        }
+        if (k.hasOwnProperty('raveon'))
+        {
+         document.documentElement.classList.add('rave');
+         r.ret = true;
+         return r;
+        }
+        if (k.hasOwnProperty('raveoff'))
+        {
+         if (document.documentElement.classList.contains('rave'))
+          document.documentElement.classList.remove('rave');
+         r.ret = true;
+         return r;
+        }
+        const kC = {};
+        let cStyles = k.styles;
+        if (typeof cStyles !== 'object')
+        {
+         if (cStyles === false)
+         {
+          r.ret = r.found;
+          return r;
+         }
+         if (cfg.display.kappa.styles.length < 1)
+         {
+          r.ret = r.found;
+          return r;
+         }
+         cStyles = cfg.display.kappa.styles;
+        }
+        for (const kS in cStyles)
+        {
+         if (!cStyles.hasOwnProperty(kS))
+          continue;
+         kC[kS] = JSON.parse(JSON.stringify(cStyles[kS]));
+         kC[kS].command = foundKCmd;
+         if (foundKCmd.length === msg.length)
+          kC[kS].params = null;
+         else
+          kC[kS].params = msg.slice(foundKCmd.length + 1);
+        }
+        let a = false;
+        if (foundKCmd.length < msg.length)
+         a = eA;
+        _aLast[Symbol.for(JSON.stringify(k))] = kNow;
+        display.kappa.show(a, kC);
+        r.ret = true;
+        return r;
+       }
+
+       return task;
+      }();
+
+      return {
+       parseCommand: $parseCommand
+      };
+     }();
+
+     function $clearCooldowns()
+     {
+      _aLast = {};
+     }
+
      return {
-      content: $content
+      content: $content,
+      line: $line,
+      clearCooldowns: $clearCooldowns
      };
     }();
 
