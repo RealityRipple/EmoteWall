@@ -4900,371 +4900,433 @@
        window.setTimeout(_eventSub, wsWait);
       }
 
-      async function _wsMessage(ev)
+      const _wsMessage = function()
       {
-       if (_tTimeout !== false)
+       async function wsMessage(ev)
        {
-        window.clearTimeout(_tTimeout);
-        _tTimeout = false;
-       }
-       if (twitch.net.dead)
-       {
-        if (_ws === null)
+        if (_tTimeout !== false)
+        {
+         window.clearTimeout(_tTimeout);
+         _tTimeout = false;
+        }
+        if (twitch.net.dead)
+        {
+         if (_ws === null)
+          return;
+         _ws.onopen = null;
+         _ws.onmessage = null;
+         _ws.onclose = null;
+         _ws.close();
+         _ws = null;
          return;
-        _ws.onopen = null;
-        _ws.onmessage = null;
-        _ws.onclose = null;
-        _ws.close();
-        _ws = null;
-        return;
+        }
+        _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+        const r = JSON.parse(ev.data);
+        if (!r.hasOwnProperty('metadata'))
+         return;
+        if (!r.hasOwnProperty('payload'))
+         return;
+        notice.info(notice.Type.TWITCH_EVENTSUB);
+        notice.active |= notice.Connection.TWITCH_EVENTSUB;
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
+        switch (r.metadata.message_type)
+        {
+         case 'session_welcome':
+          await _session_welcome(r.payload);
+          break;
+         case 'session_keepalive':
+          _wsRetry = 0;
+          break;
+         case 'session_reconnect':
+          _session_reconnect(r.payload);
+          break;
+         case 'revocation':
+          await _revocation(r.metadata);
+          break;
+         case 'notification':
+          await _notification(r);
+          break;
+        }
        }
-       _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
-       const r = JSON.parse(ev.data);
-       if (!r.hasOwnProperty('metadata'))
-        return;
-       if (!r.hasOwnProperty('payload'))
-        return;
-       notice.info(notice.Type.TWITCH_EVENTSUB);
-       notice.active |= notice.Connection.TWITCH_EVENTSUB;
-       if (notice.tHide !== false)
+
+       async function _session_welcome(p)
        {
-        window.clearTimeout(notice.tHide);
-        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
-       }
-       switch (r.metadata.message_type)
-       {
-        case 'session_welcome':
-         if (_oldWS !== null)
+        if (_oldWS !== null)
+        {
+         _oldWS.close();
+         _oldWS = null;
+         if (_tOldTimeout !== false)
          {
-          _oldWS.close();
-          _oldWS = null;
-          if (_tOldTimeout !== false)
-          {
-           window.clearTimeout(_tOldTimeout);
-           _tOldTimeout = false;
-          }
+          window.clearTimeout(_tOldTimeout);
+          _tOldTimeout = false;
          }
-         if (!r.payload.hasOwnProperty('session'))
-          return;
-         if (r.payload.session.hasOwnProperty('id'))
-          twitch.net.eventSubCtl.sessionID = r.payload.session.id;
-         if (r.payload.session.hasOwnProperty('keepalive_timeout_seconds'))
-         {
-          _lTimeout = parseInt(r.payload.session.keepalive_timeout_seconds, 10) * 2 * 1000;
-          if (_tTimeout !== false)
-          {
-           window.clearTimeout(_tTimeout);
-           _tTimeout = false;
-          }
-          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
-         }
-         const haveSubs = await twitch.net.eventSubCtl.init();
-         if (!haveSubs)
-         {
-          if (_tTimeout !== false)
-          {
-           window.clearTimeout(_tTimeout);
-           _tTimeout = false;
-          }
-          if (_ws !== null)
-          {
-           _ws.onopen = null;
-           _ws.onmessage = null;
-           _ws.onclose = null;
-           _ws.close();
-           _ws = null;
-          }
-          return;
-         }
-         break;
-        case 'session_keepalive':
-         _wsRetry = 0;
-         break;
-        case 'notification':
-         if (!r.metadata.hasOwnProperty('subscription_type'))
-          return;
-         switch (r.metadata.subscription_type)
-         {
-          case 'channel.follow':
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('user_id'))
-            return;
-           if (cfg.ignore.users !== false && r.payload.event.hasOwnProperty('user_login') && cfg.ignore.users.includes(r.payload.event.user_login))
-            return;
-           if (!r.payload.event.hasOwnProperty('user_name'))
-            return;
-           twitch.net.fList[r.payload.event.user_id] = {value: true, t: new Date().getTime()};
-           if (cfg.event.twitch.follow === false)
-            return;
-           if (document.visibilityState === 'hidden')
-            return;
-           display.kappa.show(false, cfg.event.twitch.follow, {'%USER%': r.payload.event.user_name});
-           break;
-          case 'channel.channel_points_custom_reward_redemption.add':
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('reward'))
-            return;
-           if (!r.payload.event.reward.hasOwnProperty('title'))
-            return;
-           if (cfg.ignore.users !== false && r.payload.event.hasOwnProperty('user_login') && cfg.ignore.users.includes(r.payload.event.user_login))
-            return;
-           const n = r.payload.event.reward.title;
-           if (!r.payload.event.hasOwnProperty('user_input') || r.payload.event.user_input === '')
-           {
-            await twitch.parse.event.redeem(n, false);
-            return;
-           }
-           if (!r.payload.event.reward.hasOwnProperty('id'))
-            return;
-           const lnID = r.payload.event.reward.id;
-           if (!_rList.hasOwnProperty(lnID))
-           {
-            _rList[lnID] = {name: n, cmds: []};
-            return;
-           }
-           if (_rList[lnID].name === false)
-            _rList[lnID].name = n;
-           while (_rList[lnID].cmds.length > 0)
-           {
-            await twitch.parse.event.redeem(n, _rList[lnID].cmds.shift());
-           }
-           break;
-          case 'channel.shoutout.create':
-           if (document.visibilityState === 'hidden')
-            return;
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('to_broadcaster_user_id'))
-            return;
-           if (!r.payload.event.hasOwnProperty('to_broadcaster_user_name'))
-            return;
-           await twitch.parse.event.shoutoutCreate(r.payload.event.to_broadcaster_user_id, r.payload.event.to_broadcaster_user_name);
-           break;
-          case 'channel.shoutout.receive':
-           if (document.visibilityState === 'hidden')
-            return;
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('from_broadcaster_user_id'))
-            return;
-           if (cfg.ignore.users !== false && r.payload.event.hasOwnProperty('from_broadcaster_user_login') && cfg.ignore.users.includes(r.payload.event.from_broadcaster_user_login))
-            return;
-           if (!r.payload.event.hasOwnProperty('from_broadcaster_user_name'))
-            return;
-           await twitch.parse.event.shoutoutReceive(r.payload.event.from_broadcaster_user_id, r.payload.event.from_broadcaster_user_name);
-           break;
-          case 'channel.hype_train.begin':
-           if (cfg.event.twitch.hypetrain === false)
-            return;
-           if (!cfg.event.twitch.hypetrain.hasOwnProperty('begin'))
-            return;
-           if (cfg.event.twitch.hypetrain.begin === false)
-            return;
-           if (document.visibilityState === 'hidden')
-            return;
-           display.kappa.show(false, cfg.event.twitch.hypetrain.begin);
-           break;
-          case 'channel.hype_train.end':
-           if (cfg.event.twitch.hypetrain === false)
-            return;
-           if (!cfg.event.twitch.hypetrain.hasOwnProperty('success'))
-            return;
-           if (cfg.event.twitch.hypetrain.success === false)
-            return;
-           if (document.visibilityState === 'hidden')
-            return;
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('level'))
-            return;
-           const rs = shared.findInMaybeRange(cfg.event.twitch.hypetrain.success, r.payload.event.level);
-           if (rs === false)
-            return;
-           display.kappa.show(false, rs);
-           break;
-          case 'channel.poll.begin':
-           if (cfg.event.twitch.poll === false)
-            return;
-           if (!cfg.event.twitch.poll.hasOwnProperty('begin'))
-            return;
-           if (cfg.event.twitch.poll.begin === false)
-            return;
-           if (document.visibilityState === 'hidden')
-            return;
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('title'))
-            return;
-           display.kappa.show(false, cfg.event.twitch.poll.begin, {'%TITLE%': r.payload.event.title});
-           break;
-          case 'channel.poll.end':
-           if (cfg.event.twitch.poll === false)
-            return;
-           if (!cfg.event.twitch.poll.hasOwnProperty('end'))
-            return;
-           if (cfg.event.twitch.poll.end === false)
-            return;
-           if (document.visibilityState === 'hidden')
-            return;
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('title'))
-            return;
-           if (!r.payload.event.hasOwnProperty('status') || r.payload.event.status !== 'completed')
-            return;
-           if (!r.payload.event.hasOwnProperty('choices'))
-            return;
-           twitch.parse.event.pollEnd(r.payload.event);
-           break;
-          case 'channel.prediction.begin':
-           if (cfg.event.twitch.prediction === false)
-            return;
-           if (!cfg.event.twitch.prediction.hasOwnProperty('begin'))
-            return;
-           if (cfg.event.twitch.prediction.begin === false)
-            return;
-           if (document.visibilityState === 'hidden')
-            return;
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('title'))
-            return;
-           display.kappa.show(false, cfg.event.twitch.prediction.begin, {'%TITLE%': r.payload.event.title});
-           break;
-          case 'channel.prediction.end':
-           if (cfg.event.twitch.prediction === false)
-            return;
-           if (!cfg.event.twitch.prediction.hasOwnProperty('resolved'))
-            return;
-           if (cfg.event.twitch.prediction.resolved === false)
-            return;
-           if (document.visibilityState === 'hidden')
-            return;
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('title'))
-            return;
-           if (!r.payload.event.hasOwnProperty('status') || r.payload.event.status !== 'resolved')
-            return;
-           if (!r.payload.event.hasOwnProperty('winning_outcome_id'))
-            return;
-           if (!r.payload.event.hasOwnProperty('outcomes'))
-            return;
-           twitch.parse.event.predictionEnd(r.payload.event);
-           break;
-          case 'channel.charity_campaign.donate':
-           if (cfg.event.twitch.charity === false)
-            return;
-           if (document.visibilityState === 'hidden')
-            return;
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('user_name'))
-            return;
-           const dName = r.payload.event.user_name;
-           if (!r.payload.event.hasOwnProperty('amount'))
-            return;
-           if (!r.payload.event.amount.hasOwnProperty('value'))
-            return;
-           if (!r.payload.event.amount.hasOwnProperty('decimal_places'))
-            return;
-           if (!r.payload.event.amount.hasOwnProperty('currency'))
-            return;
-           const dAmt = r.payload.event.amount.value / Math.pow(10, r.payload.event.decimal_places) + ' ' + r.payload.event.amount.currency;
-           const rd = shared.findInMaybeRange(cfg.event.twitch.charity, r.payload.event.amount.value);
-           if (rd === false)
-            return;
-           display.kappa.show(false, rd, {'%USER%': dName, '%AMOUNT%': dAmt});
-           break;
-          case 'channel.goal.begin':
-           if (cfg.event.twitch.goal === false)
-            return;
-           if (!cfg.event.twitch.goal.hasOwnProperty('begin'))
-            return;
-           if (cfg.event.twitch.goal.begin === false)
-            return;
-           if (document.visibilityState === 'hidden')
-            return;
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('type'))
-            return;
-           if (!r.payload.event.hasOwnProperty('description'))
-            return;
-           if (!r.payload.event.hasOwnProperty('target_amount'))
-            return;
-           display.kappa.show(false, cfg.event.twitch.goal.begin, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.target_amount});
-           break;
-          case 'channel.goal.end':
-           if (cfg.event.twitch.goal === false)
-            return;
-           if (!cfg.event.twitch.goal.hasOwnProperty('achieved'))
-            return;
-           if (cfg.event.twitch.goal.achieved === false)
-            return;
-           if (document.visibilityState === 'hidden')
-            return;
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('type'))
-            return;
-           if (!r.payload.event.hasOwnProperty('description'))
-            return;
-           if (!r.payload.event.hasOwnProperty('current_amount'))
-            return;
-           if (!r.payload.event.hasOwnProperty('is_achieved') || r.payload.event.is_achieved !== true)
-            return;
-           display.kappa.show(false, cfg.event.twitch.goal.achieved, {'%TITLE%': r.payload.event.description, '%TYPE%': r.payload.event.type, '%AMOUNT%': r.payload.event.current_amount});
-           break;
-          case 'channel.update':
-           if (!r.payload.hasOwnProperty('event'))
-            return;
-           if (!r.payload.event.hasOwnProperty('title'))
-            return;
-           await _addToChannelTitleTags(r.payload.event.title);
-           break;
-         }
-         break;
-        case 'session_reconnect':
-         if (!r.payload.hasOwnProperty('session'))
-          return;
+        }
+        if (!p.hasOwnProperty('session'))
+         return;
+        if (p.session.hasOwnProperty('id'))
+         twitch.net.eventSubCtl.sessionID = p.session.id;
+        if (p.session.hasOwnProperty('keepalive_timeout_seconds'))
+        {
+         _lTimeout = parseInt(p.session.keepalive_timeout_seconds, 10) * 2 * 1000;
          if (_tTimeout !== false)
          {
           window.clearTimeout(_tTimeout);
           _tTimeout = false;
          }
-         if (r.payload.session.hasOwnProperty('id'))
-          twitch.net.eventSubCtl.sessionID = r.payload.session.id;
-         if (r.payload.session.hasOwnProperty('keepalive_timeout_seconds') && r.payload.session.keepalive_timeout_seconds !== null)
-          _lTimeout = parseInt(r.payload.session.keepalive_timeout_seconds, 10) * 2 * 1000;
-         if (_ws !== null)
-         {
-          if (r.payload.session.hasOwnProperty('reconnect_url'))
-           _wsURL = r.payload.session.reconnect_url;
-          _oldWS = _ws;
-          _oldWS.onclose = null;
-          _oldWS.onmessage = null;
-          _tOldTimeout = window.setTimeout(_oldWSTimeout, _lOldTimeout);
-          _ws = null;
-         }
-         const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
-         if (_wsRetry < 2)
-          _wsRetry += 0.2;
-         window.setTimeout(_eventSub, wsWait);
-         break;
-        case 'revocation':
+         _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+        }
+        const haveSubs = await twitch.net.eventSubCtl.init();
+        if (haveSubs)
+         return;
+        if (_tTimeout !== false)
+        {
+         window.clearTimeout(_tTimeout);
+         _tTimeout = false;
+        }
+        if (_ws !== null)
+        {
+         _ws.onopen = null;
+         _ws.onmessage = null;
+         _ws.onclose = null;
+         _ws.close();
+         _ws = null;
+        }
+       }
+
+       function _session_reconnect(p)
+       {
+        if (_tTimeout !== false)
+        {
+         window.clearTimeout(_tTimeout);
+         _tTimeout = false;
+        }
+        if (p.hasOwnProperty('session'))
+        {
+         if (p.session.hasOwnProperty('id'))
+          twitch.net.eventSubCtl.sessionID = p.session.id;
+         if (p.session.hasOwnProperty('keepalive_timeout_seconds') && p.session.keepalive_timeout_seconds !== null)
+          _lTimeout = parseInt(p.session.keepalive_timeout_seconds, 10) * 2 * 1000;
+         if (p.session.hasOwnProperty('reconnect_url'))
+          _wsURL = p.session.reconnect_url;
+        }
+        else
+        {
+         twitch.net.eventSubCtl.sessionID = null;
+         _lTimeout = 5000;
+         _wsURL = cURLs.ws.twitch.eventSub;
+        }
+        if (_ws !== null)
+        {
+         _oldWS = _ws;
+         _oldWS.onclose = null;
+         _oldWS.onmessage = null;
+         _tOldTimeout = window.setTimeout(_oldWSTimeout, _lOldTimeout);
+         _ws = null;
+        }
+        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+        if (_wsRetry < 2)
+         _wsRetry += 0.2;
+        window.setTimeout(_eventSub, wsWait);
+       }
+
+       async function _revocation(m)
+       {
+        if (!m.hasOwnProperty('subscription_type'))
+         return;
+        const subType = m.subscription_type;
+        let subVer = '1';
+        if (m.hasOwnProperty('subscription_version'))
+         subVer = m.subscription_version;
+        await twitch.net.eventSubCtl.subscribe(subType, subVer);
+       }
+
+       const _notification = function()
+       {
+        async function notification(r)
+        {
          if (!r.metadata.hasOwnProperty('subscription_type'))
           return;
-         const subType = r.metadata.subscription_type;
-         let subVer = '1';
-         if (r.metadata.hasOwnProperty('subscription_version'))
-          subVer = r.metadata.subscription_version;
-         await twitch.net.eventSubCtl.subscribe(subType, subVer);
-         break;
-       }
-      }
+         if (!r.payload.hasOwnProperty('event'))
+          return;
+         switch (r.metadata.subscription_type)
+         {
+          case 'channel.channel_points_custom_reward_redemption.add':
+           await _channel_points_redeem(r.payload.event);
+           return;
+          case 'channel.update':
+           await _channel_update(r.payload.event);
+           return;
+         }
+         if (document.visibilityState === 'hidden')
+          return;
+         switch (r.metadata.subscription_type)
+         {
+          case 'channel.follow':
+           _follow(r.payload.event);
+           break;
+          case 'channel.shoutout.create':
+           await _shoutout_create(r.payload.event);
+           break;
+          case 'channel.shoutout.receive':
+           await _shoutout_receive(r.payload.event);
+           break;
+          case 'channel.hype_train.begin':
+           _train_begin();
+           return;
+          case 'channel.hype_train.end':
+           _train_end(r.payload.event);
+           break;
+          case 'channel.poll.begin':
+           _poll_begin(r.payload.event);
+           break;
+          case 'channel.poll.end':
+           _poll_end(r.payload.event);
+           break;
+          case 'channel.prediction.begin':
+           _prediction_begin(r.payload.event);
+           break;
+          case 'channel.prediction.end':
+           _prediction_end(r.payload.event);
+           break;
+          case 'channel.charity_campaign.donate':
+           _charity(r.payload.event);
+           break;
+          case 'channel.goal.begin':
+           _goal_begin(r.payload.event);
+           break;
+          case 'channel.goal.end':
+           _goal_end(r.payload.event);
+           break;
+         }
+        }
+
+        async function _channel_points_redeem(ev)
+        {
+         if (!ev.hasOwnProperty('reward'))
+          return;
+         if (!ev.reward.hasOwnProperty('title'))
+          return;
+         if (cfg.ignore.users !== false && ev.hasOwnProperty('user_login') && cfg.ignore.users.includes(ev.user_login))
+          return;
+         const n = ev.reward.title;
+         if (!ev.hasOwnProperty('user_input') || ev.user_input === '')
+         {
+          await twitch.parse.event.redeem(n, false);
+          return;
+         }
+         if (!ev.reward.hasOwnProperty('id'))
+          return;
+         const lnID = ev.reward.id;
+         if (!_rList.hasOwnProperty(lnID))
+         {
+          _rList[lnID] = {name: n, cmds: []};
+          return;
+         }
+         if (_rList[lnID].name === false)
+          _rList[lnID].name = n;
+         while (_rList[lnID].cmds.length > 0)
+         {
+          await twitch.parse.event.redeem(n, _rList[lnID].cmds.shift());
+         }
+        }
+
+        async function _channel_update(ev)
+        {
+         if (!ev.hasOwnProperty('title'))
+          return;
+         await _addToChannelTitleTags(ev.title);
+        }
+
+        function _follow(ev)
+        {
+         if (!ev.hasOwnProperty('user_id'))
+          return;
+         if (cfg.ignore.users !== false && ev.hasOwnProperty('user_login') && cfg.ignore.users.includes(ev.user_login))
+          return;
+         if (!ev.hasOwnProperty('user_name'))
+          return;
+         twitch.net.fList[ev.user_id] = {value: true, t: new Date().getTime()};
+         if (cfg.event.twitch.follow === false)
+          return;
+         display.kappa.show(false, cfg.event.twitch.follow, {'%USER%': ev.user_name});
+        }
+
+        async function _shoutout_create(ev)
+        {
+         if (!ev.hasOwnProperty('to_broadcaster_user_id'))
+          return;
+         if (!ev.hasOwnProperty('to_broadcaster_user_name'))
+          return;
+         await twitch.parse.event.shoutoutCreate(ev.to_broadcaster_user_id, ev.to_broadcaster_user_name);
+        }
+
+        async function _shoutout_receive(ev)
+        {
+         if (!ev.hasOwnProperty('from_broadcaster_user_id'))
+          return;
+         if (cfg.ignore.users !== false && ev.hasOwnProperty('from_broadcaster_user_login') && cfg.ignore.users.includes(ev.from_broadcaster_user_login))
+          return;
+         if (!ev.hasOwnProperty('from_broadcaster_user_name'))
+          return;
+         await twitch.parse.event.shoutoutReceive(ev.from_broadcaster_user_id, ev.from_broadcaster_user_name);
+        }
+
+        function _train_begin()
+        {
+         if (cfg.event.twitch.hypetrain === false)
+          return;
+         if (!cfg.event.twitch.hypetrain.hasOwnProperty('begin'))
+          return;
+         if (cfg.event.twitch.hypetrain.begin === false)
+          return;
+         display.kappa.show(false, cfg.event.twitch.hypetrain.begin);
+        }
+
+        function _train_end(ev)
+        {
+         if (cfg.event.twitch.hypetrain === false)
+          return;
+         if (!cfg.event.twitch.hypetrain.hasOwnProperty('success'))
+          return;
+         if (cfg.event.twitch.hypetrain.success === false)
+          return;
+         if (!ev.hasOwnProperty('level'))
+          return;
+         const rs = shared.findInMaybeRange(cfg.event.twitch.hypetrain.success, ev.level);
+         if (rs === false)
+          return;
+         display.kappa.show(false, rs);
+        }
+
+        function _poll_begin(ev)
+        {
+         if (cfg.event.twitch.poll === false)
+          return;
+         if (!cfg.event.twitch.poll.hasOwnProperty('begin'))
+          return;
+         if (cfg.event.twitch.poll.begin === false)
+          return;
+         if (!ev.hasOwnProperty('title'))
+          return;
+         display.kappa.show(false, cfg.event.twitch.poll.begin, {'%TITLE%': ev.title});
+        }
+
+        function _poll_end(ev)
+        {
+         if (cfg.event.twitch.poll === false)
+          return;
+         if (!cfg.event.twitch.poll.hasOwnProperty('end'))
+          return;
+         if (cfg.event.twitch.poll.end === false)
+          return;
+         if (!ev.hasOwnProperty('title'))
+          return;
+         if (!ev.hasOwnProperty('status') || ev.status !== 'completed')
+          return;
+         if (!ev.hasOwnProperty('choices'))
+          return;
+         twitch.parse.event.pollEnd(ev);
+        }
+
+        function _prediction_begin(ev)
+        {
+         if (cfg.event.twitch.prediction === false)
+          return;
+         if (!cfg.event.twitch.prediction.hasOwnProperty('begin'))
+          return;
+         if (cfg.event.twitch.prediction.begin === false)
+          return;
+         if (!ev.hasOwnProperty('title'))
+          return;
+         display.kappa.show(false, cfg.event.twitch.prediction.begin, {'%TITLE%': ev.title});
+        }
+
+        function _prediction_end(ev)
+        {
+         if (cfg.event.twitch.prediction === false)
+          return;
+         if (!cfg.event.twitch.prediction.hasOwnProperty('resolved'))
+          return;
+         if (cfg.event.twitch.prediction.resolved === false)
+          return;
+         if (!ev.hasOwnProperty('title'))
+          return;
+         if (!ev.hasOwnProperty('status') || ev.status !== 'resolved')
+          return;
+         if (!ev.hasOwnProperty('winning_outcome_id'))
+          return;
+         if (!ev.hasOwnProperty('outcomes'))
+          return;
+         twitch.parse.event.predictionEnd(ev);
+        }
+
+        function _charity(ev)
+        {
+         if (cfg.event.twitch.charity === false)
+          return;
+         if (!ev.hasOwnProperty('user_name'))
+          return;
+         const dName = ev.user_name;
+         if (!ev.hasOwnProperty('amount'))
+          return;
+         if (!ev.amount.hasOwnProperty('value'))
+          return;
+         if (!ev.amount.hasOwnProperty('decimal_places'))
+          return;
+         if (!ev.amount.hasOwnProperty('currency'))
+          return;
+         const dAmt = ev.amount.value / Math.pow(10, ev.decimal_places) + ' ' + ev.amount.currency;
+         const rd = shared.findInMaybeRange(cfg.event.twitch.charity, ev.amount.value);
+         if (rd === false)
+          return;
+         display.kappa.show(false, rd, {'%USER%': dName, '%AMOUNT%': dAmt});
+        }
+
+        function _goal_begin(ev)
+        {
+         if (cfg.event.twitch.goal === false)
+          return;
+         if (!cfg.event.twitch.goal.hasOwnProperty('begin'))
+          return;
+         if (cfg.event.twitch.goal.begin === false)
+          return;
+         if (!ev.hasOwnProperty('type'))
+          return;
+         if (!ev.hasOwnProperty('description'))
+          return;
+         if (!ev.hasOwnProperty('target_amount'))
+          return;
+         display.kappa.show(false, cfg.event.twitch.goal.begin, {'%TITLE%': ev.description, '%TYPE%': ev.type, '%AMOUNT%': ev.target_amount});
+        }
+
+        function _goal_end(ev)
+        {
+         if (cfg.event.twitch.goal === false)
+          return;
+         if (!cfg.event.twitch.goal.hasOwnProperty('achieved'))
+          return;
+         if (cfg.event.twitch.goal.achieved === false)
+          return;
+         if (!ev.hasOwnProperty('type'))
+          return;
+         if (!ev.hasOwnProperty('description'))
+          return;
+         if (!ev.hasOwnProperty('current_amount'))
+          return;
+         if (!ev.hasOwnProperty('is_achieved') || ev.is_achieved !== true)
+          return;
+         display.kappa.show(false, cfg.event.twitch.goal.achieved, {'%TITLE%': ev.description, '%TYPE%': ev.type, '%AMOUNT%': ev.current_amount});
+        }
+
+        return notification;
+       }();
+
+       return wsMessage;
+      }();
 
       function _wsTimeout()
       {
