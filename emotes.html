@@ -10835,146 +10835,10 @@
          set = 'twemoji';
         const uri = cURLs.cdn.ffz.emoji.replaceAll('%SET_ID%', set);
         const addList = {};
-        function __uriOf(c, u)
-        {
-         if (c.slice(-5) !== '-fe0f')
-          return c;
-         if (u === 1)
-          return c.slice(0, -5);
-         if (u === 2)
-         {
-          if (c.match(/-200d-264[0|2]-/) || c.match(/-200d-269[5|6]-/) || c.match(/-200d-26a7/) || c.match(/-200d-2620/) || c.match(/-200d-2708/) || c.match(/-200d-2744/) || c.match(/-200d-1f5e8/))
-           return c;
-          return c.slice(0, -5);
-         }
-         return c;
-        }
-        function __showEmoji(c, p)
-        {
-         c = __uriOf(c, 2);
-         if (!addList.hasOwnProperty(c))
-          addList[c] = 0;
-         else
-         {
-          if (dup === false)
-           return false;
-          if (dup !== true && addList[c] >= dup)
-           return false;
-         }
-         addList[c]++;
-         return {svc: 'e', url: uri + c + '.png', str: c, pos: p};
-        }
-        function __showCrew(p)
-        {
-         if (!addList.hasOwnProperty('0d9e'))
-          addList['0d9e'] = 0;
-         else
-         {
-          if (dup === false)
-           return false;
-          if (dup !== true && addList['0d9e'] >= dup)
-           return false;
-         }
-         addList['0d9e']++;
-         const svgC = shared.rnd(18);
-         const svgCSS = '.st0{fill:#484C4D;}.st1{fill:#' + crewColors[svgC][0] + ';}.st2{fill:#A3D3E3;}.st3{opacity:0.5;fill:#' + crewColors[svgC][1] + ';}.st4{opacity:0.45;fill:#5B7882;}.st5{fill:#FFFFFF;}' + (shared.rnd(2) === 1 ? 'svg{transform: scaleX(-1);}' : '');
-         const crew = crewSVG.replace('%CSS%', encodeURIComponent(svgCSS));
-         return {svc: 'e', url: crew, str: '0d9e', pos: p};
-        }
-        async function __parseEm(emI)
-        {
-         const ret = [];
-         const cpList = [];
-         for (const c of emI[0])
-         {
-          const p = c.codePointAt(0).toString(16).padStart(4, '0');
-          if (cpList.length === 0)
-          {
-           cpList.push(p);
-           continue;
-          }
-          const lL = cpList.length - 1;
-          if (p === 'fe0f')
-           cpList[lL] += '-' + p;
-          else if (p === '200d')
-           cpList[lL] += '-' + p;
-          else if (p === '20e3')
-           cpList[lL] += '-' + p;
-          else if (p.match(/1f3f[b-f]/))
-           cpList[lL] += '-' + p;
-          else if (p.match(/1f9b[0-3]/))
-          {
-           if (cpList[lL].slice(-5) === '-200d')
-            cpList[lL] += '-' + p;
-           else
-            cpList[lL] += '-200d-' + p;
-          }
-          else if (p.match(/264[0|2]/) || p.match(/26a7/))
-          {
-           if (cpList[lL].slice(-5) === '-200d')
-            cpList[lL] += '-' + p;
-           else
-            cpList[lL] += '-200d-' + p;
-          }
-          else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].length < 11)
-           cpList[lL] += '-' + p;
-          else if (p === '1f308' && cpList[lL] === '1f3f3-fe0f')
-           cpList[lL] += '-200d-' + p;
-          else if (p === '2620' && cpList[lL] === '1f3f4')
-           cpList[lL] += '-200d-' + p;
-          else if (cpList[lL].slice(-5) === '-200d')
-           cpList[lL] += '-' + p;
-          else
-           cpList.push(p);
-         }
-         const lP = cpList.length;
-         if (lP === 1)
-         {
-          let s = cpList[0];
-          if (s === '0d9e')
-          {
-           const r = __showCrew(emI.index);
-           if (r !== false)
-            ret.push(r);
-           return ret;
-          }
-          if (await _checkURL(uri + __uriOf(s, 2) + '.png'))
-          {
-           const r = __showEmoji(s, emI.index);
-           if (r !== false)
-            ret.push(r);
-           return ret;
-          }
-          while (s.includes('-'))
-          {
-           s = s.slice(0, s.lastIndexOf('-'));
-           if (await _checkURL(uri + __uriOf(s, 1) + '.png'))
-           {
-            const r = __showEmoji(s, emI.index);
-            if (r !== false)
-             ret.push(r);
-            break;
-           }
-          }
-          return ret;
-         }
-         let p = emI.index;
-         for (let j = 0; j < lP; j++)
-         {
-          p += cpList[j].replaceAll(/[^\-]/g, '').length + 1;
-          if (await _checkURL(uri + __uriOf(cpList[j], 0) + '.png'))
-          {
-           const r = __showEmoji(cpList[j], p);
-           if (r !== false)
-            ret.push(r);
-          }
-         }
-         return ret;
-        }
         const pList = [];
         for (let i = 0, l = emList.length; i < l; i++)
         {
-         pList.push(__parseEm(emList[i]));
+         pList.push(_parseEm(addList, emList[i], uri, dup));
         }
         const resp = await Promise.allSettled(pList);
         const rets = [];
@@ -10989,25 +10853,160 @@
         return rets;
        }
 
-       function _checkURL(url)
+       async function _parseEm(addList, emI, uri, dup = null)
+       {
+        const ret = [];
+        const cpList = [];
+        for (const c of emI[0])
+        {
+         const p = c.codePointAt(0).toString(16).padStart(4, '0');
+         if (cpList.length === 0)
+         {
+          cpList.push(p);
+          continue;
+         }
+         const lL = cpList.length - 1;
+         if (p === 'fe0f')
+          cpList[lL] += '-' + p;
+         else if (p === '200d')
+          cpList[lL] += '-' + p;
+         else if (p === '20e3')
+          cpList[lL] += '-' + p;
+         else if (p.match(/1f3f[b-f]/))
+          cpList[lL] += '-' + p;
+         else if (p.match(/1f9b[0-3]/))
+         {
+          if (cpList[lL].slice(-5) === '-200d')
+           cpList[lL] += '-' + p;
+          else
+           cpList[lL] += '-200d-' + p;
+         }
+         else if (p.match(/264[0|2]/) || p.match(/26a7/))
+         {
+          if (cpList[lL].slice(-5) === '-200d')
+           cpList[lL] += '-' + p;
+          else
+           cpList[lL] += '-200d-' + p;
+         }
+         else if (p.match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].match(/1f1((e[6-9a-f])|(f[0-9a-f]))/) && cpList[lL].length < 11)
+          cpList[lL] += '-' + p;
+         else if (p === '1f308' && cpList[lL] === '1f3f3-fe0f')
+          cpList[lL] += '-200d-' + p;
+         else if (p === '2620' && cpList[lL] === '1f3f4')
+          cpList[lL] += '-200d-' + p;
+         else if (cpList[lL].slice(-5) === '-200d')
+          cpList[lL] += '-' + p;
+         else
+          cpList.push(p);
+        }
+        const lP = cpList.length;
+        if (lP === 1)
+        {
+         let s = cpList[0];
+         if (s === '0d9e')
+         {
+          const r = _showCrew(addList, emI.index, dup);
+          if (r !== false)
+           ret.push(r);
+          return ret;
+         }
+         if (await _checkURL(uri, s))
+         {
+          const r = _showEmoji(addList, uri, s, emI.index, dup);
+          if (r !== false)
+           ret.push(r);
+          return ret;
+         }
+         while (s.includes('-'))
+         {
+          s = s.slice(0, s.lastIndexOf('-'));
+          if (await _checkURL(uri, s))
+          {
+           const r = _showEmoji(addList, uri, s, emI.index, dup);
+           if (r !== false)
+            ret.push(r);
+           break;
+          }
+         }
+         return ret;
+        }
+        let p = emI.index;
+        for (let j = 0; j < lP; j++)
+        {
+         p += cpList[j].replaceAll(/[^\-]/g, '').length + 1;
+         if (await _checkURL(uri, cpList[j]))
+         {
+          const r = _showEmoji(addList, uri, cpList[j], p, dup);
+          if (r !== false)
+           ret.push(r);
+         }
+        }
+        return ret;
+       }
+
+       function _showEmoji(addList, u, c, p, dup = null)
+       {
+        c = _uriOf(c);
+        if (!addList.hasOwnProperty(c))
+         addList[c] = 0;
+        else
+        {
+         if (dup === false)
+          return false;
+         if (dup !== true && addList[c] >= dup)
+          return false;
+        }
+        addList[c]++;
+        return {svc: 'e', url: u + c + '.png', str: c, pos: p};
+       }
+
+       function _showCrew(addList, p, dup = null)
+       {
+        if (!addList.hasOwnProperty('0d9e'))
+         addList['0d9e'] = 0;
+        else
+        {
+         if (dup === false)
+          return false;
+         if (dup !== true && addList['0d9e'] >= dup)
+          return false;
+        }
+        addList['0d9e']++;
+        const svgC = shared.rnd(18);
+        const svgCSS = '.st0{fill:#484C4D;}.st1{fill:#' + crewColors[svgC][0] + ';}.st2{fill:#A3D3E3;}.st3{opacity:0.5;fill:#' + crewColors[svgC][1] + ';}.st4{opacity:0.45;fill:#5B7882;}.st5{fill:#FFFFFF;}' + (shared.rnd(2) === 1 ? 'svg{transform: scaleX(-1);}' : '');
+        const crew = crewSVG.replace('%CSS%', encodeURIComponent(svgCSS));
+        return {svc: 'e', url: crew, str: '0d9e', pos: p};
+       }
+
+       function _uriOf(c)
+       {
+        if (c.slice(-5) !== '-fe0f')
+         return c;
+        if (c.match(/-200d-264[0|2]-/) || c.match(/-200d-269[5|6]-/) || c.match(/-200d-26a7/) || c.match(/-200d-2620/) || c.match(/-200d-2708/) || c.match(/-200d-2744/) || c.match(/-200d-1f5e8/))
+         return c;
+        return c.slice(0, -5);
+       }
+
+       function _checkURL(u, c)
        {
         const p = new Promise(
          function(resolve)
          {
-          if (_uList.hasOwnProperty(url))
+          c = _uriOf(c);
+          if (_uList.hasOwnProperty(c))
           {
-           resolve(_uList[url]);
+           resolve(_uList[c]);
            return;
           }
           const x = new XMLHttpRequest();
-          x.open('HEAD', url);
+          x.open('HEAD', u + c + '.png');
           x.onreadystatechange = function()
           {
            if (x.readyState < 2)
             return;
            x.onreadystatechange = null;
            const r = x.status === 200;
-           _uList[url] = r;
+           _uList[c] = r;
            resolve(r);
           };
           x.send();
