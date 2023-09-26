@@ -1420,7 +1420,7 @@
        _setNotice(e, 'noticeError global', 'Corrupted Configuration');
        break;
       case notice.Type.GLOBAL_OBS:
-       _setNotice(e, 'noticeError global', 'OBS Not Detected<br>Please see <a href="https://www.youtube.com/watch?v=1hnsN4RZ3ng" target="_blank" title="Adding Emote Wall to OBS">this &quot;How to&quot; video</a> on adding the Emote Wall to OBS.');
+       _setNotice(e, 'noticeError global', 'OBS Not Detected<br>Please see <a href="https://www.youtube.com/watch?v=1hnsN4RZ3ng" target="_blank" title="Adding Emote Wall to OBS" onclick="notice.copyAndOpen(this.href); return false;">this &quot;How to&quot; video</a> on adding the Emote Wall to OBS.');
        break;
       case notice.Type.TWITCH_TOKEN:
        if (typeof loginT !== 'undefined' && loginT.inUse)
@@ -1730,11 +1730,27 @@
      css.innerHTML = h;
     }
 
+    async function $copyAndOpen(h)
+    {
+     if (window.open(h, '_blank') !== null)
+      return;
+     try
+     {
+      await navigator.clipboard.writeText(h);
+      alert('URL Copied to Clipboard');
+     }
+     catch(ex)
+     {
+      prompt('Unable to open a new window. Copy this URL:', h);
+     }
+    }
+
     return {
      info: $info,
      warning: $warning,
      error: $error,
      activeCheck: $activeCheck,
+     copyAndOpen: $copyAndOpen,
      expect: 0,
      active: 0,
      tHide: false,
