@@ -1459,6 +1459,9 @@
        }
        _setNotice(e, 'noticeError sYouTube', 'Streaming Not Available<br>Your YouTube account does not have streaming enabled.');
        break;
+      case notice.Type.YOUTUBE_CORS:
+       _setNotice(e, 'noticeError sYouTube', 'YouTube Server Error<br>Unable to retrieve ' + sMsg + ': <a href="https://udn.realityripple.com/docs/Web/HTTP/CORS/Errors/CORSMissingAllowOrigin" target="_blank" title="Reason: CORS header \'Access-Control-Allow-Origin\' missing - HTTP" onclick="notice.copyAndOpen(this.href); return false;">CORS headers</a> not sent by YouTube.');
+       break;
       case notice.Type.YOUTUBE_RATELIMIT:
        _setNotice(e, 'noticeError sYouTube', 'YouTube Rate Limit Exceeded<br>You have sent too many requests. Please wait a while.');
        break;
@@ -1764,6 +1767,7 @@
       YOUTUBE_TOKEN: Symbol(0x21),
       YOUTUBE_NETWORK: Symbol(0x22),
       YOUTUBE_ACCOUNT: Symbol(0x23),
+      YOUTUBE_CORS: Symbol(0x27),
       YOUTUBE_RATELIMIT: Symbol(0x28),
       YOUTUBE_UNKNOWN: Symbol(0x29),
       KICK_NAME: Symbol(0x31),
@@ -7999,6 +8003,19 @@
        const j = r.json;
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+        {
+         if (_aC.length !== 0)
+          return false;
+         notice.error(notice.Type.YOUTUBE_CORS, 'current live streams');
+         notice.active &= ~notice.Connection.YOUTUBE;
+         if (notice.tHide !== false)
+         {
+          window.clearTimeout(notice.tHide);
+          notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+         }
+         return false;
+        }
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -8237,6 +8254,17 @@
         const j = r.json;
         if (!r.success)
         {
+         if (r.code === 0 && r.data === '')
+         {
+          notice.error(notice.Type.YOUTUBE_CORS, 'live chat');
+          notice.active &= ~notice.Connection.YOUTUBE;
+          if (notice.tHide !== false)
+          {
+           window.clearTimeout(notice.tHide);
+           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+          }
+          return;
+         }
          if (r.code === 404)
          {
           notice.info(notice.Type.YOUTUBE_NETWORK);
@@ -8414,6 +8442,8 @@
        const j = r.json;
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+         return [];
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -8482,6 +8512,8 @@
        const j = r.json;
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+         return [];
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -8556,6 +8588,8 @@
        const j = r.json;
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+         return [];
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -8720,6 +8754,15 @@
        const j = r.json;
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+        {
+         if (_aC.length !== 0)
+          return false;
+         notice.error(notice.Type.YOUTUBE_CORS, 'OAuth token');
+         youtube.net.oAuth.clear(false);
+         youtube.net.dead = true;
+         return false;
+        }
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -8761,6 +8804,15 @@
        const r = await shared.httpRequest('GET', url, {}, null, false);
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+        {
+         if (_aC.length !== 0)
+          return false;
+         notice.error(notice.Type.YOUTUBE_CORS, 'OAuth token info');
+         youtube.net.oAuth.clear(false);
+         youtube.net.dead = true;
+         return false;
+        }
         if (r.code === 400)
         {
          notice.error(notice.Type.YOUTUBE_TOKEN);
