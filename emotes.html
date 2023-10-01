@@ -8330,12 +8330,11 @@
            continue;
           if (!j.items[i].snippet.hasOwnProperty('type'))
            continue;
-          if (!j.items[i].hasOwnProperty('authorDetails'))
-           continue;
-          const access = 0;
           switch (j.items[i].snippet.type)
           {
            case 'textMessageEvent':
+            if (!j.items[i].hasOwnProperty('authorDetails'))
+             continue;
             if (j.items[i].snippet.hasOwnProperty('publishedAt'))
             {
              const pTime = new Date(j.items[i].snippet.publishedAt).getTime();
@@ -8349,18 +8348,18 @@
            case 'memberMilestoneChatEvent':
            case 'superStickerEvent':
            case 'membershipGiftingEvent':
-         //case 'giftMembershipReceivedEvent':
+           case 'giftMembershipReceivedEvent':
            case 'userBannedEvent':
-            _feedback(j.items[i].snippet.type, JSON.stringify(j.items[i].snippet));
+            _feedback(j.items[i].snippet.type, JSON.stringify(j.items[i]));
             if (j.items[i].snippet.hasOwnProperty('textMessageDetails') && j.items[i].snippet.textMessageDetails.hasOwnProperty('messageText'))
-             console.log(j.items[i].snippet.textMessageDetails.messageText, access);
+             console.log(j.items[i].snippet.textMessageDetails.messageText);
             else if (j.items[i].snippet.hasOwnProperty('displayMessage'))
-             console.log(j.items[i].snippet.displayMessage, access);
+             console.log(j.items[i].snippet.displayMessage);
             else
-             console.log(j.items[i].snippet, access);
+             console.log(j.items[i].snippet);
             break;
            default:
-            _feedback('other', JSON.stringify(j.items[i].snippet));
+            _feedback('other', JSON.stringify(j.items[i]));
             console.log(j.items[i]);
             break;
           }
