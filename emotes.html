@@ -5164,19 +5164,29 @@
          await _addToChannelTitleTags(ev.title);
         }
 
-        function _follow(ev)
+        const _follow = function()
         {
-         if (!ev.hasOwnProperty('user_id'))
-          return;
-         if (cfg.ignore.users !== false && ev.hasOwnProperty('user_login') && cfg.ignore.users.includes(ev.user_login))
-          return;
-         if (!ev.hasOwnProperty('user_name'))
-          return;
-         twitch.net.fList[ev.user_id] = {value: true, t: new Date().getTime()};
-         if (cfg.event.twitch.follow === false)
-          return;
-         display.kappa.show(false, cfg.event.twitch.follow, {'%USER%': ev.user_name});
-        }
+         const _fHist = [];
+
+         function $c_follow(ev)
+         {
+          if (!ev.hasOwnProperty('user_id'))
+           return;
+          if (cfg.ignore.users !== false && ev.hasOwnProperty('user_login') && cfg.ignore.users.includes(ev.user_login))
+           return;
+          if (!ev.hasOwnProperty('user_name'))
+           return;
+          twitch.net.fList[ev.user_id] = {value: true, t: new Date().getTime()};
+          if (cfg.event.twitch.follow === false)
+           return;
+          if (_fHist.includes(ev.user_id))
+           return;
+          _fHist.push(ev.user_id);
+          display.kappa.show(false, cfg.event.twitch.follow, {'%USER%': ev.user_name});
+         }
+
+         return $c_follow;
+        }();
 
         async function _shoutout_create(ev)
         {
