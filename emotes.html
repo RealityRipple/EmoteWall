@@ -8386,7 +8386,6 @@
          nextPage = j.nextPageToken;
         if (j.hasOwnProperty('items') && Array.isArray(j.items) && j.items.length > 0)
         {
-         const pNow = new Date().getTime();
          for (let i = 0, l = j.items.length; i < l; i++)
          {
           if (!j.items[i].hasOwnProperty('snippet'))
@@ -8396,30 +8395,51 @@
           switch (j.items[i].snippet.type)
           {
            case 'textMessageEvent':
-            if (!j.items[i].hasOwnProperty('authorDetails'))
-             continue;
-            if (j.items[i].snippet.hasOwnProperty('publishedAt'))
-            {
-             const pTime = new Date(j.items[i].snippet.publishedAt).getTime();
-             if (pNow - pTime > 1000 * 30)
-              continue;
-            }
-            youtube.parse.line(j.items[i]);
+            break;
+           default:
+            _feedback(j.items[i].snippet.type, JSON.stringify(j.items[i]));
+            console.log(j.items[i]);
+            break;
+          }
+         }
+         const pNow = new Date().getTime();
+         for (let i = 0, l = j.items.length; i < l; i++)
+         {
+          if (!j.items[i].hasOwnProperty('snippet'))
+           continue;
+          if (!j.items[i].snippet.hasOwnProperty('type'))
+           continue;
+          if (cmd.snippet.hasOwnProperty('publishedAt'))
+          {
+           const pTime = new Date(cmd.snippet.publishedAt).getTime();
+           if (pNow - pTime > 1000 * 30)
+            continue;
+          }
+          switch (j.items[i].snippet.type)
+          {
+           case 'textMessageEvent':
+            _textMessageEvent(j.items[i]);
             break;
            case 'superChatEvent':
+            _superChatEvent(j.items[i]);
+            break;
            case 'newSponsorEvent':
+            _newSponsorEvent(j.items[i]);
+            break;
            case 'memberMilestoneChatEvent':
+            _memberMilestoneChatEvent(j.items[i]);
+            break;
            case 'superStickerEvent':
+            _superStickerEvent(j.items[i]);
+            break;
            case 'membershipGiftingEvent':
+            _membershipGiftingEvent(j.items[i]);
+            break;
            case 'giftMembershipReceivedEvent':
+            _giftMembershipReceivedEvent(j.items[i]);
+            break;
            case 'userBannedEvent':
-            _feedback(j.items[i].snippet.type, JSON.stringify(j.items[i]));
-            if (j.items[i].snippet.hasOwnProperty('textMessageDetails') && j.items[i].snippet.textMessageDetails.hasOwnProperty('messageText'))
-             console.log(j.items[i].snippet.textMessageDetails.messageText);
-            else if (j.items[i].snippet.hasOwnProperty('displayMessage'))
-             console.log(j.items[i].snippet.displayMessage);
-            else
-             console.log(j.items[i].snippet);
+            _userBannedEvent(j.items[i]);
             break;
            default:
             _feedback('other', JSON.stringify(j.items[i]));
@@ -8444,6 +8464,74 @@
          return;
         window.clearTimeout(_tM[chatID]);
         delete _tM[chatID];
+       }
+
+       function _textMessageEvent(cmd)
+       {
+        if (!cmd.hasOwnProperty('authorDetails'))
+         return;
+        youtube.parse.line(cmd);
+       }
+
+       function _superChatEvent(cmd)
+       {
+        //j.items[i].snippet.superChatDetails.userComment
+        //j.items[i].snippet.superChatDetails.amountDisplayString
+        //j.items[i].snippet.superChatDetails.currency ['USD']
+        //j.items[i].snippet.superChatDetails.amountMicros ($1 = 1,000,000)
+        //                   <https://developers.google.com/standard-payments/reference/glossary#micros>
+        //j.items[i].snippet.superChatDetails.tier
+       }
+
+       function _newSponsorEvent(cmd)
+       {
+        //j.items[i].snippet.authorChannelId (member)
+        //j.items[i].snippet.newSponsorDetails.memberLevelName [can be empty]
+        //j.items[i].snippet.newSponsorDetails.isUpgrade [true/false]
+       }
+
+       function _memberMilestoneChatEvent(cmd)
+       {
+        //j.items[i].snippet.authorChannelId (member)
+        //j.items[i].snippet.memberMilestoneChatDetails.userComment
+        //j.items[i].snippet.memberMilestoneChatDetails.memberMonth (uint, rounded up)
+        //j.items[i].snippet.memberMilestoneChatDetails.memberLevelName [can be empty]
+       }
+
+       function _superStickerEvent(cmd)
+       {
+        //j.items[i].snippet.superStickerDetails.superStickerMetadata.stickerId
+        //j.items[i].snippet.superStickerDetails.superStickerMetadata.altText
+        //j.items[i].snippet.superStickerDetails.amountDisplayString
+        //j.items[i].snippet.superStickerDetails.currency [USD]
+        //j.items[i].snippet.superStickerDetails.amountMicros ($1 = 1,000,000)
+        //j.items[i].snippet.superStickerDetails.tier
+       }
+
+       function _membershipGiftingEvent(cmd)
+       {
+        //j.items[i].snippet.authorChannelId (gifter)
+        //j.items[i].snippet.membershipGiftingDetails.giftMembershipsCount
+        //j.items[i].snippet.membershipGiftingDetails.giftMembershipsLevelName
+       }
+
+       function _giftMembershipReceivedEvent(cmd)
+       {
+        //j.items[i].snippet.authorChannelId (recipient)
+        //j.items[i].snippet.giftMembershipReceivedDetails.memberLevelName
+        //j.items[i].snippet.giftMembershipReceivedDetails.gifterChannelId
+        //j.items[i].snippet.giftMembershipReceivedDetails.associatedMembershipGiftingMessageId
+       }
+
+       function _userBannedEvent(cmd)
+       {
+        //j.items[i].snippet.authorChannelId (moderator)
+        //j.items[i].snippet.userBannedDetails.bannedUserDetails.channelId
+        //j.items[i].snippet.userBannedDetails.bannedUserDetails.channelUrl
+        //j.items[i].snippet.userBannedDetails.bannedUserDetails.displayName
+        //j.items[i].snippet.userBannedDetails.bannedUserDetails.profileImageUrl
+        //j.items[i].snippet.userBannedDetails.banType ['permanent'/'temporary']
+        //  j.items[i].snippet.userBannedDetails.banDurationSeconds (required if banType === 'temporary')
        }
 
        return {
