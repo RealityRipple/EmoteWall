@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.8.5 BETA
+    * v0.8.6 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -356,8 +356,13 @@
        milestone: true,
        giftbomb: 5
       },
-      superchat: true,
-      supersticker: true
+      superchat: {
+       useMsg: true,
+       level: 1
+      },
+      supersticker: 1,
+      timeout: false,
+      ban: false
      },
      kick: {
       clear: true,
@@ -1420,7 +1425,7 @@
        _setNotice(e, 'noticeError global', 'Corrupted Configuration');
        break;
       case notice.Type.GLOBAL_OBS:
-       _setNotice(e, 'noticeError global', 'OBS Not Detected<br>Please see <a href="https://www.youtube.com/watch?v=1hnsN4RZ3ng" target="_blank" title="Adding Emote Wall to OBS">this &quot;How to&quot; video</a> on adding the Emote Wall to OBS.');
+       _setNotice(e, 'noticeError global', 'OBS Not Detected<br>Please see <a href="https://www.youtube.com/watch?v=1hnsN4RZ3ng" target="_blank" title="Adding Emote Wall to OBS" onclick="notice.copyAndOpen(this.href); return false;">this &quot;How to&quot; video</a> on adding the Emote Wall to OBS.');
        break;
       case notice.Type.TWITCH_TOKEN:
        if (typeof loginT !== 'undefined' && loginT.inUse)
@@ -1458,6 +1463,9 @@
         window.setTimeout(function(){loginYT.showIn();}, tRetry);
        }
        _setNotice(e, 'noticeError sYouTube', 'Streaming Not Available<br>Your YouTube account does not have streaming enabled.');
+       break;
+      case notice.Type.YOUTUBE_CORS:
+       _setNotice(e, 'noticeError sYouTube', 'YouTube Server Error<br>Unable to retrieve ' + sMsg + ': <a href="https://udn.realityripple.com/docs/Web/HTTP/CORS/Errors/CORSMissingAllowOrigin" target="_blank" title="Reason: CORS header \'Access-Control-Allow-Origin\' missing - HTTP" onclick="notice.copyAndOpen(this.href); return false;">CORS headers</a> not sent by YouTube.');
        break;
       case notice.Type.YOUTUBE_RATELIMIT:
        _setNotice(e, 'noticeError sYouTube', 'YouTube Rate Limit Exceeded<br>You have sent too many requests. Please wait a while.');
@@ -1730,11 +1738,27 @@
      css.innerHTML = h;
     }
 
+    async function $copyAndOpen(h)
+    {
+     if (window.open(h, '_blank') !== null)
+      return;
+     try
+     {
+      await navigator.clipboard.writeText(h);
+      alert('URL Copied to Clipboard');
+     }
+     catch(ex)
+     {
+      prompt('Unable to open a new window. Copy this URL:', h);
+     }
+    }
+
     return {
      info: $info,
      warning: $warning,
      error: $error,
      activeCheck: $activeCheck,
+     copyAndOpen: $copyAndOpen,
      expect: 0,
      active: 0,
      tHide: false,
@@ -1748,6 +1772,7 @@
       YOUTUBE_TOKEN: Symbol(0x21),
       YOUTUBE_NETWORK: Symbol(0x22),
       YOUTUBE_ACCOUNT: Symbol(0x23),
+      YOUTUBE_CORS: Symbol(0x27),
       YOUTUBE_RATELIMIT: Symbol(0x28),
       YOUTUBE_UNKNOWN: Symbol(0x29),
       KICK_NAME: Symbol(0x31),
@@ -1820,7 +1845,9 @@
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
@@ -1828,7 +1855,9 @@
          const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
        }
@@ -1869,7 +1898,9 @@
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
@@ -1877,7 +1908,9 @@
          const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
        }
@@ -1936,7 +1969,9 @@
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
@@ -1944,7 +1979,9 @@
          const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
        }
@@ -2014,7 +2051,9 @@
           chances.push(0.5);
           chances.push(2);
           for (let i = 0; i < cfg.emote.size.variation; i++)
+          {
            chances.push(1);
+          }
           variationSize = chances[shared.rnd(chances.length)];
          }
          else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
@@ -2022,7 +2061,9 @@
           const chances = [];
           chances.push(...cfg.emote.size.variation.range);
           for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          {
            chances.push(1);
+          }
           variationSize = chances[shared.rnd(chances.length)];
          }
         }
@@ -2110,7 +2151,9 @@
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
@@ -2118,7 +2161,9 @@
          const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
        }
@@ -2184,7 +2229,9 @@
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
@@ -2192,7 +2239,9 @@
          const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
        }
@@ -2263,7 +2312,9 @@
           chances.push(0.5);
           chances.push(2);
           for (let i = 0; i < cfg.emote.size.variation; i++)
+          {
            chances.push(1);
+          }
           variationSize = chances[shared.rnd(chances.length)];
          }
          else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
@@ -2271,7 +2322,9 @@
           const chances = [];
           chances.push(...cfg.emote.size.variation.range);
           for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          {
            chances.push(1);
+          }
           variationSize = chances[shared.rnd(chances.length)];
          }
         }
@@ -2433,7 +2486,9 @@
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
@@ -2441,7 +2496,9 @@
          const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
        }
@@ -2506,7 +2563,9 @@
           chances.push(0.5);
           chances.push(2);
           for (let i = 0; i < cfg.emote.size.variation; i++)
+          {
            chances.push(1);
+          }
           variationSize = chances[shared.rnd(chances.length)];
          }
          else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
@@ -2514,7 +2573,9 @@
           const chances = [];
           chances.push(...cfg.emote.size.variation.range);
           for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          {
            chances.push(1);
+          }
           variationSize = chances[shared.rnd(chances.length)];
          }
         }
@@ -2635,7 +2696,9 @@
           chances.push(0.5);
           chances.push(2);
           for (let i = 0; i < cfg.emote.size.variation; i++)
+          {
            chances.push(1);
+          }
           variationSize = chances[shared.rnd(chances.length)];
          }
          else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
@@ -2643,7 +2706,9 @@
           const chances = [];
           chances.push(...cfg.emote.size.variation.range);
           for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          {
            chances.push(1);
+          }
           variationSize = chances[shared.rnd(chances.length)];
          }
         }
@@ -2817,7 +2882,9 @@
          chances.push(0.5);
          chances.push(2);
          for (let i = 0; i < cfg.emote.size.variation; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
@@ -2825,7 +2892,9 @@
          const chances = [];
          chances.push(...cfg.emote.size.variation.range);
          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+         {
           chances.push(1);
+         }
          variationSize = chances[shared.rnd(chances.length)];
         }
        }
@@ -3192,8 +3261,9 @@
           return;
          let x;
          do
+         {
           x = shared.rnd(lP);
-         while (drawn[x] >= pyramidDist[x]);
+         } while (drawn[x] >= pyramidDist[x]);
          const oK = kList[shared.rnd(kList.length)];
          _block(tInit, oK.url, x, t, eH, sH, drawn[x] + 1, eT + dT);
          if (oK.hasOwnProperty('zwe'))
@@ -3280,8 +3350,9 @@
           return;
          let x;
          do
+         {
           x = shared.rnd(lP);
-         while (drawn[x] >= pyramidDist[x]);
+         } while (drawn[x] >= pyramidDist[x]);
          const oK = kList[shared.rnd(kList.length)];
          _block(tInit, oK.url, oX, x, t, eH, sH, drawn[x] + 1, eT + dT);
          if (oK.hasOwnProperty('zwe'))
@@ -3801,8 +3872,9 @@
           return;
          let x;
          do
+         {
           x = shared.rnd(lM);
-         while (drawn[x] >= msgDist[x].length);
+         } while (drawn[x] >= msgDist[x].length);
          if (msgDist[x][drawn[x]] !== 0)
          {
           const oK = kList[shared.rnd(kList.length)];
@@ -4058,7 +4130,9 @@
        case 'SmallPyramid':
         let c = 0;
         for (let i = 0, l = pyramidDist.length; i < l; i++)
+        {
          c += pyramidDist[i];
+        }
         return c;
        case 'Fireworks':
         const inner = Math.max(3, Math.floor(k.count * timing.kappa.Fireworks.quantity.small));
@@ -4752,10 +4826,14 @@
      display.kappa.hide();
      const cubes = document.getElementsByClassName('scene');
      while (cubes.length)
+     {
       cubes[0].parentElement.removeChild(cubes[0]);
+     }
      const imgs = document.getElementsByTagName('img');
      while (imgs.length)
+     {
       imgs[0].parentElement.removeChild(imgs[0]);
+     }
      service.parse.clearCooldowns();
      _eActive = 0;
     }
@@ -5144,19 +5222,29 @@
          await _addToChannelTitleTags(ev.title);
         }
 
-        function _follow(ev)
+        const _follow = function()
         {
-         if (!ev.hasOwnProperty('user_id'))
-          return;
-         if (cfg.ignore.users !== false && ev.hasOwnProperty('user_login') && cfg.ignore.users.includes(ev.user_login))
-          return;
-         if (!ev.hasOwnProperty('user_name'))
-          return;
-         twitch.net.fList[ev.user_id] = {value: true, t: new Date().getTime()};
-         if (cfg.event.twitch.follow === false)
-          return;
-         display.kappa.show(false, cfg.event.twitch.follow, {'%USER%': ev.user_name});
-        }
+         const _fHist = [];
+
+         function $c_follow(ev)
+         {
+          if (!ev.hasOwnProperty('user_id'))
+           return;
+          if (cfg.ignore.users !== false && ev.hasOwnProperty('user_login') && cfg.ignore.users.includes(ev.user_login))
+           return;
+          if (!ev.hasOwnProperty('user_name'))
+           return;
+          twitch.net.fList[ev.user_id] = {value: true, t: new Date().getTime()};
+          if (cfg.event.twitch.follow === false)
+           return;
+          if (_fHist.includes(ev.user_id))
+           return;
+          _fHist.push(ev.user_id);
+          display.kappa.show(false, cfg.event.twitch.follow, {'%USER%': ev.user_name});
+         }
+
+         return $c_follow;
+        }();
 
         async function _shoutout_create(ev)
         {
@@ -6877,7 +6965,7 @@
         let p = [];
         if (!cmd.tags.hasOwnProperty('pinned-chat-paid-is-system-message') || parseInt(cmd.tags['pinned-chat-paid-is-system-message'], 10) !== 1)
         {
-         if (cfg.event.twitch.cheer.useMsg)
+         if (cfg.event.twitch.hypechat.useMsg)
          {
           const a = await _eListFromCmd(cmd);
           p.push(...a);
@@ -7983,6 +8071,19 @@
        const j = r.json;
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+        {
+         if (_aC.length !== 0)
+          return false;
+         notice.error(notice.Type.YOUTUBE_CORS, 'current live streams');
+         notice.active &= ~notice.Connection.YOUTUBE;
+         if (notice.tHide !== false)
+         {
+          window.clearTimeout(notice.tHide);
+          notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+         }
+         return false;
+        }
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -8221,6 +8322,17 @@
         const j = r.json;
         if (!r.success)
         {
+         if (r.code === 0 && r.data === '')
+         {
+          notice.error(notice.Type.YOUTUBE_CORS, 'live chat');
+          notice.active &= ~notice.Connection.YOUTUBE;
+          if (notice.tHide !== false)
+          {
+           window.clearTimeout(notice.tHide);
+           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+          }
+          return;
+         }
          if (r.code === 404)
          {
           notice.info(notice.Type.YOUTUBE_NETWORK);
@@ -8279,6 +8391,22 @@
          nextPage = j.nextPageToken;
         if (j.hasOwnProperty('items') && Array.isArray(j.items) && j.items.length > 0)
         {
+         for (let i = 0, l = j.items.length; i < l; i++)
+         {
+          if (!j.items[i].hasOwnProperty('snippet'))
+           continue;
+          if (!j.items[i].snippet.hasOwnProperty('type'))
+           continue;
+          switch (j.items[i].snippet.type)
+          {
+           case 'textMessageEvent':
+            break;
+           default:
+            _feedback(j.items[i].snippet.type, JSON.stringify(j.items[i]));
+            console.log(j.items[i]);
+            break;
+          }
+         }
          const pNow = new Date().getTime();
          for (let i = 0, l = j.items.length; i < l; i++)
          {
@@ -8286,37 +8414,40 @@
            continue;
           if (!j.items[i].snippet.hasOwnProperty('type'))
            continue;
-          if (!j.items[i].hasOwnProperty('authorDetails'))
-           continue;
-          const access = 0;
+          if (j.items[i].snippet.hasOwnProperty('publishedAt'))
+          {
+           const pTime = new Date(j.items[i].snippet.publishedAt).getTime();
+           if (pNow - pTime > 1000 * 30)
+            continue;
+          }
           switch (j.items[i].snippet.type)
           {
            case 'textMessageEvent':
-            if (j.items[i].snippet.hasOwnProperty('publishedAt'))
-            {
-             const pTime = new Date(j.items[i].snippet.publishedAt).getTime();
-             if (pNow - pTime > 1000 * 30)
-              continue;
-            }
-            youtube.parse.line(j.items[i]);
+            _textMessageEvent(j.items[i]);
             break;
            case 'superChatEvent':
+            _superChatEvent(j.items[i]);
+            break;
            case 'newSponsorEvent':
+            _newSponsorEvent(j.items[i]);
+            break;
            case 'memberMilestoneChatEvent':
+            _memberMilestoneChatEvent(j.items[i]);
+            break;
            case 'superStickerEvent':
+            _superStickerEvent(j.items[i]);
+            break;
            case 'membershipGiftingEvent':
-         //case 'giftMembershipReceivedEvent':
+            _membershipGiftingEvent(j.items[i]);
+            break;
+           case 'giftMembershipReceivedEvent':
+            _giftMembershipReceivedEvent(j.items[i]);
+            break;
            case 'userBannedEvent':
-            _feedback(j.items[i].snippet.type, JSON.stringify(j.items[i].snippet));
-            if (j.items[i].snippet.hasOwnProperty('textMessageDetails') && j.items[i].snippet.textMessageDetails.hasOwnProperty('messageText'))
-             console.log(j.items[i].snippet.textMessageDetails.messageText, access);
-            else if (j.items[i].snippet.hasOwnProperty('displayMessage'))
-             console.log(j.items[i].snippet.displayMessage, access);
-            else
-             console.log(j.items[i].snippet, access);
+            _userBannedEvent(j.items[i]);
             break;
            default:
-            _feedback('other', JSON.stringify(j.items[i].snippet));
+            _feedback('other', JSON.stringify(j.items[i]));
             console.log(j.items[i]);
             break;
           }
@@ -8338,6 +8469,74 @@
          return;
         window.clearTimeout(_tM[chatID]);
         delete _tM[chatID];
+       }
+
+       function _textMessageEvent(cmd)
+       {
+        if (!cmd.hasOwnProperty('authorDetails'))
+         return;
+        youtube.parse.line(cmd);
+       }
+
+       function _superChatEvent(cmd)
+       {
+        //j.items[i].snippet.superChatDetails.userComment
+        //j.items[i].snippet.superChatDetails.amountDisplayString
+        //j.items[i].snippet.superChatDetails.currency ['USD']
+        //j.items[i].snippet.superChatDetails.amountMicros ($1 = 1,000,000)
+        //                   <https://developers.google.com/standard-payments/reference/glossary#micros>
+        //j.items[i].snippet.superChatDetails.tier
+       }
+
+       function _newSponsorEvent(cmd)
+       {
+        //j.items[i].snippet.authorChannelId (member)
+        //j.items[i].snippet.newSponsorDetails.memberLevelName [can be empty]
+        //j.items[i].snippet.newSponsorDetails.isUpgrade [true/false]
+       }
+
+       function _memberMilestoneChatEvent(cmd)
+       {
+        //j.items[i].snippet.authorChannelId (member)
+        //j.items[i].snippet.memberMilestoneChatDetails.userComment
+        //j.items[i].snippet.memberMilestoneChatDetails.memberMonth (uint, rounded up)
+        //j.items[i].snippet.memberMilestoneChatDetails.memberLevelName [can be empty]
+       }
+
+       function _superStickerEvent(cmd)
+       {
+        //j.items[i].snippet.superStickerDetails.superStickerMetadata.stickerId
+        //j.items[i].snippet.superStickerDetails.superStickerMetadata.altText
+        //j.items[i].snippet.superStickerDetails.amountDisplayString
+        //j.items[i].snippet.superStickerDetails.currency [USD]
+        //j.items[i].snippet.superStickerDetails.amountMicros ($1 = 1,000,000)
+        //j.items[i].snippet.superStickerDetails.tier
+       }
+
+       function _membershipGiftingEvent(cmd)
+       {
+        //j.items[i].snippet.authorChannelId (gifter)
+        //j.items[i].snippet.membershipGiftingDetails.giftMembershipsCount
+        //j.items[i].snippet.membershipGiftingDetails.giftMembershipsLevelName
+       }
+
+       function _giftMembershipReceivedEvent(cmd)
+       {
+        //j.items[i].snippet.authorChannelId (recipient)
+        //j.items[i].snippet.giftMembershipReceivedDetails.memberLevelName
+        //j.items[i].snippet.giftMembershipReceivedDetails.gifterChannelId
+        //j.items[i].snippet.giftMembershipReceivedDetails.associatedMembershipGiftingMessageId
+       }
+
+       function _userBannedEvent(cmd)
+       {
+        //j.items[i].snippet.authorChannelId (moderator)
+        //j.items[i].snippet.userBannedDetails.bannedUserDetails.channelId
+        //j.items[i].snippet.userBannedDetails.bannedUserDetails.channelUrl
+        //j.items[i].snippet.userBannedDetails.bannedUserDetails.displayName
+        //j.items[i].snippet.userBannedDetails.bannedUserDetails.profileImageUrl
+        //j.items[i].snippet.userBannedDetails.banType ['permanent'/'temporary']
+        //  j.items[i].snippet.userBannedDetails.banDurationSeconds (required if banType === 'temporary')
        }
 
        return {
@@ -8382,7 +8581,9 @@
        if (document.visibilityState !== 'hidden' && fRet !== false && fRet.length > 0)
        {
         for (let i = 0, l = fRet.length; i < l; i++)
+        {
          display.kappa.show(false, cfg.event.youtube.sub, {'%USER%': fRet[i]});
+        }
        }
        _tS = window.setTimeout(_detect, _rSC);
       }
@@ -8398,6 +8599,8 @@
        const j = r.json;
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+         return [];
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -8466,6 +8669,8 @@
        const j = r.json;
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+         return [];
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -8540,6 +8745,8 @@
        const j = r.json;
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+         return [];
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -8704,6 +8911,13 @@
        const j = r.json;
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+        {
+         notice.error(notice.Type.YOUTUBE_CORS, 'OAuth token');
+         youtube.net.oAuth.clear(false);
+         youtube.net.dead = true;
+         return false;
+        }
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -8745,9 +8959,16 @@
        const r = await shared.httpRequest('GET', url, {}, null, false);
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+        {
+         notice.error(notice.Type.YOUTUBE_CORS, 'OAuth token info');
+         youtube.net.oAuth.clear(false);
+         youtube.net.dead = true;
+         return false;
+        }
         if (r.code === 400)
         {
-         notice.error(notice.Type.TWITCH_TOKEN);
+         notice.error(notice.Type.YOUTUBE_TOKEN);
          youtube.net.oAuth.clear();
         }
         return false;
@@ -8865,12 +9086,15 @@
 
      function _getMessage(cmd)
      {
-      let msg = false;
       if (cmd.snippet.hasOwnProperty('textMessageDetails') && cmd.snippet.textMessageDetails.hasOwnProperty('messageText'))
-       msg = cmd.snippet.textMessageDetails.messageText;
-      else if (cmd.snippet.hasOwnProperty('displayMessage'))
-       msg = cmd.snippet.displayMessage;
-      return msg;
+       return cmd.snippet.textMessageDetails.messageText;
+      if (cmd.snippet.hasOwnProperty('memberMilestoneChatDetails') && cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('userComment'))
+       return cmd.snippet.memberMilestoneChatDetails.userComment;
+      if (cmd.snippet.hasOwnProperty('superChatDetails') && cmd.snippet.superChatDetails.hasOwnProperty('userComment'))
+       return cmd.snippet.superChatDetails.userComment;
+      if (cmd.snippet.hasOwnProperty('displayMessage'))
+       return cmd.snippet.displayMessage;
+      return false;
      }
 
      const $content = function()
@@ -9956,7 +10180,9 @@
        if (document.visibilityState !== 'hidden' && fRet > 0)
        {
         for (let i = 0, l = fRet; i < l; i++)
+        {
          display.kappa.show(false, cfg.event.kick.follow, {'%USER%': 'Kick User'});
+        }
        }
        _tS = window.setTimeout(_detect, _rSC);
       }
@@ -12925,7 +13151,9 @@
       if (j.hasOwnProperty('default_sets'))
       {
        for (let i = 0, l = j.default_sets.length; i < l; i++)
+       {
         usedSets.push(j.default_sets[i]);
+       }
       }
       for (const set in j.sets)
       {
@@ -14008,7 +14236,9 @@
      const s = JSON.stringify(o);
      let h = 0;
      for (let i = 0, l = s.length; i < l; i++)
+     {
       h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+     }
      return h;
     }
 
@@ -15386,7 +15616,9 @@
      let ctP = 0;
      const lP = pyramidDist.length;
      for (let i = 0; i < lP; i++)
+     {
       ctP += pyramidDist[i];
+     }
      const tP = Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.show.total);
      const tPerB = Math.max(Math.floor(tP / ctP), timing.kappa.Pyramid.show.min);
      t += '    transition: transform ease-in ' + tPerB + 'ms;\n';

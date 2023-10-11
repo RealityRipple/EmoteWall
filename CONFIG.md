@@ -909,14 +909,53 @@ Configuration Information
           - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
 
     * `superchat`  
-      *A user posts a superchat in the channel.*  
-      This value can be a boolean or array:
-      - [ ] If `true`, a kappagen will occur.
-      - [ ] If `false`, no kappagen will occur.
-      - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+      *Settings related to kappagens on a super chat event.*
+
+      * `useMsg`
+        - [ ] If `true`, any emotes in super chat messages will also be included in the kappagen.
+        - [ ] If `false`, any emotes in super chat messages will show up like normal emotes.
+
+      * `level`
+        *Minimum number of tier for a kappagen.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on all super chats.
+        - [ ] If `false`, no kappagen will occur on super chats.
+        - [ ]  If Integer, the value is the minimum tier required for a super chat to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur on super chat.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-4'` or `'5-8'`, or an open-maximum range such as `'9+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
 
     * `supersticker`  
-      *A user posts a sticker in the channel.*  
+      *Minimum number of tier for a kappagen on a super sticker event.*  
+      This value can be a boolean, integer, or array:
+      - [ ] If `true`, a kappagen will occur on all super stickers.
+      - [ ] If `false`, no kappagen will occur on super stickers.
+      - [ ]  If Integer, the value is the minimum tier required for a super chat to trigger a kappagen.
+        - [ ] If `0`, no kappagen will occur on super chat.
+      - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-4'` or `'5-8'`, or an open-maximum range such as `'9+'`.  
+      Each value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `timeout`  
+      *Minimum time for a kappagen when a user is timed out.*  
+      This value can be a boolean, integer, or array:
+      - [ ] If `true`, a kappagen will occur on all timeouts.
+      - [ ] If `false`, no kappagen will occur on timeouts.
+      - [ ] If Integer, the value is the minimum seconds required for a timeout to trigger a kappagen.
+        - [ ] If `0`, no kappagen will occur on timeouts.
+      - [ ]  If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'5-30'` or `'60-180'`, or an open-maximum range such as `'300+'`.  
+      Each value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `ban`  
+      *A user is banned in the channel.*  
       This value can be a boolean or array:
       - [ ] If `true`, a kappagen will occur.
       - [ ] If `false`, no kappagen will occur.
