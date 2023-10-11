@@ -9081,12 +9081,15 @@
 
      function _getMessage(cmd)
      {
-      let msg = false;
       if (cmd.snippet.hasOwnProperty('textMessageDetails') && cmd.snippet.textMessageDetails.hasOwnProperty('messageText'))
-       msg = cmd.snippet.textMessageDetails.messageText;
-      else if (cmd.snippet.hasOwnProperty('displayMessage'))
-       msg = cmd.snippet.displayMessage;
-      return msg;
+       return cmd.snippet.textMessageDetails.messageText;
+      if (cmd.snippet.hasOwnProperty('memberMilestoneChatDetails') && cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('userComment'))
+       return cmd.snippet.memberMilestoneChatDetails.userComment;
+      if (cmd.snippet.hasOwnProperty('superChatDetails') && cmd.snippet.superChatDetails.hasOwnProperty('userComment'))
+       return cmd.snippet.superChatDetails.userComment;
+      if (cmd.snippet.hasOwnProperty('displayMessage'))
+       return cmd.snippet.displayMessage;
+      return false;
      }
 
      const $content = function()
