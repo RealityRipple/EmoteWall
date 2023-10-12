@@ -8489,17 +8489,22 @@
 
        function _newSponsorEvent(cmd)
        {
-        //j.items[i].snippet.authorChannelId (member)
-        //j.items[i].snippet.newSponsorDetails.memberLevelName [can be empty]
-        //j.items[i].snippet.newSponsorDetails.isUpgrade [true/false]
+        if (!cmd.hasOwnProperty('authorDetails'))
+         return;
+        if (!cmd.snippet.hasOwnProperty('newSponsorDetails'))
+         return;
+        if (cmd.snippet.newSponsorDetails.isUpgrade)
+         return;
+        youtube.parse.event.member.first(cmd);
        }
 
        function _memberMilestoneChatEvent(cmd)
        {
-        //j.items[i].snippet.authorChannelId (member)
-        //j.items[i].snippet.memberMilestoneChatDetails.userComment
-        //j.items[i].snippet.memberMilestoneChatDetails.memberMonth (uint, rounded up)
-        //j.items[i].snippet.memberMilestoneChatDetails.memberLevelName [can be empty]
+        if (!cmd.hasOwnProperty('authorDetails'))
+         return;
+        if (!cmd.snippet.hasOwnProperty('memberMilestoneChatDetails'))
+         return;
+        youtube.parse.event.member.milestone(cmd);
        }
 
        function _superStickerEvent(cmd)
@@ -8513,9 +8518,11 @@
 
        function _membershipGiftingEvent(cmd)
        {
-        //j.items[i].snippet.authorChannelId (gifter)
-        //j.items[i].snippet.membershipGiftingDetails.giftMembershipsCount
-        //j.items[i].snippet.membershipGiftingDetails.giftMembershipsLevelName
+        if (!cmd.hasOwnProperty('authorDetails'))
+         return;
+        if (!cmd.snippet.hasOwnProperty('membershipGiftingDetails'))
+         return;
+        youtube.parse.event.member.gift(cmd);
        }
 
        function _userBannedEvent(cmd)
@@ -9474,9 +9481,74 @@
        return $c_supersticker;
       }();
 
-      const $sub = function()
+      const $membership = function()
       {
-       
+       function $first(cmd)
+       {
+        const u = _parseUser(cmd);
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+         return;
+        if (!cfg.event.youtube.member.hasOwnProperty('first'))
+         return;
+        if (cfg.event.youtube.member.first === false)
+         return;
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        display.kappa.show(false, cfg.event.youtube.member.first, {'%USER%': dn});
+       }
+
+       function $milestone(cmd)
+       {
+        const u = _parseUser(cmd);
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+         return;
+        if (!cfg.event.youtube.member.hasOwnProperty('milestone'))
+         return;
+        let a = [];
+        if (cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('userComment') && cmd.snippet.memberMilestoneChatDetails.userComment !== '')
+        {
+         if (cfg.event.youtube.member.useMsg)
+          a = await _eListFromCmd(cmd, true);
+         else
+          await youtube.parse.line(cmd);
+        }
+        if (!cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('memberMonth'))
+         return;
+        const mpcm = cmd.snippet.memberMilestoneChatDetails.memberMonth;
+        const rs = shared.findInMaybeRange(cfg.event.youtube.member.milestone, mpcm);
+        if (rs === false)
+         return;
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        display.kappa.show(a, rs, {'%USER%': dn, '%AMOUNT%': mpcm});
+       }
+
+       function $gift(cmd)
+       {
+        const u = _parseUser(cmd);
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+         return;
+        if (!cfg.event.youtube.member.hasOwnProperty('giftbomb'))
+         return;
+        if (!cmd.snippet.membershipGiftingDetails.hasOwnProperty('giftMembershipsCount'))
+         return;
+        const mpmgc = cmd.snippet.membershipGiftingDetails.giftMembershipsCount;
+        const gpb = shared.findInMaybeRange(cfg.event.youtube.member.giftbomb, mpmgc);
+        if (gpb === false)
+         return;
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        display.kappa.show(false, gpb, {'%SENDER%': dn, '%AMOUNT%': mpmgc});
+       }
+
+       return {
+        first: $first,
+        milestone: $milestone,
+        gift: $gift
+       }
       }();
 
       async function $ban(cmd)
@@ -9512,7 +9584,7 @@
       return {
        superchat: $superchat,
        supersticker: $supersticker,
-       sub: $sub,
+       membership: $membership,
        ban: $ban,
        timeout: $timeout
       };
