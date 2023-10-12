@@ -9355,7 +9355,7 @@
      {
       async function $c_line(cmd)
       {
-       const u = _parseUser(cmd, true);
+       const u = _parseUser(cmd);
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
         return;
        const lv = await _level(cmd);
@@ -9395,7 +9395,7 @@
          return false;
         if (cfg.event.youtube.superchat.level === false)
          return false;
-        const u = _parseUser(cmd, true);
+        const u = _parseUser(cmd);
         if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
          return;
         if (!cmd.snippet.superChatDetails.hasOwnProperty('tier') || cmd.snippet.superChatDetails.tier === null)
@@ -9448,7 +9448,7 @@
        {
         if (cfg.event.youtube.supersticker === false)
          return false;
-        const u = _parseUser(cmd, true);
+        const u = _parseUser(cmd);
         if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
          return;
         if (!cmd.snippet.superStickerDetails.hasOwnProperty('superStickerMetadata') || cmd.snippet.superStickerDetails.superStickerMetadata === null)
@@ -9620,7 +9620,7 @@
      async function _eListFromCmd(cmd, dup = null)
      {
       const r = [];
-      const u = _parseUser(cmd, true);
+      const u = _parseUser(cmd);
       if (u !== false && cfg.ignore.users !== false && cfg.ignore.users.includes(u.displayName))
        return r;
       r.push(...youtube.parse.content.youtube(cmd, dup));
