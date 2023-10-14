@@ -9502,14 +9502,21 @@
         const u = _parseUser(cmd);
         if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
          return;
-        if (!cfg.event.youtube.member.hasOwnProperty('first'))
+        let c = cfg.event.youtube.member;
+        if (cmd.snippet.newSponsorDetails.hasOwnProperty('memberLevelName'))
+        {
+         const l = cmd.snippet.newSponsorDetails.memberLevelName;
+         if (l !== false && l !== null && l !== '' && c.hasOwnProperty(l) && c[l].hasOwnProperty('first'))
+          c = c[l];
+        }
+        if (!c.hasOwnProperty('first'))
          return;
-        if (cfg.event.youtube.member.first === false)
+        if (c.first === false)
          return;
         let dn = 'Anonymous';
         if (u.hasOwnProperty('display-name'))
          dn = u['display-name'];
-        display.kappa.show(false, cfg.event.youtube.member.first, {'%USER%': dn});
+        display.kappa.show(false, c.first, {'%USER%': dn});
        }
 
        function $milestone(cmd)
@@ -9517,7 +9524,14 @@
         const u = _parseUser(cmd);
         if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
          return;
-        if (!cfg.event.youtube.member.hasOwnProperty('milestone'))
+        let c = cfg.event.youtube.member;
+        if (cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('memberLevelName'))
+        {
+         const l = cmd.snippet.memberMilestoneChatDetails.memberLevelName;
+         if (l !== false && l !== null && l !== '' && c.hasOwnProperty(l) && c[l].hasOwnProperty('milestone'))
+          c = c[l];
+        }
+        if (!c.hasOwnProperty('milestone'))
          return;
         let a = [];
         if (cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('userComment') && cmd.snippet.memberMilestoneChatDetails.userComment !== '')
@@ -9530,7 +9544,7 @@
         if (!cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('memberMonth'))
          return;
         const mpcm = cmd.snippet.memberMilestoneChatDetails.memberMonth;
-        const rs = shared.findInMaybeRange(cfg.event.youtube.member.milestone, mpcm);
+        const rs = shared.findInMaybeRange(c.milestone, mpcm);
         if (rs === false)
          return;
         let dn = 'Anonymous';
@@ -9544,12 +9558,19 @@
         const u = _parseUser(cmd);
         if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
          return;
-        if (!cfg.event.youtube.member.hasOwnProperty('giftbomb'))
-         return;
         if (!cmd.snippet.membershipGiftingDetails.hasOwnProperty('giftMembershipsCount'))
          return;
+        let c = cfg.event.youtube.member;
+        if (cmd.snippet.membershipGiftingDetails.hasOwnProperty('giftMembershipsLevelName'))
+        {
+         const l = cmd.snippet.membershipGiftingDetails.giftMembershipsLevelName;
+         if (l !== false && l !== null && l !== '' && c.hasOwnProperty(l) && c[l].hasOwnProperty('giftbomb'))
+          c = c[l];
+        }
+        if (!c.hasOwnProperty('giftbomb'))
+         return;
         const mpmgc = cmd.snippet.membershipGiftingDetails.giftMembershipsCount;
-        const gpb = shared.findInMaybeRange(cfg.event.youtube.member.giftbomb, mpmgc);
+        const gpb = shared.findInMaybeRange(c.giftbomb, mpmgc);
         if (gpb === false)
          return;
         let dn = 'Anonymous';
