@@ -8426,16 +8426,16 @@
           switch (j.items[i].snippet.type)
           {
            case 'textMessageEvent':
-            _textMessageEvent(j.items[i]);
+            await _textMessageEvent(j.items[i]);
             break;
            case 'superChatEvent':
-            _superChatEvent(j.items[i]);
+            await _superChatEvent(j.items[i]);
             break;
            case 'newSponsorEvent':
             _newSponsorEvent(j.items[i]);
             break;
            case 'memberMilestoneChatEvent':
-            _memberMilestoneChatEvent(j.items[i]);
+            await _memberMilestoneChatEvent(j.items[i]);
             break;
            case 'superStickerEvent':
             _superStickerEvent(j.items[i]);
@@ -8471,16 +8471,16 @@
         delete _tM[chatID];
        }
 
-       function _textMessageEvent(cmd)
+       async function _textMessageEvent(cmd)
        {
         if (document.visibilityState === 'hidden')
          return;
         if (!cmd.hasOwnProperty('authorDetails'))
          return;
-        youtube.parse.line(cmd);
+        await youtube.parse.line(cmd);
        }
 
-       function _superChatEvent(cmd)
+       async function _superChatEvent(cmd)
        {
         if (document.visibilityState === 'hidden')
          return;
@@ -8488,7 +8488,7 @@
          return;
         if (!cmd.snippet.hasOwnProperty('superChatDetails'))
          return;
-        youtube.parse.event.superchat(cmd);
+        await youtube.parse.event.superchat(cmd);
        }
 
        function _newSponsorEvent(cmd)
@@ -8504,7 +8504,7 @@
         youtube.parse.event.membership.first(cmd);
        }
 
-       function _memberMilestoneChatEvent(cmd)
+       async function _memberMilestoneChatEvent(cmd)
        {
         if (document.visibilityState === 'hidden')
          return;
@@ -8512,7 +8512,7 @@
          return;
         if (!cmd.snippet.hasOwnProperty('memberMilestoneChatDetails'))
          return;
-        youtube.parse.event.membership.milestone(cmd);
+        await youtube.parse.event.membership.milestone(cmd);
        }
 
        function _superStickerEvent(cmd)
@@ -9454,7 +9454,7 @@
       {
        const _minUSD = [0, 1, 2, 5, 10, 20, 50, 100, 200, 300, 400, 500];
 
-       async function $c_supersticker(cmd)
+       function $c_supersticker(cmd)
        {
         if (cfg.event.youtube.supersticker === false)
          return false;
@@ -9519,7 +9519,7 @@
         display.kappa.show(false, c.first, {'%USER%': dn});
        }
 
-       function $milestone(cmd)
+       async function $milestone(cmd)
        {
         const u = _parseUser(cmd);
         if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
@@ -9586,7 +9586,7 @@
        }
       }();
 
-      async function $ban(cmd)
+      function $ban(cmd)
       {
        if (!cmd.snippet.userBannedDetails.hasOwnProperty('bannedUserDetails'))
         return;
@@ -9598,7 +9598,7 @@
        display.kappa.show(false, cfg.event.youtube.ban, {'%USER%': dn});
       }
 
-      async function $timeout(cmd)
+      function $timeout(cmd)
       {
        if (!cmd.snippet.userBannedDetails.hasOwnProperty('banDurationSeconds'))
         return;
