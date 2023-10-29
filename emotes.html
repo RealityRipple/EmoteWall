@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.8.6 BETA
+    * v0.8.7 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -544,7 +544,7 @@
       }
      },
      'Spiral': {
-      time: 1,
+      time: 1/2,
       bulk: 8,       /* max number of emotes to send in bulk (>1 can end up looking chunked) */
       vectors: {     /* number of emote vectors per circle */
        min: 40,
@@ -1246,13 +1246,10 @@
         init: 'https://youtube.googleapis.com/youtube/v3/liveChat/messages?liveChatId=%CHAT_ID%&part=%PART%&maxResults=2000',
         page: 'https://youtube.googleapis.com/youtube/v3/liveChat/messages?liveChatId=%CHAT_ID%&part=%PART%&pageToken=%PAGE%&maxResults=2000'
        },
-       emojis: 'https://realityripple.com/Tools/Twitch/EmoteWall/yte.json'
+       emojis: 'https://realityripple.com/Tools/Twitch/EmoteWall/yte.json',
+       superstickers: 'https://realityripple.com/Tools/Twitch/EmoteWall/ytss.json'
       },
       subscriptions: 'https://www.googleapis.com/youtube/v3/subscriptions?part=%PART%&myRecentSubscribers=true&maxResults=50',
-      members: {
-       init: 'https://www.googleapis.com/youtube/v3/members?part=%PART%&mode=updates&maxResults=1',
-       page: 'https://www.googleapis.com/youtube/v3/members?part=%PART%&mode=updates&pageToken=%PAGE%&maxResults=1000'
-      },
       tokeninfo: 'https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=%OAUTH_TOKEN%'
      },
      kick: {
@@ -7953,6 +7950,8 @@
 
    const youtube = function()
    {
+    const _eStickers = {};
+
     const $net = function()
     {
      const $broadcasts = function()
@@ -8383,9 +8382,9 @@
          window.clearTimeout(notice.tHide);
          notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
         }
-        let minPoll = 1000;
+        let nextPoll = 1000;
         if (j.hasOwnProperty('pollingIntervalMillis'))
-         minPoll = j.pollingIntervalMillis;
+         nextPoll = j.pollingIntervalMillis;
         let nextPage = false;
         if (j.hasOwnProperty('nextPageToken'))
          nextPage = j.nextPageToken;
@@ -8423,16 +8422,16 @@
           switch (j.items[i].snippet.type)
           {
            case 'textMessageEvent':
-            _textMessageEvent(j.items[i]);
+            await _textMessageEvent(j.items[i]);
             break;
            case 'superChatEvent':
-            _superChatEvent(j.items[i]);
+            await _superChatEvent(j.items[i]);
             break;
            case 'newSponsorEvent':
             _newSponsorEvent(j.items[i]);
             break;
            case 'memberMilestoneChatEvent':
-            _memberMilestoneChatEvent(j.items[i]);
+            await _memberMilestoneChatEvent(j.items[i]);
             break;
            case 'superStickerEvent':
             _superStickerEvent(j.items[i]);
@@ -8440,24 +8439,14 @@
            case 'membershipGiftingEvent':
             _membershipGiftingEvent(j.items[i]);
             break;
-           case 'giftMembershipReceivedEvent':
-            _giftMembershipReceivedEvent(j.items[i]);
-            break;
            case 'userBannedEvent':
             _userBannedEvent(j.items[i]);
-            break;
-           default:
-            _feedback('other', JSON.stringify(j.items[i]));
-            console.log(j.items[i]);
             break;
           }
          }
         }
         if (!_tM.hasOwnProperty(chatID))
          return;
-        const nextPoll = Math.max(1000, minPoll); // youtube's rate limit is 610,000 requests per 24 hours
-                                                  // but there's also preflight requests and up to three
-                                                  // instances to think about
         _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, nextPoll, chatID, nextPage);
        }
 
@@ -8471,72 +8460,84 @@
         delete _tM[chatID];
        }
 
-       function _textMessageEvent(cmd)
+       async function _textMessageEvent(cmd)
        {
+        if (document.visibilityState === 'hidden')
+         return;
         if (!cmd.hasOwnProperty('authorDetails'))
          return;
-        youtube.parse.line(cmd);
+        await youtube.parse.line(cmd);
        }
 
-       function _superChatEvent(cmd)
+       async function _superChatEvent(cmd)
        {
-        //j.items[i].snippet.superChatDetails.userComment
-        //j.items[i].snippet.superChatDetails.amountDisplayString
-        //j.items[i].snippet.superChatDetails.currency ['USD']
-        //j.items[i].snippet.superChatDetails.amountMicros ($1 = 1,000,000)
-        //                   <https://developers.google.com/standard-payments/reference/glossary#micros>
-        //j.items[i].snippet.superChatDetails.tier
+        if (document.visibilityState === 'hidden')
+         return;
+        if (!cmd.hasOwnProperty('authorDetails'))
+         return;
+        if (!cmd.snippet.hasOwnProperty('superChatDetails'))
+         return;
+        await youtube.parse.event.superchat(cmd);
        }
 
        function _newSponsorEvent(cmd)
        {
-        //j.items[i].snippet.authorChannelId (member)
-        //j.items[i].snippet.newSponsorDetails.memberLevelName [can be empty]
-        //j.items[i].snippet.newSponsorDetails.isUpgrade [true/false]
+        if (document.visibilityState === 'hidden')
+         return;
+        if (!cmd.hasOwnProperty('authorDetails'))
+         return;
+        if (!cmd.snippet.hasOwnProperty('newSponsorDetails'))
+         return;
+        if (cmd.snippet.newSponsorDetails.isUpgrade)
+         return;
+        youtube.parse.event.membership.first(cmd);
        }
 
-       function _memberMilestoneChatEvent(cmd)
+       async function _memberMilestoneChatEvent(cmd)
        {
-        //j.items[i].snippet.authorChannelId (member)
-        //j.items[i].snippet.memberMilestoneChatDetails.userComment
-        //j.items[i].snippet.memberMilestoneChatDetails.memberMonth (uint, rounded up)
-        //j.items[i].snippet.memberMilestoneChatDetails.memberLevelName [can be empty]
+        if (document.visibilityState === 'hidden')
+         return;
+        if (!cmd.hasOwnProperty('authorDetails'))
+         return;
+        if (!cmd.snippet.hasOwnProperty('memberMilestoneChatDetails'))
+         return;
+        await youtube.parse.event.membership.milestone(cmd);
        }
 
        function _superStickerEvent(cmd)
        {
-        //j.items[i].snippet.superStickerDetails.superStickerMetadata.stickerId
-        //j.items[i].snippet.superStickerDetails.superStickerMetadata.altText
-        //j.items[i].snippet.superStickerDetails.amountDisplayString
-        //j.items[i].snippet.superStickerDetails.currency [USD]
-        //j.items[i].snippet.superStickerDetails.amountMicros ($1 = 1,000,000)
-        //j.items[i].snippet.superStickerDetails.tier
+        if (document.visibilityState === 'hidden')
+         return;
+        if (!cmd.hasOwnProperty('authorDetails'))
+         return;
+        if (!cmd.snippet.hasOwnProperty('superStickerDetails'))
+         return;
+        youtube.parse.event.supersticker(cmd);
        }
 
        function _membershipGiftingEvent(cmd)
        {
-        //j.items[i].snippet.authorChannelId (gifter)
-        //j.items[i].snippet.membershipGiftingDetails.giftMembershipsCount
-        //j.items[i].snippet.membershipGiftingDetails.giftMembershipsLevelName
-       }
-
-       function _giftMembershipReceivedEvent(cmd)
-       {
-        //j.items[i].snippet.authorChannelId (recipient)
-        //j.items[i].snippet.giftMembershipReceivedDetails.memberLevelName
-        //j.items[i].snippet.giftMembershipReceivedDetails.gifterChannelId
-        //j.items[i].snippet.giftMembershipReceivedDetails.associatedMembershipGiftingMessageId
+        if (document.visibilityState === 'hidden')
+         return;
+        if (!cmd.hasOwnProperty('authorDetails'))
+         return;
+        if (!cmd.snippet.hasOwnProperty('membershipGiftingDetails'))
+         return;
+        youtube.parse.event.membership.gift(cmd);
        }
 
        function _userBannedEvent(cmd)
        {
-        //j.items[i].snippet.authorChannelId (moderator)
-        //j.items[i].snippet.userBannedDetails.bannedUserDetails.channelId
-        //j.items[i].snippet.userBannedDetails.bannedUserDetails.channelUrl
-        //j.items[i].snippet.userBannedDetails.bannedUserDetails.displayName
-        //j.items[i].snippet.userBannedDetails.bannedUserDetails.profileImageUrl
-        //j.items[i].snippet.userBannedDetails.banType ['permanent'/'temporary']
-        //  j.items[i].snippet.userBannedDetails.banDurationSeconds (required if banType === 'temporary')
+        if (document.visibilityState === 'hidden')
+         return;
+        if (!cmd.snippet.hasOwnProperty('userBannedDetails'))
+         return;
+        if (!cmd.snippet.userBannedDetails.hasOwnProperty('banType'))
+         return;
+        if (cmd.snippet.userBannedDetails.banType === 'temporary')
+         youtube.parse.event.timeout(cmd);
+        else
+         youtube.parse.event.ban(cmd);
        }
 
        return {
@@ -8555,7 +8556,7 @@
      {
       let _uLS = false;
       let _tS = false;
-      const _rSC = 12000;
+      const _rSC = 6000;
 
       function $c_subscribers()
       {
@@ -8640,147 +8641,6 @@
       }
 
       return $c_subscribers;
-     }();
-
-     const $members = function()
-     {
-      let _uLS = false;
-      let _tS = false;
-      const _rSC = 12000;
-
-      async function $c_members()
-      {
-       if (!youtube.net.oAuth.auth.scope.includes(cScopes.youtube.memberships))
-        return;
-       const mID = await _init();
-       if (mID === false)
-        return;
-       _tS = window.setTimeout(_detect, _rSC, mID);
-      }
-
-      async function _init()
-      {
-       const url = cURLs.api.youtube.members.init.replaceAll('%PART%', encodeURIComponent('snippet'));
-       const h = {
-        'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
-        'Accept': 'application/json'
-       };
-       const r = await shared.httpRequest('GET', url, h);
-       const j = r.json;
-       if (!r.success)
-       {
-        if (r.code === 0 && r.data === '')
-         return [];
-        if (j !== null)
-        {
-         const e = _flatJSON(j);
-         if (e.hasOwnProperty('error.errors.0.reason') && e['error.errors.0.reason'] === 'forbidden')
-         {
-          // not a monetized account
-          return false;
-         }
-         console.log(e);
-         console.log(j);
-        }
-        console.log(r.code);
-        notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Members: ' + r.code);
-        _errorReport('members._init', url, r);
-        return false;
-       }
-       if (j === null)
-        return false;
-       if (!j.hasOwnProperty('nextPageToken'))
-        return false;
-       return j.nextPageToken;
-      }
-
-      async function _detect(mID)
-      {
-       if (youtube.net.dead)
-        return;
-       if (_tS === false)
-        return;
-       window.clearTimeout(_tS);
-       _tS = false;
-       const fRet = await _getChange(mID);
-       if (document.visibilityState !== 'hidden' && fRet !== false && fRet.length > 0)
-       {
-        for (let i = 0, l = fRet.length; i < l; i++)
-        {
-         if (fRet[i].hasOwnProperty('gift') && fRet[i].gift > 0)
-         {
-          const gpb = shared.findInMaybeRange(cfg.event.youtube.member.giftbomb, fRet[i].gift);
-          if (gpb === false)
-           return;
-          display.kappa.show(false, gpb, {'%SENDER%': fRet[i].user, '%AMOUNT%': fRet[i].gift});
-         }
-         else
-         {
-          if (fRet[i].months === 1)
-          {
-           if (cfg.event.youtube.member.first !== false)
-            display.kappa.show(false, cfg.event.youtube.member.first, {'%USER%': fRet[i].user});
-          }
-          else
-          {
-           const rs = shared.findInMaybeRange(cfg.event.youtube.member.milestone, fRet[i].months);
-           if (rs === false)
-            return;
-           display.kappa.show(false, rs, {'%USER%': fRet[i].user, '%AMOUNT%': fRet[i].months});
-          }
-         }
-        }
-       }
-       _tS = window.setTimeout(_detect, _rSC, mID);
-      }
-
-      async function _getChange(mID)
-      {
-       const url = cURLs.api.youtube.members.page.replaceAll('%PART%', encodeURIComponent('snippet')).replaceAll('%PAGE%', encodeURIComponent(mID));
-       const h = {
-        'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
-        'Accept': 'application/json'
-       };
-       const r = await shared.httpRequest('GET', url, h);
-       const j = r.json;
-       if (!r.success)
-       {
-        if (r.code === 0 && r.data === '')
-         return [];
-        if (j !== null)
-        {
-         const e = _flatJSON(j);
-         console.log(e);
-         console.log(j);
-        }
-        console.log(r.code);
-        notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Unknown Error Getting Members: ' + r.code);
-        _errorReport('members._getChange', url, r);
-        return false;
-       }
-       _feedback('memberChange', r.data);
-       if (j === null)
-        return false;
-       if (!j.hasOwnProperty('items') || !Array.isArray(j.items) || j.items.length < 1)
-        return false;
-       const findU = _uLS;
-       _uLS = j.items[0].snippet.memberDetails.channelId;
-       if (findU === false)
-        return false;
-       const s = [];
-       for (let i = 0, l = j.items.length; i < l; i++)
-       {
-        const uID = j.items[i].snippet.memberDetails.channelId;
-        if (uID === findU)
-         return s;
-        const uName = j.items[i].snippet.memberDetails.displayName;
-        const uMonths = parseInt(j.items[i].snippet.membershipsDetails.membershipsDuration.memberTotalDurationMonths, 10);
-        s.push({user: uName, months: uMonths});
-       }
-       return [];
-      }
-
-      return $c_members;
      }();
 
      const $oAuth = function()
@@ -9064,7 +8924,6 @@
       dead: false,
       broadcasts: $broadcasts,
       subscribers: $subscribers,
-      members: $members,
       oAuth: $oAuth
      };
     }();
@@ -9353,7 +9212,7 @@
      {
       async function $c_line(cmd)
       {
-       const u = _parseUser(cmd, true);
+       const u = _parseUser(cmd);
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
         return;
        const lv = await _level(cmd);
@@ -9377,6 +9236,240 @@
       }
 
       return $c_line;
+     }();
+
+     const $event = function()
+     {
+      const $superchat = function()
+      {
+       const _minUSD = [0, 1, 2, 5, 10, 20, 50, 100, 200, 300, 400, 500];
+
+       async function $c_superchat(cmd)
+       {
+        if (cfg.event.youtube.superchat === false)
+         return false;
+        if (!cfg.event.youtube.superchat.hasOwnProperty('level'))
+         return false;
+        if (cfg.event.youtube.superchat.level === false)
+         return false;
+        const u = _parseUser(cmd);
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+         return;
+        if (!cmd.snippet.superChatDetails.hasOwnProperty('tier') || cmd.snippet.superChatDetails.tier === null)
+         return false;
+        const lv = cmd.snippet.superChatDetails.tier;
+        if (lv < 1)
+         return false;
+        let p = [];
+        if (cmd.snippet.superChatDetails.hasOwnProperty('userComment') && cmd.snippet.superChatDetails.userComment !== null)
+        {
+         if (cfg.event.youtube.superchat.useMsg)
+         {
+          const a = await _eListFromCmd(cmd);
+          p.push(...a);
+         }
+         else
+          await youtube.parse.line(cmd);
+         p = _handleDuplicates(p);
+        }
+        if (p.length === 0)
+         p = false;
+        const r = shared.findInMaybeRange(cfg.event.youtube.superchat.level, lv);
+        if (r === false)
+        {
+         if (p !== false)
+         {
+          display.emote.addToShowList(p);
+          display.emote.showEmotes();
+         }
+         return true;
+        }
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        let amt = _minUSD[lv] + ' USD';
+        if (cmd.snippet.superChatDetails.hasOwnProperty('amountDisplayString') && cmd.snippet.superChatDetails.amountDisplayString !== '')
+         amt = cmd.snippet.superChatDetails.amountDisplayString;
+        display.kappa.show(p, r, {'%USER%': dn, '%AMOUNT%': amt});
+        return true;
+       }
+
+       return $c_superchat;
+      }();
+
+      const $supersticker = function()
+      {
+       const _minUSD = [0, 1, 2, 5, 10, 20, 50, 100, 200, 300, 400, 500];
+
+       function $c_supersticker(cmd)
+       {
+        if (cfg.event.youtube.supersticker === false)
+         return false;
+        const u = _parseUser(cmd);
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+         return;
+        if (!cmd.snippet.superStickerDetails.hasOwnProperty('superStickerMetadata') || cmd.snippet.superStickerDetails.superStickerMetadata === null)
+         return false;
+        if (!cmd.snippet.superStickerDetails.hasOwnProperty('tier') || cmd.snippet.superStickerDetails.tier === null)
+         return false;
+        if (!cmd.snippet.superStickerDetails.superStickerMetadata.hasOwnProperty('stickerId'))
+         return false;
+        const lv = cmd.snippet.superStickerDetails.tier;
+        if (lv < 1)
+         return false;
+        let p = [];
+        let sId = cmd.snippet.superStickerDetails.superStickerMetadata.stickerId;
+        if (_eStickers.hasOwnProperty(sId))
+         p.push(_eStickers[sId]);
+        if (p.length === 0)
+         p = false;
+        const r = shared.findInMaybeRange(cfg.event.youtube.supersticker, lv);
+        if (r === false)
+         return true;
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        let amt = _minUSD[lv] + ' USD';
+        if (cmd.snippet.superStickerDetails.hasOwnProperty('amountDisplayString') && cmd.snippet.superStickerDetails.amountDisplayString !== '')
+         amt = cmd.snippet.superStickerDetails.amountDisplayString;
+        let alt = 'Unknown';
+        if (cmd.snippet.superStickerDetails.superStickerMetadata.hasOwnProperty('altText') && cmd.snippet.superStickerDetails.superStickerMetadata.altText !== '')
+         alt = cmd.snippet.superStickerDetails.superStickerMetadata.altText;
+        display.kappa.show(p, r, {'%USER%': dn, '%STICKER%': alt, '%AMOUNT%': amt});
+        return true;
+       }
+
+       return $c_supersticker;
+      }();
+
+      const $membership = function()
+      {
+       function $first(cmd)
+       {
+        const u = _parseUser(cmd);
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+         return;
+        let c = cfg.event.youtube.member;
+        if (cmd.snippet.newSponsorDetails.hasOwnProperty('memberLevelName'))
+        {
+         const l = cmd.snippet.newSponsorDetails.memberLevelName;
+         if (l !== false && l !== null && l !== '' && c.hasOwnProperty(l) && c[l].hasOwnProperty('first'))
+          c = c[l];
+        }
+        if (!c.hasOwnProperty('first'))
+         return;
+        if (c.first === false)
+         return;
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        display.kappa.show(false, c.first, {'%USER%': dn});
+       }
+
+       async function $milestone(cmd)
+       {
+        const u = _parseUser(cmd);
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+         return;
+        let c = cfg.event.youtube.member;
+        if (cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('memberLevelName'))
+        {
+         const l = cmd.snippet.memberMilestoneChatDetails.memberLevelName;
+         if (l !== false && l !== null && l !== '' && c.hasOwnProperty(l) && c[l].hasOwnProperty('milestone'))
+          c = c[l];
+        }
+        if (!c.hasOwnProperty('milestone'))
+         return;
+        let a = [];
+        if (cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('userComment') && cmd.snippet.memberMilestoneChatDetails.userComment !== '')
+        {
+         if (cfg.event.youtube.member.useMsg)
+          a = await _eListFromCmd(cmd, true);
+         else
+          await youtube.parse.line(cmd);
+        }
+        if (!cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('memberMonth'))
+         return;
+        const mpcm = cmd.snippet.memberMilestoneChatDetails.memberMonth;
+        const rs = shared.findInMaybeRange(c.milestone, mpcm);
+        if (rs === false)
+         return;
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        display.kappa.show(a, rs, {'%USER%': dn, '%AMOUNT%': mpcm});
+       }
+
+       function $gift(cmd)
+       {
+        const u = _parseUser(cmd);
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+         return;
+        if (!cmd.snippet.membershipGiftingDetails.hasOwnProperty('giftMembershipsCount'))
+         return;
+        let c = cfg.event.youtube.member;
+        if (cmd.snippet.membershipGiftingDetails.hasOwnProperty('giftMembershipsLevelName'))
+        {
+         const l = cmd.snippet.membershipGiftingDetails.giftMembershipsLevelName;
+         if (l !== false && l !== null && l !== '' && c.hasOwnProperty(l) && c[l].hasOwnProperty('giftbomb'))
+          c = c[l];
+        }
+        if (!c.hasOwnProperty('giftbomb'))
+         return;
+        const mpmgc = cmd.snippet.membershipGiftingDetails.giftMembershipsCount;
+        const gpb = shared.findInMaybeRange(c.giftbomb, mpmgc);
+        if (gpb === false)
+         return;
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        display.kappa.show(false, gpb, {'%SENDER%': dn, '%AMOUNT%': mpmgc});
+       }
+
+       return {
+        first: $first,
+        milestone: $milestone,
+        gift: $gift
+       }
+      }();
+
+      function $ban(cmd)
+      {
+       if (!cmd.snippet.userBannedDetails.hasOwnProperty('bannedUserDetails'))
+        return;
+       if (!cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('displayName'))
+        return;
+       let dn = cmd.snippet.userBannedDetails.bannedUserDetails.displayName;
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
+        return;
+       display.kappa.show(false, cfg.event.youtube.ban, {'%USER%': dn});
+      }
+
+      function $timeout(cmd)
+      {
+       if (!cmd.snippet.userBannedDetails.hasOwnProperty('banDurationSeconds'))
+        return;
+       if (!cmd.snippet.userBannedDetails.hasOwnProperty('bannedUserDetails'))
+        return;
+       if (!cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('displayName'))
+        return;
+       let dn = cmd.snippet.userBannedDetails.bannedUserDetails.displayName;
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
+        return;
+       const dDur = cmd.snippet.userBannedDetails.banDurationSeconds;
+       const r = shared.findInMaybeRange(cfg.event.youtube.timeout, dDur);
+       if (r === false)
+        return;
+       display.kappa.show(false, r, {'%USER%': dn, '%AMOUNT%': dDur});
+      }
+
+      return {
+       superchat: $superchat,
+       supersticker: $supersticker,
+       membership: $membership,
+       ban: $ban,
+       timeout: $timeout
+      };
      }();
 
      const _level = function()
@@ -9470,7 +9563,7 @@
      async function _eListFromCmd(cmd, dup = null)
      {
       const r = [];
-      const u = _parseUser(cmd, true);
+      const u = _parseUser(cmd);
       if (u !== false && cfg.ignore.users !== false && cfg.ignore.users.includes(u.displayName))
        return r;
       r.push(...youtube.parse.content.youtube(cmd, dup));
@@ -9540,7 +9633,8 @@
 
      return {
       content: $content,
-      line: $line
+      line: $line,
+      event: $event
      };
     }();
 
@@ -9578,6 +9672,38 @@
      return true;
     }
 
+    async function $stickers()
+    {
+     const url = cURLs.api.youtube.livechat.superstickers;
+     const r = await shared.httpRequest('GET', url);
+     if (!r.success)
+      return false;
+     const j = r.json;
+     if (j === null)
+      return false;
+     let eCDN;
+     if (j.hasOwnProperty('template'))
+      eCDN = j.template;
+     else
+      eCDN = 'https://yt3.ggpht.com/%STICKER_ID%=s256-rwa';
+     if (!j.hasOwnProperty('list'))
+      return false;
+     if (typeof j.list !== 'object')
+      return false;
+     if (j.list === null)
+      return false;
+     const jNames = Object.keys(j.list);
+     for (let i = 0, l = jNames.length; i < l; i++)
+     {
+      _eStickers[jNames[i]] = {
+       scope: 'g',
+       url: eCDN.replaceAll('%STICKER_ID%', j.list[jNames[i]]),
+       id: j.list[jNames[i]]
+      };
+     }
+     return true;
+    }
+
     function _feedback(type, data)
     {
      if (cfg.youtube.feedback !== true)
@@ -9600,6 +9726,7 @@
      net: $net,
      parse: $parse,
      global: $global,
+     stickers: $stickers,
      Access: Object.freeze({
       STRANGER: 0x001,
       SUBSCRIBER: 0x002,
@@ -15439,10 +15566,10 @@
       return false;
      if (await youtube.global() === false)
       return false;
+     await youtube.stickers();
      notice.expect |= notice.Connection.YOUTUBE;
      if (cfg.event.youtube.sub !== false)
       youtube.net.subscribers();
-     youtube.net.members();
      youtube.net.broadcasts.updateStream();
      return true;
     }
