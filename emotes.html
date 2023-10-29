@@ -1250,10 +1250,6 @@
        superstickers: 'https://realityripple.com/Tools/Twitch/EmoteWall/ytss.json'
       },
       subscriptions: 'https://www.googleapis.com/youtube/v3/subscriptions?part=%PART%&myRecentSubscribers=true&maxResults=50',
-      members: {
-       init: 'https://www.googleapis.com/youtube/v3/members?part=%PART%&mode=updates&maxResults=1',
-       page: 'https://www.googleapis.com/youtube/v3/members?part=%PART%&mode=updates&pageToken=%PAGE%&maxResults=1000'
-      },
       tokeninfo: 'https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=%OAUTH_TOKEN%'
      },
      kick: {
@@ -8654,147 +8650,6 @@
       return $c_subscribers;
      }();
 
-     const $members = function()
-     {
-      let _uLS = false;
-      let _tS = false;
-      const _rSC = 12000;
-
-      async function $c_members()
-      {
-       if (!youtube.net.oAuth.auth.scope.includes(cScopes.youtube.memberships))
-        return;
-       const mID = await _init();
-       if (mID === false)
-        return;
-       _tS = window.setTimeout(_detect, _rSC, mID);
-      }
-
-      async function _init()
-      {
-       const url = cURLs.api.youtube.members.init.replaceAll('%PART%', encodeURIComponent('snippet'));
-       const h = {
-        'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
-        'Accept': 'application/json'
-       };
-       const r = await shared.httpRequest('GET', url, h);
-       const j = r.json;
-       if (!r.success)
-       {
-        if (r.code === 0 && r.data === '')
-         return [];
-        if (j !== null)
-        {
-         const e = _flatJSON(j);
-         if (e.hasOwnProperty('error.errors.0.reason') && e['error.errors.0.reason'] === 'forbidden')
-         {
-          // not a monetized account
-          return false;
-         }
-         console.log(e);
-         console.log(j);
-        }
-        console.log(r.code);
-        notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Members: ' + r.code);
-        _errorReport('members._init', url, r);
-        return false;
-       }
-       if (j === null)
-        return false;
-       if (!j.hasOwnProperty('nextPageToken'))
-        return false;
-       return j.nextPageToken;
-      }
-
-      async function _detect(mID)
-      {
-       if (youtube.net.dead)
-        return;
-       if (_tS === false)
-        return;
-       window.clearTimeout(_tS);
-       _tS = false;
-       const fRet = await _getChange(mID);
-       if (document.visibilityState !== 'hidden' && fRet !== false && fRet.length > 0)
-       {
-        for (let i = 0, l = fRet.length; i < l; i++)
-        {
-         if (fRet[i].hasOwnProperty('gift') && fRet[i].gift > 0)
-         {
-          const gpb = shared.findInMaybeRange(cfg.event.youtube.member.giftbomb, fRet[i].gift);
-          if (gpb === false)
-           return;
-          display.kappa.show(false, gpb, {'%SENDER%': fRet[i].user, '%AMOUNT%': fRet[i].gift});
-         }
-         else
-         {
-          if (fRet[i].months === 1)
-          {
-           if (cfg.event.youtube.member.first !== false)
-            display.kappa.show(false, cfg.event.youtube.member.first, {'%USER%': fRet[i].user});
-          }
-          else
-          {
-           const rs = shared.findInMaybeRange(cfg.event.youtube.member.milestone, fRet[i].months);
-           if (rs === false)
-            return;
-           display.kappa.show(false, rs, {'%USER%': fRet[i].user, '%AMOUNT%': fRet[i].months});
-          }
-         }
-        }
-       }
-       _tS = window.setTimeout(_detect, _rSC, mID);
-      }
-
-      async function _getChange(mID)
-      {
-       const url = cURLs.api.youtube.members.page.replaceAll('%PART%', encodeURIComponent('snippet')).replaceAll('%PAGE%', encodeURIComponent(mID));
-       const h = {
-        'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
-        'Accept': 'application/json'
-       };
-       const r = await shared.httpRequest('GET', url, h);
-       const j = r.json;
-       if (!r.success)
-       {
-        if (r.code === 0 && r.data === '')
-         return [];
-        if (j !== null)
-        {
-         const e = _flatJSON(j);
-         console.log(e);
-         console.log(j);
-        }
-        console.log(r.code);
-        notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Unknown Error Getting Members: ' + r.code);
-        _errorReport('members._getChange', url, r);
-        return false;
-       }
-       _feedback('memberChange', r.data);
-       if (j === null)
-        return false;
-       if (!j.hasOwnProperty('items') || !Array.isArray(j.items) || j.items.length < 1)
-        return false;
-       const findU = _uLS;
-       _uLS = j.items[0].snippet.memberDetails.channelId;
-       if (findU === false)
-        return false;
-       const s = [];
-       for (let i = 0, l = j.items.length; i < l; i++)
-       {
-        const uID = j.items[i].snippet.memberDetails.channelId;
-        if (uID === findU)
-         return s;
-        const uName = j.items[i].snippet.memberDetails.displayName;
-        const uMonths = parseInt(j.items[i].snippet.membershipsDetails.membershipsDuration.memberTotalDurationMonths, 10);
-        s.push({user: uName, months: uMonths});
-       }
-       return [];
-      }
-
-      return $c_members;
-     }();
-
      const $oAuth = function()
      {
       const _pathRefresh = '.refresh';
@@ -9076,7 +8931,6 @@
       dead: false,
       broadcasts: $broadcasts,
       subscribers: $subscribers,
-      members: $members,
       oAuth: $oAuth
      };
     }();
@@ -15723,7 +15577,6 @@
      notice.expect |= notice.Connection.YOUTUBE;
      if (cfg.event.youtube.sub !== false)
       youtube.net.subscribers();
-     youtube.net.members();
      youtube.net.broadcasts.updateStream();
      return true;
     }
