@@ -8382,9 +8382,9 @@
          window.clearTimeout(notice.tHide);
          notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
         }
-        let minPoll = 1000;
+        let nextPoll = 1000;
         if (j.hasOwnProperty('pollingIntervalMillis'))
-         minPoll = j.pollingIntervalMillis;
+         nextPoll = j.pollingIntervalMillis;
         let nextPage = false;
         if (j.hasOwnProperty('nextPageToken'))
          nextPage = j.nextPageToken;
@@ -8451,9 +8451,6 @@
         }
         if (!_tM.hasOwnProperty(chatID))
          return;
-        const nextPoll = Math.max(1000, minPoll); // youtube's rate limit is 610,000 requests per 24 hours
-                                                  // but there's also preflight requests and up to three
-                                                  // instances to think about
         _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, nextPoll, chatID, nextPage);
        }
 
@@ -8563,7 +8560,7 @@
      {
       let _uLS = false;
       let _tS = false;
-      const _rSC = 12000;
+      const _rSC = 6000;
 
       function $c_subscribers()
       {
