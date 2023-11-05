@@ -8086,49 +8086,48 @@
         if (j !== null)
         {
          const e = _flatJSON(j);
-         if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAVAILABLE')
+         if (e.hasOwnProperty('error.errors.0.reason'))
          {
-          if (_aC.length !== 0)
-           return false;
-          notice.error(notice.Type.YOUTUBE_NETWORK);
-          notice.active &= ~notice.Connection.YOUTUBE;
-          if (notice.tHide !== false)
+          const er = e['error.errors.0.reason'];
+          switch (er)
           {
-           window.clearTimeout(notice.tHide);
-           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+           case 'liveStreamingNotEnabled':
+            notice.error(notice.Type.YOUTUBE_NETWORK);
+            notice.error(notice.Type.YOUTUBE_ACCOUNT);
+            youtube.net.oAuth.clear(true);
+            youtube.net.dead = true;
+            return null;
+           case 'SERVICE_UNAVAILABLE':
+            if (_aC.length !== 0)
+             return false;
+            notice.error(notice.Type.YOUTUBE_NETWORK);
+            notice.active &= ~notice.Connection.YOUTUBE;
+            if (notice.tHide !== false)
+            {
+             window.clearTimeout(notice.tHide);
+             notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+            }
+            return false;
+           case 'backendError':
+            if (_aC.length !== 0)
+             return false;
+            notice.error(notice.Type.YOUTUBE_NETWORK);
+            notice.active &= ~notice.Connection.YOUTUBE;
+            if (notice.tHide !== false)
+            {
+             window.clearTimeout(notice.tHide);
+             notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+            }
+            return false;
+           case 'authError':
+            notice.error(notice.Type.YOUTUBE_NETWORK);
+            notice.error(notice.Type.YOUTUBE_TOKEN);
+            youtube.net.oAuth.clear(true);
+            youtube.net.dead = true;
+            return null;
           }
-          return false;
-         }
-         if (e.hasOwnProperty('error.status') && e['error.status'] === 'INTERNAL')
-         {
-          if (_aC.length !== 0)
-           return false;
-          notice.error(notice.Type.YOUTUBE_NETWORK);
-          notice.active &= ~notice.Connection.YOUTUBE;
-          if (notice.tHide !== false)
-          {
-           window.clearTimeout(notice.tHide);
-           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
-          }
-          return false;
          }
          console.log(e);
-         if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAUTHENTICATED')
-         {
-          notice.error(notice.Type.YOUTUBE_NETWORK);
-          notice.error(notice.Type.YOUTUBE_TOKEN);
-          youtube.net.oAuth.clear(true);
-          youtube.net.dead = true;
-          return null;
-         }
-         if (e.hasOwnProperty('error.message') && e['error.message'] === 'The user is not enabled for live streaming.')
-         {
-          notice.error(notice.Type.YOUTUBE_NETWORK);
-          notice.error(notice.Type.YOUTUBE_ACCOUNT);
-          youtube.net.oAuth.clear(true);
-          youtube.net.dead = true;
-          return null;
-         }
          console.log(j);
         }
         console.log(r.code);
@@ -8265,6 +8264,7 @@
       const $getMessages = function()
       {
        const _tM = [];
+       let _bSlower = 0;
 
        async function $start(chatID, page = false)
        {
@@ -8341,24 +8341,41 @@
          if (j !== null)
          {
           const e = _flatJSON(j);
-          console.log(e);
-          if (e.hasOwnProperty('error.errors.0.reason') && e['error.errors.0.reason'] === 'quotaExceeded')
+          if (e.hasOwnProperty('error.errors.0.reason'))
           {
-           notice.error(notice.Type.YOUTUBE_RATELIMIT);
-           return;
-          }
-          if (e.hasOwnProperty('error.errors.0.reason') && e['error.errors.0.reason'] === 'liveChatEnded')
-          {
-           for (let i = 0, l = _aC.length; i < l; i++)
+           const er = e['error.errors.0.reason'];
+           switch (er)
            {
-            if (_aC[i] !== chatID)
-             continue;
-            _aC.splice(i, 1);
-            break;
+            case 'quotaExceeded':
+             notice.error(notice.Type.YOUTUBE_RATELIMIT);
+             return;
+            case 'liveChatEnded':
+            case 'liveChatDisabled':
+            case 'liveChatNotFound':
+             for (let i = 0, l = _aC.length; i < l; i++)
+             {
+              if (_aC[i] !== chatID)
+               continue;
+              _aC.splice(i, 1);
+              break;
+             }
+             youtube.net.broadcasts.getMessages.stop(chatID);
+             return;
+            case 'rateLimitExceeded':
+             _bSlower += 1000;
+             if (_bSlower > 14000)
+             {
+              _bSlower = 14000;
+              notice.error(notice.Type.YOUTUBE_RATELIMIT);
+             }
+             if (!_tM.hasOwnProperty(chatID))
+              return;
+             const tWait = 4000 + _bSlower;
+             _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, tWait, chatID);
+             return;
            }
-           youtube.net.broadcasts.getMessages.stop(chatID);
-           return;
           }
+          console.log(e);
           console.log(j);
          }
          notice.error(notice.Type.YOUTUBE_NETWORK);
@@ -8385,6 +8402,7 @@
         let nextPoll = 1000;
         if (j.hasOwnProperty('pollingIntervalMillis'))
          nextPoll = j.pollingIntervalMillis;
+        nextPoll += _bSlower;
         let nextPage = false;
         if (j.hasOwnProperty('nextPageToken'))
          nextPage = j.nextPageToken;
@@ -8557,6 +8575,7 @@
       let _uLS = false;
       let _tS = false;
       const _rSC = 6000;
+      let _bSlower = 0;
 
       function $c_subscribers()
       {
@@ -8567,7 +8586,7 @@
         youtube.net.dead = true;
         return;
        }
-       _tS = window.setTimeout(_detect, _rSC);
+       _tS = window.setTimeout(_detect, _rSC + _bSlower);
       }
 
       async function _detect()
@@ -8586,7 +8605,7 @@
          display.kappa.show(false, cfg.event.youtube.sub, {'%USER%': fRet[i]});
         }
        }
-       _tS = window.setTimeout(_detect, _rSC);
+       _tS = window.setTimeout(_detect, _rSC + _bSlower);
       }
 
       async function _getChange()
@@ -8605,13 +8624,29 @@
         if (j !== null)
         {
          const e = _flatJSON(j);
-         if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAUTHENTICATED')
+         if (e.hasOwnProperty('error.errors.0.reason'))
          {
-          notice.error(notice.Type.YOUTUBE_NETWORK);
-          notice.error(notice.Type.YOUTUBE_TOKEN);
-          youtube.net.oAuth.clear(true);
-          youtube.net.dead = true;
-          return false;
+          const er = e['error.errors.0.reason'];
+          switch (er)
+          {
+           case 'authError':
+           case 'subscriptionForbidden':
+            notice.error(notice.Type.YOUTUBE_NETWORK);
+            notice.error(notice.Type.YOUTUBE_TOKEN);
+            youtube.net.oAuth.clear(true);
+            youtube.net.dead = true;
+            return false;
+           case 'rateLimitExceeded':
+            _bSlower += 1000;
+            if (_bSlower > 14000)
+            {
+             _bSlower = 14000;
+             notice.error(notice.Type.YOUTUBE_RATELIMIT);
+            }
+            return false;
+           case 'backendError':
+            return [];
+          }
          }
          console.log(e);
          console.log(j);
@@ -8784,7 +8819,7 @@
          console.log(e);
          if (e.hasOwnProperty('error') && e.error === 'invalid_grant' & e.hasOwnProperty('error_description'))
          {
-          switch(e.error_description)
+          switch (e.error_description)
           {
            case 'Token has been expired or revoked.':
             notice.error(notice.Type.YOUTUBE_NETWORK);
