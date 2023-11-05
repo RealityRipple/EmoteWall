@@ -13998,10 +13998,14 @@
       let _sse = null;
       let _lTimeout = 5000;
       let _tTimeout = false;
+      let _tInit = false;
       let _okCt = 0;
 
       function _init()
       {
+       if (_tInit !== false)
+        window.clearTimeout(_tInit);
+       _tInit = false;
        let p = '';
        for (const acct in _chList)
        {
@@ -14072,7 +14076,9 @@
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(_init, wsWait);
+       if (_tInit !== false)
+        window.clearTimeout(_tInit);
+       _tInit = window.setTimeout(_init, wsWait);
       }
 
       function _sseMessage(ev)
@@ -14153,7 +14159,9 @@
           const wsRedo = Math.floor(wWS ** (1 + _wsRetry) * 1000);
           if (_wsRetry < 2)
            _wsRetry += 0.2;
-          window.setTimeout(_init, wsRedo);
+          if (_tInit !== false)
+           window.clearTimeout(_tInit);
+          _tInit = window.setTimeout(_init, wsRedo);
           return;
          }
          _wsRetry = 0;
@@ -14190,7 +14198,9 @@
          _sse.removeEventListener('end of stream', _sseMessage);
          _sse.close();
          _sse = null;
-         window.setTimeout(_init, _lDelay);
+         if (_tInit !== false)
+          window.clearTimeout(_tInit);
+         _tInit = window.setTimeout(_init, _lDelay);
          break;
         case 'end of stream':
          if (d === null)
@@ -14244,7 +14254,9 @@
             break;
           }
          }
-         window.setTimeout(_init, wsWait);
+         if (_tInit !== false)
+          window.clearTimeout(_tInit);
+         _tInit = window.setTimeout(_init, wsWait);
          break;
        }
       }
@@ -14278,7 +14290,9 @@
        _sse = null;
        if (twitch.net.dead && youtube.net.dead && kick.net.dead)
         return;
-       _init();
+       if (_tInit !== false)
+        window.clearTimeout(_tInit);
+       _tInit = window.setTimeout(_init, _lDelay);
       }
 
       async function $join(svcName, chID)
@@ -14292,12 +14306,17 @@
          _chList[accID][svcName] = [];
         if (!_chList[accID][svcName].includes(chID))
          _chList[accID][svcName].push(chID);
+        if (_tInit !== false)
+         window.clearTimeout(_tInit);
+        _tInit = window.setTimeout(_init, _lDelay);
         return;
        }
        _chList[accID] = {};
        _chList[accID][svcName] = [];
        _chList[accID][svcName].push(chID);
-       _init();
+       if (_tInit !== false)
+        window.clearTimeout(_tInit);
+       _tInit = window.setTimeout(_init, _lDelay);
       }
 
       return $join;
