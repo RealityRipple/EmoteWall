@@ -8017,7 +8017,7 @@
         {
          didSomething = true;
          _aC.push(lStreams[i].chat);
-         window.setTimeout(youtube.net.broadcasts.getMessages.start, 48, lStreams[i].chat);
+         window.setTimeout(youtube.net.broadcasts.getMessages.start, 48, lStreams[i]);
         }
        }
        if (didSomething && cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('recheck') && cfg.youtube.connect_to.recheck === false)
@@ -8268,8 +8268,9 @@
        const _tM = [];
        let _bSlower = 0;
 
-       async function $start(chatID, page = false)
+       async function $start(stream, page = false)
        {
+        const chatID = stream.chat;
         if (_tM.hasOwnProperty(chatID) && _tM[chatID] !== false)
          window.clearTimeout(_tM[chatID]);
         _tM[chatID] = false;
@@ -8373,7 +8374,7 @@
              if (!_tM.hasOwnProperty(chatID))
               return;
              const tWait = 4000 + _bSlower;
-             _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, tWait, chatID);
+             _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, tWait, stream);
              return;
            }
           }
@@ -8442,7 +8443,7 @@
           switch (j.items[i].snippet.type)
           {
            case 'textMessageEvent':
-            await _textMessageEvent(j.items[i]);
+            await _textMessageEvent(j.items[i], stream.channel);
             break;
            case 'superChatEvent':
             await _superChatEvent(j.items[i]);
@@ -8467,7 +8468,7 @@
         }
         if (!_tM.hasOwnProperty(chatID))
          return;
-        _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, nextPoll, chatID, nextPage);
+        _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, nextPoll, stream, nextPage);
        }
 
        function $stop(chatID)
@@ -8480,12 +8481,14 @@
         delete _tM[chatID];
        }
 
-       async function _textMessageEvent(cmd)
+       async function _textMessageEvent(cmd, chID)
        {
         if (document.visibilityState === 'hidden')
          return;
         if (!cmd.hasOwnProperty('authorDetails'))
          return;
+        if (!cmd.hasOwnProperty('_channel'))
+         cmd._channel = chID;
         await youtube.parse.line(cmd);
        }
 
