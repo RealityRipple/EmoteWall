@@ -14579,6 +14579,14 @@
        if (_sse !== null)
        {
         _sse.close();
+        _sse.removeEventListener('open', _sseOpen);
+        _sse.removeEventListener('error', _sseError);
+        _sse.removeEventListener('dispatch', _sseMessage);
+        _sse.removeEventListener('hello', _sseMessage);
+        _sse.removeEventListener('heartbeat', _sseMessage);
+        _sse.removeEventListener('reconnect', _sseMessage);
+        _sse.removeEventListener('ack', _sseMessage);
+        _sse.removeEventListener('end of stream', _sseMessage);
         _sse = null;
        }
        _sse = new EventSource(uri);
