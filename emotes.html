@@ -6652,15 +6652,21 @@
         {
          if (cmd.params.length < 2)
           return [];
-         return service.parse.content['3rdparty'].ffz.general(cmd.params[1], dup);
+         let chID = twitch.net.channelID;
+         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
+          chID = cmd.tags['room-id'];
+         return service.parse.content['3rdparty'].ffz.general(cmd.params[1], 'twitch:' + chID, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
          if (cmd.params.length < 2)
           return;
+         let chID = twitch.net.channelID;
+         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
+          chID = cmd.tags['room-id'];
          const u = _parseUser(cmd);
-         service.parse.content['3rdparty'].ffz.zwe(l, 'twitch:' + u.host, cmd.params[1], pass, dup);
+         service.parse.content['3rdparty'].ffz.zwe(l, 'twitch:' + u.host, 'twitch:' + chID, cmd.params[1], pass, dup);
         }
 
         const $user = function()
@@ -6700,15 +6706,21 @@
         {
          if (cmd.params.length < 2)
           return [];
-         return service.parse.content['3rdparty'].bttv.general(cmd.params[1], dup);
+         let chID = twitch.net.channelID;
+         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
+          chID = cmd.tags['room-id'];
+         return service.parse.content['3rdparty'].bttv.general(cmd.params[1], 'twitch:' + chID, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
          if (cmd.params.length < 2)
           return;
+         let chID = twitch.net.channelID;
+         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
+          chID = cmd.tags['room-id'];
          const u = _parseUser(cmd);
-         service.parse.content['3rdparty'].bttv.zwe(l, 'twitch:' + u.id, cmd.params[1], pass, dup);
+         service.parse.content['3rdparty'].bttv.zwe(l, 'twitch:' + u.id, 'twitch:' + chID, cmd.params[1], pass, dup);
         }
 
         const $user = function()
@@ -6748,15 +6760,21 @@
         {
          if (cmd.params.length < 2)
           return [];
-         return service.parse.content['3rdparty']['7tv'].general(cmd.params[1], dup);
+         let chID = twitch.net.channelID;
+         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
+          chID = cmd.tags['room-id'];
+         return service.parse.content['3rdparty']['7tv'].general(cmd.params[1], 'twitch:' + chID, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
          if (cmd.params.length < 2)
           return;
+         let chID = twitch.net.channelID;
+         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
+          chID = cmd.tags['room-id'];
          const u = _parseUser(cmd);
-         service.parse.content['3rdparty']['7tv'].zwe(l, 'twitch:' + u.id, cmd.params[1], pass, dup);
+         service.parse.content['3rdparty']['7tv'].zwe(l, 'twitch:' + u.id, 'twitch:' + chID, cmd.params[1], pass, dup);
         }
 
         const $user = function()
@@ -9117,7 +9135,7 @@
          const msg = _getMessage(cmd);
          if (msg === false)
           return [];
-         return service.parse.content['3rdparty'].ffz.general(msg, dup);
+         return service.parse.content['3rdparty'].ffz.general(msg, 'youtube:' + cmd._channel, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
@@ -9128,7 +9146,7 @@
          const msg = _getMessage(cmd);
          if (msg === false)
           return;
-         service.parse.content['3rdparty'].ffz.zwe(l, 'youtube:' + u['display-name'], msg, pass, dup);
+         service.parse.content['3rdparty'].ffz.zwe(l, 'youtube:' + u['display-name'], 'youtube:' + cmd._channel, msg, pass, dup);
         }
 
         const $user = function()
@@ -9175,7 +9193,7 @@
          const msg = _getMessage(cmd);
          if (msg === false)
           return [];
-         return service.parse.content['3rdparty'].bttv.general(msg, dup);
+         return service.parse.content['3rdparty'].bttv.general(msg, 'youtube:' + cmd._channel, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
@@ -9186,7 +9204,7 @@
          const msg = _getMessage(cmd);
          if (msg === false)
           return;
-         service.parse.content['3rdparty'].bttv.zwe(l, 'youtube:' + u.id, msg, pass, dup);
+         service.parse.content['3rdparty'].bttv.zwe(l, 'youtube:' + u.id, 'youtube:' + cmd._channel, msg, pass, dup);
         }
 
         const $user = function()
@@ -9233,7 +9251,7 @@
          const msg = _getMessage(cmd);
          if (msg === false)
           return [];
-         return service.parse.content['3rdparty']['7tv'].general(msg, dup);
+         return service.parse.content['3rdparty']['7tv'].general(msg, 'youtube:' + cmd._channel, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
@@ -9244,7 +9262,7 @@
          const msg = _getMessage(cmd);
          if (msg === false)
           return;
-         service.parse.content['3rdparty']['7tv'].zwe(l, 'youtube:' + u.id, msg, pass, dup);
+         service.parse.content['3rdparty']['7tv'].zwe(l, 'youtube:' + u.id, 'youtube:' + cmd._channel, msg, pass, dup);
         }
 
         const $user = function()
@@ -10629,7 +10647,7 @@
         {
          if (!cmd.hasOwnProperty('content') || cmd.content === null)
           return [];
-         return service.parse.content['3rdparty'].ffz.general(cmd.content, dup);
+         return service.parse.content['3rdparty'].ffz.general(cmd.content, 'kick:' + kick.net.userID, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
@@ -10640,7 +10658,7 @@
           return;
          if (!cmd.sender.hasOwnProperty('slug') || cmd.sender.slug === null)
           return;
-         service.parse.content['3rdparty'].ffz.zwe(l, 'kick:' + cmd.sender.slug, cmd.content, pass, dup);
+         service.parse.content['3rdparty'].ffz.zwe(l, 'kick:' + cmd.sender.slug, 'kick:' + kick.net.userID, cmd.content, pass, dup);
         }
 
         const $user = function()
@@ -10686,7 +10704,7 @@
         {
          if (!cmd.hasOwnProperty('content') || cmd.content === null)
           return [];
-         return service.parse.content['3rdparty'].bttv.general(cmd.content, dup);
+         return service.parse.content['3rdparty'].bttv.general(cmd.content, 'kick:' + kick.net.userID, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
@@ -10697,7 +10715,7 @@
           return;
          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
           return;
-         service.parse.content['3rdparty'].bttv.zwe(l, 'kick:' + cmd.sender.id, cmd.content, pass, dup);
+         service.parse.content['3rdparty'].bttv.zwe(l, 'kick:' + cmd.sender.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
         }
 
         const $user = function()
@@ -10743,7 +10761,7 @@
         {
          if (!cmd.hasOwnProperty('content') || cmd.content === null)
           return [];
-         return service.parse.content['3rdparty']['7tv'].general(cmd.content, dup);
+         return service.parse.content['3rdparty']['7tv'].general(cmd.content, 'kick:' + kick.net.userID, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
@@ -10754,7 +10772,7 @@
           return;
          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
           return;
-         service.parse.content['3rdparty']['7tv'].zwe(l, 'kick:' + cmd.sender.id, cmd.content, pass, dup);
+         service.parse.content['3rdparty']['7tv'].zwe(l, 'kick:' + cmd.sender.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
         }
 
         const $user = function()
@@ -11660,7 +11678,7 @@
       {
        const $ffz = function()
        {
-        function $general(msg, dup = null)
+        function $general(msg, chID, dup = null)
         {
          if (!thirdparty.emotes.hasOwnProperty('ffz'))
           return [];
@@ -11672,6 +11690,8 @@
          for (let i = 0, l = m.length; i < l; i++)
          {
           if (!thirdparty.emotes.ffz.hasOwnProperty(m[i]))
+           continue;
+          if (thirdparty.emotes.ffz[m[i]].scope !== 'g' && !thirdparty.emotes.ffz[m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -11693,7 +11713,7 @@
          return ret;
         }
 
-        function $zwe(l, usr, msg, pass, dup = null)
+        function $zwe(l, usr, chID, msg, pass, dup = null)
         {
          if (!cfg.display.extended.useZWE)
           return;
@@ -11709,6 +11729,8 @@
          for (let i = 0, n = m.length; i < n; i++)
          {
           if (!thirdparty.emotes.zwe.ffz.hasOwnProperty(m[i]))
+           continue;
+          if (thirdparty.emotes.zwe.ffz[m[i]].scope !== 'g' && !thirdparty.emotes.zwe.ffz[m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -11996,7 +12018,7 @@
 
        const $bttv = function()
        {
-        function $general(msg, dup = null)
+        function $general(msg, chID, dup = null)
         {
          if (!thirdparty.emotes.hasOwnProperty('bttv'))
           return [];
@@ -12008,6 +12030,8 @@
          for (let i = 0, l = m.length; i < l; i++)
          {
           if (!thirdparty.emotes.bttv.hasOwnProperty(m[i]))
+           continue;
+          if (thirdparty.emotes.bttv[m[i]].scope !== 'g' && !thirdparty.emotes.bttv[m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -12029,7 +12053,7 @@
          return ret;
         }
 
-        function $zwe(l, usr, msg, pass, dup = null)
+        function $zwe(l, usr, chID, msg, pass, dup = null)
         {
          if (!cfg.display.extended.useZWE)
           return;
@@ -12045,6 +12069,8 @@
          for (let i = 0, n = m.length; i < n; i++)
          {
           if (!thirdparty.emotes.zwe.bttv.hasOwnProperty(m[i]))
+           continue;
+          if (thirdparty.emotes.zwe.bttv[m[i]].scope !== 'g' && !thirdparty.emotes.zwe.bttv[m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -12332,7 +12358,7 @@
 
        const $7tv = function()
        {
-        function $general(msg, dup = null)
+        function $general(msg, chID, dup = null)
         {
          if (!thirdparty.emotes.hasOwnProperty('7tv'))
           return [];
@@ -12344,6 +12370,8 @@
          for (let i = 0, l = m.length; i < l; i++)
          {
           if (!thirdparty.emotes['7tv'].hasOwnProperty(m[i]))
+           continue;
+          if (thirdparty.emotes['7tv'][m[i]].scope !== 'g' && !thirdparty.emotes['7tv'][m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -12365,7 +12393,7 @@
          return ret;
         }
 
-        function $zwe(l, usr, msg, pass, dup = null)
+        function $zwe(l, usr, chID, msg, pass, dup = null)
         {
          if (!cfg.display.extended.useZWE)
           return;
@@ -12381,6 +12409,8 @@
          for (let i = 0, n = m.length; i < n; i++)
          {
           if (!thirdparty.emotes.zwe['7tv'].hasOwnProperty(m[i]))
+           continue;
+          if (thirdparty.emotes.zwe['7tv'][m[i]].scope !== 'g' && !thirdparty.emotes.zwe['7tv'][m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
