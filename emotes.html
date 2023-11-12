@@ -5454,14 +5454,18 @@
 
       function _wsTimeout()
       {
-       notice.error(notice.Type.TWITCH_EVENTSUB);
-       notice.active &= ~notice.Connection.TWITCH_EVENTSUB;
-       if (notice.tHide !== false)
+       if (_lTimeout === 5000)
        {
-        window.clearTimeout(notice.tHide);
-        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        notice.error(notice.Type.TWITCH_EVENTSUB);
+        notice.active &= ~notice.Connection.TWITCH_EVENTSUB;
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
        }
-       _lTimeout = 5000;
+       else
+        _lTimeout = 5000;
        if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
         _wsURL = cURLs.ws.twitch.eventSub;
        if (_tTimeout !== false)
@@ -10285,19 +10289,23 @@
 
       function _wsTimeout()
       {
-       notice.error(notice.Type.KICK_NETWORK);
-       notice.active &= ~notice.Connection.KICK;
-       if (notice.tHide !== false)
+       if (_lTimeout === 120000)
        {
-        window.clearTimeout(notice.tHide);
-        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        notice.error(notice.Type.KICK_NETWORK);
+        notice.active &= ~notice.Connection.KICK;
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
        }
+       else
+        _lTimeout = 120000;
        if (_tExpire !== false)
        {
         window.clearTimeout(_tExpire);
         _tExpire = false;
        }
-       _lTimeout = 120000;
        _lPing = 30000;
        if (_tTimeout !== false)
        {
@@ -13121,8 +13129,10 @@
 
      function _wsTimeout()
      {
-      notice.error(notice.Type.STREAMLABS_NETWORK);
-      _lTimeout = 5000;
+      if (_lTimeout === 5000)
+       notice.error(notice.Type.STREAMLABS_NETWORK);
+      else
+       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
        window.clearTimeout(_tTimeout);
@@ -13393,14 +13403,18 @@
 
      function _wsTimeout()
      {
-      notice.error(notice.Type.STREAMELEMENTS_NETWORK);
-      notice.active &= ~notice.Connection.STREAMELEMENTS;
-      if (notice.tHide !== false)
+      if (_lTimeout === 5000)
       {
-       window.clearTimeout(notice.tHide);
-       notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       notice.error(notice.Type.STREAMELEMENTS_NETWORK);
+       notice.active &= ~notice.Connection.STREAMELEMENTS;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
       }
-      _lTimeout = 5000;
+      else
+       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
        window.clearTimeout(_tTimeout);
@@ -14868,14 +14882,18 @@
 
       function _sseTimeout()
       {
-       notice.error(notice.Type['7TV_NETWORK']);
-       notice.active &= ~notice.Connection['7TV'];
-       if (notice.tHide !== false)
+       if (_lTimeout === 5000)
        {
-        window.clearTimeout(notice.tHide);
-        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        notice.error(notice.Type['7TV_NETWORK']);
+        notice.active &= ~notice.Connection['7TV'];
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
        }
-       _lTimeout = 5000;
+       else
+        _lTimeout = 5000;
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
