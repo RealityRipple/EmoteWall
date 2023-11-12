@@ -13521,7 +13521,7 @@
    {
     const _defSize = 28;
 
-    function _addEmote(list, scope, code, id, url, w = false, h = false, zwe = false)
+    function _addEmote(list, scope, code, id, url, ch = false, w = false, h = false, zwe = false)
     {
      if (typeof list === 'undefined')
       return;
@@ -13535,14 +13535,27 @@
      {
       if (scope === 'g' && list[code].scope === 'c')
        return;
-      _removeEmote(list, scope, code);
+      if (ch !== false)
+      {
+       if (list[code].channel.includes(ch))
+        _removeEmote(list, scope, code, ch);
+       else
+       {
+        list[code].channel.push(ch);
+        return;
+       }
+      }
+      else
+       _removeEmote(list, scope, code, ch);
      }
-     list[code] = {scope: scope, url: url, id: id, width: w, height: h};
+     list[code] = {scope: scope, url: url, channel: [], id: id, width: w, height: h};
+     if (ch !== false)
+      list[code].channel.push(ch);
      if (scope === 'c' && !zwe)
       cList.push({url: url, width: w, height: h});
     }
 
-    function _removeEmote(list, scope, code)
+    function _removeEmote(list, scope, code, ch = false)
     {
      if (typeof list === 'undefined')
       return;
@@ -13550,6 +13563,14 @@
       return;
      if (list[code].scope !== scope)
       return;
+     if (ch !== false)
+     {
+      if (!list[code].channel.includes(ch))
+       return;
+      list[code].channel.filter(function(v){return v !== ch;});
+      if (list[code].channel.length > 0)
+       return;
+     }
      if (scope === 'c')
      {
       for (let c = cList.length - 1; c >= 0; c--)
@@ -13563,7 +13584,7 @@
      delete list[code];
     }
 
-    function _removeEmoteByID(list, scope, id)
+    function _removeEmoteByID(list, scope, id, ch = false)
     {
      if (typeof list === 'undefined')
       return;
@@ -13574,7 +13595,7 @@
        continue;
       if (list[k].id !== id)
        continue;
-      _removeEmote(list, scope, k);
+      _removeEmote(list, scope, k, ch);
       break;
      }
     }
@@ -13647,10 +13668,10 @@
          if (j.sets[set].emoticons[i].hasOwnProperty('modifier_flags') && (j.sets[set].emoticons[i].modifier_flags & thirdparty.ffz.Modifier.HIDDEN) === thirdparty.ffz.Modifier.HIDDEN)
           continue;
          if (cfg.display.extended.useZWE)
-          _addEmote(thirdparty.emotes.zwe.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, w, h, true);
+          _addEmote(thirdparty.emotes.zwe.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h, true);
          continue;
         }
-        _addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, w, h);
+        _addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h);
        }
       }
       if (!j.hasOwnProperty('users'))
@@ -13698,7 +13719,7 @@
            {
             if (!thirdparty.emotes.zwe.ffzU.hasOwnProperty('twitch:' + aList[k]))
              thirdparty.emotes.zwe.ffzU['twitch:' + aList[k]] = {};
-            _addEmote(thirdparty.emotes.zwe.ffzU['twitch:' + aList[k]], 'u', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, w, h, true);
+            _addEmote(thirdparty.emotes.zwe.ffzU['twitch:' + aList[k]], 'u', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h, true);
            }
           }
           continue;
@@ -13709,7 +13730,7 @@
          {
           if (!thirdparty.emotes.ffzU.hasOwnProperty('twitch:' + aList[k]))
            thirdparty.emotes.ffzU['twitch:' + aList[k]] = {};
-          _addEmote(thirdparty.emotes.ffzU['twitch:' + aList[k]], 'u', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, w, h);
+          _addEmote(thirdparty.emotes.ffzU['twitch:' + aList[k]], 'u', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h);
          }
         }
        }
@@ -13779,10 +13800,10 @@
         if ((r[i].modifier & thirdparty.ffz.Modifier.HIDDEN) === thirdparty.ffz.Modifier.HIDDEN)
          continue;
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe.ffz, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height, true);
+         _addEmote(thirdparty.emotes.zwe.ffz, 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes.ffz, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height);
+       _addEmote(thirdparty.emotes.ffz, 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -13859,10 +13880,10 @@
        if (bttvZWE.includes(j[i].id))
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe.bttv, 'g', j[i].code, j[i].id, eURL, w, h, true);
+         _addEmote(thirdparty.emotes.zwe.bttv, 'g', j[i].code, j[i].id, eURL, false, w, h, true);
         continue;
        }
-       _addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, eURL, w, h);
+       _addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, eURL, false, w, h);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -13929,10 +13950,10 @@
        if (bttvZWE.includes(r[i].id))
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe.bttv, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height, true);
+         _addEmote(thirdparty.emotes.zwe.bttv, 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes.bttv, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height);
+       _addEmote(thirdparty.emotes.bttv, 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -14046,10 +14067,10 @@
           if (bttvZWE.includes(d.data.emotes[i].id))
           {
            if (cfg.display.extended.useZWE)
-            _addEmote(thirdparty.emotes.zwe.bttvU[usr], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), w, h, true);
+            _addEmote(thirdparty.emotes.zwe.bttvU[usr], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), false, w, h, true);
            continue;
           }
-          _addEmote(thirdparty.emotes.bttvU[usr], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), w, h);
+          _addEmote(thirdparty.emotes.bttvU[usr], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), false, w, h);
          }
          cSafe = JSON.parse(JSON.stringify(cList));
          break;
@@ -14070,7 +14091,7 @@
           hC = d.data.emote.height;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), wC, hC);
+         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), d.data.channel, wC, hC);
          cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
@@ -14081,7 +14102,7 @@
           return;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emoteId);
+         _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emoteId, d.data.channel);
          cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
@@ -14102,8 +14123,8 @@
           hU = d.data.emote.height;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emote.id);
-         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), wU, hU);
+         _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emote.id, d.data.channel);
+         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), d.data.channel, wU, hU);
          cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
@@ -14229,10 +14250,10 @@
        if (j.emotes[i].data.hasOwnProperty('flags') && j.emotes[i].data.flags !== null && (j.emotes[i].data.flags & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe['7tv'], 'g', j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, jInf.width, jInf.height, true);
+         _addEmote(thirdparty.emotes.zwe['7tv'], 'g', j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, false, jInf.width, jInf.height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes['7tv'], 'g', j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, jInf.width, jInf.height);
+       _addEmote(thirdparty.emotes['7tv'], 'g', j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, false, jInf.width, jInf.height);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -14289,10 +14310,10 @@
        if ((r[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe['7tv'], 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height, true);
+         _addEmote(thirdparty.emotes.zwe['7tv'], 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes['7tv'], 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height);
+       _addEmote(thirdparty.emotes['7tv'], 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -14329,10 +14350,10 @@
        if ((setData[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe['7tvU'][svcName + ':' + uID], 'u', setData[i].name, setData[i].id, setData[i].url, setData[i].width, setData[i].height, true);
+         _addEmote(thirdparty.emotes.zwe['7tvU'][svcName + ':' + uID], 'u', setData[i].name, setData[i].id, setData[i].url, false, setData[i].width, setData[i].height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes['7tvU'][svcName + ':' + uID], 'u', setData[i].name, setData[i].id, setData[i].url, setData[i].width, setData[i].height);
+       _addEmote(thirdparty.emotes['7tvU'][svcName + ':' + uID], 'u', setData[i].name, setData[i].id, setData[i].url, false, setData[i].width, setData[i].height);
       }
      }
 
