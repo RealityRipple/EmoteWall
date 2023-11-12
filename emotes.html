@@ -6666,7 +6666,7 @@
          if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
           chID = cmd.tags['room-id'];
          const u = _parseUser(cmd);
-         service.parse.content['3rdparty'].ffz.zwe(l, 'twitch:' + u.host, 'twitch:' + chID, cmd.params[1], pass, dup);
+         service.parse.content['3rdparty'].ffz.zwe(l, 'twitch:' + u.id, 'twitch:' + chID, cmd.params[1], pass, dup);
         }
 
         const $user = function()
@@ -6676,7 +6676,7 @@
           if (cmd.params.length < 2)
            return [];
           const u = _parseUser(cmd);
-          return service.parse.content['3rdparty'].ffz.user.general('twitch:' + u.host, cmd.params[1], dup);
+          return service.parse.content['3rdparty'].ffz.user.general('twitch:' + u.id, cmd.params[1], dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
@@ -6684,7 +6684,7 @@
           if (cmd.params.length < 2)
            return;
           const u = _parseUser(cmd);
-          service.parse.content['3rdparty'].ffz.user.zwe(l, 'twitch:' + u.host, cmd.params[1], pass, dup);
+          service.parse.content['3rdparty'].ffz.user.zwe(l, 'twitch:' + u.id, cmd.params[1], pass, dup);
          }
 
          return {
@@ -9146,7 +9146,7 @@
          const msg = _getMessage(cmd);
          if (msg === false)
           return;
-         service.parse.content['3rdparty'].ffz.zwe(l, 'youtube:' + u['display-name'], 'youtube:' + cmd._channel, msg, pass, dup);
+         service.parse.content['3rdparty'].ffz.zwe(l, 'youtube:' + u.id, 'youtube:' + cmd._channel, msg, pass, dup);
         }
 
         const $user = function()
@@ -9159,7 +9159,7 @@
           const msg = _getMessage(cmd);
           if (msg === false)
            return [];
-          return service.parse.content['3rdparty'].ffz.user.general('youtube:' + u['display-name'], msg, dup);
+          return service.parse.content['3rdparty'].ffz.user.general('youtube:' + u.id, msg, dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
@@ -9170,7 +9170,7 @@
           const msg = _getMessage(cmd);
           if (msg === false)
            return;
-          service.parse.content['3rdparty'].ffz.user.zwe(l, 'youtube:' + u['display-name'], msg, pass, dup);
+          service.parse.content['3rdparty'].ffz.user.zwe(l, 'youtube:' + u.id, msg, pass, dup);
          }
 
          return {
@@ -10656,9 +10656,9 @@
           return;
          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
           return;
-         if (!cmd.sender.hasOwnProperty('slug') || cmd.sender.slug === null)
+         if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
           return;
-         service.parse.content['3rdparty'].ffz.zwe(l, 'kick:' + cmd.sender.slug, 'kick:' + kick.net.userID, cmd.content, pass, dup);
+         service.parse.content['3rdparty'].ffz.zwe(l, 'kick:' + cmd.sender.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
         }
 
         const $user = function()
@@ -10669,9 +10669,9 @@
            return [];
           if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
            return [];
-          if (!cmd.sender.hasOwnProperty('slug') || cmd.sender.slug === null)
+          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
            return [];
-          return service.parse.content['3rdparty'].ffz.user.general('kick:' + cmd.sender.slug, cmd.content, dup);
+          return service.parse.content['3rdparty'].ffz.user.general('kick:' + cmd.sender.id, cmd.content, dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
@@ -10680,9 +10680,9 @@
            return;
           if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
            return;
-          if (!cmd.sender.hasOwnProperty('slug') || cmd.sender.slug === null)
+          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
            return;
-          service.parse.content['3rdparty'].ffz.user.zwe(l, 'kick:' + cmd.sender.slug, cmd.content, pass, dup);
+          service.parse.content['3rdparty'].ffz.user.zwe(l, 'kick:' + cmd.sender.id, cmd.content, pass, dup);
          }
 
          return {
@@ -13858,16 +13858,16 @@
         _addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h);
        }
       }
-      if (!j.hasOwnProperty('users'))
+      if (!j.hasOwnProperty('user_ids'))
       {
        cSafe = JSON.parse(JSON.stringify(cList));
        return true;
       }
-      for (const setID in j.users)
+      for (const setID in j.user_ids)
       {
-       if (!j.users.hasOwnProperty(setID))
+       if (!j.user_ids.hasOwnProperty(setID))
         continue;
-       const aList = j.users[setID];
+       const aList = j.user_ids[setID];
        if (!Array.isArray(aList))
         continue;
        for (const set in j.sets)
