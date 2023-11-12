@@ -178,6 +178,7 @@
       fillZWE: false
      },
      hue: false,
+     shadow: false,
      kappa: {
       count: 150,
       styles: {
@@ -3287,14 +3288,24 @@
         const h = Math.floor(eH * x);
         const v = -1 * eH;
         const vD = sH - eH * dX;
-        let s = 'top: 0px;';
-        s += ' left: ' + h + 'px;';
+        let s = 'left: ' + h + 'px;';
+        let fH = sH;
+        if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false && shared.shadowCSS(cfg.display.shadow) !== false)
+        {
+         s += ' top: -12px;';
+         fH += 12;
+        }
+        else
+        {
+         s += ' top: -2px;';
+         fH += 2;
+        }
         s += ' --emote-height: ' + eH + 'px;';
         s += ' --emote-width: ' + eH + 'px;';
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, sH);
+        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, fH);
         window.setTimeout(_tMove, t, tInit, img, vD);
        }
 
@@ -3376,14 +3387,24 @@
         const h = oX + eH * x;
         const v = -1 * eH;
         const vD = sH - eH * dX;
-        let s = 'top: 0px;';
-        s += ' left: ' + h + 'px;';
+        let s = 'left: ' + h + 'px;';
+        let fH = sH;
+        if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false && shared.shadowCSS(cfg.display.shadow) !== false)
+        {
+         s += ' top: -12px;';
+         fH += 12;
+        }
+        else
+        {
+         s += ' top: -2px;';
+         fH += 2;
+        }
         s += ' --emote-height: ' + eH + 'px;';
         s += ' --emote-width: ' + eH + 'px;';
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, sH);
+        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, fH);
         window.setTimeout(_tMove, t, tInit, img, vD);
        }
 
@@ -3937,8 +3958,18 @@
         const h = oX + eH * x;
         const v = -1 * eH;
         const vD = vH - eH * dX;
-        let s = 'top: 0px;';
-        s += ' left: ' + h + 'px;';
+        let s = 'left: ' + h + 'px;';
+        let fH = sH;
+        if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false && shared.shadowCSS(cfg.display.shadow) !== false)
+        {
+         s += ' top: -12px;';
+         fH += 12;
+        }
+        else
+        {
+         s += ' top: -2px;';
+         fH += 2;
+        }
         s += ' --emote-height: ' + eH + 'px;';
         s += ' --emote-width: ' + eH + 'px;';
         s += ' transition: transform ' + tPerB + 'ms ease-in;';
@@ -3947,7 +3978,7 @@
         document.body.appendChild(img);
         _eActive++;
         const tMS = Math.floor(iTime * 1000 * timing.kappa.Text.time);
-        window.setTimeout(_tDrop, Math.floor(eT + tMS + t / 10), tInit, img, sH, tMS);
+        window.setTimeout(_tDrop, Math.floor(eT + tMS + t / 10), tInit, img, fH, tMS);
         window.setTimeout(_tMove, t, tInit, img, vD);
        }
 
@@ -15180,6 +15211,56 @@
      window.requestAnimationFrame(_next);
     }
 
+    function $shadowCSS(o)
+    {
+     let s = '';
+     if (o.hasOwnProperty('offset') && o.offset !== false)
+     {
+      if (o.offset.hasOwnProperty('x') && Number.isInteger(o.offset.x))
+      {
+       if (o.offset.x > 4)
+        s += '4px ';
+       else if (o.offset.x < -4)
+        s += '-4px ';
+       else
+        s += o.offset.x + 'px ';
+      }
+      else
+       s += '0px ';
+      if (o.offset.hasOwnProperty('y') && Number.isInteger(o.offset.y))
+      {
+       if (o.offset.y > 4)
+        s += '4px ';
+       else if (o.offset.y < -4)
+        s += '-4px ';
+       else
+        s += o.offset.y + 'px ';
+      }
+      else
+       s += '0px ';
+     }
+     else
+      s += '0px 0px ';
+     if (o.hasOwnProperty('blur') && Number.isInteger(o.blur))
+     {
+      if (o.blur > 4)
+       s += '4px ';
+      else if (o.blur < 0)
+       s += '0px ';
+      else
+       s += o.blur + 'px ';
+     }
+     else
+      s += '0px ';
+     if (s === '0px 0px 0px ')
+      return false;
+     if (o.hasOwnProperty('color') && o.color !== false)
+      s += o.color;
+     else
+      s += '#000000';
+     return 'filter: drop-shadow(' + s + ');';
+    }
+
     const $mspf = function()
     {
      let _init = 0;
@@ -15533,6 +15614,7 @@
      findInMaybeRange: $findInMaybeRange,
      clearAddr: $clearAddr,
      doNextFrame: $doNextFrame,
+     shadowCSS: $shadowCSS,
      mspf: $mspf,
      ec: $ec,
      storage: $storage,
@@ -16346,6 +16428,27 @@
         h = '   html\n   {\n    filter: hue-rotate(' + iHue + 'deg);\n   }\n   button, div#notices\n   {\n    filter: hue-rotate(' + (360 - iHue) + 'deg);\n   }' + h;
       }
      }
+     if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false)
+     {
+      let sF = shared.shadowCSS(cfg.display.shadow);
+      if (sF !== false)
+      {
+       let sE = '   img.emote\n';
+       sE += '   {\n';
+       sE += '    ' + sF + '\n';
+       h = h.replace('   img.emote\n   {\n', sE);
+
+       let sD = '   div.scene img.dancer\n';
+       sD += '   {\n';
+       sD += '    ' + sF + '\n';
+       h = h.replace('   div.scene img.dancer\n   {\n', sD);
+
+       let sC = '   div.scene div.cube [data-face]\n';
+       sC += '   {\n';
+       sC += '    ' + sF + '\n';
+       h = h.replace('   div.scene div.cube [data-face]\n   {\n    background-color: rgba(255, 255, 255, 0.2);\n', sC);
+      }
+     }
      let a = '   [data-squash="vertical"]\n';
      a += '   {\n';
      a += '    transform: scale(' + timing.display.Crazy.squash.width + ', ' + timing.display.Crazy.squash.height + ');\n';
@@ -16578,8 +16681,8 @@
    }
    div.scene div.cube [data-face]
    {
-    position: absolute;
     background-color: rgba(255, 255, 255, 0.2);
+    position: absolute;
    }
    div.scene div.cube [data-face="front"]
    {

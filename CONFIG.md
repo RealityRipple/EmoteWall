@@ -278,6 +278,41 @@ Configuration Information
      - [ ] Otherwise, no color rotation will occur.
      > **NOTE**: If a command to toggle rave or turn rave on exists, rave will be off at startup.
 
+  * `shadow`  
+    *Add drop-shadow to all emotes.*  
+
+    > **NOTE**: This feature removes the visibility of cube faces in order to function.  
+    > Otherwise the whole square of each face would also have a drop-shadow.  
+
+     - [ ] If `false`, no drop-shadow will be applied.
+     - [ ] If Object:
+       * `offset`  
+         *Shadow offset coordinate pair.*
+         - [ ] If `false`, an emote's shadow will be directly under the emote. This can be used with `blur` to give a "glow" or "aura" effect.
+         - [ ] If Object:
+           * `x`  
+             *Horizontal shadow offset, in pixels.*
+             - [ ] If `false` or `0`, an emote's shadow will stay in the middle of the emote.
+             - [ ] If a number between `-4` and `-1`, an emote's shadow will fall to the left of the emote.
+             - [ ] If a number between `1` and `4`, an emote's shadow will fall to the right of the emote.
+
+           * `y`  
+             *Vertical shadow offset, in pixels.*
+             - [ ] If `false` or `0`, an emote's shadow will stay vertically even with the emote.
+             - [ ] If a number between `-4` and `-1`, an emote's shadow will fall above the emote.
+             - [ ] If a number between `1` and `4`, an emote's shadow will fall below the emote.
+
+       * `blur`  
+         *Shadow blur amount, in pixels*  
+         - [ ] If `false` or `0`, an emote's shadow will be solid.
+         - [ ] If a number between `1` and `4`, an emote's shadow will be diffused.
+         > **NOTE**: This feature may reduce performance significantly.  
+
+       * `color`  
+         *Shadow color*
+         - [ ] If `false`, shadows will be black.
+         - [ ] If a `string` containing a CSS-compatible color, shadows will be the specified color.
+
   * `kappa`  
     *Settings related to emote-splosions and the !kappagen command.*
 
