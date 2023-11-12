@@ -4763,6 +4763,7 @@
 
     function _setImgSrc(img, url)
     {
+     let iTry = 1;
      img.alt = '';
      img.onload = function()
      {
@@ -4773,11 +4774,18 @@
      };
      img.onerror = function()
      {
-      img.onerror = null;
-      img.onload = null;
-      img.src = bareList[shared.rnd(bareList.length)].url;
+      iTry++;
+      if (iTry > 3)
+      {
+       img.onerror = null;
+       img.onload = null;
+       img.src = bareList[shared.rnd(bareList.length)].url;
+       return;
+      }
+      img.removeAttribute('src');
+      img.setAttribute('src', url);
      };
-     img.src = url;
+     img.setAttribute('src', url);
     }
 
     function _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters)
