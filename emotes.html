@@ -8160,10 +8160,7 @@
             return null;
           }
          }
-         console.log(e);
-         console.log(j);
         }
-        console.log(r.code);
         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Streams: ' + r.code);
         _errorReport('broadcasts._getActiveStreams', cURLs.api.youtube.broadcasts, r);
         return null;
@@ -8409,8 +8406,6 @@
              return;
            }
           }
-          console.log(e);
-          console.log(j);
          }
          notice.error(notice.Type.YOUTUBE_NETWORK);
          notice.active &= ~notice.Connection.YOUTUBE;
@@ -8419,7 +8414,6 @@
           window.clearTimeout(notice.tHide);
           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
          }
-         console.log(r.code);
          notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Messages: ' + r.code);
          _errorReport('broadcasts.getMessages.start', q, r);
          return;
@@ -8454,7 +8448,6 @@
             break;
            default:
             _feedback(j.items[i].snippet.type, JSON.stringify(j.items[i]));
-            console.log(j.items[i]);
             break;
           }
          }
@@ -8684,10 +8677,7 @@
             return [];
           }
          }
-         console.log(e);
-         console.log(j);
         }
-        console.log(r.code);
         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Subscribers: ' + r.code);
         _errorReport('subscribers._getChange', url, r);
         return false;
@@ -8705,7 +8695,6 @@
        {
         if (j.items[i].subscriberSnippet.channelId === findU)
          return s;
-        //youtube.net.sList[j.items[i].subscriberSnippet.channelId] = {value: true, t: new Date().getTime()};
         s.push(j.items[i].subscriberSnippet.title);
        }
        return [];
@@ -8799,7 +8788,6 @@
        if (oR.hasOwnProperty('refresh_token'))
        {
         _errorReport('oAuth.update', cURLs.api.rr.refresh.yt, 'Received a Refresh Token during OAuth Token refresh!');
-        console.log('REFRESH TOKEN SENT FROM YT! OMG!');
         r2 = oR.refresh_token;
        }
        const oV = await _validate(a);
@@ -8852,7 +8840,6 @@
         if (j !== null)
         {
          const e = _flatJSON(j);
-         console.log(e);
          if (e.hasOwnProperty('error') && e.error === 'invalid_grant' & e.hasOwnProperty('error_description'))
          {
           switch (e.error_description)
@@ -8870,9 +8857,7 @@
             return false;
           }
          }
-         console.log(j);
         }
-        console.log(r.code);
         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting OAuth Token: ' + r.code);
         _errorReport('oAuth._getToken', url, r);
         return false;
@@ -9556,10 +9541,7 @@
       {
        let r = youtube.Access.STRANGER;
        if (!cmd.hasOwnProperty('authorDetails'))
-       {
-        console.log('no author details in', cmd);
         return r;
-       }
        const author = cmd.authorDetails;
        if (author.hasOwnProperty('isChatOwner') && author.isChatOwner !== false)
         r |= youtube.Access.BROADCASTER;
@@ -9978,32 +9960,18 @@
          await _App_Events(j);
          return;
         }
-        const jData = JSON.parse(j.data);
-        console.log('unknown event:', j.event, jData);
        }
 
        function _pusher_error(j)
        {
         if (!j.hasOwnProperty('data'))
-        {
-         console.log(j);
          return;
-        }
         if (j.data === null)
-        {
-         console.log(j);
          return;
-        }
         if (!j.data.hasOwnProperty('code'))
-        {
-         console.log(j);
          return;
-        }
         if (j.data.code === null)
-        {
-         console.log(j);
          return;
-        }
         if (_tExpire !== false)
         {
          window.clearTimeout(_tExpire);
@@ -10035,7 +10003,6 @@
          window.setTimeout(kick.net.socket, 200);
          return;
         }
-        console.log(j);
        }
 
        const _pusher = function()
@@ -10054,7 +10021,6 @@
            _connection_established(jData);
            return;
          }
-         console.log('unknown pusher event:', j.event.slice(7), jData);
         }
 
         function _connection_established(jData)
@@ -10095,7 +10061,6 @@
            await _subscription_succeded(j);
            return;
          }
-         console.log('unknown internal pusher event:', j.event.slice(16), jData);
         }
 
         async function _subscription_succeded(j)
@@ -10153,7 +10118,6 @@
            _ChatroomClearEvent();
            return;
          }
-         console.log('unhandled app event:', j.event.slice(11), jData);
         }
 
         function _ChatMessageEvent(jData)
@@ -10181,8 +10145,6 @@
 
         function _StreamHostEvent(jData)
         {
-         if (jData.optional_message !== '')
-          console.log(jData.host_username + ' hosted for ' + jData.number_viewers + ' viewers with the message: ' + jData.optional_message);
          if (document.visibilityState === 'hidden')
           return;
          kick.parse.event.raid(jData);
@@ -10349,8 +10311,6 @@
          _usesHyphen = true;
          return _getChIDs();
         }
-        console.log(r.code);
-        console.log(r.data);
         return false;
        }
        const j = r.json;
@@ -10419,8 +10379,6 @@
          _usesHyphen = true;
          return _getChange();
         }
-        console.log(r.code);
-        console.log(r.data);
         return 0;
        }
        const j = r.json;
@@ -11032,8 +10990,6 @@
           break;
          case 'staff':
           break;
-         default:
-          console.log(cmd.sender.identity.badges[i]);
         }
        }
        /* api-heavy, only check if follower access is allowed and there's a chance it matters */
@@ -11277,8 +11233,6 @@
       {
        if (r.code === 404 && chName.includes('_'))
         return _findEmote_channel(chName, n, true);
-       console.log(r.code);
-       console.log(r.data);
        return false;
       }
       const j = r.json;
@@ -13582,7 +13536,6 @@
       const r = await shared.httpRequest('POST', url, h, b, false);
       if (!r.success)
       {
-       console.log(r);
        notice.error(notice.Type.STREAMELEMENTS_TOKEN);
        return false;
       }
@@ -16222,9 +16175,6 @@
      const bT = (twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
      const bYT = (youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
      const bK = (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL;
-     //const nT = cfg.hasOwnProperty('twitch') && cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null;
-     //const nYT = cfg.hasOwnProperty('youtube') && cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null;
-     //const nK = cfg.hasOwnProperty('kick') && cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null;
      shared.clearAddr();
      const scks = [];
      if (bT | bYT | bK)
