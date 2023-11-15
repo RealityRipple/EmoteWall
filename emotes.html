@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.8.7 BETA
+    * v0.8.8 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -178,6 +178,7 @@
       fillZWE: false
      },
      hue: false,
+     shadow: false,
      kappa: {
       count: 150,
       styles: {
@@ -319,10 +320,6 @@
       cheer: {
        useMsg: true,
        bits: 50
-      },
-      hypechat: {
-       useMsg: true,
-       level: 1
       },
       badge: {
        '1': false,
@@ -1281,7 +1278,8 @@
      },
      '7tv': {
       emotes: {
-       global: 'https://7tv.io/v3/emote-sets/global'
+       global: 'https://7tv.io/v3/emote-sets/global',
+       set: 'https://7tv.io/v3/emote-sets/%SET_ID%'
       },
       users: {
        twitch: 'https://7tv.io/v3/users/twitch/%CHANNEL_ID%',
@@ -3286,14 +3284,24 @@
         const h = Math.floor(eH * x);
         const v = -1 * eH;
         const vD = sH - eH * dX;
-        let s = 'top: 0px;';
-        s += ' left: ' + h + 'px;';
+        let s = 'left: ' + h + 'px;';
+        let fH = sH;
+        if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false && shared.shadowCSS(cfg.display.shadow) !== false)
+        {
+         s += ' top: -12px;';
+         fH += 12;
+        }
+        else
+        {
+         s += ' top: -2px;';
+         fH += 2;
+        }
         s += ' --emote-height: ' + eH + 'px;';
         s += ' --emote-width: ' + eH + 'px;';
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, sH);
+        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, fH);
         window.setTimeout(_tMove, t, tInit, img, vD);
        }
 
@@ -3375,14 +3383,24 @@
         const h = oX + eH * x;
         const v = -1 * eH;
         const vD = sH - eH * dX;
-        let s = 'top: 0px;';
-        s += ' left: ' + h + 'px;';
+        let s = 'left: ' + h + 'px;';
+        let fH = sH;
+        if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false && shared.shadowCSS(cfg.display.shadow) !== false)
+        {
+         s += ' top: -12px;';
+         fH += 12;
+        }
+        else
+        {
+         s += ' top: -2px;';
+         fH += 2;
+        }
         s += ' --emote-height: ' + eH + 'px;';
         s += ' --emote-width: ' + eH + 'px;';
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, sH);
+        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, fH);
         window.setTimeout(_tMove, t, tInit, img, vD);
        }
 
@@ -3936,8 +3954,18 @@
         const h = oX + eH * x;
         const v = -1 * eH;
         const vD = vH - eH * dX;
-        let s = 'top: 0px;';
-        s += ' left: ' + h + 'px;';
+        let s = 'left: ' + h + 'px;';
+        let fH = sH;
+        if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false && shared.shadowCSS(cfg.display.shadow) !== false)
+        {
+         s += ' top: -12px;';
+         fH += 12;
+        }
+        else
+        {
+         s += ' top: -2px;';
+         fH += 2;
+        }
         s += ' --emote-height: ' + eH + 'px;';
         s += ' --emote-width: ' + eH + 'px;';
         s += ' transition: transform ' + tPerB + 'ms ease-in;';
@@ -3946,7 +3974,7 @@
         document.body.appendChild(img);
         _eActive++;
         const tMS = Math.floor(iTime * 1000 * timing.kappa.Text.time);
-        window.setTimeout(_tDrop, Math.floor(eT + tMS + t / 10), tInit, img, sH, tMS);
+        window.setTimeout(_tDrop, Math.floor(eT + tMS + t / 10), tInit, img, fH, tMS);
         window.setTimeout(_tMove, t, tInit, img, vD);
        }
 
@@ -4182,7 +4210,7 @@
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('kick') && thirdparty.emotes.kick.hasOwnProperty(s[i]))
+       if (thirdparty.emotes.hasOwnProperty('kick') && thirdparty.emotes.kick.hasOwnProperty(s[i]) && thirdparty.emotes.kick[s[i]].scope === 'c')
        {
         v.svc = 'k';
         v.url = thirdparty.emotes.kick[s[i]].url;
@@ -4225,6 +4253,14 @@
         v.svc = 't';
         v.url = thirdparty.emotes.twitch[s[i]].url;
         v.scope = thirdparty.emotes.twitch[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.hasOwnProperty('kick') && thirdparty.emotes.kick.hasOwnProperty(s[i]) && thirdparty.emotes.kick[s[i]].scope === 'g')
+       {
+        v.svc = 'k';
+        v.url = thirdparty.emotes.kick[s[i]].url;
+        v.scope = thirdparty.emotes.kick[s[i]].scope;
         r.push(v);
         continue;
        }
@@ -4727,6 +4763,7 @@
 
     function _setImgSrc(img, url)
     {
+     let iTry = 1;
      img.alt = '';
      img.onload = function()
      {
@@ -4737,11 +4774,18 @@
      };
      img.onerror = function()
      {
-      img.onerror = null;
-      img.onload = null;
-      img.src = bareList[shared.rnd(bareList.length)].url;
+      iTry++;
+      if (iTry > 3)
+      {
+       img.onerror = null;
+       img.onload = null;
+       img.src = bareList[shared.rnd(bareList.length)].url;
+       return;
+      }
+      img.removeAttribute('src');
+      img.setAttribute('src', url);
      };
-     img.src = url;
+     img.setAttribute('src', url);
     }
 
     function _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters)
@@ -5418,14 +5462,18 @@
 
       function _wsTimeout()
       {
-       notice.error(notice.Type.TWITCH_EVENTSUB);
-       notice.active &= ~notice.Connection.TWITCH_EVENTSUB;
-       if (notice.tHide !== false)
+       if (_lTimeout === 5000)
        {
-        window.clearTimeout(notice.tHide);
-        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        notice.error(notice.Type.TWITCH_EVENTSUB);
+        notice.active &= ~notice.Connection.TWITCH_EVENTSUB;
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
        }
-       _lTimeout = 5000;
+       else
+        _lTimeout = 5000;
        if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
         _wsURL = cURLs.ws.twitch.eventSub;
        if (_tTimeout !== false)
@@ -5877,8 +5925,6 @@
         if (cmd.params.length > 1)
          cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
         if (await twitch.parse.event.cheer(cmd))
-         return;
-        if (await twitch.parse.event.hypechat(cmd))
          return;
         twitch.parse.line(cmd);
        }
@@ -6503,6 +6549,8 @@
      {
       let data = cmd.prefix;
       const ret = {};
+      if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('user-id'))
+       ret.id = cmd.tags['user-id'];
       if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('display-name'))
        ret['display-name'] = cmd.tags['display-name'];
       const gReg = new RegExp(twitch.parse.uReg, 'g');
@@ -6641,15 +6689,21 @@
         {
          if (cmd.params.length < 2)
           return [];
-         return service.parse.content['3rdparty'].ffz.general(cmd.params[1], dup);
+         let chID = twitch.net.channelID;
+         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
+          chID = cmd.tags['room-id'];
+         return service.parse.content['3rdparty'].ffz.general(cmd.params[1], 'twitch:' + chID, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
          if (cmd.params.length < 2)
           return;
+         let chID = twitch.net.channelID;
+         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
+          chID = cmd.tags['room-id'];
          const u = _parseUser(cmd);
-         service.parse.content['3rdparty'].ffz.zwe(l, u.host, cmd.params[1], pass, dup);
+         service.parse.content['3rdparty'].ffz.zwe(l, 'twitch:' + u.id, 'twitch:' + chID, cmd.params[1], pass, dup);
         }
 
         const $user = function()
@@ -6659,7 +6713,7 @@
           if (cmd.params.length < 2)
            return [];
           const u = _parseUser(cmd);
-          return service.parse.content['3rdparty'].ffz.user.general(u.host, cmd.params[1], dup);
+          return service.parse.content['3rdparty'].ffz.user.general('twitch:' + u.id, cmd.params[1], dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
@@ -6667,7 +6721,7 @@
           if (cmd.params.length < 2)
            return;
           const u = _parseUser(cmd);
-          service.parse.content['3rdparty'].ffz.user.zwe(l, u.host, cmd.params[1], pass, dup);
+          service.parse.content['3rdparty'].ffz.user.zwe(l, 'twitch:' + u.id, cmd.params[1], pass, dup);
          }
 
          return {
@@ -6689,15 +6743,21 @@
         {
          if (cmd.params.length < 2)
           return [];
-         return service.parse.content['3rdparty'].bttv.general(cmd.params[1], dup);
+         let chID = twitch.net.channelID;
+         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
+          chID = cmd.tags['room-id'];
+         return service.parse.content['3rdparty'].bttv.general(cmd.params[1], 'twitch:' + chID, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
          if (cmd.params.length < 2)
           return;
+         let chID = twitch.net.channelID;
+         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
+          chID = cmd.tags['room-id'];
          const u = _parseUser(cmd);
-         service.parse.content['3rdparty'].bttv.zwe(l, u.host, cmd.params[1], pass, dup);
+         service.parse.content['3rdparty'].bttv.zwe(l, 'twitch:' + u.id, 'twitch:' + chID, cmd.params[1], pass, dup);
         }
 
         const $user = function()
@@ -6707,7 +6767,7 @@
           if (cmd.params.length < 2)
            return [];
           const u = _parseUser(cmd);
-          return service.parse.content['3rdparty'].bttv.user.general(u.host, cmd.params[1], dup);
+          return service.parse.content['3rdparty'].bttv.user.general('twitch:' + u.id, cmd.params[1], dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
@@ -6715,7 +6775,7 @@
           if (cmd.params.length < 2)
            return;
           const u = _parseUser(cmd);
-          service.parse.content['3rdparty'].bttv.user.zwe(l, u.host, cmd.params[1], pass, dup);
+          service.parse.content['3rdparty'].bttv.user.zwe(l, 'twitch:' + u.id, cmd.params[1], pass, dup);
          }
 
          return {
@@ -6737,20 +6797,51 @@
         {
          if (cmd.params.length < 2)
           return [];
-         return service.parse.content['3rdparty']['7tv'].general(cmd.params[1], dup);
+         let chID = twitch.net.channelID;
+         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
+          chID = cmd.tags['room-id'];
+         return service.parse.content['3rdparty']['7tv'].general(cmd.params[1], 'twitch:' + chID, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
          if (cmd.params.length < 2)
           return;
+         let chID = twitch.net.channelID;
+         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
+          chID = cmd.tags['room-id'];
          const u = _parseUser(cmd);
-         return service.parse.content['3rdparty']['7tv'].zwe(l, u.host, cmd.params[1], pass, dup);
+         service.parse.content['3rdparty']['7tv'].zwe(l, 'twitch:' + u.id, 'twitch:' + chID, cmd.params[1], pass, dup);
         }
+
+        const $user = function()
+        {
+         function $userGeneral(cmd, dup = null)
+         {
+          if (cmd.params.length < 2)
+           return [];
+          const u = _parseUser(cmd);
+          return service.parse.content['3rdparty']['7tv'].user.general('twitch:' + u.id, cmd.params[1], dup);
+         }
+
+         function $userZWE(l, cmd, pass, dup = null)
+         {
+          if (cmd.params.length < 2)
+           return;
+          const u = _parseUser(cmd);
+          service.parse.content['3rdparty']['7tv'].user.zwe(l, 'twitch:' + u.id, cmd.params[1], pass, dup);
+         }
+
+         return {
+          general: $userGeneral,
+          zwe: $userZWE
+         };
+        }();
 
         return {
          general: $general,
-         zwe: $zwe
+         zwe: $zwe,
+         user: $user
         };
        }();
 
@@ -6935,72 +7026,6 @@
        display.kappa.show(p, r, {'%USER%': dn, '%AMOUNT%': cmd.tags.bits});
        return true;
       }
-
-      const $hypechat = function()
-      {
-       const _levels = ['UNKNOWN', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'];
-       const _minUSD = [0, 1, 5, 10, 20, 50, 100, 200, 300, 400, 500];
-
-       async function $c_hypechat(cmd)
-       {
-        if (cfg.event.twitch.hypechat === false)
-         return false;
-        if (!cfg.event.twitch.hypechat.hasOwnProperty('level'))
-         return false;
-        if (cfg.event.twitch.hypechat.level === false)
-         return false;
-        const u = _parseUser(cmd, true);
-        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
-         return;
-        if (!cmd.hasOwnProperty('tags'))
-         return false;
-        if (!cmd.tags.hasOwnProperty('pinned-chat-paid-level') || cmd.tags['pinned-chat-paid-level'] === null)
-         return false;
-        const lv = _levels.indexOf(cmd.tags['pinned-chat-paid-level']);
-        if (lv < 1)
-         return false;
-        let p = [];
-        if (!cmd.tags.hasOwnProperty('pinned-chat-paid-is-system-message') || parseInt(cmd.tags['pinned-chat-paid-is-system-message'], 10) !== 1)
-        {
-         if (cfg.event.twitch.hypechat.useMsg)
-         {
-          const a = await _eListFromCmd(cmd);
-          p.push(...a);
-         }
-         else
-          await twitch.parse.line(cmd);
-         p = _handleDuplicates(p);
-        }
-        if (p.length === 0)
-         p = false;
-        const r = shared.findInMaybeRange(cfg.event.twitch.hypechat.level, lv);
-        if (r === false)
-        {
-         if (p !== false)
-         {
-          display.emote.addToShowList(p);
-          display.emote.showEmotes();
-         }
-         return true;
-        }
-        let dn = 'Anonymous';
-        if (u.hasOwnProperty('display-name'))
-         dn = u['display-name'];
-        let amt = _minUSD[lv] + ' USD';
-        if (cmd.tags.hasOwnProperty('pinned-chat-paid-canonical-amount') && cmd.tags['pinned-chat-paid-canonical-amount'] !== null)
-         amt = parseInt(cmd.tags['pinned-chat-paid-canonical-amount'], 10);
-        else if (cmd.tags.hasOwnProperty('pinned-chat-paid-amount') && cmd.tags['pinned-chat-paid-amount'] !== null)
-         amt = parseInt(cmd.tags['pinned-chat-paid-amount'], 10);
-        if (cmd.tags.hasOwnProperty('pinned-chat-paid-exponent') && cmd.tags['pinned-chat-paid-exponent'] !== null)
-         amt = amt / (10 ** parseInt(cmd.tags['pinned-chat-paid-exponent'], 10));
-        if (cmd.tags.hasOwnProperty('pinned-chat-paid-currency') && cmd.tags['pinned-chat-paid-currency'] !== null)
-         amt += ' ' + cmd.tags['pinned-chat-paid-currency'];
-        display.kappa.show(p, r, {'%USER%': dn, '%AMOUNT%': amt});
-        return true;
-       }
-
-       return $c_hypechat;
-      }();
 
       async function $raid(cmd)
       {
@@ -7460,7 +7485,6 @@
 
       return {
        cheer: $cheer,
-       hypechat: $hypechat,
        raid: $raid,
        sub: $sub,
        badge: $badge,
@@ -7712,7 +7736,10 @@
        r.push(...twitch.parse.content['3rdparty'].bttv.user.general(cmd, dup));
       }
       if (cfg.display.extended.use7TV)
+      {
        r.push(...twitch.parse.content['3rdparty']['7tv'].general(cmd, dup));
+       r.push(...twitch.parse.content['3rdparty']['7tv'].user.general(cmd, dup));
+      }
       if (cfg.display.extended.useFFZ)
       {
        twitch.parse.content['3rdparty'].ffz.zwe(r, cmd, 1, dup);
@@ -7724,7 +7751,10 @@
        twitch.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 1, dup);
       }
       if (cfg.display.extended.use7TV)
+      {
        twitch.parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
+       twitch.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 1, dup);
+      }
       if (cfg.display.extended.useFFZ)
       {
        twitch.parse.content['3rdparty'].ffz.zwe(r, cmd, 2, dup);
@@ -7736,7 +7766,10 @@
        twitch.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 2, dup);
       }
       if (cfg.display.extended.use7TV)
+      {
        twitch.parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
+       twitch.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 2, dup);
+      }
       if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
       {
        for (let i = r.length - 1; i >= 0; i--)
@@ -8015,7 +8048,7 @@
         {
          didSomething = true;
          _aC.push(lStreams[i].chat);
-         window.setTimeout(youtube.net.broadcasts.getMessages.start, 48, lStreams[i].chat);
+         window.setTimeout(youtube.net.broadcasts.getMessages.start, 48, lStreams[i]);
         }
        }
        if (didSomething && cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('recheck') && cfg.youtube.connect_to.recheck === false)
@@ -8086,52 +8119,48 @@
         if (j !== null)
         {
          const e = _flatJSON(j);
-         if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAVAILABLE')
+         if (e.hasOwnProperty('error.errors.0.reason'))
          {
-          if (_aC.length !== 0)
-           return false;
-          notice.error(notice.Type.YOUTUBE_NETWORK);
-          notice.active &= ~notice.Connection.YOUTUBE;
-          if (notice.tHide !== false)
+          const er = e['error.errors.0.reason'];
+          switch (er)
           {
-           window.clearTimeout(notice.tHide);
-           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+           case 'liveStreamingNotEnabled':
+            notice.error(notice.Type.YOUTUBE_NETWORK);
+            notice.error(notice.Type.YOUTUBE_ACCOUNT);
+            youtube.net.oAuth.clear(true);
+            youtube.net.dead = true;
+            return null;
+           case 'SERVICE_UNAVAILABLE':
+            if (_aC.length !== 0)
+             return false;
+            notice.error(notice.Type.YOUTUBE_NETWORK);
+            notice.active &= ~notice.Connection.YOUTUBE;
+            if (notice.tHide !== false)
+            {
+             window.clearTimeout(notice.tHide);
+             notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+            }
+            return false;
+           case 'backendError':
+            if (_aC.length !== 0)
+             return false;
+            notice.error(notice.Type.YOUTUBE_NETWORK);
+            notice.active &= ~notice.Connection.YOUTUBE;
+            if (notice.tHide !== false)
+            {
+             window.clearTimeout(notice.tHide);
+             notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+            }
+            return false;
+           case 'authError':
+            notice.error(notice.Type.YOUTUBE_NETWORK);
+            notice.error(notice.Type.YOUTUBE_TOKEN);
+            youtube.net.oAuth.clear(true);
+            youtube.net.dead = true;
+            return null;
           }
-          return false;
          }
-         if (e.hasOwnProperty('error.status') && e['error.status'] === 'INTERNAL')
-         {
-          if (_aC.length !== 0)
-           return false;
-          notice.error(notice.Type.YOUTUBE_NETWORK);
-          notice.active &= ~notice.Connection.YOUTUBE;
-          if (notice.tHide !== false)
-          {
-           window.clearTimeout(notice.tHide);
-           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
-          }
-          return false;
-         }
-         console.log(e);
-         if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAUTHENTICATED')
-         {
-          notice.error(notice.Type.YOUTUBE_NETWORK);
-          notice.error(notice.Type.YOUTUBE_TOKEN);
-          youtube.net.oAuth.clear(true);
-          youtube.net.dead = true;
-          return null;
-         }
-         if (e.hasOwnProperty('error.message') && e['error.message'] === 'The user is not enabled for live streaming.')
-         {
-          notice.error(notice.Type.YOUTUBE_NETWORK);
-          notice.error(notice.Type.YOUTUBE_ACCOUNT);
-          youtube.net.oAuth.clear(true);
-          youtube.net.dead = true;
-          return null;
-         }
-         console.log(j);
         }
-        console.log(r.code);
         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Streams: ' + r.code);
         _errorReport('broadcasts._getActiveStreams', cURLs.api.youtube.broadcasts, r);
         return null;
@@ -8265,9 +8294,11 @@
       const $getMessages = function()
       {
        const _tM = [];
+       let _bSlower = 0;
 
-       async function $start(chatID, page = false)
+       async function $start(stream, page = false)
        {
+        const chatID = stream.chat;
         if (_tM.hasOwnProperty(chatID) && _tM[chatID] !== false)
          window.clearTimeout(_tM[chatID]);
         _tM[chatID] = false;
@@ -8341,25 +8372,40 @@
          if (j !== null)
          {
           const e = _flatJSON(j);
-          console.log(e);
-          if (e.hasOwnProperty('error.errors.0.reason') && e['error.errors.0.reason'] === 'quotaExceeded')
+          if (e.hasOwnProperty('error.errors.0.reason'))
           {
-           notice.error(notice.Type.YOUTUBE_RATELIMIT);
-           return;
-          }
-          if (e.hasOwnProperty('error.errors.0.reason') && e['error.errors.0.reason'] === 'liveChatEnded')
-          {
-           for (let i = 0, l = _aC.length; i < l; i++)
+           const er = e['error.errors.0.reason'];
+           switch (er)
            {
-            if (_aC[i] !== chatID)
-             continue;
-            _aC.splice(i, 1);
-            break;
+            case 'quotaExceeded':
+             notice.error(notice.Type.YOUTUBE_RATELIMIT);
+             return;
+            case 'liveChatEnded':
+            case 'liveChatDisabled':
+            case 'liveChatNotFound':
+             for (let i = 0, l = _aC.length; i < l; i++)
+             {
+              if (_aC[i] !== chatID)
+               continue;
+              _aC.splice(i, 1);
+              break;
+             }
+             youtube.net.broadcasts.getMessages.stop(chatID);
+             return;
+            case 'rateLimitExceeded':
+             _bSlower += 1000;
+             if (_bSlower > 14000)
+             {
+              _bSlower = 14000;
+              notice.error(notice.Type.YOUTUBE_RATELIMIT);
+             }
+             if (!_tM.hasOwnProperty(chatID))
+              return;
+             const tWait = 4000 + _bSlower;
+             _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, tWait, stream);
+             return;
            }
-           youtube.net.broadcasts.getMessages.stop(chatID);
-           return;
           }
-          console.log(j);
          }
          notice.error(notice.Type.YOUTUBE_NETWORK);
          notice.active &= ~notice.Connection.YOUTUBE;
@@ -8368,7 +8414,6 @@
           window.clearTimeout(notice.tHide);
           notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
          }
-         console.log(r.code);
          notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Messages: ' + r.code);
          _errorReport('broadcasts.getMessages.start', q, r);
          return;
@@ -8385,6 +8430,7 @@
         let nextPoll = 1000;
         if (j.hasOwnProperty('pollingIntervalMillis'))
          nextPoll = j.pollingIntervalMillis;
+        nextPoll += _bSlower;
         let nextPage = false;
         if (j.hasOwnProperty('nextPageToken'))
          nextPage = j.nextPageToken;
@@ -8402,7 +8448,6 @@
             break;
            default:
             _feedback(j.items[i].snippet.type, JSON.stringify(j.items[i]));
-            console.log(j.items[i]);
             break;
           }
          }
@@ -8422,7 +8467,7 @@
           switch (j.items[i].snippet.type)
           {
            case 'textMessageEvent':
-            await _textMessageEvent(j.items[i]);
+            await _textMessageEvent(j.items[i], stream.channel);
             break;
            case 'superChatEvent':
             await _superChatEvent(j.items[i]);
@@ -8447,7 +8492,7 @@
         }
         if (!_tM.hasOwnProperty(chatID))
          return;
-        _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, nextPoll, chatID, nextPage);
+        _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, nextPoll, stream, nextPage);
        }
 
        function $stop(chatID)
@@ -8460,12 +8505,14 @@
         delete _tM[chatID];
        }
 
-       async function _textMessageEvent(cmd)
+       async function _textMessageEvent(cmd, chID)
        {
         if (document.visibilityState === 'hidden')
          return;
         if (!cmd.hasOwnProperty('authorDetails'))
          return;
+        if (!cmd.hasOwnProperty('_channel'))
+         cmd._channel = chID;
         await youtube.parse.line(cmd);
        }
 
@@ -8557,6 +8604,7 @@
       let _uLS = false;
       let _tS = false;
       const _rSC = 6000;
+      let _bSlower = 0;
 
       function $c_subscribers()
       {
@@ -8567,7 +8615,7 @@
         youtube.net.dead = true;
         return;
        }
-       _tS = window.setTimeout(_detect, _rSC);
+       _tS = window.setTimeout(_detect, _rSC + _bSlower);
       }
 
       async function _detect()
@@ -8586,7 +8634,7 @@
          display.kappa.show(false, cfg.event.youtube.sub, {'%USER%': fRet[i]});
         }
        }
-       _tS = window.setTimeout(_detect, _rSC);
+       _tS = window.setTimeout(_detect, _rSC + _bSlower);
       }
 
       async function _getChange()
@@ -8605,18 +8653,31 @@
         if (j !== null)
         {
          const e = _flatJSON(j);
-         if (e.hasOwnProperty('error.status') && e['error.status'] === 'UNAUTHENTICATED')
+         if (e.hasOwnProperty('error.errors.0.reason'))
          {
-          notice.error(notice.Type.YOUTUBE_NETWORK);
-          notice.error(notice.Type.YOUTUBE_TOKEN);
-          youtube.net.oAuth.clear(true);
-          youtube.net.dead = true;
-          return false;
+          const er = e['error.errors.0.reason'];
+          switch (er)
+          {
+           case 'authError':
+           case 'subscriptionForbidden':
+            notice.error(notice.Type.YOUTUBE_NETWORK);
+            notice.error(notice.Type.YOUTUBE_TOKEN);
+            youtube.net.oAuth.clear(true);
+            youtube.net.dead = true;
+            return false;
+           case 'rateLimitExceeded':
+            _bSlower += 1000;
+            if (_bSlower > 14000)
+            {
+             _bSlower = 14000;
+             notice.error(notice.Type.YOUTUBE_RATELIMIT);
+            }
+            return false;
+           case 'backendError':
+            return [];
+          }
          }
-         console.log(e);
-         console.log(j);
         }
-        console.log(r.code);
         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Subscribers: ' + r.code);
         _errorReport('subscribers._getChange', url, r);
         return false;
@@ -8634,7 +8695,6 @@
        {
         if (j.items[i].subscriberSnippet.channelId === findU)
          return s;
-        //youtube.net.sList[j.items[i].subscriberSnippet.channelId] = {value: true, t: new Date().getTime()};
         s.push(j.items[i].subscriberSnippet.title);
        }
        return [];
@@ -8728,7 +8788,6 @@
        if (oR.hasOwnProperty('refresh_token'))
        {
         _errorReport('oAuth.update', cURLs.api.rr.refresh.yt, 'Received a Refresh Token during OAuth Token refresh!');
-        console.log('REFRESH TOKEN SENT FROM YT! OMG!');
         r2 = oR.refresh_token;
        }
        const oV = await _validate(a);
@@ -8781,10 +8840,9 @@
         if (j !== null)
         {
          const e = _flatJSON(j);
-         console.log(e);
          if (e.hasOwnProperty('error') && e.error === 'invalid_grant' & e.hasOwnProperty('error_description'))
          {
-          switch(e.error_description)
+          switch (e.error_description)
           {
            case 'Token has been expired or revoked.':
             notice.error(notice.Type.YOUTUBE_NETWORK);
@@ -8799,9 +8857,7 @@
             return false;
           }
          }
-         console.log(j);
         }
-        console.log(r.code);
         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting OAuth Token: ' + r.code);
         _errorReport('oAuth._getToken', url, r);
         return false;
@@ -9034,54 +9090,42 @@
          const msg = _getMessage(cmd);
          if (msg === false)
           return [];
-         return service.parse.content['3rdparty'].ffz.general(msg, dup);
+         return service.parse.content['3rdparty'].ffz.general(msg, 'youtube:' + cmd._channel, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
          const u = _parseUser(cmd);
          if (u === false)
-          return [];
+          return;
          const msg = _getMessage(cmd);
          if (msg === false)
-          return [];
-         return service.parse.content['3rdparty'].ffz.zwe(l, u.displayName, msg, pass, dup);
+          return;
+         service.parse.content['3rdparty'].ffz.zwe(l, 'youtube:' + u.id, 'youtube:' + cmd._channel, msg, pass, dup);
         }
 
         const $user = function()
         {
          function $userGeneral(cmd, dup = null)
          {
-          if (!thirdparty.emotes.hasOwnProperty('ffzU'))
-           return [];
           const u = _parseUser(cmd);
           if (u === false)
            return [];
           const msg = _getMessage(cmd);
           if (msg === false)
            return [];
-          if (!thirdparty.emotes.ffzU.hasOwnProperty(u.displayName))
-           return [];
-          return service.parse.content['3rdparty'].ffz.user.general(u.displayName, msg, dup);
+          return service.parse.content['3rdparty'].ffz.user.general('youtube:' + u.id, msg, dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
          {
-          if (!cfg.display.extended.useZWE)
-           return;
-          if (!thirdparty.emotes.hasOwnProperty('zwe'))
-           return;
-          if (!thirdparty.emotes.zwe.hasOwnProperty('ffzU'))
-           return;
           const u = _parseUser(cmd);
           if (u === false)
-           return [];
+           return;
           const msg = _getMessage(cmd);
           if (msg === false)
-           return [];
-          if (!thirdparty.emotes.zwe.ffzU.hasOwnProperty(u.displayName))
-           return [];
-          return service.parse.content['3rdparty'].ffz.user.zwe(l, u.displayName, msg, pass, dup);
+           return;
+          service.parse.content['3rdparty'].ffz.user.zwe(l, 'youtube:' + u.id, msg, pass, dup);
          }
 
          return {
@@ -9104,54 +9148,42 @@
          const msg = _getMessage(cmd);
          if (msg === false)
           return [];
-         return service.parse.content['3rdparty'].bttv.general(msg, dup);
+         return service.parse.content['3rdparty'].bttv.general(msg, 'youtube:' + cmd._channel, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
          const u = _parseUser(cmd);
          if (u === false)
-          return [];
+          return;
          const msg = _getMessage(cmd);
          if (msg === false)
           return;
-         return service.parse.content['3rdparty'].bttv.zwe(l, u.displayName, msg, pass, dup);
+         service.parse.content['3rdparty'].bttv.zwe(l, 'youtube:' + u.id, 'youtube:' + cmd._channel, msg, pass, dup);
         }
 
         const $user = function()
         {
          function $userGeneral(cmd, dup = null)
          {
-          if (!thirdparty.emotes.hasOwnProperty('bttvU'))
-           return [];
           const msg = _getMessage(cmd);
           if (msg === false)
            return [];
           const u = _parseUser(cmd);
           if (u === false)
            return [];
-          if (!thirdparty.emotes.bttvU.hasOwnProperty(u.displayName))
-           return [];
-          return service.parse.content['3rdparty'].bttv.user.general(u.displayName, msg, dup);
+          return service.parse.content['3rdparty'].bttv.user.general('youtube:' + u.id, msg, dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
          {
-          if (!cfg.display.extended.useZWE)
-           return;
-          if (!thirdparty.emotes.hasOwnProperty('zwe'))
-           return;
-          if (!thirdparty.emotes.zwe.hasOwnProperty('bttvU'))
-           return;
           const msg = _getMessage(cmd);
           if (msg === false)
-           return [];
+           return;
           const u = _parseUser(cmd);
           if (u === false)
-           return [];
-          if (!thirdparty.emotes.zwe.bttvU.hasOwnProperty(u.displayName))
-           return [];
-          return service.parse.content['3rdparty'].bttv.user.zwe(l, u.displayName, msg, pass, dup);
+           return;
+          service.parse.content['3rdparty'].bttv.user.zwe(l, 'youtube:' + u.id, msg, pass, dup);
          }
 
          return {
@@ -9174,23 +9206,54 @@
          const msg = _getMessage(cmd);
          if (msg === false)
           return [];
-         return service.parse.content['3rdparty']['7tv'].general(msg, dup);
+         return service.parse.content['3rdparty']['7tv'].general(msg, 'youtube:' + cmd._channel, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
          const u = _parseUser(cmd);
          if (u === false)
-          return [];
+          return;
          const msg = _getMessage(cmd);
          if (msg === false)
           return;
-         return service.parse.content['3rdparty']['7tv'].zwe(l, u.displayName, msg, pass, dup);
+         service.parse.content['3rdparty']['7tv'].zwe(l, 'youtube:' + u.id, 'youtube:' + cmd._channel, msg, pass, dup);
         }
+
+        const $user = function()
+        {
+         function $userGeneral(cmd, dup = null)
+         {
+          const msg = _getMessage(cmd);
+          if (msg === false)
+           return [];
+          const u = _parseUser(cmd);
+          if (u === false)
+           return [];
+          return service.parse.content['3rdparty']['7tv'].user.general('youtube:' + u.id, msg, dup);
+         }
+
+         function $userZWE(l, cmd, pass, dup = null)
+         {
+          const msg = _getMessage(cmd);
+          if (msg === false)
+           return;
+          const u = _parseUser(cmd);
+          if (u === false)
+           return;
+          service.parse.content['3rdparty']['7tv'].user.zwe(l, 'youtube:' + u.id, msg, pass, dup);
+         }
+
+         return {
+          general: $userGeneral,
+          zwe: $userZWE
+         };
+        }();
 
         return {
          general: $general,
-         zwe: $zwe
+         zwe: $zwe,
+         user: $user
         };
        }();
 
@@ -9430,7 +9493,7 @@
         first: $first,
         milestone: $milestone,
         gift: $gift
-       }
+       };
       }();
 
       function $ban(cmd)
@@ -9478,10 +9541,7 @@
       {
        let r = youtube.Access.STRANGER;
        if (!cmd.hasOwnProperty('authorDetails'))
-       {
-        console.log('no author details in', cmd);
         return r;
-       }
        const author = cmd.authorDetails;
        if (author.hasOwnProperty('isChatOwner') && author.isChatOwner !== false)
         r |= youtube.Access.BROADCASTER;
@@ -9564,7 +9624,7 @@
      {
       const r = [];
       const u = _parseUser(cmd);
-      if (u !== false && cfg.ignore.users !== false && cfg.ignore.users.includes(u.displayName))
+      if (u !== false && cfg.ignore.users !== false && cfg.ignore.users.includes(u['display-name']))
        return r;
       r.push(...youtube.parse.content.youtube(cmd, dup));
       if (cfg.display.useEmoji)
@@ -9580,7 +9640,10 @@
        r.push(...youtube.parse.content['3rdparty'].bttv.user.general(cmd, dup));
       }
       if (cfg.display.extended.use7TV)
+      {
        r.push(...youtube.parse.content['3rdparty']['7tv'].general(cmd, dup));
+       r.push(...youtube.parse.content['3rdparty']['7tv'].user.general(cmd, dup));
+      }
       if (cfg.display.extended.useFFZ)
       {
        youtube.parse.content['3rdparty'].ffz.zwe(r, cmd, 1, dup);
@@ -9592,7 +9655,10 @@
        youtube.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 1, dup);
       }
       if (cfg.display.extended.use7TV)
+      {
        youtube.parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
+       youtube.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 1, dup);
+      }
       if (cfg.display.extended.useFFZ)
       {
        youtube.parse.content['3rdparty'].ffz.zwe(r, cmd, 2, dup);
@@ -9604,7 +9670,10 @@
        youtube.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 2, dup);
       }
       if (cfg.display.extended.use7TV)
+      {
        youtube.parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
+       youtube.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 2, dup);
+      }
       if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
       {
        for (let i = r.length - 1; i >= 0; i--)
@@ -9891,32 +9960,18 @@
          await _App_Events(j);
          return;
         }
-        const jData = JSON.parse(j.data);
-        console.log('unknown event:', j.event, jData);
        }
 
        function _pusher_error(j)
        {
         if (!j.hasOwnProperty('data'))
-        {
-         console.log(j);
          return;
-        }
         if (j.data === null)
-        {
-         console.log(j);
          return;
-        }
         if (!j.data.hasOwnProperty('code'))
-        {
-         console.log(j);
          return;
-        }
         if (j.data.code === null)
-        {
-         console.log(j);
          return;
-        }
         if (_tExpire !== false)
         {
          window.clearTimeout(_tExpire);
@@ -9948,7 +10003,6 @@
          window.setTimeout(kick.net.socket, 200);
          return;
         }
-        console.log(j);
        }
 
        const _pusher = function()
@@ -9967,7 +10021,6 @@
            _connection_established(jData);
            return;
          }
-         console.log('unknown pusher event:', j.event.slice(7), jData);
         }
 
         function _connection_established(jData)
@@ -10008,7 +10061,6 @@
            await _subscription_succeded(j);
            return;
          }
-         console.log('unknown internal pusher event:', j.event.slice(16), jData);
         }
 
         async function _subscription_succeded(j)
@@ -10066,7 +10118,6 @@
            _ChatroomClearEvent();
            return;
          }
-         console.log('unhandled app event:', j.event.slice(11), jData);
         }
 
         function _ChatMessageEvent(jData)
@@ -10094,8 +10145,6 @@
 
         function _StreamHostEvent(jData)
         {
-         if (jData.optional_message !== '')
-          console.log(jData.host_username + ' hosted for ' + jData.number_viewers + ' viewers with the message: ' + jData.optional_message);
          if (document.visibilityState === 'hidden')
           return;
          kick.parse.event.raid(jData);
@@ -10210,19 +10259,23 @@
 
       function _wsTimeout()
       {
-       notice.error(notice.Type.KICK_NETWORK);
-       notice.active &= ~notice.Connection.KICK;
-       if (notice.tHide !== false)
+       if (_lTimeout === 120000)
        {
-        window.clearTimeout(notice.tHide);
-        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        notice.error(notice.Type.KICK_NETWORK);
+        notice.active &= ~notice.Connection.KICK;
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
        }
+       else
+        _lTimeout = 120000;
        if (_tExpire !== false)
        {
         window.clearTimeout(_tExpire);
         _tExpire = false;
        }
-       _lTimeout = 120000;
        _lPing = 30000;
        if (_tTimeout !== false)
        {
@@ -10258,8 +10311,6 @@
          _usesHyphen = true;
          return _getChIDs();
         }
-        console.log(r.code);
-        console.log(r.data);
         return false;
        }
        const j = r.json;
@@ -10321,13 +10372,13 @@
        const r = await shared.httpRequest('GET', url);
        if (!r.success)
        {
+        if (r.code === 0 && r.data === '')
+         return 0;
         if (r.code === 404 && _usesHyphen === 0)
         {
          _usesHyphen = true;
          return _getChange();
         }
-        console.log(r.code);
-        console.log(r.data);
         return 0;
        }
        const j = r.json;
@@ -10524,33 +10575,180 @@
 
       const $3rdparty = function()
       {
+       const $ffz = function()
+       {
+        function $general(cmd, dup = null)
+        {
+         if (!cmd.hasOwnProperty('content') || cmd.content === null)
+          return [];
+         return service.parse.content['3rdparty'].ffz.general(cmd.content, 'kick:' + kick.net.userID, dup);
+        }
+
+        function $zwe(l, cmd, pass, dup = null)
+        {
+         if (!cmd.hasOwnProperty('content') || cmd.content === null)
+          return;
+         if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+          return;
+         if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
+          return;
+         service.parse.content['3rdparty'].ffz.zwe(l, 'kick:' + cmd.sender.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
+        }
+
+        const $user = function()
+        {
+         function $userGeneral(cmd, dup = null)
+         {
+          if (!cmd.hasOwnProperty('content') || cmd.content === null)
+           return [];
+          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+           return [];
+          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
+           return [];
+          return service.parse.content['3rdparty'].ffz.user.general('kick:' + cmd.sender.id, cmd.content, dup);
+         }
+
+         function $userZWE(l, cmd, pass, dup = null)
+         {
+          if (!cmd.hasOwnProperty('content') || cmd.content === null)
+           return;
+          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+           return;
+          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
+           return;
+          service.parse.content['3rdparty'].ffz.user.zwe(l, 'kick:' + cmd.sender.id, cmd.content, pass, dup);
+         }
+
+         return {
+          general: $userGeneral,
+          zwe: $userZWE
+         };
+        }();
+
+        return {
+         general: $general,
+         zwe: $zwe,
+         user: $user
+        };
+       }();
+
+       const $bttv = function()
+       {
+        function $general(cmd, dup = null)
+        {
+         if (!cmd.hasOwnProperty('content') || cmd.content === null)
+          return [];
+         return service.parse.content['3rdparty'].bttv.general(cmd.content, 'kick:' + kick.net.userID, dup);
+        }
+
+        function $zwe(l, cmd, pass, dup = null)
+        {
+         if (!cmd.hasOwnProperty('content') || cmd.content === null)
+          return;
+         if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+          return;
+         if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
+          return;
+         service.parse.content['3rdparty'].bttv.zwe(l, 'kick:' + cmd.sender.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
+        }
+
+        const $user = function()
+        {
+         function $userGeneral(cmd, dup = null)
+         {
+          if (!cmd.hasOwnProperty('content') || cmd.content === null)
+           return [];
+          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+           return [];
+          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
+           return [];
+          return service.parse.content['3rdparty'].bttv.user.general('kick:' + cmd.sender.id, cmd.content, dup);
+         }
+
+         function $userZWE(l, cmd, pass, dup = null)
+         {
+          if (!cmd.hasOwnProperty('content') || cmd.content === null)
+           return;
+          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+           return;
+          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
+           return;
+          service.parse.content['3rdparty'].bttv.user.zwe(l, 'kick:' + cmd.sender.id, cmd.content, pass, dup);
+         }
+
+         return {
+          general: $userGeneral,
+          zwe: $userZWE
+         };
+        }();
+
+        return {
+         general: $general,
+         zwe: $zwe,
+         user: $user
+        };
+       }();
+
        const $7tv = function()
        {
         function $general(cmd, dup = null)
         {
          if (!cmd.hasOwnProperty('content') || cmd.content === null)
           return [];
-         return service.parse.content['3rdparty']['7tv'].general(cmd.content, dup);
+         return service.parse.content['3rdparty']['7tv'].general(cmd.content, 'kick:' + kick.net.userID, dup);
         }
 
         function $zwe(l, cmd, pass, dup = null)
         {
          if (!cmd.hasOwnProperty('content') || cmd.content === null)
-          return [];
+          return;
          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
-          return [];
-         if (!cmd.sender.hasOwnProperty('slug') || cmd.sender.slug === null)
-          return [];
-         return service.parse.content['3rdparty']['7tv'].zwe(l, cmd.sender.slug, cmd.content, pass, dup);
+          return;
+         if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
+          return;
+         service.parse.content['3rdparty']['7tv'].zwe(l, 'kick:' + cmd.sender.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
         }
+
+        const $user = function()
+        {
+         function $userGeneral(cmd, dup = null)
+         {
+          if (!cmd.hasOwnProperty('content') || cmd.content === null)
+           return [];
+          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+           return [];
+          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
+           return [];
+          return service.parse.content['3rdparty']['7tv'].user.general('kick:' + cmd.sender.id, cmd.content, dup);
+         }
+
+         function $userZWE(l, cmd, pass, dup = null)
+         {
+          if (!cmd.hasOwnProperty('content') || cmd.content === null)
+           return;
+          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+           return;
+          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
+           return;
+          service.parse.content['3rdparty']['7tv'].user.zwe(l, 'kick:' + cmd.sender.id, cmd.content, pass, dup);
+         }
+
+         return {
+          general: $userGeneral,
+          zwe: $userZWE
+         };
+        }();
 
         return {
          general: $general,
-         zwe: $zwe
+         zwe: $zwe,
+         user: $user
         };
        }();
 
        return {
+        ffz: $ffz,
+        bttv: $bttv,
         '7tv': $7tv
        };
       }();
@@ -10792,8 +10990,6 @@
           break;
          case 'staff':
           break;
-         default:
-          console.log(cmd.sender.identity.badges[i]);
         }
        }
        /* api-heavy, only check if follower access is allowed and there's a chance it matters */
@@ -10938,12 +11134,51 @@
       r.push(...kick.parse.content.kick(cmd, dup));
       if (cfg.display.useEmoji)
        r.push(...await kick.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+      if (cfg.display.extended.useFFZ)
+      {
+       r.push(...kick.parse.content['3rdparty'].ffz.general(cmd, dup));
+       r.push(...kick.parse.content['3rdparty'].ffz.user.general(cmd, dup));
+      }
+      if (cfg.display.extended.useBTTV)
+      {
+       r.push(...kick.parse.content['3rdparty'].bttv.general(cmd, dup));
+       r.push(...kick.parse.content['3rdparty'].bttv.user.general(cmd, dup));
+      }
       if (cfg.display.extended.use7TV)
+      {
        r.push(...kick.parse.content['3rdparty']['7tv'].general(cmd, dup));
+       r.push(...kick.parse.content['3rdparty']['7tv'].user.general(cmd, dup));
+      }
+      if (cfg.display.extended.useFFZ)
+      {
+       kick.parse.content['3rdparty'].ffz.zwe(r, cmd, 1, dup);
+       kick.parse.content['3rdparty'].ffz.user.zwe(r, cmd, 1, dup);
+      }
+      if (cfg.display.extended.useBTTV)
+      {
+       kick.parse.content['3rdparty'].bttv.zwe(r, cmd, 1, dup);
+       kick.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 1, dup);
+      }
       if (cfg.display.extended.use7TV)
+      {
        kick.parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
+       kick.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 1, dup);
+      }
+      if (cfg.display.extended.useFFZ)
+      {
+       kick.parse.content['3rdparty'].ffz.zwe(r, cmd, 2, dup);
+       kick.parse.content['3rdparty'].ffz.user.zwe(r, cmd, 2, dup);
+      }
+      if (cfg.display.extended.useBTTV)
+      {
+       kick.parse.content['3rdparty'].bttv.zwe(r, cmd, 2, dup);
+       kick.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 2, dup);
+      }
       if (cfg.display.extended.use7TV)
+      {
        kick.parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
+       kick.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 2, dup);
+      }
       if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
       {
        for (let i = r.length - 1; i >= 0; i--)
@@ -10998,8 +11233,6 @@
       {
        if (r.code === 404 && chName.includes('_'))
         return _findEmote_channel(chName, n, true);
-       console.log(r.code);
-       console.log(r.data);
        return false;
       }
       const j = r.json;
@@ -11375,7 +11608,7 @@
       {
        const $ffz = function()
        {
-        function $general(msg, dup = null)
+        function $general(msg, chID, dup = null)
         {
          if (!thirdparty.emotes.hasOwnProperty('ffz'))
           return [];
@@ -11387,6 +11620,8 @@
          for (let i = 0, l = m.length; i < l; i++)
          {
           if (!thirdparty.emotes.ffz.hasOwnProperty(m[i]))
+           continue;
+          if (thirdparty.emotes.ffz[m[i]].scope !== 'g' && !thirdparty.emotes.ffz[m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -11408,7 +11643,7 @@
          return ret;
         }
 
-        function $zwe(l, usr, msg, pass, dup = null)
+        function $zwe(l, usr, chID, msg, pass, dup = null)
         {
          if (!cfg.display.extended.useZWE)
           return;
@@ -11424,6 +11659,8 @@
          for (let i = 0, n = m.length; i < n; i++)
          {
           if (!thirdparty.emotes.zwe.ffz.hasOwnProperty(m[i]))
+           continue;
+          if (thirdparty.emotes.zwe.ffz[m[i]].scope !== 'g' && !thirdparty.emotes.zwe.ffz[m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -11491,6 +11728,14 @@
            if (thirdparty.emotes.zwe.hasOwnProperty('7tv'))
            {
             z = Object.keys(thirdparty.emotes.zwe['7tv']);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('7tvU') && thirdparty.emotes.zwe['7tvU'].hasOwnProperty(usr))
+           {
+            z = Object.keys(thirdparty.emotes.zwe['7tvU'][usr]);
             for (let j = 0, o = z.length; j < o; j++)
             {
              t = t.replaceAll(z[j], '');
@@ -11649,6 +11894,14 @@
               t = t.replaceAll(z[j], '');
              }
             }
+            if (thirdparty.emotes.zwe.hasOwnProperty('7tvU') && thirdparty.emotes.zwe['7tvU'].hasOwnProperty(usr))
+            {
+             z = Object.keys(thirdparty.emotes.zwe['7tvU'][usr]);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
             t = t.trim();
             if (t.length > 0)
             {
@@ -11695,7 +11948,7 @@
 
        const $bttv = function()
        {
-        function $general(msg, dup = null)
+        function $general(msg, chID, dup = null)
         {
          if (!thirdparty.emotes.hasOwnProperty('bttv'))
           return [];
@@ -11707,6 +11960,8 @@
          for (let i = 0, l = m.length; i < l; i++)
          {
           if (!thirdparty.emotes.bttv.hasOwnProperty(m[i]))
+           continue;
+          if (thirdparty.emotes.bttv[m[i]].scope !== 'g' && !thirdparty.emotes.bttv[m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -11728,7 +11983,7 @@
          return ret;
         }
 
-        function $zwe(l, usr, msg, pass, dup = null)
+        function $zwe(l, usr, chID, msg, pass, dup = null)
         {
          if (!cfg.display.extended.useZWE)
           return;
@@ -11744,6 +11999,8 @@
          for (let i = 0, n = m.length; i < n; i++)
          {
           if (!thirdparty.emotes.zwe.bttv.hasOwnProperty(m[i]))
+           continue;
+          if (thirdparty.emotes.zwe.bttv[m[i]].scope !== 'g' && !thirdparty.emotes.zwe.bttv[m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -11811,6 +12068,14 @@
            if (thirdparty.emotes.zwe.hasOwnProperty('7tv'))
            {
             z = Object.keys(thirdparty.emotes.zwe['7tv']);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
+           if (thirdparty.emotes.zwe.hasOwnProperty('7tvU') && thirdparty.emotes.zwe['7tvU'].hasOwnProperty(usr))
+           {
+            z = Object.keys(thirdparty.emotes.zwe['7tvU'][usr]);
             for (let j = 0, o = z.length; j < o; j++)
             {
              t = t.replaceAll(z[j], '');
@@ -11969,6 +12234,14 @@
               t = t.replaceAll(z[j], '');
              }
             }
+            if (thirdparty.emotes.zwe.hasOwnProperty('7tvU') && thirdparty.emotes.zwe['7tvU'].hasOwnProperty(usr))
+            {
+             z = Object.keys(thirdparty.emotes.zwe['7tvU'][usr]);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
             t = t.trim();
             if (t.length > 0)
             {
@@ -12015,7 +12288,7 @@
 
        const $7tv = function()
        {
-        function $general(msg, dup = null)
+        function $general(msg, chID, dup = null)
         {
          if (!thirdparty.emotes.hasOwnProperty('7tv'))
           return [];
@@ -12027,6 +12300,8 @@
          for (let i = 0, l = m.length; i < l; i++)
          {
           if (!thirdparty.emotes['7tv'].hasOwnProperty(m[i]))
+           continue;
+          if (thirdparty.emotes['7tv'][m[i]].scope !== 'g' && !thirdparty.emotes['7tv'][m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -12048,7 +12323,7 @@
          return ret;
         }
 
-        function $zwe(l, usr, msg, pass, dup = null)
+        function $zwe(l, usr, chID, msg, pass, dup = null)
         {
          if (!cfg.display.extended.useZWE)
           return;
@@ -12064,6 +12339,8 @@
          for (let i = 0, n = m.length; i < n; i++)
          {
           if (!thirdparty.emotes.zwe['7tv'].hasOwnProperty(m[i]))
+           continue;
+          if (thirdparty.emotes.zwe['7tv'][m[i]].scope !== 'g' && !thirdparty.emotes.zwe['7tv'][m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -12136,6 +12413,14 @@
              t = t.replaceAll(z[j], '');
             }
            }
+           if (thirdparty.emotes.zwe.hasOwnProperty('7tvU') && thirdparty.emotes.zwe['7tvU'].hasOwnProperty(usr))
+           {
+            z = Object.keys(thirdparty.emotes.zwe['7tvU'][usr]);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+           }
            t = t.trim();
            if (t.length > 0)
            {
@@ -12162,6 +12447,173 @@
          }
         }
 
+        const $user = function()
+        {
+         function $userGeneral(usr, msg, dup = null)
+         {
+          if (!thirdparty.emotes.hasOwnProperty('7tvU'))
+           return [];
+          if (!thirdparty.emotes['7tvU'].hasOwnProperty(usr))
+           return [];
+          const m = msg.split(' ');
+          if (dup === null)
+           dup = cfg.display.duplicates;
+          const ret = [];
+          const addList = {};
+          for (let i = 0, l = m.length; i < l; i++)
+          {
+           if (!thirdparty.emotes['7tvU'][usr].hasOwnProperty(m[i]))
+            continue;
+           if (!addList.hasOwnProperty(m[i]))
+            addList[m[i]] = 0;
+           else
+           {
+            if (dup === false)
+             continue;
+            if (dup !== true && addList[m[i]] >= dup)
+             continue;
+           }
+           addList[m[i]]++;
+           let p = 0;
+           for (let j = 0; j < i; j++)
+           {
+            p += m[j].length + 1;
+           }
+           ret.push({svc: '7', url: thirdparty.emotes['7tvU'][usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes['7tvU'][usr][m[i]].scope, width: thirdparty.emotes['7tvU'][usr][m[i]].width, height: thirdparty.emotes['7tvU'][usr][m[i]].height});
+          }
+          return ret;
+         }
+
+         function $userZWE(l, usr, msg, pass, dup = null)
+         {
+          if (!cfg.display.extended.useZWE)
+           return;
+          if (!thirdparty.emotes.hasOwnProperty('zwe'))
+           return;
+          if (!thirdparty.emotes.zwe.hasOwnProperty('7tvU'))
+           return;
+          if (!thirdparty.emotes.zwe['7tvU'].hasOwnProperty(usr))
+           return;
+          l.sort(_posSort);
+          const m = msg.split(' ');
+          if (dup === null)
+           dup = cfg.display.duplicates;
+          const addList = {};
+          for (let i = 0, n = m.length; i < n; i++)
+          {
+           if (!thirdparty.emotes.zwe['7tvU'][usr].hasOwnProperty(m[i]))
+            continue;
+           if (!addList.hasOwnProperty(m[i]))
+            addList[m[i]] = 0;
+           else
+           {
+            if (dup === false)
+             continue;
+            if (dup !== true && addList[m[i]] >= dup)
+             continue;
+           }
+           addList[m[i]]++;
+           let p = 0;
+           for (let j = 0; j < i; j++)
+           {
+            p += m[j].length + 1;
+           }
+           let f = -1;
+           let h = -1;
+           for (let j = 0, o = l.length; j < o; j++)
+           {
+            if (l[j].pos > h)
+             h = l[j].pos;
+            else
+             continue;
+            if (l[j].pos < p)
+             f = j;
+           }
+           if (f === -1)
+           {
+            if (pass === 1)
+             l.push({svc: '7', url: thirdparty.emotes.zwe['7tvU'][usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tvU'][usr][m[i]].scope, width: thirdparty.emotes.zwe['7tvU'][usr][m[i]].width, height: thirdparty.emotes.zwe['7tvU'][usr][m[i]].height});
+           }
+           else
+           {
+            let t = msg.slice(l[f].pos + l[f].str.length, p);
+            let z = Object.keys(thirdparty.emotes.zwe.bttvU[usr]);
+            for (let j = 0, o = z.length; j < o; j++)
+            {
+             t = t.replaceAll(z[j], '');
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('ffz'))
+            {
+             z = Object.keys(thirdparty.emotes.zwe.ffz);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('ffzU') && thirdparty.emotes.zwe.ffzU.hasOwnProperty(usr))
+            {
+             z = Object.keys(thirdparty.emotes.zwe.ffzU[usr]);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('bttv'))
+            {
+             z = Object.keys(thirdparty.emotes.zwe.bttv);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('bttvU') && thirdparty.emotes.zwe.bttvU.hasOwnProperty(usr))
+            {
+             z = Object.keys(thirdparty.emotes.zwe.bttvU[usr]);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            if (thirdparty.emotes.zwe.hasOwnProperty('7tv'))
+            {
+             z = Object.keys(thirdparty.emotes.zwe['7tv']);
+             for (let j = 0, o = z.length; j < o; j++)
+             {
+              t = t.replaceAll(z[j], '');
+             }
+            }
+            t = t.trim();
+            if (t.length > 0)
+            {
+             if (pass === 1)
+              l.push({svc: '7', url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
+            }
+            else if (pass === 2)
+            {
+             if (!l[f].hasOwnProperty('zwe'))
+              l[f].zwe = [];
+             l[f].zwe.push({svc: '7', url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
+             l[f].zwe.sort(_posSort);
+             for (let j = 0, o = l.length; j < o; j++)
+             {
+              if (l[j].svc !== '7')
+               continue;
+              if (l[j].pos !== p)
+               continue;
+              l.splice(j, 1);
+              break;
+             }
+            }
+           }
+          }
+         }
+
+         return {
+          general: $userGeneral,
+          zwe: $userZWE
+         };
+        }();
+
         function _posSort(a, b)
         {
          return a.pos - b.pos;
@@ -12169,7 +12621,8 @@
 
         return {
          general: $general,
-         zwe: $zwe
+         zwe: $zwe,
+         user: $user
         };
        }();
 
@@ -12638,8 +13091,10 @@
 
      function _wsTimeout()
      {
-      notice.error(notice.Type.STREAMLABS_NETWORK);
-      _lTimeout = 5000;
+      if (_lTimeout === 5000)
+       notice.error(notice.Type.STREAMLABS_NETWORK);
+      else
+       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
        window.clearTimeout(_tTimeout);
@@ -12910,14 +13365,18 @@
 
      function _wsTimeout()
      {
-      notice.error(notice.Type.STREAMELEMENTS_NETWORK);
-      notice.active &= ~notice.Connection.STREAMELEMENTS;
-      if (notice.tHide !== false)
+      if (_lTimeout === 5000)
       {
-       window.clearTimeout(notice.tHide);
-       notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       notice.error(notice.Type.STREAMELEMENTS_NETWORK);
+       notice.active &= ~notice.Connection.STREAMELEMENTS;
+       if (notice.tHide !== false)
+       {
+        window.clearTimeout(notice.tHide);
+        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+       }
       }
-      _lTimeout = 5000;
+      else
+       _lTimeout = 5000;
       if (_tTimeout !== false)
       {
        window.clearTimeout(_tTimeout);
@@ -13077,7 +13536,6 @@
       const r = await shared.httpRequest('POST', url, h, b, false);
       if (!r.success)
       {
-       console.log(r);
        notice.error(notice.Type.STREAMELEMENTS_TOKEN);
        return false;
       }
@@ -13182,7 +13640,7 @@
    {
     const _defSize = 28;
 
-    function _addEmote(list, scope, code, id, url, w = false, h = false, zwe = false)
+    function _addEmote(list, scope, code, id, url, ch = false, w = false, h = false, zwe = false)
     {
      if (typeof list === 'undefined')
       return;
@@ -13196,14 +13654,27 @@
      {
       if (scope === 'g' && list[code].scope === 'c')
        return;
-      _removeEmote(list, scope, code);
+      if (ch !== false)
+      {
+       if (list[code].channel.includes(ch))
+        _removeEmote(list, scope, code, ch);
+       else
+       {
+        list[code].channel.push(ch);
+        return;
+       }
+      }
+      else
+       _removeEmote(list, scope, code, ch);
      }
-     list[code] = {scope: scope, url: url, id: id, width: w, height: h};
+     list[code] = {scope: scope, url: url, channel: [], id: id, width: w, height: h};
+     if (ch !== false)
+      list[code].channel.push(ch);
      if (scope === 'c' && !zwe)
       cList.push({url: url, width: w, height: h});
     }
 
-    function _removeEmote(list, scope, code)
+    function _removeEmote(list, scope, code, ch = false)
     {
      if (typeof list === 'undefined')
       return;
@@ -13211,6 +13682,14 @@
       return;
      if (list[code].scope !== scope)
       return;
+     if (ch !== false)
+     {
+      if (!list[code].channel.includes(ch))
+       return;
+      list[code].channel.filter(function(v){return v !== ch;});
+      if (list[code].channel.length > 0)
+       return;
+     }
      if (scope === 'c')
      {
       for (let c = cList.length - 1; c >= 0; c--)
@@ -13224,7 +13703,7 @@
      delete list[code];
     }
 
-    function _removeEmoteByID(list, scope, id)
+    function _removeEmoteByID(list, scope, id, ch = false)
     {
      if (typeof list === 'undefined')
       return;
@@ -13235,7 +13714,7 @@
        continue;
       if (list[k].id !== id)
        continue;
-      _removeEmote(list, scope, k);
+      _removeEmote(list, scope, k, ch);
       break;
      }
     }
@@ -13308,22 +13787,22 @@
          if (j.sets[set].emoticons[i].hasOwnProperty('modifier_flags') && (j.sets[set].emoticons[i].modifier_flags & thirdparty.ffz.Modifier.HIDDEN) === thirdparty.ffz.Modifier.HIDDEN)
           continue;
          if (cfg.display.extended.useZWE)
-          _addEmote(thirdparty.emotes.zwe.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, w, h, true);
+          _addEmote(thirdparty.emotes.zwe.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h, true);
          continue;
         }
-        _addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, w, h);
+        _addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h);
        }
       }
-      if (!j.hasOwnProperty('users'))
+      if (!j.hasOwnProperty('user_ids'))
       {
        cSafe = JSON.parse(JSON.stringify(cList));
        return true;
       }
-      for (const setID in j.users)
+      for (const setID in j.user_ids)
       {
-       if (!j.users.hasOwnProperty(setID))
+       if (!j.user_ids.hasOwnProperty(setID))
         continue;
-       const aList = j.users[setID];
+       const aList = j.user_ids[setID];
        if (!Array.isArray(aList))
         continue;
        for (const set in j.sets)
@@ -13357,9 +13836,9 @@
             thirdparty.emotes.zwe.ffzU = {};
            for (let k = 0, m = aList.length; k < m; k++)
            {
-            if (!thirdparty.emotes.zwe.ffzU.hasOwnProperty(aList[k]))
-             thirdparty.emotes.zwe.ffzU[aList[k]] = {};
-            _addEmote(thirdparty.emotes.zwe.ffzU[aList[k]], 'u', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, w, h, true);
+            if (!thirdparty.emotes.zwe.ffzU.hasOwnProperty('twitch:' + aList[k]))
+             thirdparty.emotes.zwe.ffzU['twitch:' + aList[k]] = {};
+            _addEmote(thirdparty.emotes.zwe.ffzU['twitch:' + aList[k]], 'u', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h, true);
            }
           }
           continue;
@@ -13368,9 +13847,9 @@
           thirdparty.emotes.ffzU = {};
          for (let k = 0, m = aList.length; k < m; k++)
          {
-          if (!thirdparty.emotes.ffzU.hasOwnProperty(aList[k]))
-           thirdparty.emotes.ffzU[aList[k]] = {};
-          _addEmote(thirdparty.emotes.ffzU[aList[k]], 'u', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, w, h);
+          if (!thirdparty.emotes.ffzU.hasOwnProperty('twitch:' + aList[k]))
+           thirdparty.emotes.ffzU['twitch:' + aList[k]] = {};
+          _addEmote(thirdparty.emotes.ffzU['twitch:' + aList[k]], 'u', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h);
          }
         }
        }
@@ -13440,10 +13919,10 @@
         if ((r[i].modifier & thirdparty.ffz.Modifier.HIDDEN) === thirdparty.ffz.Modifier.HIDDEN)
          continue;
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe.ffz, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height, true);
+         _addEmote(thirdparty.emotes.zwe.ffz, 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes.ffz, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height);
+       _addEmote(thirdparty.emotes.ffz, 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -13520,10 +13999,10 @@
        if (bttvZWE.includes(j[i].id))
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe.bttv, 'g', j[i].code, j[i].id, eURL, w, h, true);
+         _addEmote(thirdparty.emotes.zwe.bttv, 'g', j[i].code, j[i].id, eURL, false, w, h, true);
         continue;
        }
-       _addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, eURL, w, h);
+       _addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, eURL, false, w, h);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -13590,10 +14069,10 @@
        if (bttvZWE.includes(r[i].id))
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe.bttv, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height, true);
+         _addEmote(thirdparty.emotes.zwe.bttv, 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes.bttv, 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height);
+       _addEmote(thirdparty.emotes.bttv, 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -13679,16 +14158,19 @@
        switch (d.name)
        {
         case 'lookup_user':
-         if (!d.data.hasOwnProperty('name'))
+         if (!d.data.hasOwnProperty('providerId'))
           return;
+         if (!d.data.hasOwnProperty('channel') || !d.data.channel.includes(':'))
+          return;
+         const usr = d.data.channel.slice(0, d.data.channel.indexOf(':') + 1) + d.data.providerId;
          if (!d.data.hasOwnProperty('emotes') || !Array.isArray(d.data.emotes) || d.data.emotes.length < 1)
           return;
          if (!thirdparty.emotes.hasOwnProperty('bttvU'))
           thirdparty.emotes.bttvU = {};
-         thirdparty.emotes.bttvU[d.data.name] = {};
+         thirdparty.emotes.bttvU[usr] = {};
          if (!thirdparty.emotes.zwe.hasOwnProperty('bttvU'))
           thirdparty.emotes.zwe.bttvU = {};
-         thirdparty.emotes.zwe.bttvU[d.data.name] = {};
+         thirdparty.emotes.zwe.bttvU[usr] = {};
          for (let i = 0, l = d.data.emotes.length; i < l; i++)
          {
           if (!d.data.emotes[i].hasOwnProperty('code'))
@@ -13704,10 +14186,10 @@
           if (bttvZWE.includes(d.data.emotes[i].id))
           {
            if (cfg.display.extended.useZWE)
-            _addEmote(thirdparty.emotes.zwe.bttvU[d.data.name], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), w, h, true);
+            _addEmote(thirdparty.emotes.zwe.bttvU[usr], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), false, w, h, true);
            continue;
           }
-          _addEmote(thirdparty.emotes.bttvU[d.data.name], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), w, h);
+          _addEmote(thirdparty.emotes.bttvU[usr], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), false, w, h);
          }
          cSafe = JSON.parse(JSON.stringify(cList));
          break;
@@ -13728,7 +14210,7 @@
           hC = d.data.emote.height;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), wC, hC);
+         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), d.data.channel, wC, hC);
          cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
@@ -13739,7 +14221,7 @@
           return;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emoteId);
+         _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emoteId, d.data.channel);
          cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
@@ -13760,8 +14242,8 @@
           hU = d.data.emote.height;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emote.id);
-         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), wU, hU);
+         _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emote.id, d.data.channel);
+         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), d.data.channel, wU, hU);
          cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
@@ -13887,10 +14369,10 @@
        if (j.emotes[i].data.hasOwnProperty('flags') && j.emotes[i].data.flags !== null && (j.emotes[i].data.flags & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe['7tv'], 'g', j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, jInf.width, jInf.height, true);
+         _addEmote(thirdparty.emotes.zwe['7tv'], 'g', j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, false, jInf.width, jInf.height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes['7tv'], 'g', j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, jInf.width, jInf.height);
+       _addEmote(thirdparty.emotes['7tv'], 'g', j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, false, jInf.width, jInf.height);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -13947,10 +14429,10 @@
        if ((r[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe['7tv'], 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height, true);
+         _addEmote(thirdparty.emotes.zwe['7tv'], 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes['7tv'], 'c', r[i].name, r[i].id, r[i].url, r[i].width, r[i].height);
+       _addEmote(thirdparty.emotes['7tv'], 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -13972,6 +14454,61 @@
       return j.user.id;
      }
 
+     async function _load7TV_userID(svcName, uID, setData)
+     {
+      if (!thirdparty.emotes.hasOwnProperty('7tvU'))
+       thirdparty.emotes['7tvU'] = {};
+      thirdparty.emotes['7tvU'][svcName + ':' + uID] = {};
+      if (!thirdparty.emotes.hasOwnProperty('zwe'))
+       thirdparty.emotes.zwe = {};
+      if (!thirdparty.emotes.zwe.hasOwnProperty('7tvU'))
+       thirdparty.emotes.zwe['7tvU'] = {};
+      thirdparty.emotes.zwe['7tvU'][svcName + ':' + uID] = {};
+      for (let i = 0, l = setData.length; i < l; i++)
+      {
+       if ((setData[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
+       {
+        if (cfg.display.extended.useZWE)
+         _addEmote(thirdparty.emotes.zwe['7tvU'][svcName + ':' + uID], 'u', setData[i].name, setData[i].id, setData[i].url, false, setData[i].width, setData[i].height, true);
+        continue;
+       }
+       _addEmote(thirdparty.emotes['7tvU'][svcName + ':' + uID], 'u', setData[i].name, setData[i].id, setData[i].url, false, setData[i].width, setData[i].height);
+      }
+     }
+
+     async function _load7TV_set(setID)
+     {
+      const url = cURLs.api['7tv'].emotes.set.replaceAll('%SET_ID%', setID);
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
+       return false;
+      const j = r.json;
+      if (j === null)
+       return false;
+      if (!j.hasOwnProperty('emotes') || j.emotes === null)
+       return false;
+      if (!Array.isArray(j.emotes))
+       return false;
+      const ret = [];
+      for (let i = 0, l = j.emotes.length; i < l; i++)
+      {
+       if (!j.emotes[i].hasOwnProperty('data') || j.emotes[i].data === null)
+        continue;
+       if (!j.emotes[i].data.hasOwnProperty('id') || j.emotes[i].data.id === null)
+        continue;
+       if (!j.emotes[i].hasOwnProperty('name') || j.emotes[i].name === null)
+        continue;
+       const jInf = _read7tv_URL(j.emotes[i].data);
+       if (jInf === false)
+        continue;
+       let vis = 0;
+       if (j.emotes[i].data.hasOwnProperty('flags') && j.emotes[i].data.flags !== null)
+        vis = j.emotes[i].data.flags;
+       ret.push({name: j.emotes[i].name, id: j.emotes[i].data.id, url: jInf.url, vis: vis, width: jInf.width, height: jInf.height});
+      }
+      return ret;
+     }
+
      const $events = function()
      {
       const _lDelay = 500;
@@ -13982,10 +14519,15 @@
       let _sse = null;
       let _lTimeout = 5000;
       let _tTimeout = false;
+      let _tInit = false;
       let _okCt = 0;
+      const noAcct = Symbol();
 
       function _init()
       {
+       if (_tInit !== false)
+        window.clearTimeout(_tInit);
+       _tInit = false;
        let p = '';
        for (const acct in _chList)
        {
@@ -13993,7 +14535,19 @@
          continue;
         if (p !== '')
          p += ',';
-        p += 'user.*<object_id=' + acct + '>,emote.*<object_id=' + acct + '>,emote_set.*<object_id=' + acct + '>';
+        if (acct !== noAcct)
+         p += 'user.*<object_id=' + acct + '>,emote.*<object_id=' + acct + '>,emote_set.*<object_id=' + acct + '>';
+        for (const svc in _chList[acct])
+        {
+         if (!_chList[acct].hasOwnProperty(svc))
+          continue;
+         for (let i = 0; i < _chList[acct][svc].length; i++)
+         {
+          if (p !== '')
+           p += ',';
+          p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + _chList[acct][svc][i] + '>';
+         }
+        }
        }
        if (p.length === 0)
         return;
@@ -14002,6 +14556,14 @@
        if (_sse !== null)
        {
         _sse.close();
+        _sse.removeEventListener('open', _sseOpen);
+        _sse.removeEventListener('error', _sseError);
+        _sse.removeEventListener('dispatch', _sseMessage);
+        _sse.removeEventListener('hello', _sseMessage);
+        _sse.removeEventListener('heartbeat', _sseMessage);
+        _sse.removeEventListener('reconnect', _sseMessage);
+        _sse.removeEventListener('ack', _sseMessage);
+        _sse.removeEventListener('end of stream', _sseMessage);
         _sse = null;
        }
        _sse = new EventSource(uri);
@@ -14056,10 +14618,12 @@
        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
-       window.setTimeout(_init, wsWait);
+       if (_tInit !== false)
+        window.clearTimeout(_tInit);
+       _tInit = window.setTimeout(_init, wsWait);
       }
 
-      function _sseMessage(ev)
+      async function _sseMessage(ev)
       {
        if (_tTimeout !== false)
        {
@@ -14096,6 +14660,31 @@
        switch (ev.type)
        {
         case 'dispatch':
+         if (d.hasOwnProperty('type') && d.type.includes('.') && d.type.slice(0, d.type.indexOf('.')) === 'entitlement')
+         {
+          if (d.hasOwnProperty('body') && d.body.hasOwnProperty('object') && d.body.object.hasOwnProperty('kind') && d.body.object.kind === 'EMOTE_SET' && d.body.object.hasOwnProperty('ref_id') && d.body.object.hasOwnProperty('user') && d.body.object.user.hasOwnProperty('connections') && Array.isArray(d.body.object.user.connections))
+          {
+           const setID = d.body.object.ref_id;
+           let setData = null;
+           for (let i = 0; i < d.body.object.user.connections.length; i++)
+           {
+            if (!d.body.object.user.connections[i].hasOwnProperty('platform'))
+             continue;
+            const pID = d.body.object.user.connections[i].platform.toLowerCase();
+            if (!(pID === 'twitch' || pID === 'youtube' || pID === 'kick'))
+             continue;
+            if (!d.body.object.user.connections[i].hasOwnProperty('id'))
+             continue;
+            if (setData === null)
+             setData = await _load7TV_set(setID);
+            if (setData === false)
+             return;
+            const uID = d.body.object.user.connections[i].id;
+            _load7TV_userID(pID, uID, setData);
+           }
+          }
+          return;
+         }
          if (thirdparty.timer !== false)
           window.clearTimeout(thirdparty.timer);
          thirdparty.timer = window.setTimeout(thirdparty.reload, _lDelay);
@@ -14116,7 +14705,20 @@
          }
          break;
         case 'heartbeat':
-         const needCt = Object.keys(_chList).length * 3;
+         let needCt = 0;
+         for (const acct in _chList)
+         {
+          if (!_chList.hasOwnProperty(acct))
+           continue;
+          if (acct !== noAcct)
+           needCt += 3;
+          for (const svc in _chList[acct])
+          {
+           if (!_chList[acct].hasOwnProperty(svc))
+            continue;
+           needCt += _chList[acct][svc].length;
+          }
+         }
          if (_okCt !== needCt)
          {
           if (_tTimeout !== false)
@@ -14137,7 +14739,9 @@
           const wsRedo = Math.floor(wWS ** (1 + _wsRetry) * 1000);
           if (_wsRetry < 2)
            _wsRetry += 0.2;
-          window.setTimeout(_init, wsRedo);
+          if (_tInit !== false)
+           window.clearTimeout(_tInit);
+          _tInit = window.setTimeout(_init, wsRedo);
           return;
          }
          _wsRetry = 0;
@@ -14174,7 +14778,9 @@
          _sse.removeEventListener('end of stream', _sseMessage);
          _sse.close();
          _sse = null;
-         window.setTimeout(_init, _lDelay);
+         if (_tInit !== false)
+          window.clearTimeout(_tInit);
+         _tInit = window.setTimeout(_init, _lDelay);
          break;
         case 'end of stream':
          if (d === null)
@@ -14228,21 +14834,27 @@
             break;
           }
          }
-         window.setTimeout(_init, wsWait);
+         if (_tInit !== false)
+          window.clearTimeout(_tInit);
+         _tInit = window.setTimeout(_init, wsWait);
          break;
        }
       }
 
       function _sseTimeout()
       {
-       notice.error(notice.Type['7TV_NETWORK']);
-       notice.active &= ~notice.Connection['7TV'];
-       if (notice.tHide !== false)
+       if (_lTimeout === 5000)
        {
-        window.clearTimeout(notice.tHide);
-        notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        notice.error(notice.Type['7TV_NETWORK']);
+        notice.active &= ~notice.Connection['7TV'];
+        if (notice.tHide !== false)
+        {
+         window.clearTimeout(notice.tHide);
+         notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
+        }
        }
-       _lTimeout = 5000;
+       else
+        _lTimeout = 5000;
        if (_tTimeout !== false)
        {
         window.clearTimeout(_tTimeout);
@@ -14262,26 +14874,33 @@
        _sse = null;
        if (twitch.net.dead && youtube.net.dead && kick.net.dead)
         return;
-       _init();
+       if (_tInit !== false)
+        window.clearTimeout(_tInit);
+       _tInit = window.setTimeout(_init, _lDelay);
       }
 
       async function $join(svcName, chID)
       {
-       const accID = await _load7TV_channelID(svcName, chID);
+       let accID = await _load7TV_channelID(svcName, chID);
        if (accID === false)
-        return;
+        accID = noAcct;
        if (_chList.hasOwnProperty(accID))
        {
         if (!_chList[accID].hasOwnProperty(svcName))
          _chList[accID][svcName] = [];
         if (!_chList[accID][svcName].includes(chID))
          _chList[accID][svcName].push(chID);
+        if (_tInit !== false)
+         window.clearTimeout(_tInit);
+        _tInit = window.setTimeout(_init, _lDelay);
         return;
        }
        _chList[accID] = {};
        _chList[accID][svcName] = [];
        _chList[accID][svcName].push(chID);
-       _init();
+       if (_tInit !== false)
+        window.clearTimeout(_tInit);
+       _tInit = window.setTimeout(_init, _lDelay);
       }
 
       return $join;
@@ -14475,14 +15094,12 @@
      return false;
     }
 
-    function $clearAddr(query)
+    function $clearAddr()
     {
      const o = window.location.toString();
      let u = o;
      if (u.indexOf('#') > -1)
       u = u.slice(0, u.indexOf('#'));
-     if (query && u.indexOf('?') > -1)
-      u = u.slice(0, u.indexOf('?'));
      if (u !== o)
       window.history.replaceState(null, '', u);
     }
@@ -14506,6 +15123,56 @@
       cb(...a);
      }
      window.requestAnimationFrame(_next);
+    }
+
+    function $shadowCSS(o)
+    {
+     let s = '';
+     if (o.hasOwnProperty('offset') && o.offset !== false)
+     {
+      if (o.offset.hasOwnProperty('x') && Number.isInteger(o.offset.x))
+      {
+       if (o.offset.x > 4)
+        s += '4px ';
+       else if (o.offset.x < -4)
+        s += '-4px ';
+       else
+        s += o.offset.x + 'px ';
+      }
+      else
+       s += '0px ';
+      if (o.offset.hasOwnProperty('y') && Number.isInteger(o.offset.y))
+      {
+       if (o.offset.y > 4)
+        s += '4px ';
+       else if (o.offset.y < -4)
+        s += '-4px ';
+       else
+        s += o.offset.y + 'px ';
+      }
+      else
+       s += '0px ';
+     }
+     else
+      s += '0px 0px ';
+     if (o.hasOwnProperty('blur') && Number.isInteger(o.blur))
+     {
+      if (o.blur > 4)
+       s += '4px ';
+      else if (o.blur < 0)
+       s += '0px ';
+      else
+       s += o.blur + 'px ';
+     }
+     else
+      s += '0px ';
+     if (s === '0px 0px 0px ')
+      return false;
+     if (o.hasOwnProperty('color') && o.color !== false)
+      s += o.color;
+     else
+      s += '#000000';
+     return 'filter: drop-shadow(' + s + ');';
     }
 
     const $mspf = function()
@@ -14861,6 +15528,7 @@
      findInMaybeRange: $findInMaybeRange,
      clearAddr: $clearAddr,
      doNextFrame: $doNextFrame,
+     shadowCSS: $shadowCSS,
      mspf: $mspf,
      ec: $ec,
      storage: $storage,
@@ -15507,12 +16175,7 @@
      const bT = (twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
      const bYT = (youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
      const bK = (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL;
-     const nT = cfg.hasOwnProperty('twitch') && cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null;
-     const nYT = cfg.hasOwnProperty('youtube') && cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null;
-     //const nK = cfg.hasOwnProperty('kick') && cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null;
-     shared.clearAddr(false);
-     if ((bT | nT) & (bYT | nYT))
-      shared.clearAddr(true);
+     shared.clearAddr();
      const scks = [];
      if (bT | bYT | bK)
      {
@@ -15672,6 +16335,27 @@
        const iHue = parseInt(cfg.display.hue, 10);
        if (iHue > 0 && iHue < 360)
         h = '   html\n   {\n    filter: hue-rotate(' + iHue + 'deg);\n   }\n   button, div#notices\n   {\n    filter: hue-rotate(' + (360 - iHue) + 'deg);\n   }' + h;
+      }
+     }
+     if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false)
+     {
+      let sF = shared.shadowCSS(cfg.display.shadow);
+      if (sF !== false)
+      {
+       let sE = '   img.emote\n';
+       sE += '   {\n';
+       sE += '    ' + sF + '\n';
+       h = h.replace('   img.emote\n   {\n', sE);
+
+       let sD = '   div.scene img.dancer\n';
+       sD += '   {\n';
+       sD += '    ' + sF + '\n';
+       h = h.replace('   div.scene img.dancer\n   {\n', sD);
+
+       let sC = '   div.scene div.cube [data-face]\n';
+       sC += '   {\n';
+       sC += '    ' + sF + '\n';
+       h = h.replace('   div.scene div.cube [data-face]\n   {\n    background-color: rgba(255, 255, 255, 0.2);\n', sC);
       }
      }
      let a = '   [data-squash="vertical"]\n';
@@ -15906,8 +16590,8 @@
    }
    div.scene div.cube [data-face]
    {
-    position: absolute;
     background-color: rgba(255, 255, 255, 0.2);
+    position: absolute;
    }
    div.scene div.cube [data-face="front"]
    {

@@ -278,6 +278,41 @@ Configuration Information
      - [ ] Otherwise, no color rotation will occur.
      > **NOTE**: If a command to toggle rave or turn rave on exists, rave will be off at startup.
 
+  * `shadow`  
+    *Add drop-shadow to all emotes.*  
+
+    > **NOTE**: This feature removes the visibility of cube faces in order to function.  
+    > Otherwise the whole square of each face would also have a drop-shadow.  
+
+     - [ ] If `false`, no drop-shadow will be applied.
+     - [ ] If Object:
+       * `offset`  
+         *Shadow offset coordinate pair.*
+         - [ ] If `false`, an emote's shadow will be directly under the emote. This can be used with `blur` to give a "glow" or "aura" effect.
+         - [ ] If Object:
+           * `x`  
+             *Horizontal shadow offset, in pixels.*
+             - [ ] If `false` or `0`, an emote's shadow will stay in the middle of the emote.
+             - [ ] If a number between `-4` and `-1`, an emote's shadow will fall to the left of the emote.
+             - [ ] If a number between `1` and `4`, an emote's shadow will fall to the right of the emote.
+
+           * `y`  
+             *Vertical shadow offset, in pixels.*
+             - [ ] If `false` or `0`, an emote's shadow will stay vertically even with the emote.
+             - [ ] If a number between `-4` and `-1`, an emote's shadow will fall above the emote.
+             - [ ] If a number between `1` and `4`, an emote's shadow will fall below the emote.
+
+       * `blur`  
+         *Shadow blur amount, in pixels*  
+         - [ ] If `false` or `0`, an emote's shadow will be solid.
+         - [ ] If a number between `1` and `4`, an emote's shadow will be diffused.
+         > **NOTE**: This feature may reduce performance significantly.  
+
+       * `color`  
+         *Shadow color*
+         - [ ] If `false`, shadows will be black.
+         - [ ] If a `string` containing a CSS-compatible color, shadows will be the specified color.
+
   * `kappa`  
     *Settings related to emote-splosions and the !kappagen command.*
 
@@ -698,26 +733,6 @@ Configuration Information
         - [ ]  If Integer, the value is the minimum bits required for a cheer to trigger a kappagen.
           - [ ] If `0`, no kappagen will occur on cheer.
         - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-499'` or `'2500-4999'`, or an open-maximum range such as `'7500+'`.  
-        Each value can be a boolean or array:
-          - [ ] If `true`, a kappagen will occur.
-          - [ ] If `false`, no kappagen will occur.
-          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
-
-    * `hypechat`
-      *Settings related to kappagens on a hype chat event.*
-
-      * `useMsg`
-        - [ ] If `true`, any emotes in hype chat messages will also be included in the kappagen.
-        - [ ] If `false`, any emotes in hype chat messages will show up like normal emotes.
-
-      * `level`
-        *Minimum number of level for a kappagen.*  
-        This value can be a boolean, integer, or array:
-        - [ ] If `true`, a kappagen will occur on all hype chats.
-        - [ ] If `false`, no kappagen will occur on hype chats.
-        - [ ]  If Integer, the value is the minimum level required for a hype chat to trigger a kappagen.
-          - [ ] If `0`, no kappagen will occur on hype chat.
-        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-4'` or `'5-8'`, or an open-maximum range such as `'9+'`.  
         Each value can be a boolean or array:
           - [ ] If `true`, a kappagen will occur.
           - [ ] If `false`, no kappagen will occur.
@@ -1240,7 +1255,7 @@ TheCube and Text. The kappagen style can also contain the following values:
   This can be an array or an object.
   - [ ] If Array, each entry must be a string containing the name or URL of an emote, or an emoji.
     > **NOTE**: Only your channel or global emotes can be named (including 3rd-party).
-  - [ ] If object:
+  - [ ] If Object:
     * `list`  
       This must be an array of strings, the same as the Array entry of the parent `emotes` property above.
 
