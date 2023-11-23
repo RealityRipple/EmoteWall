@@ -4343,6 +4343,12 @@
 
      async function $show(kList, kStyles = false, kParams = false)
      {
+      let gOrigin = false;
+      if (Array.isArray(kList) && kList.length === 1 && kList[0].hasOwnProperty('url') && kList[0].url === false && kList[0].hasOwnProperty('origin'))
+      {
+       gOrigin = kList[0].origin;
+       kList = false;
+      }
       const kStyle = _getNextKappaEx(kStyles, kParams);
       if (kStyle === false)
        return;
@@ -4374,6 +4380,15 @@
        kList = JSON.parse(JSON.stringify(cSafe));
       if (!Array.isArray(kList) || kList.length < 1)
        kList = JSON.parse(JSON.stringify(bareList));
+      if (gOrigin !== false && Array.isArray(kList) && kList.length > 0)
+      {
+       for (let i = 0, l = kList.length; i < l; i++)
+       {
+        if (kList[i].hasOwnProperty('origin') && kList[i].origin !== false)
+         continue;
+        kList[i].origin = gOrigin;
+       }
+      }
       const sW = window.innerWidth;
       const sH = window.innerHeight;
       const eH = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
@@ -6979,7 +6994,10 @@
        const m = cmd.params[1].toLowerCase();
        const a = _handleDuplicates(await _eListFromCmd(cmd, true));
        const accessModBC = twitch.Access.MODERATOR | twitch.Access.BROADCASTER;
-       return service.parse.line.parseCommand(m, lv, accessModBC, a);
+       let mID = false;
+       if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('id'))
+        mID = 'twitch:' + cmd.tags.id;
+       return service.parse.line.parseCommand(m, lv, accessModBC, a, mID);
       }
 
       return $c_line;
@@ -9329,7 +9347,10 @@
        const m = _getMessage(cmd).toLowerCase();
        const a = _handleDuplicates(await _eListFromCmd(cmd, true));
        const accessModBC = youtube.Access.MODERATOR | youtube.Access.BROADCASTER;
-       return service.parse.line.parseCommand(m, lv, accessModBC, a);
+       let mID = false;
+       if (cmd.hasOwnProperty('id'))
+        mID = 'youtube:' + cmd.id;
+       return service.parse.line.parseCommand(m, lv, accessModBC, a, mID);
       }
 
       return $c_line;
@@ -10832,7 +10853,10 @@
        const m = cmd.content.toLowerCase();
        const a = _handleDuplicates(await _eListFromCmd(cmd, true));
        const accessModBC = kick.Access.MODERATOR | kick.Access.BROADCASTER;
-       return service.parse.line.parseCommand(m, lv, accessModBC, a);
+       let mID = false;
+       if (cmd.hasOwnProperty('id'))
+        mID = 'kick:' + cmd.id;
+       return service.parse.line.parseCommand(m, lv, accessModBC, a, mID);
       }
 
       return $c_line;
@@ -12691,7 +12715,7 @@
      {
       const $parseCommand = function()
       {
-       async function $c_parseCommand(msg, lv, cacheAccess, eA = false)
+       async function $c_parseCommand(msg, lv, cacheAccess, eA = false, mID = false)
        {
         const kNow = new Date().getTime();
         if (msg === '!cesc' && (lv & cacheAccess) !== 0)
@@ -12702,7 +12726,7 @@
         let foundAdvCmd = false;
         for (const k of cfg.commands)
         {
-         const r = await _adv(msg, lv, k, kNow, eA);
+         const r = await _adv(msg, lv, k, kNow, eA, mID);
          if (r.done === true)
           return r.ret;
          if (r.found)
@@ -12732,6 +12756,8 @@
         if (cfg.display.kappa.cooldown > 0 && kNow - _aLast[h] < cfg.display.kappa.cooldown * 1000)
          return true;
         let a = false;
+        if (mID !== false)
+         a = [{url: false, origin: mID}];
         if (foundCmd.length < msg.length)
          a = eA;
         _aLast[h] = kNow;
@@ -12739,7 +12765,7 @@
         return true;
        }
 
-       async function _adv(msg, lv, k, kNow, eA = false)
+       async function _adv(msg, lv, k, kNow, eA = false, mID = false)
        {
         const r = {
          done: false,
@@ -12837,6 +12863,8 @@
           kC[kS].params = msg.slice(foundKCmd.length + 1);
         }
         let a = false;
+        if (mID !== false)
+         a = [{url: false, origin: mID}];
         if (foundKCmd.length < msg.length)
          a = eA;
         _aLast[Symbol.for(JSON.stringify(k))] = kNow;
