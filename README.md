@@ -35,6 +35,8 @@ Twitch filters out the ZWJ (Zero-Width Joiner) character which is used for mergi
 ### Emote Dimensions
 Emotes that are not square may be shrunk to fit while maintaining the original aspect ratio for certain animations, such as the Pyramids and Text kappagens, and Cubes. Some emote sizes are non-standard and not correctly provided. The dimensions of non-square images are stored in the OBS Browser Source's IndexedDB, so that after the first time the image is displayed, the correct dimensions will be used. This also means that some emotes (notably Twitch's basic smile set) may be squashed the very first time they're displayed.
 
+A built-in command exists for the broadcaster and all channel moderators to clear this cache in case of some kind of failure, by using exactly the message `!cesc`, which stands for Clear Emote Size Cache. The cache will be cleared immediately; no restart is required.
+
 ### Cheers
 The cheer style will be used for kappagens. If a user cheers 1000 bits in a single 1000 bit emote, then the kappagen will be made of the 1000-bit cheers. However, if the user cheers 1000 bits using multiple smaller cheer emotes, those emotes will be used for the kappagen instead.
 
