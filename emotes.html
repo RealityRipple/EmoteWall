@@ -1831,6 +1831,8 @@
         tInit = new Date().getTime();
        if (_iTitanic > tInit)
         return;
+       if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
+        return;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
        {
@@ -1883,6 +1885,8 @@
        if (tInit === 0)
         tInit = new Date().getTime();
        if (_iTitanic > tInit)
+        return;
+       if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
         return;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
@@ -1954,6 +1958,8 @@
        if (tInit === 0)
         tInit = new Date().getTime();
        if (_iTitanic > tInit)
+        return;
+       if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
         return;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
@@ -2037,6 +2043,8 @@
          tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
+        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
+         return;
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
         {
@@ -2091,12 +2099,14 @@
           iArr.push(_addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: s}, true, {time: tMS}));
          }
         }
-        window.requestAnimationFrame(function(ts){_tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, eH, ts, ts);});
+        window.requestAnimationFrame(function(ts){_tLoop(tInit, eInf.origin, iArr, bX, bY, velH, velV, vMS, sH, eH, ts, ts);});
        }
 
-       function _tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, eH, myT, ts)
+       function _tLoop(tInit, oID, iArr, bX, bY, velH, velV, vMS, sH, eH, myT, ts)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         if (iArr[0].parentNode === null)
          return;
@@ -2125,7 +2135,7 @@
         {
          iArr[i].style.transform = 'translate(' + bX + 'px, ' + bY + 'px)';
         }
-        window.requestAnimationFrame(function(fTS){_tLoop(tInit, iArr, bX, bY, velH, velV, vMS, sH, eH, myT, fTS);});
+        window.requestAnimationFrame(function(fTS){_tLoop(tInit, oID, iArr, bX, bY, velH, velV, vMS, sH, eH, myT, fTS);});
        }
 
        return $c_Bounce;
@@ -2136,6 +2146,8 @@
        if (tInit === 0)
         tInit = new Date().getTime();
        if (_iTitanic > tInit)
+        return;
+       if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
         return;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
@@ -2214,6 +2226,8 @@
        if (tInit === 0)
         tInit = new Date().getTime();
        if (_iTitanic > tInit)
+        return;
+       if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
         return;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
@@ -2297,6 +2311,8 @@
         if (tInit === 0)
          tInit = new Date().getTime();
         if (_iTitanic > tInit)
+         return;
+        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
          return;
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
@@ -2399,12 +2415,14 @@
         const d = 0;
         const lA = iArr.length;
         const lD = dests.length;
-        shared.doNextFrame(_tLoop, tInit, lA, iArr, lD, dests, d);
+        shared.doNextFrame(_tLoop, tInit, eInf.origin, lA, iArr, lD, dests, d);
        }
 
-       function _tLoop(tInit, lA, iArr, lD, dests, d)
+       function _tLoop(tInit, oID, lA, iArr, lD, dests, d)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         if (d >= lD)
          return;
@@ -2418,12 +2436,14 @@
          iArr[i].style.transition = 'top ' + dests[d].t + 'ms linear, left ' + dests[d].t + 'ms linear, transform ' + squashT + 'ms linear';
         }
         d++;
-        window.setTimeout(_tSquash, dests[d - 1].t, tInit, lA, iArr, lD, dests, d);
+        window.setTimeout(_tSquash, dests[d - 1].t, tInit, oID, lA, iArr, lD, dests, d);
        }
 
-       function _tSquash(tInit, lA, iArr, lD, dests, d)
+       function _tSquash(tInit, oID, lA, iArr, lD, dests, d)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const squashT = Math.floor(cfg.emote.time * 1000 * timing.display.Crazy.time * timing.display.Crazy.squash.time);
         for (let i = 0; i < lA; i++)
@@ -2448,19 +2468,21 @@
            break;
          }
         }
-        window.setTimeout(_tUnsquash, squashT, tInit, lA, iArr, lD, dests, d);
+        window.setTimeout(_tUnsquash, squashT, tInit, oID, lA, iArr, lD, dests, d);
        }
 
-       function _tUnsquash(tInit, lA, iArr, lD, dests, d)
+       function _tUnsquash(tInit, oID, lA, iArr, lD, dests, d)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const squashT = Math.floor(cfg.emote.time * 1000 * timing.display.Crazy.time * timing.display.Crazy.squash.time);
         for (let i = 0; i < lA; i++)
         {
          iArr[i].dataset.squash = 'no';
         }
-        window.setTimeout(_tLoop, squashT, tInit, lA, iArr, lD, dests, d);
+        window.setTimeout(_tLoop, squashT, tInit, oID, lA, iArr, lD, dests, d);
        }
 
        return $c_Crazy;
@@ -2471,6 +2493,8 @@
        if (tInit === 0)
         tInit = new Date().getTime();
        if (_iTitanic > tInit)
+        return;
+       if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
         return;
        let variationSize = 1;
        if (canV && cfg.emote.size.variation !== false)
@@ -2548,6 +2572,8 @@
         if (tInit === 0)
          tInit = new Date().getTime();
         if (_iTitanic > tInit)
+         return;
+        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
          return;
         let variationSize = 1;
         if (canV && cfg.emote.size.variation !== false)
@@ -2644,13 +2670,15 @@
           iArr.push(_addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: s, classes: ['etThrowTwist']}, true, {space: false, time: tMS}));
          }
         }
-        shared.doNextFrame(_tMove, tInit, iArr, hD, vD);
-        window.setTimeout(_tDrop, t2, tInit, iArr, s2);
+        shared.doNextFrame(_tMove, tInit, eInf.origin, iArr, hD, vD);
+        window.setTimeout(_tDrop, t2, tInit, eInf.origin, iArr, s2);
        }
 
-       function _tMove(tInit, iArr, hD, vD)
+       function _tMove(tInit, oID, iArr, hD, vD)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         for (let i = 0, l = iArr.length; i < l; i++)
         {
@@ -2658,9 +2686,11 @@
         }
        }
 
-       function _tDrop(tInit, iArr, s2)
+       function _tDrop(tInit, oID, iArr, s2)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         for (let i = 0, l = iArr.length; i < l; i++)
         {
@@ -2679,6 +2709,8 @@
         if (tInit === 0)
          tInit = new Date().getTime();
         if (_iTitanic > tInit)
+         return;
+        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
          return;
         const scene = document.createElement('div');
         scene.setAttribute('class', 'scene fit cube');
@@ -2857,12 +2889,14 @@
         _eActive += 6;
         document.body.appendChild(scene);
         _gc.hook(scene, true, 6, tMS);
-        shared.doNextFrame(_tMove, tInit, cube, scene, hD, vD, eH);
+        shared.doNextFrame(_tMove, tInit, eInf.origin, cube, scene, hD, vD, eH);
        }
 
-       function _tMove(tInit, cube, scene, hD, vD, eH)
+       function _tMove(tInit, oID, cube, scene, hD, vD, eH)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const nHh = Math.ceil(eH / 2) * -1;
         let rX = 0;
@@ -2884,6 +2918,8 @@
        if (tInit === 0)
         tInit = new Date().getTime();
        if (_iTitanic > tInit)
+        return;
+       if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
         return;
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Fountain.time);
        let variationSize = 1;
@@ -3035,7 +3071,16 @@
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        const oK = kList[shared.rnd(kList.length)];
+        let kClean = [];
+        for (let i = 0, l = kList.length; i < l; i++)
+        {
+         if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
+          continue;
+         kClean.push(kList[i]);
+        }
+        if (kClean.length < 1)
+         return;
+        const oK = kClean[shared.rnd(kClean.length)];
         let eW = eH;
         if (oK.hasOwnProperty('width') && oK.hasOwnProperty('height'))
          eW = oK.width / oK.height * eH;
@@ -3078,13 +3123,21 @@
         const inner = Math.max(3, Math.floor(iKC * timing.kappa.Fireworks.quantity.small));
         const core = Math.floor(iKC * timing.kappa.Fireworks.quantity.medium);
         const outer = Math.max(3, Math.floor(iKC * timing.kappa.Fireworks.quantity.large));
-        const lK = kList.length;
         const sR = r * timing.kappa.Fireworks.radius.small;
         for (let v = 0; v < inner; v++)
         {
          if (_iTitanic > tInit)
           return;
-         const sK = kList[shared.rnd(lK)];
+         let kClean = [];
+         for (let i = 0, l = kList.length; i < l; i++)
+         {
+          if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
+           continue;
+          kClean.push(kList[i]);
+         }
+         if (kClean.length < 1)
+          return;
+         const sK = kClean[shared.rnd(kClean.length)];
          let eW = eH;
          if (sK.hasOwnProperty('width') && sK.hasOwnProperty('height'))
           eW = sK.width / sK.height * eH;
@@ -3108,7 +3161,16 @@
         {
          if (_iTitanic > tInit)
           return;
-         const sK = kList[shared.rnd(lK)];
+         let kClean = [];
+         for (let i = 0, l = kList.length; i < l; i++)
+         {
+          if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
+           continue;
+          kClean.push(kList[i]);
+         }
+         if (kClean.length < 1)
+          return;
+         const sK = kClean[shared.rnd(kClean.length)];
          let eW = eH;
          if (sK.hasOwnProperty('width') && sK.hasOwnProperty('height'))
           eW = sK.width / sK.height * eH;
@@ -3131,7 +3193,16 @@
         {
          if (_iTitanic > tInit)
           return;
-         const sK = kList[shared.rnd(lK)];
+         let kClean = [];
+         for (let i = 0, l = kList.length; i < l; i++)
+         {
+          if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
+           continue;
+          kClean.push(kList[i]);
+         }
+         if (kClean.length < 1)
+          return;
+         const sK = kClean[shared.rnd(kClean.length)];
          let eW = eH;
          if (sK.hasOwnProperty('width') && sK.hasOwnProperty('height'))
           eW = sK.width / sK.height * eH;
@@ -3153,6 +3224,8 @@
        function _sparkler(tInit, url, oID, cX, cY, eW, eH, r, a)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const th = a * _cRadius;
         const eWh = Math.ceil(eW / 2);
@@ -3210,7 +3283,16 @@
           if (th >= _cRadius)
            th -= _cRadius;
          }
-         const oK = kList[shared.rnd(kList.length)];
+         let kClean = [];
+         for (let j = 0, l = kList.length; j < l; j++)
+         {
+          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
+           continue;
+          kClean.push(kList[j]);
+         }
+         if (kClean.length < 1)
+          return;
+         const oK = kClean[shared.rnd(kClean.length)];
          let eW = eH;
          if (oK.hasOwnProperty('width') && oK.hasOwnProperty('height'))
           eW = oK.width / oK.height * eH;
@@ -3232,6 +3314,8 @@
        function _sparkler(tInit, url, oID, oX, oY, eW, eH, r, th)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const hD = Math.floor(oX + r * Math.cos(th));
         const vD = Math.floor(oY + r * Math.sin(th));
@@ -3277,7 +3361,16 @@
          {
           x = shared.rnd(lP);
          } while (drawn[x] >= pyramidDist[x]);
-         const oK = kList[shared.rnd(kList.length)];
+         let kClean = [];
+         for (let j = 0, l = kList.length; j < l; j++)
+         {
+          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
+           continue;
+          kClean.push(kList[j]);
+         }
+         if (kClean.length < 1)
+          return;
+         const oK = kClean[shared.rnd(kClean.length)];
          _block(tInit, oK.url, oK.origin, x, t, eH, sH, drawn[x] + 1, eT + dT);
          if (oK.hasOwnProperty('zwe'))
          {
@@ -3295,6 +3388,8 @@
        function _block(tInit, url, oID, x, t, eH, sH, dX, aT)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const img = document.createElement('img');
         img.setAttribute('class', 'emote fit ktPyramid');
@@ -3320,20 +3415,24 @@
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, fH);
-        window.setTimeout(_tMove, t, tInit, img, vD);
+        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, oID, img, fH);
+        window.setTimeout(_tMove, t, tInit, oID, img, vD);
        }
 
-       function _tMove(tInit, img, vD)
+       function _tMove(tInit, oID, img, vD)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         img.style.transform = 'translateY(' + vD + 'px)';
        }
 
-       function _tDrop(tInit, img, sH)
+       function _tDrop(tInit, oID, img, sH)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time);
         const pT = Math.floor(tMS * timing.kappa.Pyramid.hide);
@@ -3377,7 +3476,16 @@
          {
           x = shared.rnd(lP);
          } while (drawn[x] >= pyramidDist[x]);
-         const oK = kList[shared.rnd(kList.length)];
+         let kClean = [];
+         for (let j = 0, l = kList.length; j < l; j++)
+         {
+          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
+           continue;
+          kClean.push(kList[j]);
+         }
+         if (kClean.length < 1)
+          return;
+         const oK = kClean[shared.rnd(kClean.length)];
          _block(tInit, oK.url, oK.origin, oX, x, t, eH, sH, drawn[x] + 1, eT + dT);
          if (oK.hasOwnProperty('zwe'))
          {
@@ -3395,6 +3503,8 @@
        function _block(tInit, url, oID, oX, x, t, eH, sH, dX, aT)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const img = document.createElement('img');
         img.setAttribute('class', 'emote fit ktSmallPyramid');
@@ -3420,20 +3530,24 @@
         s += ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, img, fH);
-        window.setTimeout(_tMove, t, tInit, img, vD);
+        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, oID, img, fH);
+        window.setTimeout(_tMove, t, tInit, oID, img, vD);
        }
 
-       function _tMove(tInit, img, vD)
+       function _tMove(tInit, oID, img, vD)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         img.style.transform = 'translateY(' + vD + 'px)';
        }
 
-       function _tDrop(tInit, img, sH)
+       function _tDrop(tInit, oID, img, sH)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time);
         const pT = Math.floor(tMS * timing.kappa.SmallPyramid.hide);
@@ -3498,7 +3612,16 @@
         {
          if (_iTitanic > tInit)
           return;
-         const oK = kList[shared.rnd(kList.length)];
+         let kClean = [];
+         for (let j = 0, l = kList.length; j < l; j++)
+         {
+          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
+           continue;
+          kClean.push(kList[j]);
+         }
+         if (kClean.length < 1)
+          return;
+         const oK = kClean[shared.rnd(kClean.length)];
          let eW = eH;
          if (oK.hasOwnProperty('width') && oK.hasOwnProperty('height'))
           eW = oK.width / oK.height * eH;
@@ -3552,6 +3675,8 @@
        {
         if (_iTitanic > tInit)
          return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
+         return;
         const h = -2 * maxW;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time);
         const tSpeed = Math.floor(tMS * timing.kappa.Stampede.speed);
@@ -3567,13 +3692,15 @@
          img = _addEmoteToDoc(tInit, url, oID, 1, {style: s, classes: ['ktStampede']}, true, {space: false, time: tSpeed}, {x: h, y: v});
         else
          img = _addEmoteToDoc(tInit, url, oID, 1, {style: s, classes: ['ktStampede']}, true, {space: false, time: tSpeed}, {x: sW, y: v});
-        window.setTimeout(_tMark, tSpeed, tInit, img);
+        window.setTimeout(_tMark, tSpeed, tInit, oID, img);
         return img;
        }
 
-       function _tMark(tInit, img)
+       function _tMark(tInit, oID, img)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         if (img === null)
          return;
@@ -3635,7 +3762,16 @@
         const ct = Math.floor(sW / bS);
         for (let i = 0; i < ct; i++)
         {
-         const oK = kList[shared.rnd(kList.length)];
+         let kClean = [];
+         for (let j = 0, l = kList.length; j < l; j++)
+         {
+          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
+           continue;
+          kClean.push(kList[j]);
+         }
+         if (kClean.length < 1)
+          return;
+         const oK = kClean[shared.rnd(kClean.length)];
          urls.push(oK);
          const oZ = [];
          if (oK.hasOwnProperty('zwe'))
@@ -3724,6 +3860,8 @@
        {
         if (_iTitanic > tInit)
          return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
+         return;
         const box = document.createElement('div');
         box.setAttribute('class', 'scene ktCongaIn');
         const img = document.createElement('img');
@@ -3799,10 +3937,19 @@
         cube.setAttribute('class', 'cube');
         cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
         const sFaces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+        let kClean = [];
+        for (let i = 0, l = kList.length; i < l; i++)
+        {
+         if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
+          continue;
+         kClean.push(kList[i]);
+        }
+        if (kClean.length < 1)
+         return;
         const eFaces = [];
         for (let i = 0; i < 6; i++)
         {
-         eFaces.push(kList[shared.rnd(kList.length)]);
+         eFaces.push(kClean[shared.rnd(kClean.length)]);
         }
         for (let i = 0; i < 6; i++)
         {
@@ -3916,7 +4063,16 @@
          } while (drawn[x] >= msgDist[x].length);
          if (msgDist[x][drawn[x]] !== 0)
          {
-          const oK = kList[shared.rnd(kList.length)];
+          let kClean = [];
+          for (let j = 0, l = kList.length; j < l; j++)
+          {
+           if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
+            continue;
+           kClean.push(kList[j]);
+          }
+          if (kClean.length < 1)
+           return;
+          const oK = kClean[shared.rnd(kClean.length)];
           _block(tInit, oK.url, oK.origin, vH, oX, drawn[x] + 1, tPerB, eT, iTime, x, t, sH, eH);
           if (oK.hasOwnProperty('zwe'))
           {
@@ -3972,6 +4128,8 @@
        {
         if (_iTitanic > tInit)
          return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
+         return;
         const img = document.createElement('img');
         img.setAttribute('class', 'emote fit');
         _setImgSrc(img, url);
@@ -3999,20 +4157,24 @@
         document.body.appendChild(img);
         _eActive++;
         const tMS = Math.floor(iTime * 1000 * timing.kappa.Text.time);
-        window.setTimeout(_tDrop, Math.floor(eT + tMS + t / 10), tInit, img, fH, tMS);
-        window.setTimeout(_tMove, t, tInit, img, vD);
+        window.setTimeout(_tDrop, Math.floor(eT + tMS + t / 10), tInit, oID, img, fH, tMS);
+        window.setTimeout(_tMove, t, tInit, oID, img, vD);
        }
 
-       function _tMove(tInit, img, vD)
+       function _tMove(tInit, oID, img, vD)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         img.style.transform = 'translateY(' + vD + 'px)';
        }
 
-       function _tDrop(tInit, img, sH, tMS)
+       function _tDrop(tInit, oID, img, sH, tMS)
        {
         if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const pT = Math.floor(tMS * timing.kappa.Text.hide);
         img.style.transform = 'translateY(' + sH + 'px)';
@@ -4502,13 +4664,22 @@
         {
          if (_iTitanic > tInit)
           return;
-         const rB = shared.rnd(lK);
+         let kClean = [];
+         for (let j = 0, l = kList.length; j < l; j++)
+         {
+          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
+           continue;
+          kClean.push(kList[j]);
+         }
+         if (kClean.length < 1)
+          return;
+         const rB = shared.rnd(kClean.length);
          _eActive--;
          let eWb = eH;
-         if (kList[rB].hasOwnProperty('width') && kList[rB].hasOwnProperty('height'))
-          eWb = kList[rB].width / kList[rB].height * eH;
+         if (kClean[rB].hasOwnProperty('width') && kClean[rB].hasOwnProperty('height'))
+          eWb = kClean[rB].width / kClean[rB].height * eH;
          const sRb = sW - Math.ceil(eWb / 2);
-         display.emote.list.StraightLine(kList[rB], sW, sH, eH, oH * sRb, oV, false, tInit);
+         display.emote.list.StraightLine(kClean[rB], sW, sH, eH, oH * sRb, oV, false, tInit);
          if (i % bA.ct === bA.ct - 1)
           await _fPause(bA.f);
         }
@@ -4521,9 +4692,18 @@
         {
          if (_iTitanic > tInit)
           return;
-         const rF = shared.rnd(lK);
+         let kClean = [];
+         for (let j = 0, l = kList.length; j < l; j++)
+         {
+          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
+           continue;
+          kClean.push(kList[j]);
+         }
+         if (kClean.length < 1)
+          return;
+         const rF = shared.rnd(kClean.length);
          _eActive--;
-         display.emote.list.Fountain(kList[rF], sW, sH, eH, fX, fY, false, tInit);
+         display.emote.list.Fountain(kClean[rF], sW, sH, eH, fX, fY, false, tInit);
          if (i % fA.ct === fA.ct - 1)
           await _fPause(fA.f);
         }
@@ -4534,9 +4714,18 @@
         {
          if (_iTitanic > tInit)
           return;
-         const rN = shared.rnd(lK);
+         let kClean = [];
+         for (let j = 0, l = kList.length; j < l; j++)
+         {
+          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
+           continue;
+          kClean.push(kList[j]);
+         }
+         if (kClean.length < 1)
+          return;
+         const rN = shared.rnd(kClean.length);
          _eActive--;
-         display.emote.list.Confetti(kList[rN], sW, sH, eHh, false, tInit);
+         display.emote.list.Confetti(kClean[rN], sW, sH, eHh, false, tInit);
          if (i % cA.ct === cA.ct - 1)
           await _fPause(cA.f);
         }
@@ -4549,12 +4738,21 @@
         {
          if (_iTitanic > tInit)
           return;
-         const r = shared.rnd(lK);
+         let kClean = [];
+         for (let j = 0, l = kList.length; j < l; j++)
+         {
+          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
+           continue;
+          kClean.push(kList[j]);
+         }
+         if (kClean.length < 1)
+          return;
+         const r = shared.rnd(kClean.length);
          _eActive--;
          if (kStyle.style === 'StraightLine')
-          display.emote.list.StraightLine(kList[r], sW, sH, eH, false, false, false, tInit);
+          display.emote.list.StraightLine(kClean[r], sW, sH, eH, false, false, false, tInit);
          else
-          display.emote.list[kStyle.style](kList[r], sW, sH, eH, false, tInit);
+          display.emote.list[kStyle.style](kClean[r], sW, sH, eH, false, tInit);
          if (i % kA.ct === kA.ct - 1)
           await _fPause(kA.f);
         }
@@ -4924,7 +5122,8 @@
     return {
      emote: $emote,
      kappa: $kappa,
-     eraseAll: $eraseAll
+     eraseAll: $eraseAll,
+     erasedMsgs: []
     };
    }();
 
