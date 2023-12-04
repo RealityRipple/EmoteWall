@@ -6082,6 +6082,7 @@
       let _wsRetry = 0;
       let _firstRS = true;
       let _ws = null;
+      const _msgHistory = {};
       const _lPing = 30000;
       const _lTimeout = 35000;
       const _lExpire = 5000;
@@ -6244,6 +6245,12 @@
 
        async function _PRIVMSG(cmd)
        {
+        if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('user-id') && cmd.tags.hasOwnProperty('id'))
+        {
+         if (!_msgHistory.hasOwnProperty(cmd.tags['user-id']))
+          _msgHistory[cmd.tags['user-id']] = [];
+         _msgHistory[cmd.tags['user-id']].push(cmd.tags.id);
+        }
         if (document.visibilityState === 'hidden')
          return;
         if (cmd.params.length > 1)
@@ -6383,6 +6390,11 @@
          case 2:
           if (document.visibilityState === 'hidden')
            return;
+          if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('target-user-id') && _msgHistory.hasOwnProperty(cmd.tags['target-user-id']))
+          {
+           while (_msgHistory[cmd.tags['target-user-id']].length > 0)
+            display.eraseMsg('twitch:' + _msgHistory[cmd.tags['target-user-id']].shift());
+          }
           if (cmd.tags.hasOwnProperty('ban-duration'))
           {
            if (cfg.event.twitch.timeout !== false)
@@ -8332,6 +8344,7 @@
      const $broadcasts = function()
      {
       const _aC = [];
+      const _msgHistory = {};
       let  _tS = false;
 
       async function $updateStream()
@@ -8858,6 +8871,12 @@
          return;
         if (!cmd.hasOwnProperty('_channel'))
          cmd._channel = chID;
+        if (cmd.hasOwnProperty('id') && cmd.authorDetails.hasOwnProperty('channelId'))
+        {
+         if (!_msgHistory.hasOwnProperty(cmd.authorDetails.channelId))
+          _msgHistory[cmd.authorDetails.channelId] = [];
+         _msgHistory[cmd.authorDetails.channelId].push(cmd.id);
+        }
         await youtube.parse.line(cmd);
        }
 
@@ -8871,6 +8890,12 @@
          return;
         if (!cmd.hasOwnProperty('_channel'))
          cmd._channel = chID;
+        if (cmd.hasOwnProperty('id') && cmd.authorDetails.hasOwnProperty('channelId'))
+        {
+         if (!_msgHistory.hasOwnProperty(cmd.authorDetails.channelId))
+          _msgHistory[cmd.authorDetails.channelId] = [];
+         _msgHistory[cmd.authorDetails.channelId].push(cmd.id);
+        }
         await youtube.parse.event.superchat(cmd);
        }
 
@@ -8908,6 +8933,12 @@
          return;
         if (!cmd.hasOwnProperty('_channel'))
          cmd._channel = chID;
+        if (cmd.hasOwnProperty('id') && cmd.authorDetails.hasOwnProperty('channelId'))
+        {
+         if (!_msgHistory.hasOwnProperty(cmd.authorDetails.channelId))
+          _msgHistory[cmd.authorDetails.channelId] = [];
+         _msgHistory[cmd.authorDetails.channelId].push(cmd.id);
+        }
         youtube.parse.event.supersticker(cmd);
        }
 
@@ -8940,6 +8971,11 @@
          return;
         if (!cmd.snippet.userBannedDetails.hasOwnProperty('banType'))
          return;
+        if (cmd.snippet.userBannedDetails.hasOwnProperty('bannedUserDetails') && cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('channelId') && _msgHistory.hasOwnProperty(cmd.snippet.userBannedDetails.bannedUserDetails.channelId))
+        {
+         while (_msgHistory[cmd.snippet.userBannedDetails.bannedUserDetails.channelId].length > 0)
+          display.eraseMsg('youtube:' + _msgHistory[cmd.snippet.userBannedDetails.bannedUserDetails.channelId].shift());
+        }
         if (cmd.snippet.userBannedDetails.banType === 'temporary')
          youtube.parse.event.timeout(cmd);
         else
@@ -10187,6 +10223,7 @@
       let _wsRetry = 0;
       let _firstRS = true;
       let _ws = null;
+      const _msgHistory = {};
       let _lPing = 30000;
       let _lTimeout = 120000;
       const _lExpire = 5000;
@@ -10493,6 +10530,12 @@
 
         function _ChatMessageEvent(jData)
         {
+         if (jData.hasOwnProperty('id') && jData.id !== null && jData.hasOwnProperty('sender') && jData.sender !== null && jData.sender.hasOwnProperty('id') && jData.sender.id !== null)
+         {
+          if (!_msgHistory.hasOwnProperty(jData.sender.id))
+           _msgHistory[jData.sender.id] = [];
+          _msgHistory[jData.sender.id].push(jData.id);
+         }
          if (document.visibilityState === 'hidden')
           return;
          kick.parse.line(jData);
@@ -10502,6 +10545,11 @@
         {
          if (document.visibilityState === 'hidden')
           return;
+         if (jData.hasOwnProperty('user') && jData.user !== null && jData.user.hasOwnProperty('id') && jData.user.id !== null && _msgHistory.hasOwnProperty(jData.user.id))
+         {
+          while (_msgHistory[jData.user.id].length > 0)
+           display.eraseMsg('kick:' + _msgHistory[jData.user.id].shift());
+         }
          if (jData.hasOwnProperty('expires_at') && jData.expires_at !== null)
          {
           if (cfg.event.kick.timeout !== false)
