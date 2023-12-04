@@ -8812,7 +8812,7 @@
             await _textMessageEvent(j.items[i], stream.channel);
             break;
            case 'superChatEvent':
-            await _superChatEvent(j.items[i]);
+            await _superChatEvent(j.items[i], stream.channel);
             break;
            case 'newSponsorEvent':
             _newSponsorEvent(j.items[i]);
@@ -8821,7 +8821,7 @@
             await _memberMilestoneChatEvent(j.items[i]);
             break;
            case 'superStickerEvent':
-            _superStickerEvent(j.items[i]);
+            _superStickerEvent(j.items[i], stream.channel);
             break;
            case 'membershipGiftingEvent':
             _membershipGiftingEvent(j.items[i]);
@@ -8861,7 +8861,7 @@
         await youtube.parse.line(cmd);
        }
 
-       async function _superChatEvent(cmd)
+       async function _superChatEvent(cmd, chID)
        {
         if (document.visibilityState === 'hidden')
          return;
@@ -8869,6 +8869,8 @@
          return;
         if (!cmd.snippet.hasOwnProperty('superChatDetails'))
          return;
+        if (!cmd.hasOwnProperty('_channel'))
+         cmd._channel = chID;
         await youtube.parse.event.superchat(cmd);
        }
 
@@ -8896,7 +8898,7 @@
         await youtube.parse.event.membership.milestone(cmd);
        }
 
-       function _superStickerEvent(cmd)
+       function _superStickerEvent(cmd, chID)
        {
         if (document.visibilityState === 'hidden')
          return;
@@ -8904,6 +8906,8 @@
          return;
         if (!cmd.snippet.hasOwnProperty('superStickerDetails'))
          return;
+        if (!cmd.hasOwnProperty('_channel'))
+         cmd._channel = chID;
         youtube.parse.event.supersticker(cmd);
        }
 
