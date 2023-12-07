@@ -15127,21 +15127,7 @@
           }
           break;
          case 2:
-          let needCt = 0;
-          for (const acct in _chList)
-          {
-           if (!_chList.hasOwnProperty(acct))
-            continue;
-           if (acct !== _noAcct)
-            needCt += 3;
-           for (const svc in _chList[acct])
-           {
-            if (!_chList[acct].hasOwnProperty(svc))
-             continue;
-            needCt += _chList[acct][svc].length;
-           }
-          }
-          if (_okCt !== needCt)
+          if (_okCt !== _needCt())
           {
            if (_tTimeout !== false)
            {
@@ -15198,21 +15184,7 @@
             {
              if (!d.d.data.hasOwnProperty('subscriptions_restored') || d.d.data.subscriptions_restored === null)
               return;
-             let needCt = 0;
-             for (const acct in _chList)
-             {
-              if (!_chList.hasOwnProperty(acct))
-               continue;
-              if (acct !== _noAcct)
-               needCt += 3;
-              for (const svc in _chList[acct])
-              {
-               if (!_chList[acct].hasOwnProperty(svc))
-                continue;
-               needCt += _chList[acct][svc].length;
-              }
-             }
-             if (d.d.data.subscriptions_restored !== needCt)
+             if (d.d.data.subscriptions_restored !== _needCt())
              {
               if (d.d.data.subscriptions_restored > 0)
               {
@@ -15581,21 +15553,7 @@
           }
           break;
          case 'heartbeat':
-          let needCt = 0;
-          for (const acct in _chList)
-          {
-           if (!_chList.hasOwnProperty(acct))
-            continue;
-           if (acct !== _noAcct)
-            needCt += 3;
-           for (const svc in _chList[acct])
-           {
-            if (!_chList[acct].hasOwnProperty(svc))
-             continue;
-            needCt += _chList[acct][svc].length;
-           }
-          }
-          if (_okCt !== needCt)
+          if (_okCt !== _needCt())
           {
            if (_tTimeout !== false)
            {
@@ -15781,6 +15739,25 @@
        _socket.joinA(accID);
        _socket.joinS(svcName, chID);
        _events.join();
+      }
+
+      function _needCt()
+      {
+       let c = 0;
+       for (const acct in _chList)
+       {
+        if (!_chList.hasOwnProperty(acct))
+         continue;
+        if (acct !== _noAcct)
+         c += 3;
+        for (const svc in _chList[acct])
+        {
+         if (!_chList[acct].hasOwnProperty(svc))
+          continue;
+         c += _chList[acct][svc].length;
+        }
+       }
+       return c;
       }
 
       return {
