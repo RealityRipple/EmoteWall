@@ -9226,7 +9226,7 @@
        youtube.net.oAuth.auth.expires = parseInt(j.expires_in, 10);
       }
 
-      async function _refresh(t)
+      async function _refresh(t, retries = false)
       {
        const url = cURLs.api.rr.refresh.yt;
        const h = {'Content-Type': 'application/x-www-form-urlencoded'};
@@ -9247,21 +9247,33 @@
         if (j !== null)
         {
          const e = _flatJSON(j);
-         if (e.hasOwnProperty('error') && e.error === 'invalid_grant' & e.hasOwnProperty('error_description'))
+         if (e.hasOwnProperty('error'))
          {
-          switch (e.error_description)
+          if (e.error === 'internal_failure')
           {
-           case 'Token has been expired or revoked.':
-            notice.error(notice.Type.YOUTUBE_NETWORK);
-            notice.error(notice.Type.YOUTUBE_TOKEN);
-            youtube.net.oAuth.clear(true);
-            youtube.net.dead = true;
-            return false;
-           case 'Bad Request':
-            notice.error(notice.Type.YOUTUBE_UNKNOWN, 'The server did not like the request.');
-            youtube.net.oAuth.clear(false);
-            youtube.net.dead = true;
-            return false;
+           if (retries === false)
+            return _refresh(t, true);
+           notice.error(notice.Type.YOUTUBE_UNKNOWN, 'The server ran into an internal problem.');
+           youtube.net.oAuth.clear(false);
+           youtube.net.dead = true;
+           return false;
+          }
+          if (e.error === 'invalid_grant' & e.hasOwnProperty('error_description'))
+          {
+           switch (e.error_description)
+           {
+            case 'Token has been expired or revoked.':
+             notice.error(notice.Type.YOUTUBE_NETWORK);
+             notice.error(notice.Type.YOUTUBE_TOKEN);
+             youtube.net.oAuth.clear(true);
+             youtube.net.dead = true;
+             return false;
+            case 'Bad Request':
+             notice.error(notice.Type.YOUTUBE_UNKNOWN, 'The server did not like the request.');
+             youtube.net.oAuth.clear(false);
+             youtube.net.dead = true;
+             return false;
+           }
           }
          }
         }
