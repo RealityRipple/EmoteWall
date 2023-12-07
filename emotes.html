@@ -8650,6 +8650,10 @@
       {
        const _tM = [];
        let _bSlower = 0;
+       const _mInterval = 1000;
+       const _mStep = 1000;
+       const _mWait = 4000;
+       const _mLimit = 15000 - _mInterval;
 
        async function $start(stream, page = false)
        {
@@ -8748,15 +8752,15 @@
              youtube.net.broadcasts.getMessages.stop(chatID);
              return;
             case 'rateLimitExceeded':
-             _bSlower += 1000;
-             if (_bSlower > 14000)
+             _bSlower += _mStep;
+             if (_bSlower > _mLimit)
              {
-              _bSlower = 14000;
+              _bSlower = _mLimit;
               notice.error(notice.Type.YOUTUBE_RATELIMIT);
              }
              if (!_tM.hasOwnProperty(chatID))
               return;
-             const tWait = 4000 + _bSlower;
+             const tWait = _mWait + _bSlower;
              _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, tWait, stream);
              return;
            }
@@ -8782,7 +8786,7 @@
          window.clearTimeout(notice.tHide);
          notice.tHide = window.setTimeout(notice.activeCheck, notice.iHide);
         }
-        let nextPoll = 1000;
+        let nextPoll = _mInterval;
         if (j.hasOwnProperty('pollingIntervalMillis'))
          nextPoll = j.pollingIntervalMillis;
         nextPoll += _bSlower;
@@ -8816,7 +8820,8 @@
           if (j.items[i].snippet.hasOwnProperty('publishedAt'))
           {
            const pTime = new Date(j.items[i].snippet.publishedAt).getTime();
-           if (pNow - pTime > 1000 * 30)
+           const pJitter = (_mWait + _bSlower) * (2 + (_bSlower > 0 ? Math.floor(_mStep / _bSlower) : 0));
+           if (pNow - pTime > pJitter)
             continue;
           }
           switch (j.items[i].snippet.type)
