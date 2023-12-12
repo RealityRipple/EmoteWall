@@ -6382,13 +6382,13 @@
            display.eraseAll();
           break;
          case 2:
-          if (document.visibilityState === 'hidden')
-           return;
           if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('target-user-id') && _msgHistory.hasOwnProperty(cmd.tags['target-user-id']))
           {
            while (_msgHistory[cmd.tags['target-user-id']].length > 0)
             display.eraseMsg('twitch:' + _msgHistory[cmd.tags['target-user-id']].shift());
           }
+          if (document.visibilityState === 'hidden')
+           return;
           if (cmd.tags.hasOwnProperty('ban-duration'))
           {
            if (cfg.event.twitch.timeout !== false)
@@ -8939,8 +8939,6 @@
 
        function _userBannedEvent(cmd)
        {
-        if (document.visibilityState === 'hidden')
-         return;
         if (!cmd.snippet.hasOwnProperty('userBannedDetails'))
          return;
         if (!cmd.snippet.userBannedDetails.hasOwnProperty('banType'))
@@ -8950,6 +8948,8 @@
          while (_msgHistory[cmd.snippet.userBannedDetails.bannedUserDetails.channelId].length > 0)
           display.eraseMsg('youtube:' + _msgHistory[cmd.snippet.userBannedDetails.bannedUserDetails.channelId].shift());
         }
+        if (document.visibilityState === 'hidden')
+         return;
         if (cmd.snippet.userBannedDetails.banType === 'temporary')
          youtube.parse.event.timeout(cmd);
         else
@@ -10521,13 +10521,13 @@
 
         async function _UserBannedEvent(jData)
         {
-         if (document.visibilityState === 'hidden')
-          return;
          if (jData.hasOwnProperty('user') && jData.user !== null && jData.user.hasOwnProperty('id') && jData.user.id !== null && _msgHistory.hasOwnProperty(jData.user.id))
          {
           while (_msgHistory[jData.user.id].length > 0)
            display.eraseMsg('kick:' + _msgHistory[jData.user.id].shift());
          }
+         if (document.visibilityState === 'hidden')
+          return;
          if (jData.hasOwnProperty('expires_at') && jData.expires_at !== null)
          {
           if (cfg.event.kick.timeout !== false)
