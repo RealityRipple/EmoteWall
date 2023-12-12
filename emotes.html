@@ -8672,6 +8672,14 @@
         {
          if (r.code === 0 && r.data === '')
          {
+          if (page !== false)
+          {
+           if (!_tM.hasOwnProperty(chatID))
+            return;
+           const cWait = _mWait + _bSlower;
+           _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, cWait, stream);
+           return;
+          }
           notice.error(notice.Type.YOUTUBE_CORS, 'live chat');
           notice.active &= ~notice.Connection.YOUTUBE;
           notice.resetHide();
@@ -8727,11 +8735,19 @@
            }
           }
          }
+         _errorReport('broadcasts.getMessages.start', q, r);
+         if (page !== false)
+         {
+          if (!_tM.hasOwnProperty(chatID))
+           return;
+          const eWait = _mWait + _bSlower;
+          _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, eWait, stream);
+          return;
+         }
          notice.error(notice.Type.YOUTUBE_NETWORK);
          notice.active &= ~notice.Connection.YOUTUBE;
          notice.resetHide();
          notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Messages: ' + r.code);
-         _errorReport('broadcasts.getMessages.start', q, r);
          return;
         }
         if (j === null)
