@@ -11756,7 +11756,7 @@
      return e;
     }
 
-    async function _getUserProfile(dn, retry = false)
+    async function _getUserProfile(dn, retry = true)
     {
      const slug = _usesHyphen === true ? kick.net.oAuth.auth.channel.replaceAll('_', '-') : kick.net.oAuth.auth.channel;
      const url = cURLs.api.kick.users.replaceAll('%CHANNEL_NAME%', encodeURIComponent(slug)).replaceAll('%USER%', encodeURIComponent(dn));
@@ -11768,11 +11768,8 @@
        _usesHyphen = true;
        return _getUserProfile(dn);
       }
-      if (retry === false)
-      {
-       if (r.code === 0 && r.data === '')
-        return _getUserProfile(dn, true);
-      }
+      if (retry && r.code === 0 && r.data === '')
+       return _getUserProfile(dn, false);
       return false;
      }
      const j = r.json;
