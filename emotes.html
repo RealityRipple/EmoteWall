@@ -17148,227 +17148,267 @@
      await thirdparty['7tv'].global();
     }
 
-    function _css()
+    const _css = function()
     {
-     const css = document.getElementsByTagName('STYLE')[0];
-     let spc = {indent: 0};
-     let h = shared.unIndent(css.innerHTML, spc);
-     if (cfg.display.hasOwnProperty('hue') && cfg.display.hue !== false)
+     function $c_css()
      {
-      if (cfg.display.hue === 'rave')
-      {
-       let r = 'html.rave\n';
-       r += '{\n';
-       r += ' animation: rave 3s linear infinite;\n';
-       r += '}\n';
-       r += '@keyframes rave\n';
-       r += '{\n';
-       for (let i = 0; i <= 100; i += 10)
-       {
-        r += ' ' + i + '%\n';
-        r += ' {\n';
-        r += '  filter: hue-rotate(' + i * 3.6 + 'deg);\n';
-        r += ' }\n';
-       }
-       r += '}\n';
-       r += 'html.rave button, html.rave div#notices\n';
-       r += '{\n';
-       r += ' animation: antirave 3s linear infinite;\n';
-       r += '}\n';
-       r += '@keyframes antirave\n';
-       r += '{\n';
-       for (let i = 0; i <= 100; i += 10)
-       {
-        r += ' ' + i + '%\n';
-        r += ' {\n';
-        r += '  filter: hue-rotate(' + (360 - i * 3.6) + 'deg);\n';
-        r += ' }\n';
-       }
-       r += '}\n';
-       h = r + h;
-      }
-      else if (!isNaN(cfg.display.hue))
-      {
-       const iHue = parseInt(cfg.display.hue, 10);
-       if (iHue > 0 && iHue < 360)
-        h = 'html\n{\n filter: hue-rotate(' + iHue + 'deg);\n}\nbutton, div#notices\n{\n filter: hue-rotate(' + (360 - iHue) + 'deg);\n}\n' + h;
-      }
+      const css = document.getElementsByTagName('STYLE')[0];
+      let spc = {indent: 0};
+      let h = shared.unIndent(css.innerHTML, spc);
+      h = _hue(h);
+      h = _shadow(h);
+      h = _zwe(h);
+      h = _anim(h);
+      h = _gui(h);
+      h = _variations(h);
+      h = shared.reIndent(h, spc);
+      css.innerHTML = h;
      }
-     if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false)
-     {
-      let sF = shared.shadowCSS(cfg.display.shadow);
-      if (sF !== false)
-      {
-       let sE = '\nimg.emote\n';
-       sE += '{\n';
-       sE += ' ' + sF + '\n';
-       h = h.replace('\nimg.emote\n{\n', sE);
 
-       let sD = '\ndiv.scene img.dancer\n';
-       sD += '{\n';
-       sD += ' ' + sF + '\n';
-       h = h.replace('\ndiv.scene img.dancer\n{\n', sD);
-
-       let sC = '\ndiv.scene div.cube [data-face]\n';
-       sC += '{\n';
-       sC += ' ' + sF + '\n';
-       h = h.replace('\ndiv.scene div.cube [data-face]\n{\n background-color: rgba(255, 255, 255, 0.2);\n', sC);
-      }
-     }
-     let a = '\n[data-squash="vertical"]\n';
-     a += '{\n';
-     a += ' transform: scale(' + timing.display.Crazy.squash.width + ', ' + timing.display.Crazy.squash.height + ');\n';
-     a += '}\n';
-     a += '[data-squash="horizontal"]\n';
-     a += '{\n';
-     a += ' transform: scale(' + timing.display.Crazy.squash.height + ', ' + timing.display.Crazy.squash.width + ');\n';
-     a += '}';
-     h = h.replace('\n[data-squash="no"]\n', a + '\n[data-squash="no"]\n');
-     if (cfg.display.extended.useZWE && cfg.display.extended.hasOwnProperty('fillZWE') && cfg.display.extended.fillZWE)
+     function _hue(h)
      {
-      h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.1)) / 2);');
-      h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.8)) / 2);');
-      h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.95)) / 2);');
-      h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.1)) / 2);');
-      let z = '\nimg.fit,\n';
-      z += '.fit img\n';
-      z += '{\n';
-      z += ' object-fit: contain;\n';
-      z += ' object-position: 50% 50%;\n';
-      z += '}';
-      h = h.replace('\nimg\n{\n', z + '\nimg\n{\n');
-     }
-     else
-     {
-      let z = '\nimg\n';
-      z += '{\n';
-      z += ' object-fit: contain;\n';
-      z += ' object-position: 50% 50%;\n';
-      h = h.replace('\nimg\n{\n', z);
-     }
-     let t = '\n.etStraightLine\n';
-     t += '{\n';
-     t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time) + 'ms;\n';
-     t += '}\n';
-     t += '.etThrowTwist\n';
-     t += '{\n';
-     t += ' transition: transform cubic-bezier(0.32, 0, 0.67, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.twist) + 'ms;\n';
-     t += '}\n';
-     t += '.etThrowDrop\n';
-     t += '{\n';
-     t += ' transition: transform cubic-bezier(0.5, 0, 0.75, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.drop) + 'ms;\n';
-     t += '}\n';
-     t += '.etFountain\n';
-     t += '{\n';
-     t += ' transition: transform cubic-bezier(0, 0, 0.58, 1) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Fountain.time) + 'ms;\n';
-     t += '}\n';
-     t += 'div.scene.cube:not(.kappa),\n';
-     t += 'div.scene.cube:not(.kappa) div.cube\n';
-     t += '{\n';
-     t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time) + 'ms;\n';
-     t += '}\n';
-     t += '.ktFireworkRocket\n';
-     t += '{\n';
-     t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time * timing.kappa.Fireworks.speed.rocket) + 'ms;\n';
-     t += '}\n';
-     t += '.ktFireworkSparkler\n';
-     t += '{\n';
-     t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time) + 'ms;\n';
-     t += '}\n';
-     t += '.ktSpiral\n';
-     t += '{\n';
-     t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time) + 'ms;\n';
-     t += '}\n';
-     t += '.ktPyramid\n';
-     t += '{\n';
-     let ctP = 0;
-     const lP = pyramidDist.length;
-     for (let i = 0; i < lP; i++)
-     {
-      ctP += pyramidDist[i];
-     }
-     const tP = Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.show.total);
-     const tPerB = Math.max(Math.floor(tP / ctP), timing.kappa.Pyramid.show.min);
-     t += ' transition: transform ease-in ' + tPerB + 'ms;\n';
-     t += '}\n';
-     t += '.ktPyramidDrop\n';
-     t += '{\n';
-     t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.hide) + 'ms;\n';
-     t += '}\n';
-     t += '.ktSmallPyramid\n';
-     t += '{\n';
-     const tSP = Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.show.total);
-     const tPerSB = Math.max(Math.floor(tSP / ctP), timing.kappa.SmallPyramid.show.min);
-     t += ' transition: transform ease-in ' + tPerSB + 'ms;\n';
-     t += '}\n';
-     t += '.ktSmallPyramidDrop\n';
-     t += '{\n';
-     t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.hide) + 'ms;\n';
-     t += '}\n';
-     t += '.ktStampede\n';
-     t += '{\n';
-     t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time * timing.kappa.Stampede.speed) + 'ms;\n';
-     t += '}\n';
-     const congaShowMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.show);
-     const congaHideMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.hide);
-     t += '.ktCongaIn\n';
-     t += '{\n';
-     t += ' transition: transform linear ' + congaShowMS + 'ms;\n';
-     t += '}\n';
-     t += '.ktCongaOut\n';
-     t += '{\n';
-     t += ' transition: transform ease-in ' + congaHideMS + 'ms;\n';
-     t += '}\n';
-     t += 'div.scene.cube.kappa,\n';
-     t += 'div.scene.cube.kappa div.cube\n';
-     t += '{\n';
-     t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.TheCube.time) + 'ms;\n';
-     t += '}';
-     h = h.replace('\n[data-squash="vertical"]\n', t + '\n[data-squash="vertical"]\n');
-     if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === false)
-      h = h.replace('\n#notices\n{\n', '\n#notices\n{\n display: none;\n');
-     if (cfg.hasOwnProperty('twitch') && cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null)
-      h = h.replace('\nbutton.twitch\n{\n', '\nbutton.twitch\n{\n display: none;\n');
-     if (cfg.hasOwnProperty('youtube') && cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null)
-      h = h.replace('\nbutton.youtube\n{\n', '\nbutton.youtube\n{\n display: none;\n');
-     if (cfg.hasOwnProperty('kick') && cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null)
-      h = h.replace('\nbutton.kick\n{\n', '\nbutton.kick\n{\n display: none;\n');
-     if (cfg.emote.size.variation !== false && typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-     {
-      let v = '\n.eSize-1_000\n';
-      v += '{\n';
-      v += ' --zoom-height: var(--emote-height);\n';
-      v += ' --zoom-width: var(--emote-width);\n';
-      v += '}\n';
-      v += '.eSize-0_500\n';
-      v += '{\n';
-      v += ' --zoom-height: calc(var(--emote-height) / 2);\n';
-      v += ' --zoom-width: calc(var(--emote-width) / 2);\n';
-      v += '}\n';
-      v += '.eSize-2_000\n';
-      v += '{\n';
-      v += ' --zoom-height: calc(var(--emote-height) * 2);\n';
-      v += ' --zoom-width: calc(var(--emote-width) * 2);\n';
-      v += '}\n';
-      let v2 = '\n.eSize-1_000\n';
-      v2 += '{\n';
-      v2 += ' --zoom-height: var(--emote-height);\n';
-      v2 += ' --zoom-width: var(--emote-width);\n';
-      v2 += '}\n';
-      for (let i = 0, l = cfg.emote.size.variation.range.length; i < l; i++)
+      if (cfg.display.hasOwnProperty('hue') && cfg.display.hue !== false)
       {
-       const rV = cfg.emote.size.variation.range[i].toFixed(3);
-       v2 += '.eSize-' + rV.replace('.', '_') + '\n';
+       if (cfg.display.hue === 'rave')
+       {
+        let r = 'html.rave\n';
+        r += '{\n';
+        r += ' animation: rave 3s linear infinite;\n';
+        r += '}\n';
+        r += '@keyframes rave\n';
+        r += '{\n';
+        for (let i = 0; i <= 100; i += 10)
+        {
+         r += ' ' + i + '%\n';
+         r += ' {\n';
+         r += '  filter: hue-rotate(' + i * 3.6 + 'deg);\n';
+         r += ' }\n';
+        }
+        r += '}\n';
+        r += 'html.rave button, html.rave div#notices\n';
+        r += '{\n';
+        r += ' animation: antirave 3s linear infinite;\n';
+        r += '}\n';
+        r += '@keyframes antirave\n';
+        r += '{\n';
+        for (let i = 0; i <= 100; i += 10)
+        {
+         r += ' ' + i + '%\n';
+         r += ' {\n';
+         r += '  filter: hue-rotate(' + (360 - i * 3.6) + 'deg);\n';
+         r += ' }\n';
+        }
+        r += '}\n';
+        h = r + h;
+       }
+       else if (!isNaN(cfg.display.hue))
+       {
+        const iHue = parseInt(cfg.display.hue, 10);
+        if (iHue > 0 && iHue < 360)
+         h = 'html\n{\n filter: hue-rotate(' + iHue + 'deg);\n}\nbutton, div#notices\n{\n filter: hue-rotate(' + (360 - iHue) + 'deg);\n}\n' + h;
+       }
+      }
+      return h;
+     }
+
+     function _shadow(h)
+     {
+      if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false)
+      {
+       let sF = shared.shadowCSS(cfg.display.shadow);
+       if (sF !== false)
+       {
+        let sE = '\nimg.emote\n';
+        sE += '{\n';
+        sE += ' ' + sF + '\n';
+        h = h.replace('\nimg.emote\n{\n', sE);
+
+        let sD = '\ndiv.scene img.dancer\n';
+        sD += '{\n';
+        sD += ' ' + sF + '\n';
+        h = h.replace('\ndiv.scene img.dancer\n{\n', sD);
+
+        let sC = '\ndiv.scene div.cube [data-face]\n';
+        sC += '{\n';
+        sC += ' ' + sF + '\n';
+        h = h.replace('\ndiv.scene div.cube [data-face]\n{\n background-color: rgba(255, 255, 255, 0.2);\n', sC);
+       }
+      }
+      return h;
+     }
+
+     function _zwe(h)
+     {
+      if (cfg.display.extended.useZWE && cfg.display.extended.hasOwnProperty('fillZWE') && cfg.display.extended.fillZWE)
+      {
+       h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.1)) / 2);');
+       h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.8)) / 2);');
+       h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.95)) / 2);');
+       h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.1)) / 2);');
+       let z = '\nimg.fit,\n';
+       z += '.fit img\n';
+       z += '{\n';
+       z += ' object-fit: contain;\n';
+       z += ' object-position: 50% 50%;\n';
+       z += '}';
+       h = h.replace('\nimg\n{\n', z + '\nimg\n{\n');
+      }
+      else
+      {
+       let z = '\nimg\n';
+       z += '{\n';
+       z += ' object-fit: contain;\n';
+       z += ' object-position: 50% 50%;\n';
+       h = h.replace('\nimg\n{\n', z);
+      }
+      return h;
+     }
+
+     function _anim(h)
+     {
+      let t = '\n.etStraightLine\n';
+      t += '{\n';
+      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time) + 'ms;\n';
+      t += '}\n';
+      t += '.etThrowTwist\n';
+      t += '{\n';
+      t += ' transition: transform cubic-bezier(0.32, 0, 0.67, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.twist) + 'ms;\n';
+      t += '}\n';
+      t += '.etThrowDrop\n';
+      t += '{\n';
+      t += ' transition: transform cubic-bezier(0.5, 0, 0.75, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.drop) + 'ms;\n';
+      t += '}\n';
+      t += '.etFountain\n';
+      t += '{\n';
+      t += ' transition: transform cubic-bezier(0, 0, 0.58, 1) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Fountain.time) + 'ms;\n';
+      t += '}\n';
+      t += 'div.scene.cube:not(.kappa),\n';
+      t += 'div.scene.cube:not(.kappa) div.cube\n';
+      t += '{\n';
+      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time) + 'ms;\n';
+      t += '}\n';
+      t += '.ktFireworkRocket\n';
+      t += '{\n';
+      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time * timing.kappa.Fireworks.speed.rocket) + 'ms;\n';
+      t += '}\n';
+      t += '.ktFireworkSparkler\n';
+      t += '{\n';
+      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time) + 'ms;\n';
+      t += '}\n';
+      t += '.ktSpiral\n';
+      t += '{\n';
+      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time) + 'ms;\n';
+      t += '}\n';
+      t += '.ktPyramid\n';
+      t += '{\n';
+      let ctP = 0;
+      const lP = pyramidDist.length;
+      for (let i = 0; i < lP; i++)
+      {
+       ctP += pyramidDist[i];
+      }
+      const tP = Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.show.total);
+      const tPerB = Math.max(Math.floor(tP / ctP), timing.kappa.Pyramid.show.min);
+      t += ' transition: transform ease-in ' + tPerB + 'ms;\n';
+      t += '}\n';
+      t += '.ktPyramidDrop\n';
+      t += '{\n';
+      t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.hide) + 'ms;\n';
+      t += '}\n';
+      t += '.ktSmallPyramid\n';
+      t += '{\n';
+      const tSP = Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.show.total);
+      const tPerSB = Math.max(Math.floor(tSP / ctP), timing.kappa.SmallPyramid.show.min);
+      t += ' transition: transform ease-in ' + tPerSB + 'ms;\n';
+      t += '}\n';
+      t += '.ktSmallPyramidDrop\n';
+      t += '{\n';
+      t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.hide) + 'ms;\n';
+      t += '}\n';
+      t += '.ktStampede\n';
+      t += '{\n';
+      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time * timing.kappa.Stampede.speed) + 'ms;\n';
+      t += '}\n';
+      const congaShowMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.show);
+      const congaHideMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.hide);
+      t += '.ktCongaIn\n';
+      t += '{\n';
+      t += ' transition: transform linear ' + congaShowMS + 'ms;\n';
+      t += '}\n';
+      t += '.ktCongaOut\n';
+      t += '{\n';
+      t += ' transition: transform ease-in ' + congaHideMS + 'ms;\n';
+      t += '}\n';
+      t += 'div.scene.cube.kappa,\n';
+      t += 'div.scene.cube.kappa div.cube\n';
+      t += '{\n';
+      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.TheCube.time) + 'ms;\n';
+      t += '}\n';
+      t += '[data-squash="vertical"]\n';
+      t += '{\n';
+      t += ' transform: scale(' + timing.display.Crazy.squash.width + ', ' + timing.display.Crazy.squash.height + ');\n';
+      t += '}\n';
+      t += '[data-squash="horizontal"]\n';
+      t += '{\n';
+      t += ' transform: scale(' + timing.display.Crazy.squash.height + ', ' + timing.display.Crazy.squash.width + ');\n';
+      t += '}';
+      h = h.replace('\n[data-squash="no"]\n', t + '\n[data-squash="no"]\n');
+      return h;
+     }
+
+     function _gui(h)
+     {
+      if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === false)
+       h = h.replace('\n#notices\n{\n', '\n#notices\n{\n display: none;\n');
+      if (cfg.hasOwnProperty('twitch') && cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null)
+       h = h.replace('\nbutton.twitch\n{\n', '\nbutton.twitch\n{\n display: none;\n');
+      if (cfg.hasOwnProperty('youtube') && cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null)
+       h = h.replace('\nbutton.youtube\n{\n', '\nbutton.youtube\n{\n display: none;\n');
+      if (cfg.hasOwnProperty('kick') && cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null)
+       h = h.replace('\nbutton.kick\n{\n', '\nbutton.kick\n{\n display: none;\n');
+      return h;
+     }
+
+     function _variations(h)
+     {
+      if (cfg.emote.size.variation !== false && typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+      {
+       let v = '\n.eSize-1_000\n';
+       v += '{\n';
+       v += ' --zoom-height: var(--emote-height);\n';
+       v += ' --zoom-width: var(--emote-width);\n';
+       v += '}\n';
+       v += '.eSize-0_500\n';
+       v += '{\n';
+       v += ' --zoom-height: calc(var(--emote-height) / 2);\n';
+       v += ' --zoom-width: calc(var(--emote-width) / 2);\n';
+       v += '}\n';
+       v += '.eSize-2_000\n';
+       v += '{\n';
+       v += ' --zoom-height: calc(var(--emote-height) * 2);\n';
+       v += ' --zoom-width: calc(var(--emote-width) * 2);\n';
+       v += '}\n';
+       let v2 = '\n.eSize-1_000\n';
        v2 += '{\n';
-       v2 += ' --zoom-height: calc(var(--emote-height) * ' + rV + ');\n';
-       v2 += ' --zoom-width: calc(var(--emote-width) * ' + rV + ');\n';
+       v2 += ' --zoom-height: var(--emote-height);\n';
+       v2 += ' --zoom-width: var(--emote-width);\n';
        v2 += '}\n';
+       for (let i = 0, l = cfg.emote.size.variation.range.length; i < l; i++)
+       {
+        const rV = cfg.emote.size.variation.range[i].toFixed(3);
+        v2 += '.eSize-' + rV.replace('.', '_') + '\n';
+        v2 += '{\n';
+        v2 += ' --zoom-height: calc(var(--emote-height) * ' + rV + ');\n';
+        v2 += ' --zoom-width: calc(var(--emote-width) * ' + rV + ');\n';
+        v2 += '}\n';
+       }
+       h = h.replace(v, v2);
       }
-      h = h.replace(v, v2);
+      return h;
      }
-     h = shared.reIndent(h, spc);
-     css.innerHTML = h;
-    }
+
+     return $c_css;
+    }();
 
     function _hasRaveToggle()
     {
