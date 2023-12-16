@@ -6084,7 +6084,7 @@
       let _wsRetry = 0;
       let _firstRS = true;
       let _ws = null;
-      const _msgHistory = {};
+      let _msgHistory = {};
       const _lPing = 30000;
       const _lTimeout = 35000;
       const _lExpire = 5000;
@@ -6369,6 +6369,15 @@
        {
         if (!cmd.tags.hasOwnProperty('target-msg-id'))
          return;
+        for (let uID in _msgHistory)
+        {
+         if (!_msgHistory.hasOwnProperty(uID))
+          continue;
+         if (!_msgHistory[uID].includes(cmd.tags['target-msg-id']))
+          continue;
+         _msgHistory[uID].filter(function(v){return v !== cmd.tags['target-msg-id'];});
+         break;
+        }
         const mID = 'twitch:' + cmd.tags['target-msg-id'];
         display.eraseMsg(mID);
        }
@@ -6378,6 +6387,7 @@
         switch (cmd.params.length)
         {
          case 1:
+          _msgHistory = {};
           if (cfg.event.twitch.clear)
            display.eraseAll();
           break;
@@ -8933,6 +8943,8 @@
          return;
         if (!cmd.snippet.messageDeletedDetails.hasOwnProperty('deletedMessageId'))
          return;
+        if (cmd.hasOwnProperty('authorDetails') && cmd.authorDetails.hasOwnProperty('channelId') && _msgHistory.hasOwnProperty(cmd.authorDetails.channelId) && _msgHistory[cmd.authorDetails.channelId].includes(cmd.snippet.messageDeletedDetails.deletedMessageId))
+         _msgHistory[cmd.authorDetails.channelId].filter(function(v){return v !== cmd.snippet.messageDeletedDetails.deletedMessageId;});
         const mID = 'youtube:' + cmd.snippet.messageDeletedDetails.deletedMessageId;
         display.eraseMsg(mID);
        }
@@ -10209,7 +10221,7 @@
       let _wsRetry = 0;
       let _firstRS = true;
       let _ws = null;
-      const _msgHistory = {};
+      let _msgHistory = {};
       let _lPing = 30000;
       let _lTimeout = 120000;
       const _lExpire = 5000;
@@ -10616,12 +10628,22 @@
           return;
          if (!jData.message.hasOwnProperty('id'))
           return;
+         for (let uID in _msgHistory)
+         {
+          if (!_msgHistory.hasOwnProperty(uID))
+           continue;
+          if (!_msgHistory[uID].includes(jData.message.id))
+           continue;
+          _msgHistory[uID].filter(function(v){return v !== jData.message.id;});
+          break;
+         }
          const mID = 'kick:' + jData.message.id;
          display.eraseMsg(mID);
         }
 
         function _ChatroomClearEvent()
         {
+         _msgHistory = {};
          if (cfg.event.kick.clear)
           display.eraseAll();
         }
