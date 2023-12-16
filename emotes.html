@@ -6808,7 +6808,10 @@
        }
        const r = await _refresh(twitch.net.oAuth.auth.refresh_token);
        if (r === false)
+       {
+        _populateAuth();
         return;
+       }
        const sAccess = r.access_token;
        const sRefresh = r.refresh_token;
        const v = await _validate(sAccess);
@@ -7923,7 +7926,7 @@
        return r;
       }
 
-      async function _checkFollower(cmd)
+      async function _checkFollower(cmd, retry = true)
       {
        const uID = cmd.tags['user-id'];
        if (twitch.net.fList.hasOwnProperty(uID))
@@ -7942,8 +7945,8 @@
        {
         if (r.code === 401)
         {
-         if (await twitch.net.oAuth.reinit())
-          return _checkFollower(cmd);
+         if (retry && await twitch.net.oAuth.reinit())
+          return _checkFollower(cmd, false);
          notice.error(notice.Type.TWITCH_TOKEN);
          if (!loginT.inUse)
           twitch.net.oAuth.clear();
@@ -8160,7 +8163,7 @@
      const _rCH = 300000;
      const _chList = {};
 
-     async function $c_findEmote_channel(chID, n = false)
+     async function $c_findEmote_channel(chID, n = false, retry = true)
      {
       if (n === false && _chList.hasOwnProperty(chID))
       {
@@ -8178,8 +8181,8 @@
       {
        if (r.code === 401)
        {
-        if (await twitch.net.oAuth.reinit())
-         return _findEmote_channel(chID, n);
+        if (retry && await twitch.net.oAuth.reinit())
+         return _findEmote_channel(chID, n, false);
         notice.error(notice.Type.TWITCH_TOKEN);
         if (!loginT.inUse)
          twitch.net.oAuth.clear();
@@ -8267,7 +8270,7 @@
      return e;
     }
 
-    async function $global()
+    async function $global(retry = true)
     {
      if (!thirdparty.emotes.hasOwnProperty('twitch'))
       thirdparty.emotes.twitch = {};
@@ -8281,8 +8284,8 @@
      {
       if (r.code === 401)
       {
-       if (await twitch.net.oAuth.reinit())
-        return twitch.global();
+       if (retry && await twitch.net.oAuth.reinit())
+        return twitch.global(false);
        notice.error(notice.Type.TWITCH_TOKEN);
        if (!loginT.inUse)
         twitch.net.oAuth.clear();
@@ -9305,7 +9308,10 @@
        }
        const r = await _refresh(youtube.net.oAuth.auth.refresh_token);
        if (r === false)
+       {
+        _populateAuth();
         return;
+       }
        const sAccess = r.access_token;
        let sRefresh = youtube.net.oAuth.auth.refresh_token;
        if (r.hasOwnProperty('refresh_token'))
@@ -14002,7 +14008,10 @@
       }
       const r = await _refresh(streamelements.oAuth.auth.refresh_token);
       if (r === false)
+      {
+       _populateAuth();
        return;
+      }
       const sAccess = r.access_token;
       const sRefresh = r.refresh_token;
       const v = await _validate(sAccess);
