@@ -8459,6 +8459,8 @@
          notice.resetHide();
          return false;
         }
+        if (r.code === 408 && r.data === shared.errTimeout)
+         return false;
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -8696,6 +8698,14 @@
           notice.error(notice.Type.YOUTUBE_CORS, 'live chat');
           notice.active &= ~notice.Connection.YOUTUBE;
           notice.resetHide();
+          return;
+         }
+         if (r.code === 408 && r.data === shared.errTimeout)
+         {
+          if (!_tM.hasOwnProperty(chatID))
+           return;
+          const tWait = _mWait + _bSlower;
+          _tM[chatID] = window.setTimeout(youtube.net.broadcasts.getMessages.start, tWait, stream);
           return;
          }
          if (r.code === 404)
@@ -9034,6 +9044,8 @@
        {
         if (r.code === 0 && r.data === '')
          return [];
+        if (r.code === 408 && r.data === shared.errTimeout)
+         return false;
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -9221,6 +9233,12 @@
          youtube.net.dead = true;
          return false;
         }
+        if (r.code === 408 && r.data === shared.errTimeout)
+        {
+         if (retries === false)
+          return _refresh(t, true);
+         return false;
+        }
         if (j !== null)
         {
          const e = _flatJSON(j);
@@ -9278,6 +9296,8 @@
          youtube.net.dead = true;
          return false;
         }
+        if (r.code === 408 && r.data === shared.errTimeout)
+         return false;
         if (r.code === 400)
         {
          notice.error(notice.Type.YOUTUBE_TOKEN);
@@ -15848,6 +15868,7 @@
         url += '_=' + (0xFFFFFFFF + shared.rnd(0xFFFFFFFF));
        }
        x.open(type, url);
+       x.timeout = 10000;
        for (const hK in hdrs)
        {
         if (!hdrs.hasOwnProperty(hK))
@@ -15860,14 +15881,26 @@
         {
          if (x.readyState < 2)
           return;
+         x.ontimeout = null;
          x.onreadystatechange = null;
          resolve(Math.floor(x.status / 100) === 2);
          return;
         }
         if (x.readyState !== 4)
          return;
+        x.ontimeout = null;
         x.onreadystatechange = null;
         resolve({code: x.status, data: x.responseText, get success(){return Math.floor(this.code / 100) === 2;}, get json(){try{return JSON.parse(this.data);}catch(ex){return null;}}});
+       };
+       x.ontimeout = function()
+       {
+        x.ontimeout = null;
+        x.onreadystatechange = null;
+        if (ret === false)
+         resolve(false);
+        else
+         resolve({code: 408, data: shared.errTimeout, get success(){return false;}, get json(){return null;}});
+        return;
        };
        if (body === null)
         x.send();
@@ -16386,6 +16419,7 @@
      hashCode: $hashCode,
      getHashParams: $getHashParams,
      httpRequest: $httpRequest,
+     errTimeout: Symbol(),
      findInMaybeRange: $findInMaybeRange,
      clearAddr: $clearAddr,
      doNextFrame: $doNextFrame,
