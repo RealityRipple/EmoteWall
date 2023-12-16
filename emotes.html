@@ -7281,7 +7281,7 @@
        {
         e.push(...await _findFFZ_channel(uID));
         e.push(...await _findBTTV_channel(uID));
-        e.push(...await _find7TV_channel(uID));
+        e.push(...await _find7TV_channel(uID, cfg.event.twitch.tag.targetExtendedEmotes));
        }
        display.kappa.show(e, cfg.event.twitch.tag.styles, {'%USER%': uTagged});
        return true;
@@ -7403,7 +7403,7 @@
        {
         e.push(...await _findFFZ_channel(d));
         e.push(...await _findBTTV_channel(d));
-        e.push(...await _find7TV_channel(d));
+        e.push(...await _find7TV_channel(d, cfg.event.twitch.raid.originExtendedEmotes));
        }
        display.kappa.show(e, r, {'%USER%': dn, '%AMOUNT%': c});
       }
@@ -7750,7 +7750,7 @@
        {
         e.push(...await _findFFZ_channel(uID));
         e.push(...await _findBTTV_channel(uID));
-        e.push(...await _find7TV_channel(uID));
+        e.push(...await _find7TV_channel(uID, cfg.event.twitch.shoutout.create.targetExtendedEmotes));
        }
        display.kappa.show(e, cfg.event.twitch.shoutout.create.styles, {'%USER%': uName});
       }
@@ -7777,7 +7777,7 @@
        {
         e.push(...await _findFFZ_channel(uID));
         e.push(...await _findBTTV_channel(uID));
-        e.push(...await _find7TV_channel(uID));
+        e.push(...await _find7TV_channel(uID, cfg.event.twitch.shoutout.receive.originExtendedEmotes));
        }
        display.kappa.show(e, cfg.event.twitch.shoutout.receive.styles, {'%USER%': uName});
       }
@@ -8250,11 +8250,11 @@
      return e;
     }
 
-    async function _find7TV_channel(chID)
+    async function _find7TV_channel(chID, cVal)
     {
      if (!cfg.display.extended.use7TV)
       return [];
-     const r7TV = await thirdparty['7tv'].channelEx('twitch', chID);
+     const r7TV = await thirdparty['7tv'].channelEx('twitch', chID, cVal === 'listed');
      if (r7TV === false)
       return [];
      const e = [];
@@ -11247,7 +11247,7 @@
        const e = await _findEmote_channel(u.display);
        if (cfg.event.kick.raid.originExtendedEmotes)
        {
-        e.push(...await _find7TV_channel(u.id));
+        e.push(...await _find7TV_channel(u.id, cfg.event.kick.raid.originExtendedEmotes));
        }
        display.kappa.show(e, r, {'%USER%': u.display, '%AMOUNT%': c});
       }
@@ -11733,11 +11733,11 @@
      return $c_findEmote_channel;
     }();
 
-    async function _find7TV_channel(chID)
+    async function _find7TV_channel(chID, cVal)
     {
      if (!cfg.display.extended.use7TV)
       return [];
-     const r7TV = await thirdparty['7tv'].channelEx('kick', chID);
+     const r7TV = await thirdparty['7tv'].channelEx('kick', chID, cVal === 'listed');
      if (r7TV === false)
       return [];
      const e = [];
@@ -14789,7 +14789,7 @@
       return true;
      }
 
-     async function $channelEx(svcName, chID)
+     async function $channelEx(svcName, chID, listedOnly)
      {
       const url = cURLs.api['7tv'].users[svcName].replaceAll('%CHANNEL_ID%', chID);
       const r = await shared.httpRequest('GET', url);
@@ -14808,6 +14808,8 @@
       for (let i = 0, l = j.emote_set.emotes.length; i < l; i++)
       {
        if (!j.emote_set.emotes[i].hasOwnProperty('data') || j.emote_set.emotes[i].data === null)
+        continue;
+       if (listedOnly && j.emote_set.emotes[i].data.hasOwnProperty('listed') && j.emote_set.emotes[i].data.listed !== true)
         continue;
        if (!j.emote_set.emotes[i].data.hasOwnProperty('id') || j.emote_set.emotes[i].data.id === null)
         continue;
@@ -14832,7 +14834,7 @@
        thirdparty.emotes.zwe = {};
       if (!thirdparty.emotes.zwe.hasOwnProperty('7tv'))
        thirdparty.emotes.zwe['7tv'] = {};
-      const r = await thirdparty['7tv'].channelEx(svcName, chID);
+      const r = await thirdparty['7tv'].channelEx(svcName, chID, false);
       if (r === false)
        return false;
       for (let i = 0, l = r.length; i < l; i++)

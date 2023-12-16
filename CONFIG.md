@@ -525,7 +525,13 @@ Configuration Information
         - [ ] If `true`, raid kappagens will use channel emotes from the raider's channel.
         - [ ] If `false`, raid kappagens will use your channel's emotes.
 
-      * `originExtendedEmotes` -- A boolean to toggle third-party emotes, if originEmotes is enabled.
+      * `originExtendedEmotes`  
+        *Control the display of third-party emotes, if originEmotes is enabled.*  
+        > **NOTE**: The `'listed'` option only applies to 7TV, as FFZ doesn't provide unapproved emotes, and BTTV auto-approves.  
+        This value can be a boolean or string:
+        - [ ] If `'listed'`, raid kappagens will only use the raider's listed third-party channel emotes.
+        - [ ] If `true`, raid kappagens will use all the raider's third-party channel emotes.
+        - [ ] If `false`, raid kappagens will not use third-party channel emotes.
 
     * `follow`  
       *A user follows the channel.*  
@@ -555,7 +561,12 @@ Configuration Information
           - [ ] If `false`, shoutout kappagens will use your channel's emotes.
 
         * `targetExtendedEmotes`  
-          *A boolean to toggle third-party emotes, if `targetEmotes` is enabled.*
+          *Control the display of third-party emotes, if targetEmotes is enabled.*  
+          > **NOTE**: The `'listed'` option only applies to 7TV, as FFZ doesn't provide unapproved emotes, and BTTV auto-approves.  
+          This value can be a boolean or string:
+          - [ ] If `'listed'`, shoutout kappagens will only use the target's listed third-party channel emotes.
+          - [ ] If `true`, shoutout kappagens will use all the target's third-party channel emotes.
+          - [ ] If `false`, shoutout kappagens will not use third-party channel emotes.
 
       * `receive`  
         *Settings related to kappagens when another channel shouts you out.*
@@ -573,7 +584,12 @@ Configuration Information
           - [ ] If `false`, shoutout kappagens will use your channel's emotes.
 
         * `originExtendedEmotes`  
-          *A boolean to toggle third-party emotes, if `originEmotes` is enabled.*
+          *Control the display of third-party emotes, if originEmotes is enabled.*  
+          > **NOTE**: The `'listed'` option only applies to 7TV, as FFZ doesn't provide unapproved emotes, and BTTV auto-approves.  
+          This value can be a boolean or string:
+          - [ ] If `'listed'`, shoutout kappagens will only use the source's listed third-party channel emotes.
+          - [ ] If `true`, shoutout kappagens will use all the source's third-party channel emotes.
+          - [ ] If `false`, shoutout kappagens will not use third-party channel emotes.
 
     * `tag`  
       *Settings related to kappagens when users tag a channel you've tagged in your stream title.*
@@ -595,7 +611,12 @@ Configuration Information
         - [ ] If `false`, tag kappagens will use your channel's emotes.
 
       * `targetExtendedEmotes`  
-        *A boolean to toggle third-party emotes, if `targetEmotes` is enabled.*
+        *Control the display of third-party emotes, if targetEmotes is enabled.*  
+        > **NOTE**: The `'listed'` option only applies to 7TV, as FFZ doesn't provide unapproved emotes, and BTTV auto-approves.  
+        This value can be a boolean or string:
+        - [ ] If `'listed'`, tag kappagens will only use the target's listed third-party channel emotes.
+        - [ ] If `true`, tag kappagens will use all the target's third-party channel emotes.
+        - [ ] If `false`, tag kappagens will not use third-party channel emotes.
 
     * `sub`  
       *Settings related to kappagens on a subscribe event.*
@@ -1006,7 +1027,12 @@ Configuration Information
         - [ ] If `false`, raid kappagens will use your channel's emotes.
 
       * `originExtendedEmotes`  
-        *A boolean to toggle third-party emotes, if originEmotes is enabled.*
+        *Control the display of third-party emotes, if originEmotes is enabled.*  
+        > **NOTE**: The `'listed'` option only applies to 7TV, as FFZ doesn't provide unapproved emotes, and BTTV auto-approves.  
+        This value can be a boolean or string:
+        - [ ] If `'listed'`, raid kappagens will only use the raider's listed third-party channel emotes.
+        - [ ] If `true`, raid kappagens will use all the raider's third-party channel emotes.
+        - [ ] If `false`, raid kappagens will not use third-party channel emotes.
 
     * `follow`  
       *A user follows the channel.*  
