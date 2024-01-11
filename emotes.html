@@ -1357,12 +1357,17 @@
     const _iHide = 5000;
     const _states = {};
     const _timers = {};
+    const _sTypes = {
+     info: Symbol(),
+     warning: Symbol(),
+     error: Symbol()
+    };
 
     function $info(i)
     {
-     if (_states.hasOwnProperty(i) && _states[i] === 'i')
+     if (_states.hasOwnProperty(i) && _states[i] === _sTypes.info)
       return;
-     _states[i] = 'i';
+     _states[i] = _sTypes.info;
      if (!_timers.hasOwnProperty(i))
       _timers[i] = false;
      _buildNotices();
@@ -1398,9 +1403,9 @@
 
     function $warning(w)
     {
-     if (_states.hasOwnProperty(w) && _states[w] === 'w')
+     if (_states.hasOwnProperty(w) && _states[w] === _sTypes.warning)
       return;
-     _states[w] = 'w';
+     _states[w] = _sTypes.warning;
      if (!_timers.hasOwnProperty(w))
       _timers[w] = false;
      _buildNotices();
@@ -1415,9 +1420,9 @@
 
     function $error(e, sMsg = false)
     {
-     if (_states.hasOwnProperty(e) && _states[e] === 'e')
+     if (_states.hasOwnProperty(e) && _states[e] === _sTypes.error)
       return;
-     _states[e] = 'e';
+     _states[e] = _sTypes.error;
      if (!_timers.hasOwnProperty(e))
       _timers[e] = false;
      _buildNotices();
