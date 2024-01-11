@@ -1348,6 +1348,24 @@
      memberships: 'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
     }
    };
+   const cSources = {
+    service: {
+     url: Symbol(),
+     cheer: Symbol(),
+     twitch: Symbol(),
+     youtube: Symbol(),
+     kick: Symbol(),
+     ffz: Symbol(),
+     bttv: Symbol(),
+     '7tv': Symbol(),
+     emoji: Symbol()
+    },
+    scope: {
+     user: Symbol(),
+     global: Symbol(),
+     channel: Symbol()
+    }
+   };
 
    const notice = function()
    {
@@ -4402,15 +4420,15 @@
        idx += s[i].length + 1;
        if (s[i].includes('//'))
        {
-        v.svc = 'u';
-        v.scope = 'g';
+        v.svc = cSources.service.url;
+        v.scope = cSources.scope.global;
         v.url = s[i];
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('twitch') && thirdparty.emotes.twitch.hasOwnProperty(s[i]) && thirdparty.emotes.twitch[s[i]].scope === 'c')
+       if (thirdparty.emotes.hasOwnProperty('twitch') && thirdparty.emotes.twitch.hasOwnProperty(s[i]) && thirdparty.emotes.twitch[s[i]].scope === cSources.scope.channel)
        {
-        v.svc = 't';
+        v.svc = cSources.service.twitch;
         v.url = thirdparty.emotes.twitch[s[i]].url;
         v.scope = thirdparty.emotes.twitch[s[i]].scope;
         r.push(v);
@@ -4418,23 +4436,23 @@
        }
        if (thirdparty.emotes.hasOwnProperty('youtube') && thirdparty.emotes.youtube.hasOwnProperty(s[i]))
        {
-        v.svc = 'y';
+        v.svc = cSources.service.youtube;
         v.url = thirdparty.emotes.youtube[s[i]].url;
         v.scope = thirdparty.emotes.youtube[s[i]].scope;
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('kick') && thirdparty.emotes.kick.hasOwnProperty(s[i]) && thirdparty.emotes.kick[s[i]].scope === 'c')
+       if (thirdparty.emotes.hasOwnProperty('kick') && thirdparty.emotes.kick.hasOwnProperty(s[i]) && thirdparty.emotes.kick[s[i]].scope === cSources.scope.channel)
        {
-        v.svc = 'k';
+        v.svc = cSources.service.kick;
         v.url = thirdparty.emotes.kick[s[i]].url;
         v.scope = thirdparty.emotes.kick[s[i]].scope;
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('ffz') && thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope === 'c')
+       if (thirdparty.emotes.hasOwnProperty('ffz') && thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope === cSources.scope.channel)
        {
-        v.svc = 'f';
+        v.svc = cSources.service.ffz;
         v.url = thirdparty.emotes.ffz[s[i]].url;
         v.scope = thirdparty.emotes.ffz[s[i]].scope;
         v.width = thirdparty.emotes.ffz[s[i]].width;
@@ -4442,9 +4460,9 @@
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('bttv') && thirdparty.emotes.bttv.hasOwnProperty(s[i]) && thirdparty.emotes.bttv[s[i]].scope === 'c')
+       if (thirdparty.emotes.hasOwnProperty('bttv') && thirdparty.emotes.bttv.hasOwnProperty(s[i]) && thirdparty.emotes.bttv[s[i]].scope === cSources.scope.channel)
        {
-        v.svc = 'b';
+        v.svc = cSources.service.bttv;
         v.url = thirdparty.emotes.bttv[s[i]].url;
         v.scope = thirdparty.emotes.bttv[s[i]].scope;
         v.width = thirdparty.emotes.bttv[s[i]].width;
@@ -4452,9 +4470,9 @@
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('7tv') && thirdparty.emotes['7tv'].hasOwnProperty(s[i]) && thirdparty.emotes['7tv'][s[i]].scope === 'c')
+       if (thirdparty.emotes.hasOwnProperty('7tv') && thirdparty.emotes['7tv'].hasOwnProperty(s[i]) && thirdparty.emotes['7tv'][s[i]].scope === cSources.scope.channel)
        {
-        v.svc = '7';
+        v.svc = cSources.service['7tv'];
         v.url = thirdparty.emotes['7tv'][s[i]].url;
         v.scope = thirdparty.emotes['7tv'][s[i]].scope;
         v.width = thirdparty.emotes['7tv'][s[i]].width;
@@ -4462,25 +4480,25 @@
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('twitch') && thirdparty.emotes.twitch.hasOwnProperty(s[i]) && thirdparty.emotes.twitch[s[i]].scope === 'g')
+       if (thirdparty.emotes.hasOwnProperty('twitch') && thirdparty.emotes.twitch.hasOwnProperty(s[i]) && thirdparty.emotes.twitch[s[i]].scope === cSources.scope.global)
        {
-        v.svc = 't';
+        v.svc = cSources.service.twitch;
         v.url = thirdparty.emotes.twitch[s[i]].url;
         v.scope = thirdparty.emotes.twitch[s[i]].scope;
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('kick') && thirdparty.emotes.kick.hasOwnProperty(s[i]) && thirdparty.emotes.kick[s[i]].scope === 'g')
+       if (thirdparty.emotes.hasOwnProperty('kick') && thirdparty.emotes.kick.hasOwnProperty(s[i]) && thirdparty.emotes.kick[s[i]].scope === cSources.scope.global)
        {
-        v.svc = 'k';
+        v.svc = cSources.service.kick;
         v.url = thirdparty.emotes.kick[s[i]].url;
         v.scope = thirdparty.emotes.kick[s[i]].scope;
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('ffz') && thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope === 'g')
+       if (thirdparty.emotes.hasOwnProperty('ffz') && thirdparty.emotes.ffz.hasOwnProperty(s[i]) && thirdparty.emotes.ffz[s[i]].scope === cSources.scope.global)
        {
-        v.svc = 'f';
+        v.svc = cSources.service.ffz;
         v.url = thirdparty.emotes.ffz[s[i]].url;
         v.scope = thirdparty.emotes.ffz[s[i]].scope;
         v.width = thirdparty.emotes.ffz[s[i]].width;
@@ -4488,9 +4506,9 @@
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('bttv') && thirdparty.emotes.bttv.hasOwnProperty(s[i]) && thirdparty.emotes.bttv[s[i]].scope === 'g')
+       if (thirdparty.emotes.hasOwnProperty('bttv') && thirdparty.emotes.bttv.hasOwnProperty(s[i]) && thirdparty.emotes.bttv[s[i]].scope === cSources.scope.global)
        {
-        v.svc = 'b';
+        v.svc = cSources.service.bttv;
         v.url = thirdparty.emotes.bttv[s[i]].url;
         v.scope = thirdparty.emotes.bttv[s[i]].scope;
         v.width = thirdparty.emotes.bttv[s[i]].width;
@@ -4498,9 +4516,9 @@
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('7tv') && thirdparty.emotes['7tv'].hasOwnProperty(s[i]) && thirdparty.emotes['7tv'][s[i]].scope === 'g')
+       if (thirdparty.emotes.hasOwnProperty('7tv') && thirdparty.emotes['7tv'].hasOwnProperty(s[i]) && thirdparty.emotes['7tv'][s[i]].scope === cSources.scope.global)
        {
-        v.svc = '7';
+        v.svc = cSources.service['7tv'];
         v.url = thirdparty.emotes['7tv'][s[i]].url;
         v.scope = thirdparty.emotes['7tv'][s[i]].scope;
         v.width = thirdparty.emotes['7tv'][s[i]].width;
@@ -4513,8 +4531,8 @@
         const eMoji = await service.parse.content.emoji(s[i], cfg.display.useEmoji, true);
         if (eMoji.length > 0)
         {
-         v.svc = 'e';
-         v.scope = 'g';
+         v.svc = cSources.service.emoji;
+         v.scope = cSources.scope.global;
          const vStart = v.pos;
          for (let j = 0, m = eMoji.length; j < m; j++)
          {
@@ -6535,7 +6553,7 @@
        {
         if (!thirdparty.emotes.twitch[n].hasOwnProperty('scope'))
          continue;
-        if (thirdparty.emotes.twitch[n].scope !== 'c')
+        if (thirdparty.emotes.twitch[n].scope !== cSources.scope.channel)
          continue;
         for (let c = cList.length - 1; c >= 0; c--)
         {
@@ -7010,11 +7028,11 @@
         const eStart = parseInt(eVals[0].split('-')[0], 10);
         const eEnd = parseInt(eVals[0].split('-')[1], 10);
         const sName = m.slice(eStart, eEnd + 1);
-        let sc = 'c';
+        let sc = cSources.scope.channel;
         if (thirdparty.emotes.twitch.hasOwnProperty(sName) && thirdparty.emotes.twitch[sName].hasOwnProperty('scope'))
          sc = thirdparty.emotes.twitch[sName].scope;
         if (eID === '80393')
-         sc = 'u';
+         sc = cSources.scope.user;
         let l = eVals.length;
         if (dup === false)
          l = 1;
@@ -7023,7 +7041,7 @@
         for (let c = 0; c < l; c++)
         {
          const p = parseInt(eVals[c].split('-')[0], 10);
-         ret.push({svc: 't', url: u, str: sName, pos: p, scope: sc});
+         ret.push({svc: cSources.service.twitch, url: u, str: sName, pos: p, scope: sc});
         }
        }
        return ret;
@@ -7349,7 +7367,7 @@
           if (parseInt(amt, 10) < thirdparty.emotes.cheer[prefix][i].min)
            continue;
           const sName = prefix + thirdparty.emotes.cheer[prefix][i].min;
-          p.push({svc: 'c', url: thirdparty.emotes.cheer[prefix][i].img, str: sName});
+          p.push({svc: cSources.service.cheer, url: thirdparty.emotes.cheer[prefix][i].img, str: sName});
           break;
          }
         }
@@ -8003,12 +8021,12 @@
       const r = [];
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === 'c')
+       if (a[i].svc === cSources.service.cheer)
         r.push(a[i]);
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope === 'u')
+       if (a[i].scope === cSources.scope.user)
        {
         if (_notDupe(a[i], r))
          r.push(a[i]);
@@ -8016,7 +8034,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === 't' && a[i].scope === 'c')
+       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.channel)
        {
         if (_notDupe(a[i], r))
          r.push(a[i]);
@@ -8024,7 +8042,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope === 'c' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
+       if (a[i].scope === cSources.scope.channel && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
        {
         if (_notDupe(a[i], r))
          r.push(a[i]);
@@ -8032,7 +8050,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === 't' && a[i].scope === 'g')
+       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.global)
        {
         if (_notDupe(a[i], r))
          r.push(a[i]);
@@ -8040,7 +8058,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope === 'g' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
+       if (a[i].scope === cSources.scope.global && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
        {
         if (_notDupe(a[i], r))
          r.push(a[i]);
@@ -8048,7 +8066,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === 'e')
+       if (a[i].svc === cSources.service.emoji)
        {
         if (_notDupe(a[i], r))
          r.push(a[i]);
@@ -8126,7 +8144,7 @@
        for (let i = r.length - 1; i >= 0; i--)
        {
         let m = r[i].str;
-        if (r[i].svc === 'e')
+        if (r[i].svc === cSources.service.emoji)
          m = String.fromCharCode(parseInt(m, 16));
         if (cfg.ignore.emotes.includes(m))
          r.splice(i, 1);
@@ -8212,7 +8230,7 @@
        if (n !== false && j.data[i].hasOwnProperty('name'))
        {
         n[j.data[i].name] = {
-         scope: 'c',
+         scope: cSources.scope.channel,
          url: eURL,
          id: j.data[i].id
         };
@@ -8311,7 +8329,7 @@
       if (!j.data[i].hasOwnProperty('name'))
        continue;
       thirdparty.emotes.twitch[j.data[i].name] = {
-       scope: 'g',
+       scope: cSources.scope.global,
        url: cURLs.cdn.twitch.emote.replaceAll('%EMOTE_ID%', j.data[i].id),
        id: j.data[i].id
       };
@@ -9484,7 +9502,7 @@
           if (ct >= dup)
            continue;
          }
-         ret.push({svc: 'y', url: u, str: emList[i][0], pos: emList[i].index});
+         ret.push({svc: cSources.service.youtube, url: u, str: emList[i][0], pos: emList[i].index});
         }
         return ret;
        }
@@ -9998,17 +10016,17 @@
       const r = [];
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope === 'u')
+       if (a[i].scope === cSources.scope.user)
         r.push(a[i]);
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === 'y' || a[i].svc === 'c' || a[i].svc === 'e')
+       if (a[i].svc === cSources.service.youtube || a[i].svc === cSources.service.cheer || a[i].svc === cSources.service.emoji)
         r.push(a[i]);
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope === 'c' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
+       if (a[i].scope === cSources.scope.channel && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
        {
         let f = false;
         for (let j = 0, l = r.length; j < l; j++)
@@ -10027,7 +10045,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope !== 'c' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
+       if (a[i].scope !== cSources.scope.channel && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
        {
         let f = false;
         for (let j = 0, l = r.length; j < l; j++)
@@ -10106,7 +10124,7 @@
        for (let i = r.length - 1; i >= 0; i--)
        {
         let m = r[i].str;
-        if (r[i].svc === 'e')
+        if (r[i].svc === cSources.service.emoji)
          m = String.fromCharCode(parseInt(m, 16));
         if (cfg.ignore.emotes.includes(m))
          r.splice(i, 1);
@@ -10167,7 +10185,7 @@
      for (let i = 0, l = jNames.length; i < l; i++)
      {
       thirdparty.emotes.youtube[jNames[i]] = {
-       scope: 'g',
+       scope: cSources.scope.global,
        url: eCDN.replaceAll('%EMOJI_ID%', j.list[jNames[i]]),
        id: j.list[jNames[i]]
       };
@@ -10199,7 +10217,7 @@
      for (let i = 0, l = jNames.length; i < l; i++)
      {
       _eStickers[jNames[i]] = {
-       scope: 'g',
+       scope: cSources.scope.global,
        url: eCDN.replaceAll('%STICKER_ID%', j.list[jNames[i]]),
        id: j.list[jNames[i]]
       };
@@ -10875,7 +10893,7 @@
        {
         if (!thirdparty.emotes.kick[n].hasOwnProperty('scope'))
          continue;
-        if (thirdparty.emotes.kick[n].scope !== 'c')
+        if (thirdparty.emotes.kick[n].scope !== cSources.scope.channel)
          continue;
         for (let c = cList.length - 1; c >= 0; c--)
         {
@@ -11012,14 +11030,14 @@
         }
         const u = cURLs.cdn.kick.emote.replaceAll('%EMOTE_ID%', eID);
         const p = emList[i].index;
-        let sc = 'c';
+        let sc = cSources.scope.channel;
         const sName = emList[i][3];
         if (sName !== '')
         {
          if (thirdparty.emotes.kick.hasOwnProperty(sName) && thirdparty.emotes.kick[sName].hasOwnProperty('scope'))
           sc = thirdparty.emotes.kick[sName].scope;
         }
-        ret.push({svc: 'k', url: u, str: emList[i][0], pos: p, scope: sc});
+        ret.push({svc: cSources.service.kick, url: u, str: emList[i][0], pos: p, scope: sc});
         ids.push(eID);
        }
        return ret;
@@ -11511,12 +11529,12 @@
       const r = [];
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === 'c')
+       if (a[i].svc === cSources.service.cheer)
         r.push(a[i]);
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope === 'u')
+       if (a[i].scope === cSources.scope.user)
        {
         if (_notDupe(a[i], r))
          r.push(a[i]);
@@ -11524,7 +11542,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === 'k' && a[i].scope === 'c')
+       if (a[i].svc === cSources.service.kick && a[i].scope === cSources.scope.channel)
        {
         if (_notDupe(a[i], r))
          r.push(a[i]);
@@ -11532,7 +11550,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope === 'c' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
+       if (a[i].scope === cSources.scope.channel && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
        {
         if (_notDupe(a[i], r))
          r.push(a[i]);
@@ -11540,7 +11558,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === 'k' && a[i].scope === 'g')
+       if (a[i].svc === cSources.service.kick && a[i].scope === cSources.scope.global)
        {
         if (_notDupe(a[i], r))
          r.push(a[i]);
@@ -11548,7 +11566,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope === 'g' && (a[i].svc === 'b' || a[i].svc === 'f' || a[i].svc === '7'))
+       if (a[i].scope === cSources.scope.global && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
        {
         if (_notDupe(a[i], r))
          r.push(a[i]);
@@ -11556,7 +11574,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === 'e')
+       if (a[i].svc === cSources.service.emoji)
        {
         if (_notDupe(a[i], r))
          r.push(a[i]);
@@ -11639,7 +11657,7 @@
        for (let i = r.length - 1; i >= 0; i--)
        {
         let m = r[i].str;
-        if (r[i].svc === 'e')
+        if (r[i].svc === cSources.service.emoji)
          m = String.fromCharCode(parseInt(m, 16));
         if (cfg.ignore.emotes.includes(m))
          r.splice(i, 1);
@@ -11726,7 +11744,7 @@
         if (n !== false && j[i].emotes[e].hasOwnProperty('name') && j[i].emotes[e].name !== null)
         {
          n[j[i].emotes[e].name] = {
-          scope: 'c',
+          scope: cSources.scope.channel,
           url: eURL,
           id: j[i].emotes[e].id
          };
@@ -11754,7 +11772,7 @@
         continue;
        const eURL = cURLs.cdn.kick.emote.replaceAll('%EMOTE_ID%', d.emotes[e].id);
        thirdparty.emotes.kick[d.emotes[e].name] = {
-        scope: 'g',
+        scope: cSources.scope.global,
         url: eURL,
         id: d.emotes[e].id
        };
@@ -12002,7 +12020,7 @@
           return false;
         }
         addList[c]++;
-        return {svc: 'e', url: u + c + '.png', str: c, pos: p};
+        return {svc: cSources.service.emoji, url: u + c + '.png', str: c, pos: p};
        }
 
        function _showCrew(addList, p, dup = null)
@@ -12020,7 +12038,7 @@
         const svgC = shared.rnd(18);
         const svgCSS = '.st0{fill:#484C4D;}.st1{fill:#' + crewColors[svgC][0] + ';}.st2{fill:#A3D3E3;}.st3{opacity:0.5;fill:#' + crewColors[svgC][1] + ';}.st4{opacity:0.45;fill:#5B7882;}.st5{fill:#FFFFFF;}' + (shared.rnd(2) === 1 ? 'svg{transform: scaleX(-1);}' : '');
         const crew = crewSVG.replace('%CSS%', encodeURIComponent(svgCSS));
-        return {svc: 'e', url: crew, str: '0d9e', pos: p};
+        return {svc: cSources.service.emoji, url: crew, str: '0d9e', pos: p};
        }
 
        function _uriOf(c)
@@ -12080,7 +12098,7 @@
          {
           if (!thirdparty.emotes.ffz.hasOwnProperty(m[i]))
            continue;
-          if (thirdparty.emotes.ffz[m[i]].scope !== 'g' && !thirdparty.emotes.ffz[m[i]].channel.includes(chID))
+          if (thirdparty.emotes.ffz[m[i]].scope !== cSources.scope.global && !thirdparty.emotes.ffz[m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -12097,7 +12115,7 @@
           {
            p += m[j].length + 1;
           }
-          ret.push({svc: 'f', url: thirdparty.emotes.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.ffz[m[i]].scope, width: thirdparty.emotes.ffz[m[i]].width, height: thirdparty.emotes.ffz[m[i]].height});
+          ret.push({svc: cSources.service.ffz, url: thirdparty.emotes.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.ffz[m[i]].scope, width: thirdparty.emotes.ffz[m[i]].width, height: thirdparty.emotes.ffz[m[i]].height});
          }
          return ret;
         }
@@ -12119,7 +12137,7 @@
          {
           if (!thirdparty.emotes.zwe.ffz.hasOwnProperty(m[i]))
            continue;
-          if (thirdparty.emotes.zwe.ffz[m[i]].scope !== 'g' && !thirdparty.emotes.zwe.ffz[m[i]].channel.includes(chID))
+          if (thirdparty.emotes.zwe.ffz[m[i]].scope !== cSources.scope.global && !thirdparty.emotes.zwe.ffz[m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -12150,7 +12168,7 @@
           if (f === -1)
           {
            if (pass === 1)
-            l.push({svc: 'f', url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope, width: thirdparty.emotes.zwe.ffz[m[i]].width, height: thirdparty.emotes.zwe.ffz[m[i]].height});
+            l.push({svc: cSources.service.ffz, url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope, width: thirdparty.emotes.zwe.ffz[m[i]].width, height: thirdparty.emotes.zwe.ffz[m[i]].height});
           }
           else
           {
@@ -12204,17 +12222,17 @@
            if (t.length > 0)
            {
             if (pass === 1)
-             l.push({svc: 'f', url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope, width: thirdparty.emotes.zwe.ffz[m[i]].width, height: thirdparty.emotes.zwe.ffz[m[i]].height});
+             l.push({svc: cSources.service.ffz, url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope, width: thirdparty.emotes.zwe.ffz[m[i]].width, height: thirdparty.emotes.zwe.ffz[m[i]].height});
            }
            else if (pass === 2)
            {
             if (!l[f].hasOwnProperty('zwe'))
              l[f].zwe = [];
-            l[f].zwe.push({svc: 'f', url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope, width: thirdparty.emotes.zwe.ffz[m[i]].width, height: thirdparty.emotes.zwe.ffz[m[i]].height});
+            l[f].zwe.push({svc: cSources.service.ffz, url: thirdparty.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffz[m[i]].scope, width: thirdparty.emotes.zwe.ffz[m[i]].width, height: thirdparty.emotes.zwe.ffz[m[i]].height});
             l[f].zwe.sort(_posSort);
             for (let j = 0, o = l.length; j < o; j++)
             {
-             if (l[j].svc !== 'f')
+             if (l[j].svc !== cSources.service.ffz)
               continue;
              if (l[j].pos !== p)
               continue;
@@ -12258,7 +12276,7 @@
            {
             p += m[j].length + 1;
            }
-           ret.push({svc: 'f', url: thirdparty.emotes.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.ffzU[usr][m[i]].scope, width: thirdparty.emotes.ffzU[usr][m[i]].width, height: thirdparty.emotes.ffzU[usr][m[i]].height});
+           ret.push({svc: cSources.service.ffz, url: thirdparty.emotes.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.ffzU[usr][m[i]].scope, width: thirdparty.emotes.ffzU[usr][m[i]].width, height: thirdparty.emotes.ffzU[usr][m[i]].height});
           }
           return ret;
          }
@@ -12311,7 +12329,7 @@
            if (f === -1)
            {
             if (pass === 1)
-             l.push({svc: 'f', url: thirdparty.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffzU[usr][m[i]].scope, width: thirdparty.emotes.zwe.ffzU[usr][m[i]].width, height: thirdparty.emotes.zwe.ffzU[usr][m[i]].height});
+             l.push({svc: cSources.service.ffz, url: thirdparty.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffzU[usr][m[i]].scope, width: thirdparty.emotes.zwe.ffzU[usr][m[i]].width, height: thirdparty.emotes.zwe.ffzU[usr][m[i]].height});
            }
            else
            {
@@ -12365,17 +12383,17 @@
             if (t.length > 0)
             {
              if (pass === 1)
-              l.push({svc: 'f', url: thirdparty.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffzU[usr][m[i]].scope, width: thirdparty.emotes.zwe.ffzU[usr][m[i]].width, height: thirdparty.emotes.zwe.ffzU[usr][m[i]].height});
+              l.push({svc: cSources.service.ffz, url: thirdparty.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffzU[usr][m[i]].scope, width: thirdparty.emotes.zwe.ffzU[usr][m[i]].width, height: thirdparty.emotes.zwe.ffzU[usr][m[i]].height});
             }
             else if (pass === 2)
             {
              if (!l[f].hasOwnProperty('zwe'))
               l[f].zwe = [];
-             l[f].zwe.push({svc: 'f', url: thirdparty.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffzU[usr][m[i]].scope, width: thirdparty.emotes.zwe.ffzU[usr][m[i]].width, height: thirdparty.emotes.zwe.ffzU[usr][m[i]].height});
+             l[f].zwe.push({svc: cSources.service.ffz, url: thirdparty.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.ffzU[usr][m[i]].scope, width: thirdparty.emotes.zwe.ffzU[usr][m[i]].width, height: thirdparty.emotes.zwe.ffzU[usr][m[i]].height});
              l[f].zwe.sort(_posSort);
              for (let j = 0, o = l.length; j < o; j++)
              {
-              if (l[j].svc !== 'f')
+              if (l[j].svc !== cSources.service.ffz)
                continue;
               if (l[j].pos !== p)
                continue;
@@ -12420,7 +12438,7 @@
          {
           if (!thirdparty.emotes.bttv.hasOwnProperty(m[i]))
            continue;
-          if (thirdparty.emotes.bttv[m[i]].scope !== 'g' && !thirdparty.emotes.bttv[m[i]].channel.includes(chID))
+          if (thirdparty.emotes.bttv[m[i]].scope !== cSources.scope.global && !thirdparty.emotes.bttv[m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -12437,7 +12455,7 @@
           {
            p += m[j].length + 1;
           }
-          ret.push({svc: 'b', url: thirdparty.emotes.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.bttv[m[i]].scope, width: thirdparty.emotes.bttv[m[i]].width, height: thirdparty.emotes.bttv[m[i]].height});
+          ret.push({svc: cSources.service.bttv, url: thirdparty.emotes.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.bttv[m[i]].scope, width: thirdparty.emotes.bttv[m[i]].width, height: thirdparty.emotes.bttv[m[i]].height});
          }
          return ret;
         }
@@ -12459,7 +12477,7 @@
          {
           if (!thirdparty.emotes.zwe.bttv.hasOwnProperty(m[i]))
            continue;
-          if (thirdparty.emotes.zwe.bttv[m[i]].scope !== 'g' && !thirdparty.emotes.zwe.bttv[m[i]].channel.includes(chID))
+          if (thirdparty.emotes.zwe.bttv[m[i]].scope !== cSources.scope.global && !thirdparty.emotes.zwe.bttv[m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -12490,7 +12508,7 @@
           if (f === -1)
           {
            if (pass === 1)
-            l.push({svc: 'b', url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope, width: thirdparty.emotes.zwe.bttv[m[i]].width, height: thirdparty.emotes.zwe.bttv[m[i]].height});
+            l.push({svc: cSources.service.bttv, url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope, width: thirdparty.emotes.zwe.bttv[m[i]].width, height: thirdparty.emotes.zwe.bttv[m[i]].height});
           }
           else
           {
@@ -12544,17 +12562,17 @@
            if (t.length > 0)
            {
             if (pass === 1)
-             l.push({svc: 'b', url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope, width: thirdparty.emotes.zwe.bttv[m[i]].width, height: thirdparty.emotes.zwe.bttv[m[i]].height});
+             l.push({svc: cSources.service.bttv, url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope, width: thirdparty.emotes.zwe.bttv[m[i]].width, height: thirdparty.emotes.zwe.bttv[m[i]].height});
            }
            else if (pass === 2)
            {
             if (!l[f].hasOwnProperty('zwe'))
              l[f].zwe = [];
-            l[f].zwe.push({svc: 'b', url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope, width: thirdparty.emotes.zwe.bttv[m[i]].width, height: thirdparty.emotes.zwe.bttv[m[i]].height});
+            l[f].zwe.push({svc: cSources.service.bttv, url: thirdparty.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttv[m[i]].scope, width: thirdparty.emotes.zwe.bttv[m[i]].width, height: thirdparty.emotes.zwe.bttv[m[i]].height});
             l[f].zwe.sort(_posSort);
             for (let j = 0, o = l.length; j < o; j++)
             {
-             if (l[j].svc !== 'b')
+             if (l[j].svc !== cSources.service.bttv)
               continue;
              if (l[j].pos !== p)
               continue;
@@ -12598,7 +12616,7 @@
            {
             p += m[j].length + 1;
            }
-           ret.push({svc: 'b', url: thirdparty.emotes.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.bttvU[usr][m[i]].scope, width: thirdparty.emotes.bttvU[usr][m[i]].width, height: thirdparty.emotes.bttvU[usr][m[i]].height});
+           ret.push({svc: cSources.service.bttv, url: thirdparty.emotes.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.bttvU[usr][m[i]].scope, width: thirdparty.emotes.bttvU[usr][m[i]].width, height: thirdparty.emotes.bttvU[usr][m[i]].height});
           }
           return ret;
          }
@@ -12651,7 +12669,7 @@
            if (f === -1)
            {
             if (pass === 1)
-             l.push({svc: 'b', url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
+             l.push({svc: cSources.service.bttv, url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
            }
            else
            {
@@ -12705,17 +12723,17 @@
             if (t.length > 0)
             {
              if (pass === 1)
-              l.push({svc: 'b', url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
+              l.push({svc: cSources.service.bttv, url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
             }
             else if (pass === 2)
             {
              if (!l[f].hasOwnProperty('zwe'))
               l[f].zwe = [];
-             l[f].zwe.push({svc: 'b', url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
+             l[f].zwe.push({svc: cSources.service.bttv, url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
              l[f].zwe.sort(_posSort);
              for (let j = 0, o = l.length; j < o; j++)
              {
-              if (l[j].svc !== 'b')
+              if (l[j].svc !== cSources.service.bttv)
                continue;
               if (l[j].pos !== p)
                continue;
@@ -12760,7 +12778,7 @@
          {
           if (!thirdparty.emotes['7tv'].hasOwnProperty(m[i]))
            continue;
-          if (thirdparty.emotes['7tv'][m[i]].scope !== 'g' && !thirdparty.emotes['7tv'][m[i]].channel.includes(chID))
+          if (thirdparty.emotes['7tv'][m[i]].scope !== cSources.scope.global && !thirdparty.emotes['7tv'][m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -12777,7 +12795,7 @@
           {
            p += m[j].length + 1;
           }
-          ret.push({svc: '7', url: thirdparty.emotes['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes['7tv'][m[i]].scope, width: thirdparty.emotes['7tv'][m[i]].width, height: thirdparty.emotes['7tv'][m[i]].height});
+          ret.push({svc: cSources.service['7tv'], url: thirdparty.emotes['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes['7tv'][m[i]].scope, width: thirdparty.emotes['7tv'][m[i]].width, height: thirdparty.emotes['7tv'][m[i]].height});
          }
          return ret;
         }
@@ -12799,7 +12817,7 @@
          {
           if (!thirdparty.emotes.zwe['7tv'].hasOwnProperty(m[i]))
            continue;
-          if (thirdparty.emotes.zwe['7tv'][m[i]].scope !== 'g' && !thirdparty.emotes.zwe['7tv'][m[i]].channel.includes(chID))
+          if (thirdparty.emotes.zwe['7tv'][m[i]].scope !== cSources.scope.global && !thirdparty.emotes.zwe['7tv'][m[i]].channel.includes(chID))
            continue;
           if (!addList.hasOwnProperty(m[i]))
            addList[m[i]] = 0;
@@ -12830,7 +12848,7 @@
           if (f === -1)
           {
            if (pass === 1)
-            l.push({svc: '7', url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope, width: thirdparty.emotes.zwe['7tv'][m[i]].width, height: thirdparty.emotes.zwe['7tv'][m[i]].height});
+            l.push({svc: cSources.service['7tv'], url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope, width: thirdparty.emotes.zwe['7tv'][m[i]].width, height: thirdparty.emotes.zwe['7tv'][m[i]].height});
           }
           else
           {
@@ -12884,17 +12902,17 @@
            if (t.length > 0)
            {
             if (pass === 1)
-             l.push({svc: '7', url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope, width: thirdparty.emotes.zwe['7tv'][m[i]].width, height: thirdparty.emotes.zwe['7tv'][m[i]].height});
+             l.push({svc: cSources.service['7tv'], url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope, width: thirdparty.emotes.zwe['7tv'][m[i]].width, height: thirdparty.emotes.zwe['7tv'][m[i]].height});
            }
            else if (pass === 2)
            {
             if (!l[f].hasOwnProperty('zwe'))
              l[f].zwe = [];
-            l[f].zwe.push({svc: '7', url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope, width: thirdparty.emotes.zwe['7tv'][m[i]].width, height: thirdparty.emotes.zwe['7tv'][m[i]].height});
+            l[f].zwe.push({svc: cSources.service['7tv'], url: thirdparty.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tv'][m[i]].scope, width: thirdparty.emotes.zwe['7tv'][m[i]].width, height: thirdparty.emotes.zwe['7tv'][m[i]].height});
             l[f].zwe.sort(_posSort);
             for (let j = 0, o = l.length; j < o; j++)
             {
-             if (l[j].svc !== '7')
+             if (l[j].svc !== cSources.service['7tv'])
               continue;
              if (l[j].pos !== p)
               continue;
@@ -12938,7 +12956,7 @@
            {
             p += m[j].length + 1;
            }
-           ret.push({svc: '7', url: thirdparty.emotes['7tvU'][usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes['7tvU'][usr][m[i]].scope, width: thirdparty.emotes['7tvU'][usr][m[i]].width, height: thirdparty.emotes['7tvU'][usr][m[i]].height});
+           ret.push({svc: cSources.service['7tv'], url: thirdparty.emotes['7tvU'][usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes['7tvU'][usr][m[i]].scope, width: thirdparty.emotes['7tvU'][usr][m[i]].width, height: thirdparty.emotes['7tvU'][usr][m[i]].height});
           }
           return ret;
          }
@@ -12991,7 +13009,7 @@
            if (f === -1)
            {
             if (pass === 1)
-             l.push({svc: '7', url: thirdparty.emotes.zwe['7tvU'][usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tvU'][usr][m[i]].scope, width: thirdparty.emotes.zwe['7tvU'][usr][m[i]].width, height: thirdparty.emotes.zwe['7tvU'][usr][m[i]].height});
+             l.push({svc: cSources.service['7tv'], url: thirdparty.emotes.zwe['7tvU'][usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe['7tvU'][usr][m[i]].scope, width: thirdparty.emotes.zwe['7tvU'][usr][m[i]].width, height: thirdparty.emotes.zwe['7tvU'][usr][m[i]].height});
            }
            else
            {
@@ -13045,17 +13063,17 @@
             if (t.length > 0)
             {
              if (pass === 1)
-              l.push({svc: '7', url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
+              l.push({svc: cSources.service['7tv'], url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
             }
             else if (pass === 2)
             {
              if (!l[f].hasOwnProperty('zwe'))
               l[f].zwe = [];
-             l[f].zwe.push({svc: '7', url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
+             l[f].zwe.push({svc: cSources.service['7tv'], url: thirdparty.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.zwe.bttvU[usr][m[i]].scope, width: thirdparty.emotes.zwe.bttvU[usr][m[i]].width, height: thirdparty.emotes.zwe.bttvU[usr][m[i]].height});
              l[f].zwe.sort(_posSort);
              for (let j = 0, o = l.length; j < o; j++)
              {
-              if (l[j].svc !== '7')
+              if (l[j].svc !== cSources.service['7tv'])
                continue;
               if (l[j].pos !== p)
                continue;
@@ -14102,7 +14120,7 @@
       h = _defSize;
      if (list.hasOwnProperty(code))
      {
-      if (scope === 'g' && list[code].scope === 'c')
+      if (scope === cSources.scope.global && list[code].scope === cSources.scope.channel)
        return;
       if (ch !== false)
       {
@@ -14120,7 +14138,7 @@
      list[code] = {scope: scope, url: url, channel: [], id: id, width: w, height: h};
      if (ch !== false)
       list[code].channel.push(ch);
-     if (scope === 'c' && !zwe)
+     if (scope === cSources.scope.channel && !zwe)
       cList.push({url: url, width: w, height: h});
     }
 
@@ -14140,7 +14158,7 @@
       if (list[code].channel.length > 0)
        return;
      }
-     if (scope === 'c')
+     if (scope === cSources.scope.channel)
      {
       for (let c = cList.length - 1; c >= 0; c--)
       {
@@ -14237,10 +14255,10 @@
          if (j.sets[set].emoticons[i].hasOwnProperty('modifier_flags') && (j.sets[set].emoticons[i].modifier_flags & thirdparty.ffz.Modifier.HIDDEN) === thirdparty.ffz.Modifier.HIDDEN)
           continue;
          if (cfg.display.extended.useZWE)
-          _addEmote(thirdparty.emotes.zwe.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h, true);
+          _addEmote(thirdparty.emotes.zwe.ffz, cSources.scope.global, j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h, true);
          continue;
         }
-        _addEmote(thirdparty.emotes.ffz, 'g', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h);
+        _addEmote(thirdparty.emotes.ffz, cSources.scope.global, j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h);
        }
       }
       if (!j.hasOwnProperty('user_ids'))
@@ -14288,7 +14306,7 @@
            {
             if (!thirdparty.emotes.zwe.ffzU.hasOwnProperty('twitch:' + aList[k]))
              thirdparty.emotes.zwe.ffzU['twitch:' + aList[k]] = {};
-            _addEmote(thirdparty.emotes.zwe.ffzU['twitch:' + aList[k]], 'u', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h, true);
+            _addEmote(thirdparty.emotes.zwe.ffzU['twitch:' + aList[k]], cSources.scope.user, j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h, true);
            }
           }
           continue;
@@ -14299,7 +14317,7 @@
          {
           if (!thirdparty.emotes.ffzU.hasOwnProperty('twitch:' + aList[k]))
            thirdparty.emotes.ffzU['twitch:' + aList[k]] = {};
-          _addEmote(thirdparty.emotes.ffzU['twitch:' + aList[k]], 'u', j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h);
+          _addEmote(thirdparty.emotes.ffzU['twitch:' + aList[k]], cSources.scope.user, j.sets[set].emoticons[i].name, j.sets[set].emoticons[i].id, u, false, w, h);
          }
         }
        }
@@ -14369,10 +14387,10 @@
         if ((r[i].modifier & thirdparty.ffz.Modifier.HIDDEN) === thirdparty.ffz.Modifier.HIDDEN)
          continue;
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe.ffz, 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height, true);
+         _addEmote(thirdparty.emotes.zwe.ffz, cSources.scope.channel, r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes.ffz, 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
+       _addEmote(thirdparty.emotes.ffz, cSources.scope.channel, r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -14449,10 +14467,10 @@
        if (bttvZWE.includes(j[i].id))
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe.bttv, 'g', j[i].code, j[i].id, eURL, false, w, h, true);
+         _addEmote(thirdparty.emotes.zwe.bttv, cSources.scope.global, j[i].code, j[i].id, eURL, false, w, h, true);
         continue;
        }
-       _addEmote(thirdparty.emotes.bttv, 'g', j[i].code, j[i].id, eURL, false, w, h);
+       _addEmote(thirdparty.emotes.bttv, cSources.scope.global, j[i].code, j[i].id, eURL, false, w, h);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -14519,10 +14537,10 @@
        if (bttvZWE.includes(r[i].id))
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe.bttv, 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height, true);
+         _addEmote(thirdparty.emotes.zwe.bttv, cSources.scope.channel, r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes.bttv, 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
+       _addEmote(thirdparty.emotes.bttv, cSources.scope.channel, r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -14628,10 +14646,10 @@
           if (bttvZWE.includes(d.data.emotes[i].id))
           {
            if (cfg.display.extended.useZWE)
-            _addEmote(thirdparty.emotes.zwe.bttvU[usr], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), false, w, h, true);
+            _addEmote(thirdparty.emotes.zwe.bttvU[usr], cSources.scope.user, d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), false, w, h, true);
            continue;
           }
-          _addEmote(thirdparty.emotes.bttvU[usr], 'u', d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), false, w, h);
+          _addEmote(thirdparty.emotes.bttvU[usr], cSources.scope.user, d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), false, w, h);
          }
          cSafe = JSON.parse(JSON.stringify(cList));
          break;
@@ -14652,7 +14670,7 @@
           hC = d.data.emote.height;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), d.data.channel, wC, hC);
+         _addEmote(thirdparty.emotes.bttv, cSources.scope.channel, d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), d.data.channel, wC, hC);
          cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
@@ -14663,7 +14681,7 @@
           return;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emoteId, d.data.channel);
+         _removeEmoteByID(thirdparty.emotes.bttv, cSources.scope.channel, d.data.emoteId, d.data.channel);
          cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
@@ -14684,8 +14702,8 @@
           hU = d.data.emote.height;
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
-         _removeEmoteByID(thirdparty.emotes.bttv, 'c', d.data.emote.id, d.data.channel);
-         _addEmote(thirdparty.emotes.bttv, 'c', d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), d.data.channel, wU, hU);
+         _removeEmoteByID(thirdparty.emotes.bttv, cSources.scope.channel, d.data.emote.id, d.data.channel);
+         _addEmote(thirdparty.emotes.bttv, cSources.scope.channel, d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), d.data.channel, wU, hU);
          cSafe = JSON.parse(JSON.stringify(cList));
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
@@ -14811,10 +14829,10 @@
        if (j.emotes[i].data.hasOwnProperty('flags') && j.emotes[i].data.flags !== null && (j.emotes[i].data.flags & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe['7tv'], 'g', j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, false, jInf.width, jInf.height, true);
+         _addEmote(thirdparty.emotes.zwe['7tv'], cSources.scope.global, j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, false, jInf.width, jInf.height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes['7tv'], 'g', j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, false, jInf.width, jInf.height);
+       _addEmote(thirdparty.emotes['7tv'], cSources.scope.global, j.emotes[i].data.name, j.emotes[i].data.id, jInf.url, false, jInf.width, jInf.height);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -14873,10 +14891,10 @@
        if ((r[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe['7tv'], 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height, true);
+         _addEmote(thirdparty.emotes.zwe['7tv'], cSources.scope.channel, r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes['7tv'], 'c', r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
+       _addEmote(thirdparty.emotes['7tv'], cSources.scope.channel, r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
       }
       cSafe = JSON.parse(JSON.stringify(cList));
       return true;
@@ -14913,10 +14931,10 @@
        if ((setData[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
        {
         if (cfg.display.extended.useZWE)
-         _addEmote(thirdparty.emotes.zwe['7tvU'][svcName + ':' + uID], 'u', setData[i].name, setData[i].id, setData[i].url, false, setData[i].width, setData[i].height, true);
+         _addEmote(thirdparty.emotes.zwe['7tvU'][svcName + ':' + uID], cSources.scope.user, setData[i].name, setData[i].id, setData[i].url, false, setData[i].width, setData[i].height, true);
         continue;
        }
-       _addEmote(thirdparty.emotes['7tvU'][svcName + ':' + uID], 'u', setData[i].name, setData[i].id, setData[i].url, false, setData[i].width, setData[i].height);
+       _addEmote(thirdparty.emotes['7tvU'][svcName + ':' + uID], cSources.scope.user, setData[i].name, setData[i].id, setData[i].url, false, setData[i].width, setData[i].height);
       }
      }
 
