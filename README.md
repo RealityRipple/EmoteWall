@@ -31,16 +31,27 @@ You will receive a new version of your HTML file with your previous settings.
 ### Kappagen
 Each emote-splosion uses the number of emotes defined in the kappa count preference mentioned in [CONFIG.md](./CONFIG.md), except Pyramid, which uses a constant number based on the `pyramidDist` array, and Text, which uses the `alnumDist` array to construct specific words or phrases. If the trigger includes specific emotes (via kappagen, cheer, or resub message), the ratio of one emote to another will be maintained. If a user with kappa access posts "!kappagen PunchTrees PunchTrees SSSsss" then two thirds of the emotes in the emote-splosion will be "PunchTrees", and one third will be "SSSsss".
 
+### Emote Priority
+Priority for emotes with identical names (case-sensitive) uses this exact order:
+ 1) Cheermotes
+ 2) User Emotes + Golden Kappa
+ 3) Channel Emotes
+ 4) Global Emotes
+ 5) Emojis
+
+The order between services is always:
+ 1) First-Party (Twitch, YouTube, or Kick)
+ 2) FrankerFaceZ
+ 3) BetterTTV
+ 4) 7TV
+
+This priority order is slightly different from existing extensions, and prioritizes the ability to override global emotes with channel-themed ones, as well as allowing third-party User emotes to override any others, except cheers.
+
 ### Cheers
 The cheer style will be used for kappagens. If a user cheers 1000 bits in a single 1000 bit emote, then the kappagen will be made of the 1000-bit cheers. However, if the user cheers 1000 bits using multiple smaller cheer emotes, those emotes will be used for the kappagen instead.
 
 ### Twitch API
 There are only a few actual problems with Twitch's API; many of the issues listed below are things that could be improved or made more efficient, not things that are broken.
-
-> #### [Emojis](//twitch.uservoice.com/forums/310201/suggestions/44425005)
-> Twitch filters out the ZWJ (Zero-Width Joiner) character which is used for merging many emojis. This system makes use of basic character detection to correctly parse many standard ZWJ-style emojis even without the ZWJ character, however more complicated sets such as the "family units" are not possible to correctly handle. The alternative character 0xE0002 used by some third-party Twitch chat projects will be correctly parsed as a ZWJ according to the rules laid out in the RFC:  
->
-> [Emoji RFC](//gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f)
 
 > #### [Emote Dimensions](//twitch.uservoice.com/forums/310213/suggestions/46824100)
 > Emotes that are not square may be shrunk to fit while maintaining the original aspect ratio for certain animations, such as the Pyramids and Text kappagens, and Cubes. Some emote sizes are non-standard and not correctly provided. The dimensions of non-square images are stored in the OBS Browser Source's IndexedDB, so that after the first time the image is displayed, the correct dimensions will be used. This also means that some emotes (notably Twitch's basic smile set) may be squashed the very first time they're displayed.
@@ -67,6 +78,11 @@ There are only a few actual problems with Twitch's API; many of the issues liste
 
 > #### [Redeems](//twitch.uservoice.com/forums/932221/suggestions/45492757)
 > Channel point redeems show up as both EventSub events and IRC chat events, however there is no shared ID to help you tell that both messages are from a single event. Adding a shared ID would improve channel point redeem detection support.
+
+> #### Legacy Emoji Workaround
+> Twitch used to filter out the ZWJ (Zero-Width Joiner) character which is used for merging many emojis. The alternative character 0xE0002 may still replace ZWJs in some third-party Twitch chat projects, and will be correctly parsed as a ZWJ according to the rules laid out in the RFC:  
+>
+> [Emoji RFC](//gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f)
 
 ### YouTube API
 YouTube Livestream support is still under active development, and may not correctly support Monetized Channel events such as memberships, super chats, or stickers. It will, however, detect and send information on such events to the RealityRipple webserver for development purposes, if you enable the `feedback` option in the configuration. Additionally, due to the myriad limitations in the YouTube API, there is currently no method to load any custom channel emojis, and Google's interest in improving the API seems to be, essentially, nonexistent.  
