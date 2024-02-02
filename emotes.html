@@ -4434,7 +4434,7 @@
         r.push(v);
         continue;
        }
-       if (thirdparty.emotes.hasOwnProperty('youtube') && thirdparty.emotes.youtube.hasOwnProperty(s[i]))
+       if (thirdparty.emotes.hasOwnProperty('youtube') && thirdparty.emotes.youtube.hasOwnProperty(s[i]) && thirdparty.emotes.youtube[s[i]].scope === cSources.scope.channel)
        {
         v.svc = cSources.service.youtube;
         v.url = thirdparty.emotes.youtube[s[i]].url;
@@ -4485,6 +4485,14 @@
         v.svc = cSources.service.twitch;
         v.url = thirdparty.emotes.twitch[s[i]].url;
         v.scope = thirdparty.emotes.twitch[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (thirdparty.emotes.hasOwnProperty('youtube') && thirdparty.emotes.youtube.hasOwnProperty(s[i]) && thirdparty.emotes.youtube[s[i]].scope === cSources.scope.global)
+       {
+        v.svc = cSources.service.youtube;
+        v.url = thirdparty.emotes.youtube[s[i]].url;
+        v.scope = thirdparty.emotes.youtube[s[i]].scope;
         r.push(v);
         continue;
        }
