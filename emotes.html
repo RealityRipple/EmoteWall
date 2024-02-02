@@ -8848,42 +8848,45 @@
          const pNow = new Date().getTime();
          for (let i = 0, l = j.items.length; i < l; i++)
          {
-          if (!j.items[i].hasOwnProperty('snippet'))
+          const cmd = j.items[i];
+          if (!cmd.hasOwnProperty('snippet'))
            continue;
-          if (!j.items[i].snippet.hasOwnProperty('type'))
+          if (!cmd.snippet.hasOwnProperty('type'))
            continue;
-          if (j.items[i].snippet.hasOwnProperty('publishedAt'))
+          if (cmd.snippet.hasOwnProperty('publishedAt'))
           {
-           const pTime = new Date(j.items[i].snippet.publishedAt).getTime();
+           const pTime = new Date(cmd.snippet.publishedAt).getTime();
            const pJitter = (_mWait + _bSlower) * (2 + (_bSlower > 0 ? Math.floor(_mStep / _bSlower) : 0));
            if (pNow - pTime > pJitter)
             continue;
           }
-          switch (j.items[i].snippet.type)
+          if (!cmd.hasOwnProperty('_channel'))
+           cmd._channel = stream.channel;
+          switch (cmd.snippet.type)
           {
            case 'textMessageEvent':
-            await _textMessageEvent(j.items[i], stream.channel);
+            await _textMessageEvent(cmd);
             break;
            case 'superChatEvent':
-            await _superChatEvent(j.items[i], stream.channel);
+            await _superChatEvent(cmd);
             break;
            case 'newSponsorEvent':
-            _newSponsorEvent(j.items[i]);
+            _newSponsorEvent(cmd);
             break;
            case 'memberMilestoneChatEvent':
-            await _memberMilestoneChatEvent(j.items[i]);
+            await _memberMilestoneChatEvent(cmd);
             break;
            case 'superStickerEvent':
-            _superStickerEvent(j.items[i], stream.channel);
+            _superStickerEvent(cmd);
             break;
            case 'membershipGiftingEvent':
-            _membershipGiftingEvent(j.items[i]);
+            _membershipGiftingEvent(cmd);
             break;
            case 'messageDeletedEvent':
-            _messageDeletedEvent(j.items[i]);
+            _messageDeletedEvent(cmd);
             break;
            case 'userBannedEvent':
-            _userBannedEvent(j.items[i]);
+            _userBannedEvent(cmd);
             break;
           }
          }
@@ -8903,14 +8906,12 @@
         delete _tM[chatID];
        }
 
-       async function _textMessageEvent(cmd, chID)
+       async function _textMessageEvent(cmd)
        {
         if (document.visibilityState === 'hidden')
          return;
         if (!cmd.hasOwnProperty('authorDetails'))
          return;
-        if (!cmd.hasOwnProperty('_channel'))
-         cmd._channel = chID;
         if (cmd.hasOwnProperty('id') && cmd.authorDetails.hasOwnProperty('channelId'))
         {
          if (!_msgHistory.hasOwnProperty(cmd.authorDetails.channelId))
@@ -8920,7 +8921,7 @@
         await youtube.parse.line(cmd);
        }
 
-       async function _superChatEvent(cmd, chID)
+       async function _superChatEvent(cmd)
        {
         if (document.visibilityState === 'hidden')
          return;
@@ -8928,8 +8929,6 @@
          return;
         if (!cmd.snippet.hasOwnProperty('superChatDetails'))
          return;
-        if (!cmd.hasOwnProperty('_channel'))
-         cmd._channel = chID;
         if (cmd.hasOwnProperty('id') && cmd.authorDetails.hasOwnProperty('channelId'))
         {
          if (!_msgHistory.hasOwnProperty(cmd.authorDetails.channelId))
@@ -8963,7 +8962,7 @@
         await youtube.parse.event.membership.milestone(cmd);
        }
 
-       function _superStickerEvent(cmd, chID)
+       function _superStickerEvent(cmd)
        {
         if (document.visibilityState === 'hidden')
          return;
@@ -8971,8 +8970,6 @@
          return;
         if (!cmd.snippet.hasOwnProperty('superStickerDetails'))
          return;
-        if (!cmd.hasOwnProperty('_channel'))
-         cmd._channel = chID;
         if (cmd.hasOwnProperty('id') && cmd.authorDetails.hasOwnProperty('channelId'))
         {
          if (!_msgHistory.hasOwnProperty(cmd.authorDetails.channelId))
