@@ -9539,10 +9539,16 @@
          dup = cfg.display.duplicates;
         if (dup === false)
          dup = 1;
+        const lv = _level(cmd);
         for (let i = 0, l = emList.length; i < l; i++)
         {
          const u = _ttu(emList[i][0]);
          if (u === false)
+          continue;
+         let sc = cSources.scope.global;
+         if (u.hasOwnProperty('scope'))
+          sc = u.scope;
+         if (sc === cSources.scope.channel && (lv & (youtube.Access.MEMBER | youtube.Access.BROADCASTER)) === 0)
           continue;
          if (dup !== true)
          {
@@ -9555,9 +9561,6 @@
           if (ct >= dup)
            continue;
          }
-         let sc = cSources.scope.channel;
-         if (u.hasOwnProperty('scope'))
-          sc = u.scope;
          ret.push({svc: cSources.service.youtube, url: u.url, str: emList[i][0], pos: emList[i].index, scope: sc});
         }
         return ret;
