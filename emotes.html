@@ -10024,53 +10024,68 @@
       const r = [];
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope === cSources.scope.user)
+       if (a[i].svc === cSources.service.cheer)
         r.push(a[i]);
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === cSources.service.youtube || a[i].svc === cSources.service.cheer || a[i].svc === cSources.service.emoji)
-        r.push(a[i]);
+       if (a[i].scope === cSources.scope.user)
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.youtube && a[i].scope === cSources.scope.channel)
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
       }
       for (let i = 0; i < lA; i++)
       {
        if (a[i].scope === cSources.scope.channel && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
        {
-        let f = false;
-        for (let j = 0, l = r.length; j < l; j++)
-        {
-         if (r[j].str === a[i].str)
-         {
-          f = true;
-          if (r[j].svc === a[i].svc)
-           r.push(a[i]);
-          break;
-         }
-        }
-        if (!f)
+        if (_notDupe(a[i], r))
          r.push(a[i]);
        }
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].scope !== cSources.scope.channel && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
+       if (a[i].svc === cSources.service.youtube && a[i].scope === cSources.scope.global)
        {
-        let f = false;
-        for (let j = 0, l = r.length; j < l; j++)
-        {
-         if (r[j].str === a[i].str)
-         {
-          f = true;
-          if (r[j].svc === a[i].svc)
-           r.push(a[i]);
-          break;
-         }
-        }
-        if (!f)
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].scope === cSources.scope.global && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.emoji)
+       {
+        if (_notDupe(a[i], r))
          r.push(a[i]);
        }
       }
       return r;
+     }
+
+     function _notDupe(add, pend)
+     {
+      for (let i = 0, l = pend.length; i < l; i++)
+      {
+       if (pend[i].str === add.str)
+        return (pend[i].svc === add.svc);
+      }
+      return true;
      }
 
      async function _eListFromCmd(cmd, dup = null)
