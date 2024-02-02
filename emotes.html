@@ -1249,7 +1249,7 @@
         init: 'https://youtube.googleapis.com/youtube/v3/liveChat/messages?liveChatId=%CHAT_ID%&part=%PART%&maxResults=2000',
         page: 'https://youtube.googleapis.com/youtube/v3/liveChat/messages?liveChatId=%CHAT_ID%&part=%PART%&pageToken=%PAGE%&maxResults=2000'
        },
-       emojis: 'https://realityripple.com/Tools/Twitch/EmoteWall/yte.json',
+       emojis: 'https://realityripple.com/Tools/ytEmojiDB/read.php',
        superstickers: 'https://realityripple.com/Tools/Twitch/EmoteWall/ytss.json'
       },
       subscriptions: 'https://www.googleapis.com/youtube/v3/subscriptions?part=%PART%&myRecentSubscribers=true&maxResults=50',
@@ -1308,6 +1308,9 @@
     cdn: {
      twitch: {
       emote: 'https://static-cdn.jtvnw.net/emoticons/v2/%EMOTE_ID%/default/dark/3.0'
+     },
+     youtube: {
+      emoji: 'https://yt3.ggpht.com/%EMOJI_ID%=w112-h112-c-k-nd'
      },
      kick: {
       emote: 'https://files.kick.com/emotes/%EMOTE_ID%/fullsize'
@@ -8415,6 +8418,7 @@
         if (!youtube.net.channelIDs.includes(lStreams[i].channel))
         {
          youtube.net.channelIDs.push(lStreams[i].channel);
+         await _loadEmote_channel(lStreams[i].channel);
          if (cfg.display.extended.useFFZ)
           thirdparty.ffz.channel('youtube', lStreams[i].channel);
          if (cfg.display.extended.useBTTV)
@@ -9138,6 +9142,40 @@
       return $c_subscribers;
      }();
 
+     async function _loadEmote_channel(chName)
+     {
+      if (!thirdparty.emotes.hasOwnProperty('youtube'))
+       thirdparty.emotes.youtube = {};
+      const r = await _findEmote_channel(chName, thirdparty.emotes.youtube);
+      if (r === false)
+       return false;
+      if (cList.length === 0)
+       cList = r;
+      else
+      {
+       for (const n in thirdparty.emotes.youtube)
+       {
+        if (!thirdparty.emotes.youtube[n].hasOwnProperty('scope'))
+         continue;
+        if (thirdparty.emotes.youtube[n].scope !== cSources.scope.channel)
+         continue;
+        for (let c = cList.length - 1; c >= 0; c--)
+        {
+         if (cList[c].url !== thirdparty.emotes.youtube[n].url)
+          continue;
+         cList.splice(c, 1);
+         break;
+        }
+       }
+       for (let i = 0, l = r.length; i < l; i++)
+       {
+        if (!cList.includes(r[i]))
+         cList.push(r[i]);
+       }
+      }
+      cSafe = JSON.parse(JSON.stringify(cList));
+     }
+
      const $oAuth = function()
      {
       const _pathRefresh = '.refresh';
@@ -9487,8 +9525,7 @@
         let msg = _getMessage(cmd);
         if (msg === false)
          return [];
-        msg = msg.toLowerCase();
-        const emSeg = /(:[a-z\-]+:)/g;
+        const emSeg = /(:[^: ]+:)/g;
         const emList = [];
         let match = '';
         while ((match = emSeg.exec(msg)) !== null)
@@ -9518,7 +9555,10 @@
           if (ct >= dup)
            continue;
          }
-         ret.push({svc: cSources.service.youtube, url: u, str: emList[i][0], pos: emList[i].index});
+         let sc = cSources.scope.channel;
+         if (u.hasOwnProperty('scope'))
+          sc = u.scope;
+         ret.push({svc: cSources.service.youtube, url: u.url, str: emList[i][0], pos: emList[i].index, scope: sc});
         }
         return ret;
        }
@@ -9533,7 +9573,7 @@
         t = t.slice(0, -1);
         if (!thirdparty.emotes.youtube.hasOwnProperty(t))
          return false;
-        return thirdparty.emotes.youtube[t].url;
+        return thirdparty.emotes.youtube[t];
        }
 
        return $c_youtube;
@@ -10198,6 +10238,87 @@
      };
     }();
 
+    const _findEmote_channel = function()
+    {
+     const _rCH = 300000;
+     const _chList = {};
+
+     async function $c_findEmote_channel(chName, n = false)
+     {
+      if (n === false && _chList.hasOwnProperty(chName))
+      {
+       const tDif = new Date().getTime() - _chList[chName].t;
+       if (tDif < _rCH)
+        return _chList[chName].value;
+      }
+      const url = cURLs.api.youtube.livechat.emojis;
+      const h = {'Content-Type': 'application/x-www-form-urlencoded'};
+      const b = 'u=' + encodeURIComponent(chName);
+      const r = await shared.httpRequest('POST', url, h, b);
+      if (!r.success)
+       return false;
+      const j = r.json;
+      if (j === null)
+       return false;
+      if (typeof j !== 'object')
+       return false;
+      const ret = [];
+      const jIDs = Object.keys(j);
+      for (let i = 0, l = jIDs.length; i < l; i++)
+      {
+       if (!j.hasOwnProperty(jIDs[i]))
+        continue;
+       if (!j[jIDs[i]].hasOwnProperty('name'))
+        continue;
+       if (!j[jIDs[i]].hasOwnProperty('image'))
+        continue;
+       if (cfg.ignore.emotes !== false)
+       {
+        let isOK = true;
+        for (let k = 0, c = j[jIDs[i]].name.length; k < c; k++)
+        {
+         let eName = j[jIDs[i]].name[k];
+         if (eName.slice(0, 1) !== ':')
+          continue;
+         if (eName.slice(-1) !== ':')
+          continue;
+         eName = eName.slice(1, -1);
+         if (cfg.ignore.emotes.includes(eName))
+         {
+          isOK = false;
+          break;
+         }
+        }
+        if (!isOK)
+         continue;
+       }
+       const eURL = cURLs.cdn.youtube.emoji.replaceAll('%EMOJI_ID%', j[jIDs[i]].image);
+       if (n !== false)
+       {
+        for (let k = 0, c = j[jIDs[i]].name.length; k < c; k++)
+        {
+         let eName = j[jIDs[i]].name[k];
+         if (eName.slice(0, 1) !== ':')
+          continue;
+         if (eName.slice(-1) !== ':')
+          continue;
+         eName = eName.slice(1, -1);
+         n[eName] = {
+          scope: cSources.scope.channel,
+          url: eURL,
+          id: jIDs[i]
+         };
+        }
+       }
+       ret.push({url: eURL});
+      }
+      _chList[chName] = {t: new Date().getTime(), value: ret};
+      return ret;
+     }
+
+     return $c_findEmote_channel;
+    }();
+
     async function $global()
     {
      if (!thirdparty.emotes.hasOwnProperty('youtube'))
@@ -10209,25 +10330,25 @@
      const j = r.json;
      if (j === null)
       return false;
-     let eCDN;
-     if (j.hasOwnProperty('template'))
-      eCDN = j.template;
-     else
-      eCDN = 'https://yt3.ggpht.com/%EMOJI_ID%=w112-h112-c-k-nd';
-     if (!j.hasOwnProperty('list'))
+     if (typeof j !== 'object')
       return false;
-     if (typeof j.list !== 'object')
-      return false;
-     if (j.list === null)
-      return false;
-     const jNames = Object.keys(j.list);
-     for (let i = 0, l = jNames.length; i < l; i++)
+     const jIDs = Object.keys(j);
+     for (let i = 0, l = jIDs.length; i < l; i++)
      {
-      thirdparty.emotes.youtube[jNames[i]] = {
-       scope: cSources.scope.global,
-       url: eCDN.replaceAll('%EMOJI_ID%', j.list[jNames[i]]),
-       id: j.list[jNames[i]]
-      };
+      for (let k = 0, c = j[jIDs[i]].name.length; k < c; k++)
+      {
+       let eName = j[jIDs[i]].name[k];
+       if (eName.slice(0, 1) !== ':')
+        continue;
+       if (eName.slice(-1) !== ':')
+        continue;
+       eName = eName.slice(1, -1);
+       thirdparty.emotes.youtube[eName] = {
+        scope: cSources.scope.global,
+        url: cURLs.cdn.youtube.emoji.replaceAll('%EMOJI_ID%', j[jIDs[i]].image),
+        id: jIDs[i]
+       };
+      }
      }
      return true;
     }
