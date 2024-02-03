@@ -1252,7 +1252,10 @@
        emojis: 'https://realityripple.com/Tools/ytEmojiDB/read.php',
        superstickers: 'https://realityripple.com/Tools/Twitch/EmoteWall/ytss.json'
       },
-      subscriptions: 'https://www.googleapis.com/youtube/v3/subscriptions?part=%PART%&myRecentSubscribers=true&maxResults=50',
+      subscriptions: {
+       recent: 'https://www.googleapis.com/youtube/v3/subscriptions?part=%PART%&myRecentSubscribers=true&maxResults=50',
+       match: 'https://www.googleapis.com/youtube/v3/subscriptions?part=%PART%&channelId=%USER%&forChannelId=%CHANNEL%'
+      },
       tokeninfo: 'https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=%OAUTH_TOKEN%'
      },
      kick: {
@@ -9038,9 +9041,10 @@
       let _uLS = false;
       let _tS = false;
       const _rSC = 12000;
+      const _rSH = 3600000;
       let _bSlower = 0;
 
-      function $c_subscribers()
+      function $init()
       {
        if (!youtube.net.oAuth.auth.scope.includes(cScopes.youtube.readonly))
        {
@@ -9073,7 +9077,7 @@
 
       async function _getChange()
       {
-       const url = cURLs.api.youtube.subscriptions.replaceAll('%PART%', encodeURIComponent('subscriberSnippet'));
+       const url = cURLs.api.youtube.subscriptions.recent.replaceAll('%PART%', encodeURIComponent('snippet,subscriberSnippet'));
        const h = {
         'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
         'Accept': 'application/json'
@@ -9122,13 +9126,42 @@
         return false;
        if (!j.hasOwnProperty('items') || !Array.isArray(j.items) || j.items.length < 1)
         return false;
+       for (let i = 0, l = j.items.length; i < l; i++)
+       {
+        if (!j.items[i].hasOwnProperty('snippet'))
+         continue;
+        if (!j.items[i].snippet.hasOwnProperty('resourceId'))
+         continue;
+        if (!j.items[i].snippet.resourceId.hasOwnProperty('channelId'))
+         continue;
+        if (!j.items[i].hasOwnProperty('subscriberSnippet'))
+         continue;
+        if (!j.items[i].subscriberSnippet.hasOwnProperty('channelId'))
+         continue;
+        const chID = j.items[i].snippet.resourceId.channelId;
+        if (!youtube.net.sList.hasOwnProperty(chID))
+         youtube.net.sList[chID] = {};
+        youtube.net.sList[chID][j.items[i].subscriberSnippet.channelId] = {value: true, t: new Date().getTime()};
+       }
        const findU = _uLS;
-       _uLS = j.items[0].subscriberSnippet.channelId;
+       for (let i = 0, l = j.items.length; i < l; i++)
+       {
+        if (!j.items[i].hasOwnProperty('subscriberSnippet'))
+         continue;
+        if (!j.items[i].subscriberSnippet.hasOwnProperty('channelId'))
+         continue;
+        _uLS = j.items[i].subscriberSnippet.channelId;
+        break;
+       }
        if (findU === false)
         return false;
        const s = [];
        for (let i = 0, l = j.items.length; i < l; i++)
        {
+        if (!j.items[i].hasOwnProperty('subscriberSnippet'))
+         continue;
+        if (!j.items[i].subscriberSnippet.hasOwnProperty('channelId'))
+         continue;
         if (j.items[i].subscriberSnippet.channelId === findU)
          return s;
         s.push(j.items[i].subscriberSnippet.title);
@@ -9136,7 +9169,60 @@
        return [];
       }
 
-      return $c_subscribers;
+      async function $checkUser(chID, uID)
+      {
+       if (youtube.net.sList.hasOwnProperty(chID) && youtube.net.sList[chID].hasOwnProperty(uID))
+       {
+        const tDif = new Date().getTime() - youtube.net.sList[chID][uID].t;
+        if (tDif < _rSH)
+         return youtube.net.sList[chID][uID].value;
+       }
+       const url = cURLs.api.youtube.subscriptions.match.replaceAll('%PART%', encodeURIComponent('subscriberSnippet')).replaceAll('%USER%', encodeURIComponent(uID)).replaceAll('%CHANNEL%', encodeURIComponent(chID));
+       const h = {
+        'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
+        'Accept': 'application/json'
+       };
+       const r = await shared.httpRequest('GET', url, h);
+       const j = r.json;
+       if (!r.success)
+       {
+        if (r.code === 0 && r.data === '')
+         return false;
+        if (r.code === 408 && r.data === shared.errTimeout)
+         return false;
+        if (j === null)
+         return false;
+        const e = _flatJSON(j);
+        if (!e.hasOwnProperty('error.errors.0.reason'))
+         return false;
+        if (e['error.errors.0.reason'] !== 'subscriptionForbidden')
+         return false;
+        if (!youtube.net.sList.hasOwnProperty(chID))
+         youtube.net.sList[chID] = {};
+        youtube.net.sList[chID][uID] = {value: false, t: new Date().getTime()};
+        return false;
+       }
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('pageInfo'))
+        return false;
+       if (!j.pageInfo.hasOwnProperty('totalResults'))
+        return false;
+       if (!youtube.net.sList.hasOwnProperty(chID))
+        youtube.net.sList[chID] = {};
+       if (j.pageInfo.totalResults > 0)
+       {
+        youtube.net.sList[chID][uID] = {value: true, t: new Date().getTime()};
+        return true;
+       }
+       youtube.net.sList[chID][uID] = {value: false, t: new Date().getTime()};
+       return false;
+      }
+
+      return {
+       init: $init,
+       checkUser: $checkUser
+      };
      }();
 
      async function _loadEmote_channel(chName)
@@ -9470,6 +9556,7 @@
 
      return {
       channelIDs: [],
+      sList: {},
       dead: false,
       broadcasts: $broadcasts,
       subscribers: $subscribers,
@@ -9517,7 +9604,7 @@
 
       const $youtube = function()
       {
-       function $c_youtube(cmd, dup = null)
+       async function $c_youtube(cmd, dup = null)
        {
         let msg = _getMessage(cmd);
         if (msg === false)
@@ -9536,7 +9623,7 @@
          dup = cfg.display.duplicates;
         if (dup === false)
          dup = 1;
-        const lv = _level(cmd);
+        const lv = await _level(cmd);
         for (let i = 0, l = emList.length; i < l; i++)
         {
          const u = _ttu(emList[i][0]);
@@ -10036,33 +10123,60 @@
       };
      }();
 
-     const _level = function()
+     async function _level(cmd)
      {
-      function $c_level(cmd)
-      {
-       let r = youtube.Access.STRANGER;
-       if (!cmd.hasOwnProperty('authorDetails'))
-        return r;
-       const author = cmd.authorDetails;
-       if (author.hasOwnProperty('isChatOwner') && author.isChatOwner !== false)
-        r |= youtube.Access.BROADCASTER;
-       if (author.hasOwnProperty('isChatModerator') && author.isChatModerator !== false)
-        r |= youtube.Access.MODERATOR;
-       if (author.hasOwnProperty('isChatSponsor') && author.isChatSponsor !== false)
-        r |= youtube.Access.MEMBER;
-       if (author.hasOwnProperty('isMember') && author.isMember !== false)
-        r |= youtube.Access.MEMBER;
-       if (author.hasOwnProperty('isVerified') && author.isVerified !== false)
-        r |= youtube.Access.VERIFIED;
-       if (author.hasOwnProperty('isSubscriber') && author.isSubscriber !== false)
-        r |= youtube.Access.SUBSCRIBER;
-       if ((r & youtube.Access.BROADCASTER) === youtube.Access.BROADCASTER && (r & youtube.Access.MEMBER) !== 0)
-        return r & ~youtube.Access.MEMBER;
+      let r = youtube.Access.STRANGER;
+      if (!cmd.hasOwnProperty('authorDetails'))
        return r;
+      const author = cmd.authorDetails;
+      if (author.hasOwnProperty('isChatOwner') && author.isChatOwner !== false)
+       r |= youtube.Access.BROADCASTER;
+      if (author.hasOwnProperty('isChatModerator') && author.isChatModerator !== false)
+       r |= youtube.Access.MODERATOR;
+      if (author.hasOwnProperty('isChatSponsor') && author.isChatSponsor !== false)
+       r |= youtube.Access.MEMBER;
+      if (author.hasOwnProperty('isMember') && author.isMember !== false)
+       r |= youtube.Access.MEMBER;
+      if (author.hasOwnProperty('isVerified') && author.isVerified !== false)
+       r |= youtube.Access.VERIFIED;
+      if (author.hasOwnProperty('isSubscriber') && author.isSubscriber !== false)
+       r |= youtube.Access.SUBSCRIBER;
+      if (cmd.hasOwnProperty('_channel') && cmd.authorDetails.hasOwnProperty('channelId'))
+      {
+       /* api-heavy, only check if subscriber access is allowed and there's a chance it matters */
+       let needS = false;
+       if ((cfg.display.access & youtube.Access.SUBSCRIBER) === youtube.Access.SUBSCRIBER && (cfg.display.access & youtube.Access.STRANGER) !== youtube.Access.STRANGER)
+        needS = true;
+       else if ((cfg.display.kappa.access & youtube.Access.SUBSCRIBER) === youtube.Access.SUBSCRIBER && (cfg.display.kappa.access & youtube.Access.STRANGER) !== kick.Access.STRANGER)
+        needS = true;
+       else
+       {
+        for (const k of cfg.commands)
+        {
+         if (!k.hasOwnProperty('styles'))
+          continue;
+         if (!k.hasOwnProperty('access'))
+          continue;
+         if ((k.access & youtube.Access.SUBSCRIBER) === youtube.Access.SUBSCRIBER && (k.access & youtube.Access.STRANGER) !== youtube.Access.STRANGER)
+         {
+          needS = true;
+          break;
+         }
+        }
+       }
+       if (needS)
+       {
+        const uID = cmd.authorDetails.channelId;
+        const chID = cmd._channel;
+        const f = await youtube.net.subscribers.checkUser(chID, uID);
+        if (f)
+         r |= youtube.Access.SUBSCRIBER;
+       }
       }
-
-      return $c_level;
-     }();
+      if ((r & youtube.Access.BROADCASTER) === youtube.Access.BROADCASTER && (r & youtube.Access.MEMBER) !== 0)
+       return r & ~youtube.Access.MEMBER;
+      return r;
+     }
 
      function _handleDuplicates(a)
      {
@@ -10150,7 +10264,7 @@
       const u = _parseUser(cmd);
       if (u !== false && cfg.ignore.users !== false && cfg.ignore.users.includes(u['display-name']))
        return r;
-      r.push(...youtube.parse.content.youtube(cmd, dup));
+      r.push(...await youtube.parse.content.youtube(cmd, dup));
       if (cfg.display.useEmoji)
        r.push(...await youtube.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
       if (cfg.display.extended.useFFZ)
@@ -17320,7 +17434,7 @@
      await youtube.stickers();
      notice.expect |= notice.Connection.YOUTUBE;
      if (cfg.event.youtube.sub !== false)
-      youtube.net.subscribers();
+      youtube.net.subscribers.init();
      youtube.net.broadcasts.updateStream();
      return true;
     }
