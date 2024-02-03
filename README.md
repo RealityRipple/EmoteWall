@@ -95,7 +95,9 @@ Despite these numerous issues, the Emote Wall still functions on YouTube, and ne
 > There is no API for finding global or monetized channel emojis via an HTTP request. The chat system's `liveChatMessage` events likewise do not contain any custom emoji data.
 
 > #### [Subscriber Status](https://issuetracker.google.com/issues/263926624)
-> This is much the same as Twitch's follower detection. Additionally, the use of the term "sponsor" instead of "member" has stuck around through the parameter they do include, but the tier isn't provided.
+> This is much the same as Twitch's follower detection, containing no tag (or property in YouTube's case) to determine if a user is a subscriber, with the inclusion of new subscribers having to be detected via list polling. To make matters worse, a user can make all subscriptions private through the Privacy Settings on YouTube, which also hides the user's subscription from the broadcaster, and thus the API. This means, if a user sets subscriptions to private, the Emote Wall will not know the user is a subscriber.
+>
+> Additionally, the use of the term "sponsor" instead of "member" has stuck around through the property they do include, but the tier isn't provided.
 
 > #### [Uniform Errors](https://issuetracker.google.com/issues/287881893)
 > The API returns differently formatted errors depending on where the error occurs in the API response process, making error handling a nightmare.
