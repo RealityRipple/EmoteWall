@@ -109,6 +109,7 @@
       'Crazy',        // Bounce off the walls [Layout Shifts - Requires offset-anchor / offset-position directives]
       'Confetti',     // Fall like confetti                   (no zoom, no fade in, only fade out)
       'Throw',        // Toss at the middle and tumble down   (no fade/zoom in, only out)
+      'Pop',          // Jump from the bottom                 (no fade/zoom in, only out)
       'TheCube'       // Rotate a 3D cube of an emote         (no zoom, only fade)
      ],
      access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x008 | 0x004 | 0x002 | 0x001,
@@ -423,6 +424,28 @@
         min: 0.3,
         max: 0.7
        }
+      }
+     },
+     'Pop': {
+      time: 1,
+      peek: {        /* percentages of the above time percentage */
+       up: 1/10,
+       pause: 1/10,
+       'down': 1/10
+      },
+      pause: 0,
+      jump: {
+       up: 1/5,
+       pause: 0,
+       'down': 1/2
+      },
+      top: {         /* percentages of the screen height */
+       min: 1/10,
+       max: 2/5
+      },
+      bottom: {
+       min: 4/5,
+       max: 19/20
       }
      },
      'TheCube': {
@@ -2697,6 +2720,135 @@
        return $c_Throw;
       }();
 
+      const $Pop = function()
+      {
+       function $c_Pop(eInf, sW, sH, eH, canV = true, tInit = 0)
+       {
+        if (tInit === 0)
+         tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
+        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
+         return;
+        let variationSize = 1;
+        if (canV && cfg.emote.size.variation !== false)
+        {
+         if (typeof cfg.emote.size.variation === 'number')
+         {
+          const chances = [];
+          chances.push(0.5);
+          chances.push(2);
+          for (let i = 0; i < cfg.emote.size.variation; i++)
+          {
+           chances.push(1);
+          }
+          variationSize = chances[shared.rnd(chances.length)];
+         }
+         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+         {
+          const chances = [];
+          chances.push(...cfg.emote.size.variation.range);
+          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          {
+           chances.push(1);
+          }
+          variationSize = chances[shared.rnd(chances.length)];
+         }
+        }
+        eH = Math.ceil(eH * variationSize);
+        let eW = eH;
+        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+         eW = eInf.width / eInf.height * eH;
+        const sR = sW - eW;
+        const sB = sH - eH;
+        const h = shared.rnd(sR);
+        const v = sH;
+        const vT = Math.floor(sH * _rndFromRange(timing.display.Pop.top));
+        const vB = Math.floor(sH * _rndFromRange(timing.display.Pop.bottom));
+        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Pop.time);
+        const t1 = Math.floor(tMS * timing.display.Pop.peek.up);
+        const t2 = Math.floor(tMS * timing.display.Pop.peek.pause);
+        const t3 = Math.floor(tMS * timing.display.Pop.peek.down);
+        const t4 = Math.floor(tMS * timing.display.Pop.pause);
+        const t5 = Math.floor(tMS * timing.display.Pop.jump.up);
+        const t6 = Math.floor(tMS * timing.display.Pop.jump.pause);
+        const t7 = Math.floor(tMS * timing.display.Pop.jump.down);
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eW + 'px;';
+        s += ' left: ' + h + 'px;';
+        s += ' transform: translateY(' + v + 'px);';
+        const aNames = [];
+        const aDelays = [];
+        const aDurs = [];
+        const aTimings = [];
+        const aFills = [];
+        const aIters = [];
+        if (cfg.emote.out.fade)
+        {
+         const fOut = _tAnim.fade.out / 100;
+         const t7F = t7 * fOut;
+         aNames.push('fadeOut');
+         aDelays.push(t1 + t2 + t3 + t4 + t5 + t6 + Math.floor(t7 - t7F) + 'ms');
+         aDurs.push(Math.floor(t7F) + 'ms');
+         aTimings.push('ease-out');
+         aFills.push('forwards');
+         aIters.push('1');
+        }
+        else
+        {
+         aNames.push('noFadeOut');
+         aDelays.push(t1 + t2 + t3 + t4 + t5 + t6 + t7 - 50 + 'ms');
+         aDurs.push('50ms');
+         aTimings.push('ease-out');
+         aFills.push('forwards');
+         aIters.push('1');
+        }
+        if (cfg.emote.out.zoom)
+        {
+         const zOut = _tAnim.zoom.out / 100;
+         const t7Z = t7 * zOut;
+         aNames.push('zoomOut');
+         aDelays.push(t1 + t2 + t3 + t4 + t5 + t6 + Math.floor(t7 - t7Z) + 'ms');
+         aDurs.push(Math.floor(t7Z) + 'ms');
+         aTimings.push('linear');
+         aFills.push('forwards');
+         aIters.push('1');
+        }
+        s += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
+        const iArr = [];
+        iArr.push(_addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: s, classes: ['etPopPeek']}, true, {space: false, time: tMS}));
+        if (eInf.hasOwnProperty('zwe'))
+        {
+         for (let i = 0, l = eInf.zwe.length; i < l; i++)
+         {
+          iArr.push(_addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: s, classes: ['etPopPeek']}, true, {space: false, time: tMS}));
+         }
+        }
+        shared.doNextFrame(_tMove, tInit, eInf.origin, iArr, sB);
+        window.setTimeout(_tMove, t1 + t2, tInit, eInf.origin, iArr, v);
+        window.setTimeout(_tMove, t1 + t2 + t3 + t4, tInit, eInf.origin, iArr, vT);
+        window.setTimeout(_tMove, t1 + t2 + t3 + t4 + t5 + t6, tInit, eInf.origin, iArr, vB);
+       }
+
+       function _tMove(tInit, oID, iArr, vD)
+       {
+        if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
+         return;
+        for (let i = 0, l = iArr.length; i < l; i++)
+        {
+         iArr[i].classList.replace('etPopJumpUp', 'etPopJumpDown');
+         iArr[i].classList.replace('etPopPeekDown', 'etPopJumpUp');
+         iArr[i].classList.replace('etPopPeekUp', 'etPopPeekDown');
+         iArr[i].classList.replace('etPopPeek', 'etPopPeekUp');
+         iArr[i].style.transform = 'translateY( ' + vD + 'px)';
+        }
+       }
+
+       return $c_Pop;
+      }();
+
       const $TheCube = function()
       {
        function $c_TheCube(eInf, sW, sH, eH, canV = true, tInit = 0)
@@ -2993,6 +3145,7 @@
        Crazy: $Crazy,
        Confetti: $Confetti,
        Throw: $Throw,
+       Pop: $Pop,
        TheCube: $TheCube,
        Fountain: $Fountain
       };
@@ -17575,6 +17728,22 @@
       t += '.etThrowDrop\n';
       t += '{\n';
       t += ' transition: transform cubic-bezier(0.5, 0, 0.75, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.drop) + 'ms;\n';
+      t += '}\n';
+      t += '.etPopPeekUp\n';
+      t += '{\n';
+      t += ' transition: transform ease-in-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.up) + 'ms;\n';
+      t += '}\n';
+      t += '.etPopPeekDown\n';
+      t += '{\n';
+      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.down) + 'ms;\n';
+      t += '}\n';
+      t += '.etPopJumpUp\n';
+      t += '{\n';
+      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.up) + 'ms;\n';
+      t += '}\n';
+      t += '.etPopJumpDown\n';
+      t += '{\n';
+      t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.down) + 'ms;\n';
       t += '}\n';
       t += '.etFountain\n';
       t += '{\n';
