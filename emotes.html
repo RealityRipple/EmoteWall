@@ -16105,6 +16105,7 @@
 
     async function $emoji(set)
     {
+     const unqSkip = ['00a9', '00ae', '2122', '24c2'];
      if (set === true)
       set = 'twemoji';
      const r = await shared.httpRequest('GET', cURLs.cdn.emoji.list.replaceAll('%SET_ID%', set));
@@ -16121,6 +16122,8 @@
        continue;
       if (j[id].hasOwnProperty('t'))
       {
+       if (j[id].hasOwnProperty('s') && j[id].s === -1 && unqSkip.includes(id))
+        continue;
        const u = cURLs.cdn.emoji.image.replaceAll('%SET_ID%', set).replaceAll('%EMOJI_ID%', j[id].t);
        _addEmote(thirdparty.emotes.emoji, cSources.scope.global, id, j[id].t, u);
        continue;
