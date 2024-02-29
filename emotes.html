@@ -15335,6 +15335,7 @@
        let _wsR_M = 0;
        let _ws = null;
        let _sess = null;
+       let _oldSess = false;
        let _lTimeout = 5000;
        let _tTimeout = false;
        let _okCt = 0;
@@ -15415,13 +15416,18 @@
           if (d.d === null)
            return;
           _okCt = 0;
-          if (_sess !== null)
+          if (_sess !== null && !_oldSess)
           {
            if (_ws.readyState === 1)
+           {
+            _oldSess = true;
             _ws.send(JSON.stringify({'op': 34, 'd': {'session_id': _sess}}));
+           }
           }
           else
           {
+           _oldSess = false;
+           _sess = null;
            for (const acct in _chList)
            {
             if (!_chList.hasOwnProperty(acct))
@@ -15446,6 +15452,8 @@
           }
           break;
          case 2:
+          if (d.d !== null && d.d.hasOwnProperty('count') && d.d.count === 0)
+           return;
           if (_okCt !== _needCt())
           {
            if (_tTimeout !== false)
@@ -15555,6 +15563,7 @@
             case 4010:
             case 4011:
              _sess = null;
+             _oldSess = false;
              return;
             case 4005:
              wsWait = Math.floor((5 ** (1 + _wsR_RL) / 5) * 60 * 1000);
