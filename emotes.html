@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.9.1 BETA
+    * v0.9.2 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -109,6 +109,7 @@
       'Crazy',        // Bounce off the walls [Layout Shifts - Requires offset-anchor / offset-position directives]
       'Confetti',     // Fall like confetti                   (no zoom, no fade in, only fade out)
       'Throw',        // Toss at the middle and tumble down   (no fade/zoom in, only out)
+      'Pop',          // Jump from the bottom                 (no fade/zoom in, only out)
       'TheCube'       // Rotate a 3D cube of an emote         (no zoom, only fade)
      ],
      access: 0x800 | 0x400 | 0x200 | 0x100 | 0x080 | 0x040 | 0x020 | 0x010 | 0x008 | 0x004 | 0x002 | 0x001,
@@ -121,6 +122,7 @@
       useZWE: true,
       fillZWE: false
      },
+     toroidal: false,
      hue: false,
      shadow: false,
      kappa: {
@@ -423,6 +425,28 @@
         min: 0.3,
         max: 0.7
        }
+      }
+     },
+     'Pop': {
+      time: 1,
+      peek: {        /* percentages of the above time percentage */
+       up: 1/10,
+       pause: 1/10,
+       'down': 1/10
+      },
+      pause: 0,
+      jump: {
+       up: 1/5,
+       pause: 0,
+       'down': 1/2
+      },
+      top: {         /* percentages of the screen height */
+       min: 1/10,
+       max: 2/5
+      },
+      bottom: {
+       min: 4/5,
+       max: 19/20
       }
      },
      'TheCube': {
@@ -1262,8 +1286,9 @@
      kick: {
       emote: 'https://files.kick.com/emotes/%EMOTE_ID%/fullsize'
      },
-     ffz: {
-      emoji: 'https://cdn.frankerfacez.com/static/emoji/images/%SET_ID%/'
+     emoji: {
+      list: 'https://cdn.jsdelivr.net/gh/realityripple/emoji/list.min.json',
+      image: 'https://cdn.jsdelivr.net/gh/realityripple/emoji/%SET_ID%/%EMOJI_ID%.png'
      },
      bttv: {
       emote: 'https://cdn.betterttv.net/emote/%EMOTE_ID%/3x'
@@ -1875,78 +1900,319 @@
        }
       }
 
-      function $StraightLine(eInf, sW, sH, eH, x = false, y = false, canV = true, tInit = 0)
+      const $StraightLine = function()
       {
-       if (tInit === 0)
-        tInit = new Date().getTime();
-       if (_iTitanic > tInit)
-        return;
-       if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
-        return;
-       let variationSize = 1;
-       if (canV && cfg.emote.size.variation !== false)
+       function $c_StraightLine(eInf, sW, sH, eH, x = false, y = false, canV = true, tInit = 0)
        {
-        if (typeof cfg.emote.size.variation === 'number')
+        if (tInit === 0)
+         tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
+        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
+         return;
+        let variationSize = 1;
+        if (canV && cfg.emote.size.variation !== false)
         {
-         const chances = [];
-         chances.push(0.5);
-         chances.push(2);
-         for (let i = 0; i < cfg.emote.size.variation; i++)
+         if (typeof cfg.emote.size.variation === 'number')
          {
-          chances.push(1);
+          const chances = [];
+          chances.push(0.5);
+          chances.push(2);
+          for (let i = 0; i < cfg.emote.size.variation; i++)
+          {
+           chances.push(1);
+          }
+          variationSize = chances[shared.rnd(chances.length)];
          }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-        {
-         const chances = [];
-         chances.push(...cfg.emote.size.variation.range);
-         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
          {
-          chances.push(1);
+          const chances = [];
+          chances.push(...cfg.emote.size.variation.range);
+          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          {
+           chances.push(1);
+          }
+          variationSize = chances[shared.rnd(chances.length)];
          }
-         variationSize = chances[shared.rnd(chances.length)];
         }
-       }
-       eH = Math.ceil(eH * variationSize);
-       let eW = eH;
-       if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
-        eW = eInf.width / eInf.height * eH;
-       const eHh = Math.ceil(eH / 2);
-       const eWh = Math.ceil(eW / 2);
-       let h = x;
-       if (h === false)
-        h = shared.rnd(sW) - eWh;
-       let v = y;
-       if (v === false)
-        v = shared.rnd(sH) - eHh;
-       const r = Math.min(sW, sH) * (shared.rnd() + 1);
-       let th = shared.rnd() * _cRadius;
-       if (!x && !y)
-       {
-        const nH = eH * -1;
-        const nW = eW * -1;
-        while (!_safePoints(h, v, th, r, nW, nH, sW, sH))
+        eH = Math.ceil(eH * variationSize);
+        let eW = eH;
+        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+         eW = eInf.width / eInf.height * eH;
+        const eHh = Math.ceil(eH / 2);
+        const eWh = Math.ceil(eW / 2);
+        let h = x;
+        if (h === false)
+         h = shared.rnd(sW) - eWh;
+        let v = y;
+        if (v === false)
+         v = shared.rnd(sH) - eHh;
+        const r = Math.min(sW, sH) * (shared.rnd() + 1);
+        let th = shared.rnd() * _cRadius;
+        if (!cfg.display.toroidal && !x && !y)
         {
-         th = shared.rnd() * _cRadius;
+         const nH = eH * -1;
+         const nW = eW * -1;
+         while (!_safePoints(h, v, th, r, nW, nH, sW, sH))
+         {
+          th = shared.rnd() * _cRadius;
+         }
         }
-       }
-       const hD = Math.floor(h + r * Math.cos(th));
-       const vD = Math.floor(v + r * Math.sin(th));
-       let s = '--emote-height: ' + eH + 'px;';
-       s += ' --emote-width: ' + eW + 'px;';
-       const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time);
-       s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-       s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-       _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
-       if (eInf.hasOwnProperty('zwe'))
-       {
-        for (let i = 0, l = eInf.zwe.length; i < l; i++)
+        const hD = Math.floor(h + r * Math.cos(th));
+        const vD = Math.floor(v + r * Math.sin(th));
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eW + 'px;';
+        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time);
+        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
+        _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
+        if (eInf.hasOwnProperty('zwe'))
         {
-         _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
+         for (let i = 0, l = eInf.zwe.length; i < l; i++)
+         {
+          _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
+         }
+        }
+        if (cfg.display.toroidal)
+        {
+         let pastL = (h > hD && hD < 0) ? Math.floor((Math.abs(hD) + sW) / sW) : 0;
+         let pastR = (h < hD && hD > (sW - eW)) ? Math.floor(hD / sW) : 0;
+         let pastT = (v > vD && vD < 0) ? Math.floor((Math.abs(vD) + sH) / sH) : 0;
+         let pastB = (v < vD && vD > (sH - eH)) ? Math.floor(vD / sH) : 0;
+         const negW = -1 * eW;
+         const negH = -1 * eH;
+         while (pastT)
+         {
+          const lH = sH * pastT;
+          const lowerV = v + lH;
+          const lowerVD = vD + lH;
+          const sB = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + h + 'px, ' + lowerV + 'px);');
+          if (_csClip(negW, negH, sW, sH, h, lowerV, hD, lowerVD))
+          {
+           _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sB, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: hD, y: lowerVD});
+           if (eInf.hasOwnProperty('zwe'))
+           {
+            for (let i = 0, l = eInf.zwe.length; i < l; i++)
+            {
+             _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sB, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: hD, y: lowerVD});
+            }
+           }
+          }
+          let tL = pastL;
+          while (tL)
+          {
+           const lW = sW * tL;
+           const righterH = h + lW;
+           const righterHD = hD + lW;
+           const sR = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + righterH + 'px, ' + lowerV + 'px);');
+           if (_csClip(negW, negH, sW, sH, righterH, lowerV, righterHD, lowerVD))
+           {
+            _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sR, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: righterHD, y: lowerVD});
+            if (eInf.hasOwnProperty('zwe'))
+            {
+             for (let i = 0, l = eInf.zwe.length; i < l; i++)
+             {
+              _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sR, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: righterHD, y: lowerVD});
+             }
+            }
+           }
+           tL--;
+          }
+          let tR = pastR;
+          while (tR)
+          {
+           const lW = sW * tR;
+           const lefterH = h - lW;
+           const lefterHD = hD - lW;
+           const sL = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + lefterH + 'px, ' + lowerV + 'px);');
+           if (_csClip(negW, negH, sW, sH, lefterH, lowerV, lefterHD, lowerVD))
+           {
+            _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sL, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: lefterHD, y: lowerVD});
+            if (eInf.hasOwnProperty('zwe'))
+            {
+             for (let i = 0, l = eInf.zwe.length; i < l; i++)
+             {
+              _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sL, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: lefterHD, y: lowerVD});
+             }
+            }
+           }
+           tR--;
+          }
+          pastT--;
+         }
+         while (pastB)
+         {
+          const lH = sH * pastB;
+          const higherV = v - lH;
+          const higherVD = vD - lH;
+          const sT = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + h + 'px, ' + higherV + 'px);');
+          if (_csClip(negW, negH, sW, sH, h, higherV, hD, higherVD))
+          {
+           _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sT, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: hD, y: higherVD});
+           if (eInf.hasOwnProperty('zwe'))
+           {
+            for (let i = 0, l = eInf.zwe.length; i < l; i++)
+            {
+             _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sT, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: hD, y: higherVD});
+            }
+           }
+          }
+          let bL = pastL;
+          while (bL)
+          {
+           const lW = sW * bL;
+           const righterH = h + lW;
+           const righterHD = hD + lW;
+           const sR = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + righterH + 'px, ' + higherV + 'px);');
+           if (_csClip(negW, negH, sW, sH, righterH, higherV, righterHD, higherVD))
+           {
+            _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sR, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: righterHD, y: higherVD});
+            if (eInf.hasOwnProperty('zwe'))
+            {
+             for (let i = 0, l = eInf.zwe.length; i < l; i++)
+             {
+              _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sR, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: righterHD, y: higherVD});
+             }
+            }
+           }
+           bL--;
+          }
+          let bR = pastR;
+          while (bR)
+          {
+           const lW = sW * bR;
+           const lefterH = h - lW;
+           const lefterHD = hD - lW;
+           const sL = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + lefterH + 'px, ' + higherV + 'px);');
+           if (_csClip(negW, negH, sW, sH, lefterH, higherV, lefterHD, higherVD))
+           {
+            _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sL, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: lefterHD, y: higherVD});
+            if (eInf.hasOwnProperty('zwe'))
+            {
+             for (let i = 0, l = eInf.zwe.length; i < l; i++)
+             {
+              _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sL, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: lefterHD, y: higherVD});
+             }
+            }
+           }
+           bR--;
+          }
+          pastB--;
+         }
+         while (pastL)
+         {
+          const lW = sW * pastL;
+          const righterH = h + lW;
+          const righterHD = hD + lW;
+          const sR = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + righterH + 'px, ' + v + 'px);');
+          if (_csClip(negW, negH, sW, sH, righterH, v, righterHD, vD))
+          {
+           _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sR, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: righterHD, y: vD});
+           if (eInf.hasOwnProperty('zwe'))
+           {
+            for (let i = 0, l = eInf.zwe.length; i < l; i++)
+            {
+             _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sR, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: righterHD, y: vD});
+            }
+           }
+          }
+          pastL--;
+         }
+         while (pastR)
+         {
+          const lW = sW * pastR;
+          const lefterH = h - lW;
+          const lefterHD = hD - lW;
+          const sL = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + lefterH + 'px, ' + v + 'px);');
+          if (_csClip(negW, negH, sW, sH, lefterH, v, lefterHD, vD))
+          {
+           _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sL, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: lefterHD, y: vD});
+           if (eInf.hasOwnProperty('zwe'))
+           {
+            for (let i = 0, l = eInf.zwe.length; i < l; i++)
+            {
+             _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sL, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: lefterHD, y: vD});
+            }
+           }
+          }
+          pastR--;
+         }
         }
        }
-      }
+
+       function _csClip(xMin, yMin, xMax, yMax, x0, y0, x1, y1)
+       {
+        xMin++;
+        yMin++;
+        xMax--;
+        yMax--;
+        let outcode0 = _csOutCode(xMin, yMin, xMax, yMax, x0, y0);
+        let outcode1 = _csOutCode(xMin, yMin, xMax, yMax, x1, y1);
+        let a = false;
+        while (true)
+        {
+         if ((outcode0 | outcode1) === 0)
+         {
+          a = true;
+          break;
+         }
+         if ((outcode0 & outcode1) !== 0)
+          break;
+         let x;
+         let y;
+         let outcodeOut = Math.max(outcode1, outcode0);
+         if ((outcodeOut & 0x08) === 0x08)
+         {
+          x = x0 + (x1 - x0) * (yMax - y0) / (y1 - y0);
+          y = yMax;
+         }
+         else if ((outcodeOut & 0x04) === 0x04)
+         {
+          x = x0 + (x1 - x0) * (yMin - y0) / (y1 - y0);
+          y = yMin;
+         }
+         else if ((outcodeOut & 0x02) === 0x02)
+         {
+          y = y0 + (y1 - y0) * (xMax - x0) / (x1 - x0);
+          x = xMax;
+         }
+         else if ((outcodeOut & 0x01) === 0x01)
+         {
+          y = y0 + (y1 - y0) * (xMin - x0) / (x1 - x0);
+          x = xMin;
+         }
+         if (outcodeOut === outcode0)
+         {
+          x0 = x;
+          y0 = y;
+          outcode0 = _csOutCode(xMin, yMin, xMax, yMax, x0, y0);
+         }
+         else
+         {
+          x1 = x;
+          y1 = y;
+          outcode1 = _csOutCode(xMin, yMin, xMax, yMax, x1, y1);
+         }
+        }
+        return a;
+       }
+
+       function _csOutCode(xMin, yMin, xMax, yMax, x, y)
+       {
+        let code = 0x00;
+        if (x < xMin)
+         code |= 0x01;
+        else if (x > xMax)
+         code |= 0x02;
+        if (y < yMin)
+         code |= 0x04;
+        else if (y > yMax)
+         code |= 0x08;
+        return code;
+       }
+
+       return $c_StraightLine;
+      }();
 
       function $Rise(eInf, sW, sH, eH, canV = true, tInit = 0)
       {
@@ -2026,6 +2292,35 @@
         for (let i = 0, l = eInf.zwe.length; i < l; i++)
         {
          _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: s}, false, {space: false, time: tMS});
+        }
+       }
+       if (cfg.display.toroidal)
+       {
+        const pastL = h < eW;
+        const pastR = h > (sW - eW);
+        if (pastL)
+        {
+         const sR = s.replace('left: ' + h + 'px;', 'left: ' + (h + sW) + 'px;');
+         _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sR}, false, {space: false, time: tMS});
+         if (eInf.hasOwnProperty('zwe'))
+         {
+          for (let i = 0, l = eInf.zwe.length; i < l; i++)
+          {
+           _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sR}, false, {space: false, time: tMS});
+          }
+         }
+        }
+        if (pastR)
+        {
+         const sL = s.replace('left: ' + h + 'px;', 'left: ' + (h - sW) + 'px;');
+         _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sL}, false, {space: false, time: tMS});
+         if (eInf.hasOwnProperty('zwe'))
+         {
+          for (let i = 0, l = eInf.zwe.length; i < l; i++)
+          {
+           _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sL}, false, {space: false, time: tMS});
+          }
+         }
         }
        }
       }
@@ -2288,6 +2583,35 @@
         for (let i = 0, l = eInf.zwe.length; i < l; i++)
         {
          _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: s, dataset: dsO}, false, {space: false, time: tMS});
+        }
+       }
+       if (cfg.display.toroidal)
+       {
+        const pastL = h < eW;
+        const pastR = h > (sW - eW);
+        if (pastL)
+        {
+         const sR = s.replace('left: ' + h + 'px;', 'left: ' + (h + sW) + 'px;');
+         _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sR, dataset: dsO}, false, {space: false, time: tMS});
+         if (eInf.hasOwnProperty('zwe'))
+         {
+          for (let i = 0, l = eInf.zwe.length; i < l; i++)
+          {
+           _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sR, dataset: dsO}, false, {space: false, time: tMS});
+          }
+         }
+        }
+        if (pastR)
+        {
+         const sL = s.replace('left: ' + h + 'px;', 'left: ' + (h - sW) + 'px;');
+         _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sL, dataset: dsO}, false, {space: false, time: tMS});
+         if (eInf.hasOwnProperty('zwe'))
+         {
+          for (let i = 0, l = eInf.zwe.length; i < l; i++)
+          {
+           _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sL, dataset: dsO}, false, {space: false, time: tMS});
+          }
+         }
         }
        }
       }
@@ -2697,6 +3021,135 @@
        return $c_Throw;
       }();
 
+      const $Pop = function()
+      {
+       function $c_Pop(eInf, sW, sH, eH, canV = true, tInit = 0)
+       {
+        if (tInit === 0)
+         tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
+        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
+         return;
+        let variationSize = 1;
+        if (canV && cfg.emote.size.variation !== false)
+        {
+         if (typeof cfg.emote.size.variation === 'number')
+         {
+          const chances = [];
+          chances.push(0.5);
+          chances.push(2);
+          for (let i = 0; i < cfg.emote.size.variation; i++)
+          {
+           chances.push(1);
+          }
+          variationSize = chances[shared.rnd(chances.length)];
+         }
+         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
+         {
+          const chances = [];
+          chances.push(...cfg.emote.size.variation.range);
+          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          {
+           chances.push(1);
+          }
+          variationSize = chances[shared.rnd(chances.length)];
+         }
+        }
+        eH = Math.ceil(eH * variationSize);
+        let eW = eH;
+        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+         eW = eInf.width / eInf.height * eH;
+        const sR = sW - eW;
+        const sB = sH - eH;
+        const h = shared.rnd(sR);
+        const v = sH;
+        const vT = Math.floor(sH * _rndFromRange(timing.display.Pop.top));
+        const vB = Math.floor(sH * _rndFromRange(timing.display.Pop.bottom));
+        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Pop.time);
+        const t1 = Math.floor(tMS * timing.display.Pop.peek.up);
+        const t2 = Math.floor(tMS * timing.display.Pop.peek.pause);
+        const t3 = Math.floor(tMS * timing.display.Pop.peek.down);
+        const t4 = Math.floor(tMS * timing.display.Pop.pause);
+        const t5 = Math.floor(tMS * timing.display.Pop.jump.up);
+        const t6 = Math.floor(tMS * timing.display.Pop.jump.pause);
+        const t7 = Math.floor(tMS * timing.display.Pop.jump.down);
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eW + 'px;';
+        s += ' left: ' + h + 'px;';
+        s += ' transform: translateY(' + v + 'px);';
+        const aNames = [];
+        const aDelays = [];
+        const aDurs = [];
+        const aTimings = [];
+        const aFills = [];
+        const aIters = [];
+        if (cfg.emote.out.fade)
+        {
+         const fOut = _tAnim.fade.out / 100;
+         const t7F = t7 * fOut;
+         aNames.push('fadeOut');
+         aDelays.push(t1 + t2 + t3 + t4 + t5 + t6 + Math.floor(t7 - t7F) + 'ms');
+         aDurs.push(Math.floor(t7F) + 'ms');
+         aTimings.push('ease-out');
+         aFills.push('forwards');
+         aIters.push('1');
+        }
+        else
+        {
+         aNames.push('noFadeOut');
+         aDelays.push(t1 + t2 + t3 + t4 + t5 + t6 + t7 - 50 + 'ms');
+         aDurs.push('50ms');
+         aTimings.push('ease-out');
+         aFills.push('forwards');
+         aIters.push('1');
+        }
+        if (cfg.emote.out.zoom)
+        {
+         const zOut = _tAnim.zoom.out / 100;
+         const t7Z = t7 * zOut;
+         aNames.push('zoomOut');
+         aDelays.push(t1 + t2 + t3 + t4 + t5 + t6 + Math.floor(t7 - t7Z) + 'ms');
+         aDurs.push(Math.floor(t7Z) + 'ms');
+         aTimings.push('linear');
+         aFills.push('forwards');
+         aIters.push('1');
+        }
+        s += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
+        const iArr = [];
+        iArr.push(_addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: s, classes: ['etPopPeek']}, true, {space: false, time: tMS}));
+        if (eInf.hasOwnProperty('zwe'))
+        {
+         for (let i = 0, l = eInf.zwe.length; i < l; i++)
+         {
+          iArr.push(_addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: s, classes: ['etPopPeek']}, true, {space: false, time: tMS}));
+         }
+        }
+        shared.doNextFrame(_tMove, tInit, eInf.origin, iArr, sB);
+        window.setTimeout(_tMove, t1 + t2, tInit, eInf.origin, iArr, v);
+        window.setTimeout(_tMove, t1 + t2 + t3 + t4, tInit, eInf.origin, iArr, vT);
+        window.setTimeout(_tMove, t1 + t2 + t3 + t4 + t5 + t6, tInit, eInf.origin, iArr, vB);
+       }
+
+       function _tMove(tInit, oID, iArr, vD)
+       {
+        if (_iTitanic > tInit)
+         return;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
+         return;
+        for (let i = 0, l = iArr.length; i < l; i++)
+        {
+         iArr[i].classList.replace('etPopJumpUp', 'etPopJumpDown');
+         iArr[i].classList.replace('etPopPeekDown', 'etPopJumpUp');
+         iArr[i].classList.replace('etPopPeekUp', 'etPopPeekDown');
+         iArr[i].classList.replace('etPopPeek', 'etPopPeekUp');
+         iArr[i].style.transform = 'translateY( ' + vD + 'px)';
+        }
+       }
+
+       return $c_Pop;
+      }();
+
       const $TheCube = function()
       {
        function $c_TheCube(eInf, sW, sH, eH, canV = true, tInit = 0)
@@ -2993,6 +3446,7 @@
        Crazy: $Crazy,
        Confetti: $Confetti,
        Throw: $Throw,
+       Pop: $Pop,
        TheCube: $TheCube,
        Fountain: $Fountain
       };
@@ -12100,9 +12554,9 @@
      {
       const $emoji = function()
       {
-       const _uList = {};
+       const _sus = '0d9e';
 
-       async function $c_emoji(msg, set, dup = null)
+       function $c_emoji(msg, set, dup = null)
        {
         const emSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
         const emList = [];
@@ -12111,7 +12565,7 @@
         {
          emList.push(match);
         }
-        const kcSeg = /((?:[0-9#\*]\ufe0f\u20e3)+)+/gu;
+        const kcSeg = /((?:[0-9#\*]\ufe0f?\u20e3)+)+/gu;
         match = '';
         while ((match = kcSeg.exec(msg)) !== null)
         {
@@ -12129,27 +12583,16 @@
          dup = cfg.display.duplicates;
         if (set === true)
          set = 'twemoji';
-        const uri = cURLs.cdn.ffz.emoji.replaceAll('%SET_ID%', set);
         const addList = {};
-        const pList = [];
+        const rets = [];
         for (let i = 0, l = emList.length; i < l; i++)
         {
-         pList.push(_parseEm(addList, emList[i], uri, dup));
-        }
-        const resp = await Promise.allSettled(pList);
-        const rets = [];
-        for (let i = 0, l = resp.length; i < l; i++)
-        {
-         if (resp[i].status !== 'fulfilled')
-          continue;
-         if (resp[i].value.length === 0)
-          continue;
-         rets.push(...resp[i].value);
+         rets.push(..._parseEm(addList, emList[i], set, dup));
         }
         return rets;
        }
 
-       async function _parseEm(addList, emI, uri, dup = null)
+       function _parseEm(addList, emI, set, dup = null)
        {
         const ret = [];
         const cpList = [];
@@ -12195,120 +12638,59 @@
          else
           cpList.push(p);
         }
-        const lP = cpList.length;
-        if (lP === 1)
+        let pos = emI.index;
+        for (let j = 0, lP = cpList.length; j < lP; j++)
         {
-         let s = cpList[0];
-         if (s === '0d9e')
+         let s = cpList[j];
+         pos += s.replaceAll(/[^\-]/g, '').length + 1;
+         if (s === _sus)
          {
-          const r = _showCrew(addList, emI.index, dup);
-          if (r !== false)
-           ret.push(r);
-          return ret;
+          const rC = _showCrew(addList, pos, dup);
+          if (rC !== false)
+           ret.push(rC);
+          continue;
          }
-         if (await _checkURL(uri, s))
-         {
-          const r = _showEmoji(addList, uri, s, emI.index, dup);
-          if (r !== false)
-           ret.push(r);
-          return ret;
-         }
-         while (s.includes('-'))
-         {
-          s = s.slice(0, s.lastIndexOf('-'));
-          if (await _checkURL(uri, s))
-          {
-           const r = _showEmoji(addList, uri, s, emI.index, dup);
-           if (r !== false)
-            ret.push(r);
-           break;
-          }
-         }
-         return ret;
-        }
-        let p = emI.index;
-        for (let j = 0; j < lP; j++)
-        {
-         p += cpList[j].replaceAll(/[^\-]/g, '').length + 1;
-         if (await _checkURL(uri, cpList[j]))
-         {
-          const r = _showEmoji(addList, uri, cpList[j], p, dup);
-          if (r !== false)
-           ret.push(r);
-         }
+         const rE = _showEmoji(addList, s, pos, dup);
+         if (rE !== false)
+          ret.push(rE);
         }
         return ret;
        }
 
-       function _showEmoji(addList, u, c, p, dup = null)
+       function _showEmoji(addList, c, p, dup = null)
        {
-        c = _uriOf(c);
-        if (!addList.hasOwnProperty(c))
-         addList[c] = 0;
+        if (!thirdparty.emotes.emoji.hasOwnProperty(c))
+         return false;
+        const e = thirdparty.emotes.emoji[c];
+        if (!addList.hasOwnProperty(e.id))
+         addList[e.id] = 0;
         else
         {
          if (dup === false)
           return false;
-         if (dup !== true && addList[c] >= dup)
+         if (dup !== true && addList[e.id] >= dup)
           return false;
         }
-        addList[c]++;
-        return {svc: cSources.service.emoji, url: u + c + '.png', str: c, pos: p};
+        addList[e.id]++;
+        return {svc: cSources.service.emoji, url: e.url, str: c, pos: p};
        }
 
        function _showCrew(addList, p, dup = null)
        {
-        if (!addList.hasOwnProperty('0d9e'))
-         addList['0d9e'] = 0;
+        if (!addList.hasOwnProperty(_sus))
+         addList[_sus] = 0;
         else
         {
          if (dup === false)
           return false;
-         if (dup !== true && addList['0d9e'] >= dup)
+         if (dup !== true && addList[_sus] >= dup)
           return false;
         }
-        addList['0d9e']++;
+        addList[_sus]++;
         const svgC = shared.rnd(18);
         const svgCSS = '.st0{fill:#484C4D;}.st1{fill:#' + crewColors[svgC][0] + ';}.st2{fill:#A3D3E3;}.st3{opacity:0.5;fill:#' + crewColors[svgC][1] + ';}.st4{opacity:0.45;fill:#5B7882;}.st5{fill:#FFFFFF;}' + (shared.rnd(2) === 1 ? 'svg{transform: scaleX(-1);}' : '');
         const crew = crewSVG.replace('%CSS%', encodeURIComponent(svgCSS));
-        return {svc: cSources.service.emoji, url: crew, str: '0d9e', pos: p};
-       }
-
-       function _uriOf(c)
-       {
-        if (c.slice(-5) !== '-fe0f')
-         return c;
-        if (c.match(/-200d-264[0|2]-/) || c.match(/-200d-269[5|6]-/) || c.match(/-200d-26a7/) || c.match(/-200d-2620/) || c.match(/-200d-2708/) || c.match(/-200d-2744/) || c.match(/-200d-1f5e8/))
-         return c;
-        return c.slice(0, -5);
-       }
-
-       function _checkURL(u, c)
-       {
-        const p = new Promise(
-         function(resolve)
-         {
-          c = _uriOf(c);
-          if (_uList.hasOwnProperty(c))
-          {
-           resolve(_uList[c]);
-           return;
-          }
-          const x = new XMLHttpRequest();
-          x.open('HEAD', u + c + '.png');
-          x.onreadystatechange = function()
-          {
-           if (x.readyState < 2)
-            return;
-           x.onreadystatechange = null;
-           const r = x.status === 200;
-           _uList[c] = r;
-           resolve(r);
-          };
-          x.send();
-         }
-        );
-        return p;
+        return {svc: cSources.service.emoji, url: crew, str: _sus, pos: p};
        }
 
        return $c_emoji;
@@ -15253,6 +15635,7 @@
        let _wsR_M = 0;
        let _ws = null;
        let _sess = null;
+       let _oldSess = false;
        let _lTimeout = 5000;
        let _tTimeout = false;
        let _okCt = 0;
@@ -15333,29 +15716,27 @@
           if (d.d === null)
            return;
           _okCt = 0;
-          if (_sess !== null)
+          if (_sess !== null && !_oldSess)
           {
            if (_ws.readyState === 1)
+           {
+            _oldSess = true;
             _ws.send(JSON.stringify({'op': 34, 'd': {'session_id': _sess}}));
+           }
           }
           else
           {
+           _oldSess = false;
+           _sess = null;
            for (const acct in _chList)
            {
             if (!_chList.hasOwnProperty(acct))
              continue;
-            if (acct !== _noAcct)
-             _wsSub(acct);
-            for (const svc in _chList[acct])
-            {
-             if (!_chList[acct].hasOwnProperty(svc))
-              continue;
-             for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
-             {
-              _wsSubCh(svc, _chList[acct][svc][i]);
-             }
-            }
+            _wsSub(acct);
+            _wsAddChSubs(acct);
            }
+           if (_chList.hasOwnProperty(_noAcct))
+            _wsAddChSubs(_noAcct);
           }
           if (d.d.hasOwnProperty('session_id') && d.d.session_id !== null)
            _sess = d.d.session_id;
@@ -15371,6 +15752,8 @@
           }
           break;
          case 2:
+          if (d.d !== null && d.d.hasOwnProperty('count') && d.d.count === 0)
+           return;
           if (_okCt !== _needCt())
           {
            if (_tTimeout !== false)
@@ -15411,18 +15794,11 @@
              {
               if (!_chList.hasOwnProperty(acct))
                continue;
-              if (acct !== _noAcct)
-               _wsSub(acct);
-              for (const svc in _chList[acct])
-              {
-               if (!_chList[acct].hasOwnProperty(svc))
-                continue;
-               for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
-               {
-                _wsSubCh(svc, _chList[acct][svc][i]);
-               }
-              }
+              _wsSub(acct);
+              _wsAddChSubs(acct);
              }
+             if (_chList.hasOwnProperty(_noAcct))
+              _wsAddChSubs(_noAcct);
             }
             else
             {
@@ -15436,35 +15812,21 @@
                {
                 if (!_chList.hasOwnProperty(acct))
                  continue;
-                if (acct !== _noAcct)
-                 _wsUnsub(acct);
-                for (const svc in _chList[acct])
-                {
-                 if (!_chList[acct].hasOwnProperty(svc))
-                  continue;
-                 for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
-                 {
-                  _wsUnsubCh(svc, _chList[acct][svc][i]);
-                 }
-                }
+                _wsUnsub(acct);
+                _wsRemChSubs(acct);
                }
+               if (_chList.hasOwnProperty(_noAcct))
+                _wsRemChSubs(_noAcct);
               }
               for (const acct in _chList)
               {
                if (!_chList.hasOwnProperty(acct))
                 continue;
-               if (acct !== _noAcct)
-                _wsSub(acct);
-               for (const svc in _chList[acct])
-               {
-                if (!_chList[acct].hasOwnProperty(svc))
-                 continue;
-                for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
-                {
-                 _wsSubCh(svc, _chList[acct][svc][i]);
-                }
-               }
+               _wsSub(acct);
+               _wsAddChSubs(acct);
               }
+              if (_chList.hasOwnProperty(_noAcct))
+               _wsAddChSubs(_noAcct);
              }
              else
               _okCt = d.d.data.subscriptions_restored;
@@ -15501,6 +15863,7 @@
             case 4010:
             case 4011:
              _sess = null;
+             _oldSess = false;
              return;
             case 4005:
              wsWait = Math.floor((5 ** (1 + _wsR_RL) / 5) * 60 * 1000);
@@ -15525,6 +15888,32 @@
           }
           window.setTimeout(_socket.init, wsWait);
           break;
+        }
+       }
+
+       function _wsAddChSubs(acct)
+       {
+        for (const svc in _chList[acct])
+        {
+         if (!_chList[acct].hasOwnProperty(svc))
+          continue;
+         for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
+         {
+          _wsSubCh(svc, _chList[acct][svc][i]);
+         }
+        }
+       }
+
+       function _wsRemChSubs(acct)
+       {
+        for (const svc in _chList[acct])
+        {
+         if (!_chList[acct].hasOwnProperty(svc))
+          continue;
+         for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
+         {
+          _wsUnsubCh(svc, _chList[acct][svc][i]);
+         }
         }
        }
 
@@ -15640,8 +16029,7 @@
           continue;
          if (p !== '')
           p += ',';
-         if (acct !== _noAcct)
-          p += 'user.*<object_id=' + acct + '>,emote.*<object_id=' + acct + '>,emote_set.*<object_id=' + acct + '>';
+         p += 'user.*<object_id=' + acct + '>,emote.*<object_id=' + acct + '>,emote_set.*<object_id=' + acct + '>';
          for (const svc in _chList[acct])
          {
           if (!_chList[acct].hasOwnProperty(svc))
@@ -15651,6 +16039,22 @@
            if (p !== '')
             p += ',';
            p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + _chList[acct][svc][i] + '>';
+          }
+         }
+        }
+        if (_chList.hasOwnProperty(_noAcct))
+        {
+         if (p !== '')
+          p += ',';
+         for (const svc in _chList[_noAcct])
+         {
+          if (!_chList[_noAcct].hasOwnProperty(svc))
+           continue;
+          for (let i = 0, l = _chList[_noAcct][svc].length; i < l; i++)
+          {
+           if (p !== '')
+            p += ',';
+           p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + _chList[_noAcct][svc][i] + '>';
           }
          }
         }
@@ -15980,7 +16384,8 @@
        _chList[accID] = {};
        _chList[accID][svcName] = [];
        _chList[accID][svcName].push(chID);
-       _socket.joinA(accID);
+       if (accID !== _noAcct)
+        _socket.joinA(accID);
        _socket.joinS(svcName, chID);
        _events.join();
       }
@@ -15999,6 +16404,15 @@
          if (!_chList[acct].hasOwnProperty(svc))
           continue;
          c += _chList[acct][svc].length;
+        }
+       }
+       if (_chList.hasOwnProperty(_noAcct))
+       {
+        for (const svc in _chList[_noAcct])
+        {
+         if (!_chList[_noAcct].hasOwnProperty(svc))
+          continue;
+         c += _chList[_noAcct][svc].length;
         }
        }
        return c;
@@ -16020,6 +16434,36 @@
       })
      };
     }();
+
+    async function $emoji(set)
+    {
+     const unqSkip = ['00a9', '00ae', '2122', '24c2'];
+     if (set === true)
+      set = 'twemoji';
+     const r = await shared.httpRequest('GET', cURLs.cdn.emoji.list.replaceAll('%SET_ID%', set));
+     if (!r.success)
+      return;
+     const j = r.json;
+     if (j === null)
+      return;
+     if (!thirdparty.emotes.hasOwnProperty('emoji'))
+      thirdparty.emotes.emoji = {};
+     for (const id in j)
+     {
+      if (!j.hasOwnProperty(id))
+       continue;
+      if (j[id].hasOwnProperty('t'))
+      {
+       if (j[id].hasOwnProperty('s') && j[id].s === -1 && unqSkip.includes(id))
+        continue;
+       const u = cURLs.cdn.emoji.image.replaceAll('%SET_ID%', set).replaceAll('%EMOJI_ID%', j[id].t);
+       _addEmote(thirdparty.emotes.emoji, cSources.scope.global, id, j[id].t, u);
+       continue;
+      }
+      const u = cURLs.cdn.emoji.image.replaceAll('%SET_ID%', set).replaceAll('%EMOJI_ID%', id);
+      _addEmote(thirdparty.emotes.emoji, cSources.scope.global, id, id, u);
+     }
+    }
 
     function $reload()
     {
@@ -16063,6 +16507,7 @@
      ffz: $ffz,
      bttv: $bttv,
      '7tv': $7tv,
+     emoji: $emoji,
      reload: $reload
     };
    }();
@@ -17332,6 +17777,7 @@
      const scks = [];
      if (bT | bYT | bK)
      {
+      scks.push(_emoji());
       scks.push(_streamlabs());
       scks.push(_streamelements());
       scks.push(_7tv());
@@ -17444,6 +17890,13 @@
       return;
      thirdparty['7tv'].socketEx.init();
      await thirdparty['7tv'].global();
+    }
+
+    async function _emoji()
+    {
+     if (!cfg.display.useEmoji)
+      return;
+     await thirdparty.emoji(cfg.display.useEmoji);
     }
 
     const _css = function()
@@ -17575,6 +18028,22 @@
       t += '.etThrowDrop\n';
       t += '{\n';
       t += ' transition: transform cubic-bezier(0.5, 0, 0.75, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.drop) + 'ms;\n';
+      t += '}\n';
+      t += '.etPopPeekUp\n';
+      t += '{\n';
+      t += ' transition: transform ease-in-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.up) + 'ms;\n';
+      t += '}\n';
+      t += '.etPopPeekDown\n';
+      t += '{\n';
+      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.down) + 'ms;\n';
+      t += '}\n';
+      t += '.etPopJumpUp\n';
+      t += '{\n';
+      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.up) + 'ms;\n';
+      t += '}\n';
+      t += '.etPopJumpDown\n';
+      t += '{\n';
+      t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.down) + 'ms;\n';
       t += '}\n';
       t += '.etFountain\n';
       t += '{\n';

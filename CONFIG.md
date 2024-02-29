@@ -271,6 +271,12 @@ Configuration Information
       - [ ] If `true`, ZWEs will be stretched or squashed to fit non-square emotes.
       - [ ] If `false`, ZWEs will be placed in the center of non-square emotes.
 
+  * `toroidal`  
+    *Toggles an infinite Asteroids-esque loop for emotes. Applies to StraightLine, Rise, and Drop animations and kappas.*
+    - [ ] If `true`, emotes will loop around to the opposite side when moving off the edge of the screen.
+    - [ ] If `false`, emotes will disappear when moving off the edge of the screen.
+     > **NOTE**: This feature functions by creating multiple objects on the Emote Wall, which count against any limit you may have set, and may take extra processing power.
+
   * `hue`  
     *Rotate the hue of all emotes.*
      - [ ] If a number between `1` and `359`, all colors will be rotated by that many degrees.

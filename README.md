@@ -127,4 +127,6 @@ This emote wall may do better if the browser source has a frame rate limit of 30
 
 - The Cube animation uses eight objects on screen for every image, making it a particularly resource-heavy drawing.
 
+- The Toroidal display feature also creates a dynamic number of objects on screen, to allow for seamless looping.
+
 If your computer has trouble with this emote wall, please try disabling these options.
