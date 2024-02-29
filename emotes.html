@@ -1285,8 +1285,9 @@
      kick: {
       emote: 'https://files.kick.com/emotes/%EMOTE_ID%/fullsize'
      },
-     ffz: {
-      emoji: 'https://cdn.frankerfacez.com/static/emoji/images/%SET_ID%/'
+     emoji: {
+      list: 'https://cdn.jsdelivr.net/gh/realityripple/emoji/list.min.json',
+      image: 'https://cdn.jsdelivr.net/gh/realityripple/emoji/%SET_ID%/%EMOJI_ID%.png'
      },
      bttv: {
       emote: 'https://cdn.betterttv.net/emote/%EMOTE_ID%/3x'
@@ -12253,9 +12254,9 @@
      {
       const $emoji = function()
       {
-       const _uList = {};
+       const _sus = '0d9e';
 
-       async function $c_emoji(msg, set, dup = null)
+       function $c_emoji(msg, set, dup = null)
        {
         const emSeg = /((?:[\p{EPres}\p{ExtPict}]\ufe0f?\u200d?)+)+/gu;
         const emList = [];
@@ -12282,27 +12283,16 @@
          dup = cfg.display.duplicates;
         if (set === true)
          set = 'twemoji';
-        const uri = cURLs.cdn.ffz.emoji.replaceAll('%SET_ID%', set);
         const addList = {};
-        const pList = [];
+        const rets = [];
         for (let i = 0, l = emList.length; i < l; i++)
         {
-         pList.push(_parseEm(addList, emList[i], uri, dup));
-        }
-        const resp = await Promise.allSettled(pList);
-        const rets = [];
-        for (let i = 0, l = resp.length; i < l; i++)
-        {
-         if (resp[i].status !== 'fulfilled')
-          continue;
-         if (resp[i].value.length === 0)
-          continue;
-         rets.push(...resp[i].value);
+         rets.push(..._parseEm(addList, emList[i], set, dup));
         }
         return rets;
        }
 
-       async function _parseEm(addList, emI, uri, dup = null)
+       function _parseEm(addList, emI, set, dup = null)
        {
         const ret = [];
         const cpList = [];
@@ -12348,120 +12338,59 @@
          else
           cpList.push(p);
         }
-        const lP = cpList.length;
-        if (lP === 1)
+        let pos = emI.index;
+        for (let j = 0, lP = cpList.length; j < lP; j++)
         {
-         let s = cpList[0];
-         if (s === '0d9e')
+         let s = cpList[j];
+         pos += s.replaceAll(/[^\-]/g, '').length + 1;
+         if (s === _sus)
          {
-          const r = _showCrew(addList, emI.index, dup);
-          if (r !== false)
-           ret.push(r);
-          return ret;
+          const rC = _showCrew(addList, pos, dup);
+          if (rC !== false)
+           ret.push(rC);
+          continue;
          }
-         if (await _checkURL(uri, s))
-         {
-          const r = _showEmoji(addList, uri, s, emI.index, dup);
-          if (r !== false)
-           ret.push(r);
-          return ret;
-         }
-         while (s.includes('-'))
-         {
-          s = s.slice(0, s.lastIndexOf('-'));
-          if (await _checkURL(uri, s))
-          {
-           const r = _showEmoji(addList, uri, s, emI.index, dup);
-           if (r !== false)
-            ret.push(r);
-           break;
-          }
-         }
-         return ret;
-        }
-        let p = emI.index;
-        for (let j = 0; j < lP; j++)
-        {
-         p += cpList[j].replaceAll(/[^\-]/g, '').length + 1;
-         if (await _checkURL(uri, cpList[j]))
-         {
-          const r = _showEmoji(addList, uri, cpList[j], p, dup);
-          if (r !== false)
-           ret.push(r);
-         }
+         const rE = _showEmoji(addList, s, pos, dup);
+         if (rE !== false)
+          ret.push(rE);
         }
         return ret;
        }
 
-       function _showEmoji(addList, u, c, p, dup = null)
+       function _showEmoji(addList, c, p, dup = null)
        {
-        c = _uriOf(c);
-        if (!addList.hasOwnProperty(c))
-         addList[c] = 0;
+        if (!thirdparty.emotes.emoji.hasOwnProperty(c))
+         return false;
+        const e = thirdparty.emotes.emoji[c];
+        if (!addList.hasOwnProperty(e.id))
+         addList[e.id] = 0;
         else
         {
          if (dup === false)
           return false;
-         if (dup !== true && addList[c] >= dup)
+         if (dup !== true && addList[e.id] >= dup)
           return false;
         }
-        addList[c]++;
-        return {svc: cSources.service.emoji, url: u + c + '.png', str: c, pos: p};
+        addList[e.id]++;
+        return {svc: cSources.service.emoji, url: e.url, str: c, pos: p};
        }
 
        function _showCrew(addList, p, dup = null)
        {
-        if (!addList.hasOwnProperty('0d9e'))
-         addList['0d9e'] = 0;
+        if (!addList.hasOwnProperty(_sus))
+         addList[_sus] = 0;
         else
         {
          if (dup === false)
           return false;
-         if (dup !== true && addList['0d9e'] >= dup)
+         if (dup !== true && addList[_sus] >= dup)
           return false;
         }
-        addList['0d9e']++;
+        addList[_sus]++;
         const svgC = shared.rnd(18);
         const svgCSS = '.st0{fill:#484C4D;}.st1{fill:#' + crewColors[svgC][0] + ';}.st2{fill:#A3D3E3;}.st3{opacity:0.5;fill:#' + crewColors[svgC][1] + ';}.st4{opacity:0.45;fill:#5B7882;}.st5{fill:#FFFFFF;}' + (shared.rnd(2) === 1 ? 'svg{transform: scaleX(-1);}' : '');
         const crew = crewSVG.replace('%CSS%', encodeURIComponent(svgCSS));
-        return {svc: cSources.service.emoji, url: crew, str: '0d9e', pos: p};
-       }
-
-       function _uriOf(c)
-       {
-        if (c.slice(-5) !== '-fe0f')
-         return c;
-        if (c.match(/-200d-264[0|2]-/) || c.match(/-200d-269[5|6]-/) || c.match(/-200d-26a7/) || c.match(/-200d-2620/) || c.match(/-200d-2708/) || c.match(/-200d-2744/) || c.match(/-200d-1f5e8/))
-         return c;
-        return c.slice(0, -5);
-       }
-
-       function _checkURL(u, c)
-       {
-        const p = new Promise(
-         function(resolve)
-         {
-          c = _uriOf(c);
-          if (_uList.hasOwnProperty(c))
-          {
-           resolve(_uList[c]);
-           return;
-          }
-          const x = new XMLHttpRequest();
-          x.open('HEAD', u + c + '.png');
-          x.onreadystatechange = function()
-          {
-           if (x.readyState < 2)
-            return;
-           x.onreadystatechange = null;
-           const r = x.status === 200;
-           _uList[c] = r;
-           resolve(r);
-          };
-          x.send();
-         }
-        );
-        return p;
+        return {svc: cSources.service.emoji, url: crew, str: _sus, pos: p};
        }
 
        return $c_emoji;
@@ -16174,6 +16103,33 @@
      };
     }();
 
+    async function $emoji(set)
+    {
+     if (set === true)
+      set = 'twemoji';
+     const r = await shared.httpRequest('GET', cURLs.cdn.emoji.list.replaceAll('%SET_ID%', set));
+     if (!r.success)
+      return;
+     const j = r.json;
+     if (j === null)
+      return;
+     if (!thirdparty.emotes.hasOwnProperty('emoji'))
+      thirdparty.emotes.emoji = {};
+     for (const id in j)
+     {
+      if (!j.hasOwnProperty(id))
+       continue;
+      if (j[id].hasOwnProperty('t'))
+      {
+       const u = cURLs.cdn.emoji.image.replaceAll('%SET_ID%', set).replaceAll('%EMOJI_ID%', j[id].t);
+       _addEmote(thirdparty.emotes.emoji, cSources.scope.global, id, j[id].t, u);
+       continue;
+      }
+      const u = cURLs.cdn.emoji.image.replaceAll('%SET_ID%', set).replaceAll('%EMOJI_ID%', id);
+      _addEmote(thirdparty.emotes.emoji, cSources.scope.global, id, id, u);
+     }
+    }
+
     function $reload()
     {
      if (thirdparty.timer === false)
@@ -16216,6 +16172,7 @@
      ffz: $ffz,
      bttv: $bttv,
      '7tv': $7tv,
+     emoji: $emoji,
      reload: $reload
     };
    }();
@@ -17485,6 +17442,7 @@
      const scks = [];
      if (bT | bYT | bK)
      {
+      scks.push(_emoji());
       scks.push(_streamlabs());
       scks.push(_streamelements());
       scks.push(_7tv());
@@ -17597,6 +17555,13 @@
       return;
      thirdparty['7tv'].socketEx.init();
      await thirdparty['7tv'].global();
+    }
+
+    async function _emoji()
+    {
+     if (!cfg.display.useEmoji)
+      return;
+     await thirdparty.emoji(cfg.display.useEmoji);
     }
 
     const _css = function()
