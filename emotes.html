@@ -15426,18 +15426,11 @@
            {
             if (!_chList.hasOwnProperty(acct))
              continue;
-            if (acct !== _noAcct)
-             _wsSub(acct);
-            for (const svc in _chList[acct])
-            {
-             if (!_chList[acct].hasOwnProperty(svc))
-              continue;
-             for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
-             {
-              _wsSubCh(svc, _chList[acct][svc][i]);
-             }
-            }
+            _wsSub(acct);
+            _wsAddChSubs(acct);
            }
+           if (_chList.hasOwnProperty(_noAcct))
+            _wsAddChSubs(_noAcct);
           }
           if (d.d.hasOwnProperty('session_id') && d.d.session_id !== null)
            _sess = d.d.session_id;
@@ -15493,18 +15486,11 @@
              {
               if (!_chList.hasOwnProperty(acct))
                continue;
-              if (acct !== _noAcct)
-               _wsSub(acct);
-              for (const svc in _chList[acct])
-              {
-               if (!_chList[acct].hasOwnProperty(svc))
-                continue;
-               for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
-               {
-                _wsSubCh(svc, _chList[acct][svc][i]);
-               }
-              }
+              _wsSub(acct);
+              _wsAddChSubs(acct);
              }
+             if (_chList.hasOwnProperty(_noAcct))
+              _wsAddChSubs(_noAcct);
             }
             else
             {
@@ -15518,35 +15504,21 @@
                {
                 if (!_chList.hasOwnProperty(acct))
                  continue;
-                if (acct !== _noAcct)
-                 _wsUnsub(acct);
-                for (const svc in _chList[acct])
-                {
-                 if (!_chList[acct].hasOwnProperty(svc))
-                  continue;
-                 for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
-                 {
-                  _wsUnsubCh(svc, _chList[acct][svc][i]);
-                 }
-                }
+                _wsUnsub(acct);
+                _wsRemChSubs(acct);
                }
+               if (_chList.hasOwnProperty(_noAcct))
+                _wsRemChSubs(_noAcct);
               }
               for (const acct in _chList)
               {
                if (!_chList.hasOwnProperty(acct))
                 continue;
-               if (acct !== _noAcct)
-                _wsSub(acct);
-               for (const svc in _chList[acct])
-               {
-                if (!_chList[acct].hasOwnProperty(svc))
-                 continue;
-                for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
-                {
-                 _wsSubCh(svc, _chList[acct][svc][i]);
-                }
-               }
+               _wsSub(acct);
+               _wsAddChSubs(acct);
               }
+              if (_chList.hasOwnProperty(_noAcct))
+               _wsAddChSubs(_noAcct);
              }
              else
               _okCt = d.d.data.subscriptions_restored;
@@ -15607,6 +15579,32 @@
           }
           window.setTimeout(_socket.init, wsWait);
           break;
+        }
+       }
+
+       function _wsAddChSubs(acct)
+       {
+        for (const svc in _chList[acct])
+        {
+         if (!_chList[acct].hasOwnProperty(svc))
+          continue;
+         for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
+         {
+          _wsSubCh(svc, _chList[acct][svc][i]);
+         }
+        }
+       }
+
+       function _wsRemChSubs(acct)
+       {
+        for (const svc in _chList[acct])
+        {
+         if (!_chList[acct].hasOwnProperty(svc))
+          continue;
+         for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
+         {
+          _wsUnsubCh(svc, _chList[acct][svc][i]);
+         }
         }
        }
 
@@ -15722,8 +15720,7 @@
           continue;
          if (p !== '')
           p += ',';
-         if (acct !== _noAcct)
-          p += 'user.*<object_id=' + acct + '>,emote.*<object_id=' + acct + '>,emote_set.*<object_id=' + acct + '>';
+         p += 'user.*<object_id=' + acct + '>,emote.*<object_id=' + acct + '>,emote_set.*<object_id=' + acct + '>';
          for (const svc in _chList[acct])
          {
           if (!_chList[acct].hasOwnProperty(svc))
@@ -15733,6 +15730,22 @@
            if (p !== '')
             p += ',';
            p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + _chList[acct][svc][i] + '>';
+          }
+         }
+        }
+        if (_chList.hasOwnProperty(_noAcct))
+        {
+         if (p !== '')
+          p += ',';
+         for (const svc in _chList[_noAcct])
+         {
+          if (!_chList[_noAcct].hasOwnProperty(svc))
+           continue;
+          for (let i = 0, l = _chList[_noAcct][svc].length; i < l; i++)
+          {
+           if (p !== '')
+            p += ',';
+           p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + _chList[_noAcct][svc][i] + '>';
           }
          }
         }
@@ -16062,7 +16075,8 @@
        _chList[accID] = {};
        _chList[accID][svcName] = [];
        _chList[accID][svcName].push(chID);
-       _socket.joinA(accID);
+       if (accID !== _noAcct)
+        _socket.joinA(accID);
        _socket.joinS(svcName, chID);
        _events.join();
       }
@@ -16081,6 +16095,15 @@
          if (!_chList[acct].hasOwnProperty(svc))
           continue;
          c += _chList[acct][svc].length;
+        }
+       }
+       if (_chList.hasOwnProperty(_noAcct))
+       {
+        for (const svc in _chList[_noAcct])
+        {
+         if (!_chList[_noAcct].hasOwnProperty(svc))
+          continue;
+         c += _chList[_noAcct][svc].length;
         }
        }
        return c;
