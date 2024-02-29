@@ -122,6 +122,7 @@
       useZWE: true,
       fillZWE: false
      },
+     toroidal: false,
      hue: false,
      shadow: false,
      kappa: {
@@ -1899,78 +1900,319 @@
        }
       }
 
-      function $StraightLine(eInf, sW, sH, eH, x = false, y = false, canV = true, tInit = 0)
+      const $StraightLine = function()
       {
-       if (tInit === 0)
-        tInit = new Date().getTime();
-       if (_iTitanic > tInit)
-        return;
-       if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
-        return;
-       let variationSize = 1;
-       if (canV && cfg.emote.size.variation !== false)
+       function $c_StraightLine(eInf, sW, sH, eH, x = false, y = false, canV = true, tInit = 0)
        {
-        if (typeof cfg.emote.size.variation === 'number')
+        if (tInit === 0)
+         tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
+        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
+         return;
+        let variationSize = 1;
+        if (canV && cfg.emote.size.variation !== false)
         {
-         const chances = [];
-         chances.push(0.5);
-         chances.push(2);
-         for (let i = 0; i < cfg.emote.size.variation; i++)
+         if (typeof cfg.emote.size.variation === 'number')
          {
-          chances.push(1);
+          const chances = [];
+          chances.push(0.5);
+          chances.push(2);
+          for (let i = 0; i < cfg.emote.size.variation; i++)
+          {
+           chances.push(1);
+          }
+          variationSize = chances[shared.rnd(chances.length)];
          }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-        {
-         const chances = [];
-         chances.push(...cfg.emote.size.variation.range);
-         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
          {
-          chances.push(1);
+          const chances = [];
+          chances.push(...cfg.emote.size.variation.range);
+          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+          {
+           chances.push(1);
+          }
+          variationSize = chances[shared.rnd(chances.length)];
          }
-         variationSize = chances[shared.rnd(chances.length)];
         }
-       }
-       eH = Math.ceil(eH * variationSize);
-       let eW = eH;
-       if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
-        eW = eInf.width / eInf.height * eH;
-       const eHh = Math.ceil(eH / 2);
-       const eWh = Math.ceil(eW / 2);
-       let h = x;
-       if (h === false)
-        h = shared.rnd(sW) - eWh;
-       let v = y;
-       if (v === false)
-        v = shared.rnd(sH) - eHh;
-       const r = Math.min(sW, sH) * (shared.rnd() + 1);
-       let th = shared.rnd() * _cRadius;
-       if (!x && !y)
-       {
-        const nH = eH * -1;
-        const nW = eW * -1;
-        while (!_safePoints(h, v, th, r, nW, nH, sW, sH))
+        eH = Math.ceil(eH * variationSize);
+        let eW = eH;
+        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+         eW = eInf.width / eInf.height * eH;
+        const eHh = Math.ceil(eH / 2);
+        const eWh = Math.ceil(eW / 2);
+        let h = x;
+        if (h === false)
+         h = shared.rnd(sW) - eWh;
+        let v = y;
+        if (v === false)
+         v = shared.rnd(sH) - eHh;
+        const r = Math.min(sW, sH) * (shared.rnd() + 1);
+        let th = shared.rnd() * _cRadius;
+        if (!cfg.display.toroidal && !x && !y)
         {
-         th = shared.rnd() * _cRadius;
+         const nH = eH * -1;
+         const nW = eW * -1;
+         while (!_safePoints(h, v, th, r, nW, nH, sW, sH))
+         {
+          th = shared.rnd() * _cRadius;
+         }
         }
-       }
-       const hD = Math.floor(h + r * Math.cos(th));
-       const vD = Math.floor(v + r * Math.sin(th));
-       let s = '--emote-height: ' + eH + 'px;';
-       s += ' --emote-width: ' + eW + 'px;';
-       const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time);
-       s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-       s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-       _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
-       if (eInf.hasOwnProperty('zwe'))
-       {
-        for (let i = 0, l = eInf.zwe.length; i < l; i++)
+        const hD = Math.floor(h + r * Math.cos(th));
+        const vD = Math.floor(v + r * Math.sin(th));
+        let s = '--emote-height: ' + eH + 'px;';
+        s += ' --emote-width: ' + eW + 'px;';
+        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time);
+        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
+        _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
+        if (eInf.hasOwnProperty('zwe'))
         {
-         _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
+         for (let i = 0, l = eInf.zwe.length; i < l; i++)
+         {
+          _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: s, classes: ['etStraightLine']}, false, {time: tMS}, {x: hD, y: vD});
+         }
+        }
+        if (cfg.display.toroidal)
+        {
+         let pastL = (h > hD && hD < 0) ? Math.floor((Math.abs(hD) + sW) / sW) : 0;
+         let pastR = (h < hD && hD > (sW - eW)) ? Math.floor(hD / sW) : 0;
+         let pastT = (v > vD && vD < 0) ? Math.floor((Math.abs(vD) + sH) / sH) : 0;
+         let pastB = (v < vD && vD > (sH - eH)) ? Math.floor(vD / sH) : 0;
+         const negW = -1 * eW;
+         const negH = -1 * eH;
+         while (pastT)
+         {
+          const lH = sH * pastT;
+          const lowerV = v + lH;
+          const lowerVD = vD + lH;
+          const sB = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + h + 'px, ' + lowerV + 'px);');
+          if (_csClip(negW, negH, sW, sH, h, lowerV, hD, lowerVD))
+          {
+           _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sB, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: hD, y: lowerVD});
+           if (eInf.hasOwnProperty('zwe'))
+           {
+            for (let i = 0, l = eInf.zwe.length; i < l; i++)
+            {
+             _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sB, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: hD, y: lowerVD});
+            }
+           }
+          }
+          let tL = pastL;
+          while (tL)
+          {
+           const lW = sW * tL;
+           const righterH = h + lW;
+           const righterHD = hD + lW;
+           const sR = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + righterH + 'px, ' + lowerV + 'px);');
+           if (_csClip(negW, negH, sW, sH, righterH, lowerV, righterHD, lowerVD))
+           {
+            _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sR, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: righterHD, y: lowerVD});
+            if (eInf.hasOwnProperty('zwe'))
+            {
+             for (let i = 0, l = eInf.zwe.length; i < l; i++)
+             {
+              _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sR, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: righterHD, y: lowerVD});
+             }
+            }
+           }
+           tL--;
+          }
+          let tR = pastR;
+          while (tR)
+          {
+           const lW = sW * tR;
+           const lefterH = h - lW;
+           const lefterHD = hD - lW;
+           const sL = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + lefterH + 'px, ' + lowerV + 'px);');
+           if (_csClip(negW, negH, sW, sH, lefterH, lowerV, lefterHD, lowerVD))
+           {
+            _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sL, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: lefterHD, y: lowerVD});
+            if (eInf.hasOwnProperty('zwe'))
+            {
+             for (let i = 0, l = eInf.zwe.length; i < l; i++)
+             {
+              _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sL, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: lefterHD, y: lowerVD});
+             }
+            }
+           }
+           tR--;
+          }
+          pastT--;
+         }
+         while (pastB)
+         {
+          const lH = sH * pastB;
+          const higherV = v - lH;
+          const higherVD = vD - lH;
+          const sT = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + h + 'px, ' + higherV + 'px);');
+          if (_csClip(negW, negH, sW, sH, h, higherV, hD, higherVD))
+          {
+           _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sT, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: hD, y: higherVD});
+           if (eInf.hasOwnProperty('zwe'))
+           {
+            for (let i = 0, l = eInf.zwe.length; i < l; i++)
+            {
+             _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sT, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: hD, y: higherVD});
+            }
+           }
+          }
+          let bL = pastL;
+          while (bL)
+          {
+           const lW = sW * bL;
+           const righterH = h + lW;
+           const righterHD = hD + lW;
+           const sR = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + righterH + 'px, ' + higherV + 'px);');
+           if (_csClip(negW, negH, sW, sH, righterH, higherV, righterHD, higherVD))
+           {
+            _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sR, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: righterHD, y: higherVD});
+            if (eInf.hasOwnProperty('zwe'))
+            {
+             for (let i = 0, l = eInf.zwe.length; i < l; i++)
+             {
+              _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sR, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: righterHD, y: higherVD});
+             }
+            }
+           }
+           bL--;
+          }
+          let bR = pastR;
+          while (bR)
+          {
+           const lW = sW * bR;
+           const lefterH = h - lW;
+           const lefterHD = hD - lW;
+           const sL = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + lefterH + 'px, ' + higherV + 'px);');
+           if (_csClip(negW, negH, sW, sH, lefterH, higherV, lefterHD, higherVD))
+           {
+            _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sL, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: lefterHD, y: higherVD});
+            if (eInf.hasOwnProperty('zwe'))
+            {
+             for (let i = 0, l = eInf.zwe.length; i < l; i++)
+             {
+              _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sL, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: lefterHD, y: higherVD});
+             }
+            }
+           }
+           bR--;
+          }
+          pastB--;
+         }
+         while (pastL)
+         {
+          const lW = sW * pastL;
+          const righterH = h + lW;
+          const righterHD = hD + lW;
+          const sR = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + righterH + 'px, ' + v + 'px);');
+          if (_csClip(negW, negH, sW, sH, righterH, v, righterHD, vD))
+          {
+           _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sR, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: righterHD, y: vD});
+           if (eInf.hasOwnProperty('zwe'))
+           {
+            for (let i = 0, l = eInf.zwe.length; i < l; i++)
+            {
+             _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sR, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: righterHD, y: vD});
+            }
+           }
+          }
+          pastL--;
+         }
+         while (pastR)
+         {
+          const lW = sW * pastR;
+          const lefterH = h - lW;
+          const lefterHD = hD - lW;
+          const sL = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + lefterH + 'px, ' + v + 'px);');
+          if (_csClip(negW, negH, sW, sH, lefterH, v, lefterHD, vD))
+          {
+           _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sL, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: lefterHD, y: vD});
+           if (eInf.hasOwnProperty('zwe'))
+           {
+            for (let i = 0, l = eInf.zwe.length; i < l; i++)
+            {
+             _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sL, classes: ['etStraightLine']}, false, {space: false, time: tMS}, {x: lefterHD, y: vD});
+            }
+           }
+          }
+          pastR--;
+         }
         }
        }
-      }
+
+       function _csClip(xMin, yMin, xMax, yMax, x0, y0, x1, y1)
+       {
+        xMin++;
+        yMin++;
+        xMax--;
+        yMax--;
+        let outcode0 = _csOutCode(xMin, yMin, xMax, yMax, x0, y0);
+        let outcode1 = _csOutCode(xMin, yMin, xMax, yMax, x1, y1);
+        let a = false;
+        while (true)
+        {
+         if ((outcode0 | outcode1) === 0)
+         {
+          a = true;
+          break;
+         }
+         if ((outcode0 & outcode1) !== 0)
+          break;
+         let x;
+         let y;
+         let outcodeOut = Math.max(outcode1, outcode0);
+         if ((outcodeOut & 0x08) === 0x08)
+         {
+          x = x0 + (x1 - x0) * (yMax - y0) / (y1 - y0);
+          y = yMax;
+         }
+         else if ((outcodeOut & 0x04) === 0x04)
+         {
+          x = x0 + (x1 - x0) * (yMin - y0) / (y1 - y0);
+          y = yMin;
+         }
+         else if ((outcodeOut & 0x02) === 0x02)
+         {
+          y = y0 + (y1 - y0) * (xMax - x0) / (x1 - x0);
+          x = xMax;
+         }
+         else if ((outcodeOut & 0x01) === 0x01)
+         {
+          y = y0 + (y1 - y0) * (xMin - x0) / (x1 - x0);
+          x = xMin;
+         }
+         if (outcodeOut === outcode0)
+         {
+          x0 = x;
+          y0 = y;
+          outcode0 = _csOutCode(xMin, yMin, xMax, yMax, x0, y0);
+         }
+         else
+         {
+          x1 = x;
+          y1 = y;
+          outcode1 = _csOutCode(xMin, yMin, xMax, yMax, x1, y1);
+         }
+        }
+        return a;
+       }
+
+       function _csOutCode(xMin, yMin, xMax, yMax, x, y)
+       {
+        let code = 0x00;
+        if (x < xMin)
+         code |= 0x01;
+        else if (x > xMax)
+         code |= 0x02;
+        if (y < yMin)
+         code |= 0x04;
+        else if (y > yMax)
+         code |= 0x08;
+        return code;
+       }
+
+       return $c_StraightLine;
+      }();
 
       function $Rise(eInf, sW, sH, eH, canV = true, tInit = 0)
       {
@@ -2050,6 +2292,35 @@
         for (let i = 0, l = eInf.zwe.length; i < l; i++)
         {
          _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: s}, false, {space: false, time: tMS});
+        }
+       }
+       if (cfg.display.toroidal)
+       {
+        const pastL = h < eW;
+        const pastR = h > (sW - eW);
+        if (pastL)
+        {
+         const sR = s.replace('left: ' + h + 'px;', 'left: ' + (h + sW) + 'px;');
+         _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sR}, false, {space: false, time: tMS});
+         if (eInf.hasOwnProperty('zwe'))
+         {
+          for (let i = 0, l = eInf.zwe.length; i < l; i++)
+          {
+           _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sR}, false, {space: false, time: tMS});
+          }
+         }
+        }
+        if (pastR)
+        {
+         const sL = s.replace('left: ' + h + 'px;', 'left: ' + (h - sW) + 'px;');
+         _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sL}, false, {space: false, time: tMS});
+         if (eInf.hasOwnProperty('zwe'))
+         {
+          for (let i = 0, l = eInf.zwe.length; i < l; i++)
+          {
+           _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sL}, false, {space: false, time: tMS});
+          }
+         }
         }
        }
       }
@@ -2312,6 +2583,35 @@
         for (let i = 0, l = eInf.zwe.length; i < l; i++)
         {
          _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: s, dataset: dsO}, false, {space: false, time: tMS});
+        }
+       }
+       if (cfg.display.toroidal)
+       {
+        const pastL = h < eW;
+        const pastR = h > (sW - eW);
+        if (pastL)
+        {
+         const sR = s.replace('left: ' + h + 'px;', 'left: ' + (h + sW) + 'px;');
+         _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sR, dataset: dsO}, false, {space: false, time: tMS});
+         if (eInf.hasOwnProperty('zwe'))
+         {
+          for (let i = 0, l = eInf.zwe.length; i < l; i++)
+          {
+           _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sR, dataset: dsO}, false, {space: false, time: tMS});
+          }
+         }
+        }
+        if (pastR)
+        {
+         const sL = s.replace('left: ' + h + 'px;', 'left: ' + (h - sW) + 'px;');
+         _addEmoteToDoc(tInit, eInf.url, eInf.origin, variationSize, {style: sL, dataset: dsO}, false, {space: false, time: tMS});
+         if (eInf.hasOwnProperty('zwe'))
+         {
+          for (let i = 0, l = eInf.zwe.length; i < l; i++)
+          {
+           _addEmoteToDoc(tInit, eInf.zwe[i].url, eInf.origin, variationSize, {style: sL, dataset: dsO}, false, {space: false, time: tMS});
+          }
+         }
         }
        }
       }
