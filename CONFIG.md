@@ -247,6 +247,7 @@ Configuration Information
      - [ ] If `'openmoji'`, emojis will be shown using the "**openmoji**" font.
      - [ ] If `'noto'`, emojis will be shown using the "**noto**" font.
      - [ ] If `'blob'`, emojis will be shown using the "**blobmoji**" font.
+     - [ ] If `'facebook'`, emojis will be shown using the "**Facebook emoji**" font.
 
   * `extended`  
     *Settings related to third-party emotes.*
