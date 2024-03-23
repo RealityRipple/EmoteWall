@@ -3560,11 +3560,19 @@
        {
         if (_iTitanic > tInit)
          return;
+        let abort = false;
         for (let i = 0, l = iArr.length; i < l; i++)
         {
+         if (iArr[i].parentNode === null)
+         {
+          abort = true;
+          continue;
+         }
          document.body.removeChild(iArr[i]);
          _eActive--;
         }
+        if (abort)
+         return;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time);
         const kTime = Math.floor(tMS * timing.kappa.Fireworks.speed.burst);
         const fA = _kAcTime(iKC, kTime);
