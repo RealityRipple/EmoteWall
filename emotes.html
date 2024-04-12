@@ -4719,7 +4719,7 @@
       const a = p.split(' ');
       for (let i = 0, l = a.length; i < l; i++)
       {
-       if (!isNaN(a[i]))
+       if (shared.nReg.i.test(a[i]))
         return parseInt(a[i], 10);
       }
       return false;
@@ -5434,7 +5434,7 @@
         document.body.removeChild(i);
        if (d === true)
         _eActive--;
-       else if (d !== false && !isNaN(d))
+       else if (d !== false && Number.isInteger(d))
         _eActive -= d;
       }
       if (!done)
@@ -7858,7 +7858,7 @@
          if (msg[m].slice(0, firstChars).toLowerCase() !== prefix.toLowerCase())
           continue;
          const amt = msg[m].slice(firstChars);
-         if (isNaN(amt))
+         if (!shared.nReg.i.test(amt))
           continue;
          for (let i = 0, n = service.emotes.cheer[prefix].length; i < n; i++)
          {
@@ -9076,7 +9076,7 @@
          lcList.push({channel: j.items[i].snippet.channelId, chat: j.items[i].snippet.liveChatId, publishedAt: nPublished, actualStartTime: nStarted, title: sTitle, description: sDesc});
         }
         lcList.sort(_ytSort);
-        if (cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('max') && !isNaN(cfg.youtube.connect_to.max) && cfg.youtube.connect_to.max > 0 && lcList.length > cfg.youtube.connect_to.max)
+        if (cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('max') && Number.isInteger(cfg.youtube.connect_to.max) && cfg.youtube.connect_to.max > 0 && lcList.length > cfg.youtube.connect_to.max)
          lcList.length = cfg.youtube.connect_to.max;
         return lcList;
        }
@@ -9107,7 +9107,7 @@
         lcList.push({channel: j.items[i].snippet.channelId, chat: j.items[i].snippet.liveChatId, publishedAt: nPublished, actualStartTime: nStarted, title: sTitle, description: sDesc});
        }
        lcList.sort(_ytSort);
-       if (cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('max') && !isNaN(cfg.youtube.connect_to.max) && cfg.youtube.connect_to.max > 0 && lcList.length > cfg.youtube.connect_to.max)
+       if (cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('max') && Number.isInteger(cfg.youtube.connect_to.max) && cfg.youtube.connect_to.max > 0 && lcList.length > cfg.youtube.connect_to.max)
         lcList.length = cfg.youtube.connect_to.max;
        return lcList;
       }
@@ -9137,7 +9137,7 @@
          return chooseB;
         if (aB === false)
          return chooseA;
-        if (isNaN(aA) || isNaN(aB))
+        if (!shared.nReg.f.test(aA) || !shared.nReg.f.test(aB))
         {
          const cmp = aA.localeCompare(aB);
          if (cmp === 0)
@@ -17362,7 +17362,11 @@
       REFRESH_TOKEN: 0x02,
       ACCESS_TOKEN: 0x04,
       JWT_TOKEN: 0x08
-     })
+     }),
+     nReg: {
+      i: /^\d+$/,
+      f: /^[\d\.\-]+$/
+     }
     };
    }();
 
@@ -18178,7 +18182,7 @@
         r += '}\n';
         h = r + h;
        }
-       else if (!isNaN(cfg.display.hue))
+       else if (Number.isInteger(cfg.display.hue))
        {
         const iHue = parseInt(cfg.display.hue, 10);
         if (iHue > 0 && iHue < 360)
