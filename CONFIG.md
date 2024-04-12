@@ -1278,7 +1278,7 @@ TheCube and Text. The kappagen style can also contain the following values:
        - [ ] If `false`, the default count will be used exclusively.
 
      * `maximum`  
-       *The maximum number of emotes to show for this kappagen if dynamic is set to `true.*  
+       *The maximum number of emotes to show for this kappagen if dynamic is set to `true`.*  
        This must be an integer.
        - [ ] If this property does not exist, it will fall back to the maximum number of emotes allowed on screen.
        - [ ] If Integer, this is the maximum number of emotes this kappagen style can display.
