@@ -1135,8 +1135,12 @@ Configuration Information
   * `tip`  
     *Settings related to third-party tip systems.*
 
+    * `useMsgEmotes`  
+      - [ ] If `true`, any emotes in tip messages will be used for the kappagen.
+      - [ ] If `false`, tips will ignore the tip's message.
+
     * `useProfileImage`  
-      - [ ] If `true`, tips will use the tipper's profile image instead of emotes.
+      - [ ] If `true`, tips (without message emotes) will use the tipper's profile image instead of emotes.
       - [ ] If `false`, tips will use your standard kappagen emotes.
 
     * `streamlabs`  

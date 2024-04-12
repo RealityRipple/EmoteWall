@@ -330,6 +330,7 @@
      },
      tip: {
       useProfileImage: false,
+      useMsgEmotes: true,
       streamlabs: {
        donation: false,
        pledge: false
@@ -13911,6 +13912,121 @@
       };
      }();
 
+     function _parseTwitch(msg, dup = null)
+     {
+      if (!thirdparty.emotes.hasOwnProperty('twitch'))
+       return [];
+      const m = msg.split(' ');
+      if (dup === null)
+       dup = cfg.display.duplicates;
+      const ret = [];
+      const addList = {};
+      for (let i = 0, l = m.length; i < l; i++)
+      {
+       if (!thirdparty.emotes.twitch.hasOwnProperty(m[i]))
+        continue;
+       if (!addList.hasOwnProperty(m[i]))
+        addList[m[i]] = 0;
+       else
+       {
+        if (dup === false)
+         continue;
+        if (dup !== true && addList[m[i]] >= dup)
+         continue;
+       }
+       addList[m[i]]++;
+       let p = 0;
+       for (let j = 0; j < i; j++)
+       {
+        p += m[j].length + 1;
+       }
+       ret.push({svc: cSources.service.twitch, url: thirdparty.emotes.twitch[m[i]].url, str: m[i], pos: p, scope: thirdparty.emotes.twitch[m[i]].scope, width: thirdparty.emotes.twitch[m[i]].width, height: thirdparty.emotes.twitch[m[i]].height});
+      }
+      return ret;
+     }
+
+     async function $eListFromMsg(user, msg)
+     {
+      if (cfg.ignore.users !== false && cfg.ignore.users.includes(user))
+       return false;
+      const r = [];
+      const chID = 'twitch:' + twitch.net.channelID;
+      r.push(..._parseTwitch(msg));
+      if (cfg.display.useEmoji)
+       r.push(...await service.parse.content.emoji(msg, cfg.display.useEmoji));
+      if (cfg.display.extended.useFFZ)
+      {
+       r.push(...service.parse.content['3rdparty'].ffz.general(msg, chID));
+       r.push(...service.parse.content['3rdparty'].ffz.user.general(msg, chID));
+      }
+      if (cfg.display.extended.useBTTV)
+      {
+       r.push(...service.parse.content['3rdparty'].bttv.general(msg, chID));
+       r.push(...service.parse.content['3rdparty'].bttv.user.general(msg, chID));
+      }
+      if (cfg.display.extended.use7TV)
+      {
+       r.push(...service.parse.content['3rdparty']['7tv'].general(msg, chID));
+       r.push(...service.parse.content['3rdparty']['7tv'].user.general(msg, chID));
+      }
+      if (cfg.display.extended.useFFZ)
+      {
+       service.parse.content['3rdparty'].ffz.zwe(r, false, chID, msg, 1);
+       service.parse.content['3rdparty'].ffz.user.zwe(r, false, chID, msg, 1);
+      }
+      if (cfg.display.extended.useBTTV)
+      {
+       service.parse.content['3rdparty'].bttv.zwe(r, false, chID, msg, 1);
+       service.parse.content['3rdparty'].bttv.user.zwe(r, false, chID, msg, 1);
+      }
+      if (cfg.display.extended.use7TV)
+      {
+       service.parse.content['3rdparty']['7tv'].zwe(r, false, chID, msg, 1);
+       service.parse.content['3rdparty']['7tv'].user.zwe(r, false, chID, msg, 1);
+      }
+      if (cfg.display.extended.useFFZ)
+      {
+       service.parse.content['3rdparty'].ffz.zwe(r, false, chID, msg, 2);
+       service.parse.content['3rdparty'].ffz.user.zwe(r, false, chID, msg, 2);
+      }
+      if (cfg.display.extended.useBTTV)
+      {
+       service.parse.content['3rdparty'].bttv.zwe(r, false, chID, msg, 2);
+       service.parse.content['3rdparty'].bttv.user.zwe(r, false, chID, msg, 2);
+      }
+      if (cfg.display.extended.use7TV)
+      {
+       service.parse.content['3rdparty']['7tv'].zwe(r, false, chID, msg, 2);
+       service.parse.content['3rdparty']['7tv'].user.zwe(r, false, chID, msg, 2);
+      }
+      if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
+      {
+       for (let i = r.length - 1; i >= 0; i--)
+       {
+        let m = r[i].str;
+        if (r[i].svc === cSources.service.emoji)
+         m = String.fromCharCode(parseInt(m, 16));
+        if (cfg.ignore.emotes.includes(m))
+         r.splice(i, 1);
+       }
+      }
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       if (r[i].hasOwnProperty('width') || r[i].hasOwnProperty('height'))
+        continue;
+       if (!r[i].hasOwnProperty('url'))
+        continue;
+       const sz = await shared.ec.get(r[i].url);
+       if (sz === null)
+        continue;
+       r[i].width = sz.width;
+       r[i].height = sz.height;
+      }
+      if (r.length < 1)
+       return false;
+      return r;
+     }
+
      function $clearCooldowns()
      {
       _aLast = {};
@@ -13919,6 +14035,7 @@
      return {
       content: $content,
       line: $line,
+      eListFromMsg: $eListFromMsg,
       clearCooldowns: $clearCooldowns
      };
     }();
@@ -13936,12 +14053,18 @@
      {
       const n = dRet[i].name;
       const a = dRet[i].amt;
+      const m = dRet[i].msg;
       const v = Math.floor(a * cfg.streamlabs.curMul);
       const r = shared.findInMaybeRange(cfg.event.tip.streamlabs.donation, v);
       if (r === false)
        continue;
       let p = false;
-      if (cfg.event.tip.useProfileImage && n !== false)
+      if (cfg.event.tip.useMsgEmotes && m !== false)
+      {
+       await thirdparty.tips.streamlabs();
+       p = await service.parse.eListFromMsg(n, m);
+      }
+      if (p === false && cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
        if (!twitch.parse.uReg.test(n))
@@ -14163,7 +14286,10 @@
           let n = false;
           if (o[1].message[i].hasOwnProperty('name'))
            n = o[1].message[i].name;
-          rD.push({amt: o[1].message[i].amount, name: n});
+          let m = false;
+          if (o[1].message[i].hasOwnProperty('message') && o[1].message[i].message !== null && o[1].message[i].message !== '')
+           m = o[1].message[i].message;
+          rD.push({amt: o[1].message[i].amount, name: n, msg: m});
          }
          if (rD.length > 0)
           await _showStreamlabsDonations(rD);
@@ -14245,7 +14371,7 @@
 
    const streamelements = function()
    {
-    async function _showStreamElementsTip(dAmt, dName)
+    async function _showStreamElementsTip(dAmt, dName, dMsg = false)
     {
      const v = Math.floor(dAmt * cfg.streamelements.curMul);
      if (v < 1)
@@ -14254,7 +14380,12 @@
      if (r === false)
       return;
      let p = false;
-     if (cfg.event.tip.useProfileImage && dName !== false)
+     if (cfg.event.tip.useMsgEmotes && dMsg !== false)
+     {
+      await thirdparty.tips.streamelements();
+      p = await service.parse.eListFromMsg(dName, dMsg);
+     }
+     if (p === false && cfg.event.tip.useProfileImage && dName !== false)
      {
       let u = false;
       if (!twitch.parse.uReg.test(dName))
@@ -14448,7 +14579,10 @@
         let n = false;
         if (o[1].data.hasOwnProperty('name'))
          n = o[1].data.name;
-        await _showStreamElementsTip(o[1].data.amount, n);
+        let m = false;
+        if (o[1].data.hasOwnProperty('message'))
+         m = o[1].data.message;
+        await _showStreamElementsTip(o[1].data.amount, n, m);
         break;
       }
      }
