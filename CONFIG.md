@@ -1287,6 +1287,13 @@ TheCube and Text. The kappagen style can also contain the following values:
        - [ ] If this property does not exist, it will fall back to the maximum number of emotes allowed on screen.
        - [ ] If Integer, this is the maximum number of emotes this kappagen style can display.
 
+     * `eq`  
+       *The equation to apply to the number of emotes to show if dynamic is set to `true`.*  
+       This must be a string, using the letter `n` to represent the relevant dynamic value.  
+       Equations must contain only the operators `+`, `-`, `*`, `/`, `(` and `)`.  
+       - [ ] If the equation does not return a number, it will be ignored.  
+       - [ ] If the equation does not return an integer, it will be `Math.round()`ed.
+
 * `emotes`  
   *A list of emotes that will be used for this kappagen.*  
   This can be an array or an object.

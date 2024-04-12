@@ -4725,6 +4725,69 @@
       return false;
      }
 
+     const _arith = function()
+     {
+      const _nReg = new RegExp(/^([+-]?\d*\.?\d+)$/);
+      const _pReg = new RegExp(/\(([^()]*)\)/);
+      const _mReg = new RegExp(/([+-]?\d*\.?\d+)([*\/])([+-]?\d*\.?\d+)/);
+      const _aReg = new RegExp(/([+-]?\d*\.?\d+)([+-])([+-]?\d*\.?\d+)/);
+
+      function $c_arith(eq, v)
+      {
+       eq = eq.replaceAll(' ', '');
+       eq = eq.replaceAll('n', v);
+       let cur;
+       while(!_nReg.test(eq))
+       {
+        eq = _parens(eq);
+        if (eq === cur)
+         return false;
+        cur = eq;
+       }
+       return +eq;
+      }
+
+      function _parens(eq)
+      {
+       while (_pReg.test(eq))
+       {
+        eq = eq.replace(_pReg, function(m, p1){return _add(_mul(p1));});
+       }
+       return _add(_mul(eq));
+      }
+
+      function _mul(eq)
+      {
+       while (_mReg.test(eq))
+       {
+        eq = eq.replace(_mReg, function(m) {
+         const s = _mReg.exec(m);
+         const r = s[2] === '*' ? s[1] * s[3] : s[1] / s[3];
+         if (r >= 0)
+          return '+' + r;
+         return r;
+        });
+       }
+       return eq;
+      }
+
+      function _add(eq)
+      {
+       while (_aReg.test(eq))
+       {
+        eq = eq.replace(_aReg, function(m) {
+         const s = _aReg.exec(m);
+         if (s[2] === '+')
+          return +s[1] + (+s[3]);
+         return s[1] - s[3];
+        });
+       }
+       return eq;
+      }
+
+      return $c_arith;
+     }();
+
      function _getNextKappaEx(kS = false, kP = false)
      {
       if (typeof kS !== 'object')
@@ -4780,10 +4843,24 @@
           if (pC !== false)
            tKC = pC;
          }
+         if (p.count.hasOwnProperty('eq') && p.count.eq !== false)
+         {
+          let rEq = _arith(p.count.eq, tKC);
+          if (rEq !== false)
+           tKC = Math.round(rEq);
+         }
         }
        }
        if (tKC === -1 && kP !== false && kP.hasOwnProperty('%AMOUNT%') && Math.ceil(kP['%AMOUNT%']) > 0)
+       {
         tKC = Math.ceil(kP['%AMOUNT%']);
+        if (p.count.hasOwnProperty('eq') && p.count.eq !== false)
+        {
+         let rEq = _arith(p.count.eq, tKC);
+         if (rEq !== false)
+          tKC = Math.round(rEq);
+        }
+       }
        if (tKC > 0)
         iKC = tKC;
       }
