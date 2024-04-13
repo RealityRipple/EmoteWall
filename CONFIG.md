@@ -235,6 +235,7 @@ Configuration Information
 
   * `duplicates`  
     *A boolean or integer to toggle duplicate emotes per message.*
+    > **NOTE**: If you use a threshold rate (`"cfg.emote.threshold"`), this duplicate limit applies to how many emotes will count toward the threshold, rather than how many will be shown.
      - [ ] If `true`, every emote posted in chat will be shown.
      - [ ] If `false`, only one of each emote per message will be shown.
      - [ ] If `greater than 1`, sets the maximum number of identical emotes shown from any message.
@@ -430,6 +431,18 @@ Configuration Information
     *The maximum number of emotes to save in queue.*  
     Set this value to `0` for an infinite queue.  
     This value will be ignored if the previous value (`"cfg.emote.max"`) is infinite (`0`).
+
+  * `threshold`  
+    *Set a minimum number of emotes required before an emote is shown.*  
+    This setting uses two values, `emotes` and `seconds`, to describe the minimum rate at which emotes must be posted in chat in order to be shown.  
+    If, for example, the setting is `emotes: 3, seconds: 10`, then one emote will be shown on screen for every three of that emote posted in chat, unless more than 10 seconds pass between any two messages.  
+    The `"cfg.display.duplicates"` limit can be used to control how many emotes count toward the threshold from each message.
+
+    * `emotes`  
+      *The minimum number of an emote that must be sent by users within a span of time.*  
+
+    * `seconds`  
+      *The window size in seconds in which a minimum number of an emote must be sent.*  
 
   * `size`  
     *Settings related to the size of emotes.*

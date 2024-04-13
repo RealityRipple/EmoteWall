@@ -169,6 +169,10 @@
      time: 5,
      max: 0,
      queue: 0,
+     threshold: {
+      emotes: 0,
+      seconds: 0
+     },
      size: {
       ratio: {
        normal: 1/12,
@@ -1841,6 +1845,7 @@
     const $emote = function()
     {
      const _toShow = [];
+     const _toSift = [];
 
      let _tEmote = false;
 
@@ -3478,6 +3483,60 @@
        _tEmote = window.setTimeout(display.emote.showEmotes, 500);
        return;
       }
+      if (cfg.emote.hasOwnProperty('threshold') && !!cfg.emote.threshold &&
+       cfg.emote.threshold.hasOwnProperty('emotes') && !!cfg.emote.threshold.emotes &&
+       cfg.emote.threshold.hasOwnProperty('seconds') && !!cfg.emote.threshold.seconds)
+      {
+       const rateE = cfg.emote.threshold.emotes;
+       if (_toShow.length > 0)
+       {
+        for (let i = _toShow.length - 1; i >= 0; i--)
+        {
+         if (!_toShow[i].hasOwnProperty('url') || !_toShow[i].hasOwnProperty('timestamp'))
+          continue;
+         _toSift.push(_toShow[i]);
+         _toShow.splice(i, 1);
+        }
+       }
+       const tNow = new Date().getTime();
+       const ctOf = {};
+       for (let i = 0, l = _toSift.length; i < l; i++)
+       {
+        const showID = _toSift[i].url;
+        if (!ctOf.hasOwnProperty(showID))
+         ctOf[showID] = 0;
+        ctOf[showID]++;
+       }
+       for (const showID in ctOf)
+       {
+        if (!ctOf.hasOwnProperty(showID))
+         continue;
+        if (ctOf[showID] < rateE)
+         delete ctOf[showID];
+        else
+         ctOf[showID] = Math.floor(ctOf[showID] / rateE) * rateE;
+       }
+       for (let i = _toSift.length - 1; i >= 0; i--)
+       {
+        const showID = _toSift[i].url;
+        if (!ctOf.hasOwnProperty(showID))
+         continue;
+        const ctOfID = ctOf[showID];
+        if (ctOfID === 0)
+         continue;
+        ctOf[showID] -= 1;
+        const sel = _toSift[i];
+        _toSift.splice(i, 1);
+        if (ctOfID % rateE === 0)
+         _toShow.push(sel);
+       }
+       const rateMS = cfg.emote.threshold.seconds * 1000;
+       for (let i = _toSift.length - 1; i >= 0; i--)
+       {
+        if (_toSift[i].timestamp + rateMS < tNow)
+         _toSift.splice(i, 1);
+       }
+      }
       let e = null;
       while ((e = _toShow.shift()) !== undefined)
       {
@@ -3490,6 +3549,8 @@
         return;
        }
       }
+      if (_toSift.length > 0)
+       _tEmote = window.setTimeout(display.emote.showEmotes, 500);
      }
 
      function $addToShowList(p)
@@ -8656,8 +8717,10 @@
          r.splice(i, 1);
        }
       }
+      const t = new Date().getTime();
       for (let i = 0, l = r.length; i < l; i++)
       {
+       r[i].timestamp = t;
        if (r[i].hasOwnProperty('width') || r[i].hasOwnProperty('height'))
         continue;
        if (!r[i].hasOwnProperty('url'))
@@ -10814,8 +10877,10 @@
          r.splice(i, 1);
        }
       }
+      const t = new Date().getTime();
       for (let i = 0, l = r.length; i < l; i++)
       {
+       r[i].timestamp = t;
        if (r[i].hasOwnProperty('width') || r[i].hasOwnProperty('height'))
         continue;
        if (!r[i].hasOwnProperty('url'))
@@ -12436,8 +12501,10 @@
          r.splice(i, 1);
        }
       }
+      const t = new Date().getTime();
       for (let i = 0, l = r.length; i < l; i++)
       {
+       r[i].timestamp = t;
        if (r[i].hasOwnProperty('width') || r[i].hasOwnProperty('height'))
         continue;
        if (!r[i].hasOwnProperty('url'))
