@@ -235,6 +235,7 @@ Configuration Information
 
   * `duplicates`  
     *A boolean or integer to toggle duplicate emotes per message.*
+    > **NOTE**: If you use a threshold rate (`"cfg.emote.threshold"`), this duplicate limit applies to how many emotes will count toward the threshold, rather than how many will be shown.
      - [ ] If `true`, every emote posted in chat will be shown.
      - [ ] If `false`, only one of each emote per message will be shown.
      - [ ] If `greater than 1`, sets the maximum number of identical emotes shown from any message.
@@ -430,6 +431,18 @@ Configuration Information
     *The maximum number of emotes to save in queue.*  
     Set this value to `0` for an infinite queue.  
     This value will be ignored if the previous value (`"cfg.emote.max"`) is infinite (`0`).
+
+  * `threshold`  
+    *Set a minimum number of emotes required before an emote is shown.*  
+    This setting uses two values, `emotes` and `seconds`, to describe the minimum rate at which emotes must be posted in chat in order to be shown.  
+    If, for example, the setting is `emotes: 3, seconds: 10`, then one emote will be shown on screen for every three of that emote posted in chat, unless more than 10 seconds pass between any two messages.  
+    The `"cfg.display.duplicates"` limit can be used to control how many emotes count toward the threshold from each message.
+
+    * `emotes`  
+      *The minimum number of an emote that must be sent by users within a span of time.*  
+
+    * `seconds`  
+      *The window size in seconds in which a minimum number of an emote must be sent.*  
 
   * `size`  
     *Settings related to the size of emotes.*
@@ -1135,8 +1148,12 @@ Configuration Information
   * `tip`  
     *Settings related to third-party tip systems.*
 
+    * `useMsgEmotes`  
+      - [ ] If `true`, any emotes in tip messages will be used for the kappagen.
+      - [ ] If `false`, tips will ignore the tip's message.
+
     * `useProfileImage`  
-      - [ ] If `true`, tips will use the tipper's profile image instead of emotes.
+      - [ ] If `true`, tips (without message emotes) will use the tipper's profile image instead of emotes.
       - [ ] If `false`, tips will use your standard kappagen emotes.
 
     * `streamlabs`  
@@ -1278,10 +1295,17 @@ TheCube and Text. The kappagen style can also contain the following values:
        - [ ] If `false`, the default count will be used exclusively.
 
      * `maximum`  
-       *The maximum number of emotes to show for this kappagen if dynamic is set to `true.*  
+       *The maximum number of emotes to show for this kappagen if dynamic is set to `true`.*  
        This must be an integer.
        - [ ] If this property does not exist, it will fall back to the maximum number of emotes allowed on screen.
        - [ ] If Integer, this is the maximum number of emotes this kappagen style can display.
+
+     * `eq`  
+       *The equation to apply to the number of emotes to show if dynamic is set to `true`.*  
+       This must be a string, using the letter `n` to represent the relevant dynamic value.  
+       Equations must contain only the operators `+`, `-`, `*`, `/`, `(` and `)`.  
+       - [ ] If the equation does not return a number, it will be ignored.  
+       - [ ] If the equation does not return an integer, it will be `Math.round()`ed.
 
 * `emotes`  
   *A list of emotes that will be used for this kappagen.*  
