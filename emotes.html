@@ -17151,21 +17151,42 @@
       return new Promise(
        function(resolve)
        {
+        let tTimeout = window.setTimeout(function() { resolve(null); }, 500);
         const o = window.indexedDB.open(_dbName, 1);
         o.onupgradeneeded = function()
         {
+         if (tTimeout !== null)
+         {
+          window.clearTimeout(tTimeout);
+          tTimeout = null;
+         }
          resolve(null);
         };
         o.onblocked = function()
         {
+         if (tTimeout !== null)
+         {
+          window.clearTimeout(tTimeout);
+          tTimeout = null;
+         }
          resolve(null);
         };
         o.onerror = function()
         {
+         if (tTimeout !== null)
+         {
+          window.clearTimeout(tTimeout);
+          tTimeout = null;
+         }
          resolve(null);
         };
         o.onsuccess = function(ev)
         {
+         if (tTimeout !== null)
+         {
+          window.clearTimeout(tTimeout);
+          tTimeout = null;
+         }
          const dbr = ev.target.result;
          if (dbr.objectStoreNames[0] !== _tblName)
          {
