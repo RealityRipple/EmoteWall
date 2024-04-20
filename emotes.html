@@ -7608,6 +7608,39 @@
        return ret;
       }
 
+      function $bits(cmd)
+      {
+       let p = [];
+       if (!service.emotes.hasOwnProperty('cheer'))
+        return p;
+       if (cmd.tags.bits < 1)
+        return p;
+       const msg = cmd.params[1].split(' ');
+       for (let m = 0, l = msg.length; m < l; m++)
+       {
+        for (const prefix in service.emotes.cheer)
+        {
+         if (!service.emotes.cheer.hasOwnProperty(prefix))
+          continue;
+         const firstChars = prefix.length;
+         if (msg[m].slice(0, firstChars).toLowerCase() !== prefix.toLowerCase())
+          continue;
+         const amt = msg[m].slice(firstChars);
+         if (!shared.nReg.i.test(amt))
+          continue;
+         for (let i = 0, n = service.emotes.cheer[prefix].length; i < n; i++)
+         {
+          if (parseInt(amt, 10) < service.emotes.cheer[prefix][i].min)
+           continue;
+          const sName = prefix + service.emotes.cheer[prefix][i].min;
+          p.push({svc: cSources.service.cheer, url: service.emotes.cheer[prefix][i].img, str: sName});
+          break;
+         }
+        }
+       }
+       return p;
+      }
+
       const $3rdparty = function()
       {
        const $ffz = function()
@@ -7782,13 +7815,14 @@
       return {
        emoji: $emoji,
        twitch: $twitch,
+       bits: $bits,
        '3rdparty': $3rdparty
       };
      }();
 
      const $line = function()
      {
-      async function $c_line(cmd)
+      async function $c_line(cmd, andCheers = true)
       {
        const u = _parseUser(cmd, true);
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
@@ -7804,7 +7838,7 @@
         return;
        if ((lv & cfg.display.access) === 0)
         return;
-       const p = _handleDuplicates(await _eListFromCmd(cmd));
+       const p = _handleDuplicates(await _eListFromCmd(cmd, null, andCheers));
        if (p.length === 0)
         return;
        display.emote.addToShowList(p);
@@ -7910,36 +7944,17 @@
        if (cmd.tags.bits < 1)
         return false;
        let p = [];
-       const msg = cmd.params[1].split(' ');
-       for (let m = 0, l = msg.length; m < l; m++)
-       {
-        for (const prefix in service.emotes.cheer)
-        {
-         if (!service.emotes.cheer.hasOwnProperty(prefix))
-          continue;
-         const firstChars = prefix.length;
-         if (msg[m].slice(0, firstChars).toLowerCase() !== prefix.toLowerCase())
-          continue;
-         const amt = msg[m].slice(firstChars);
-         if (!shared.nReg.i.test(amt))
-          continue;
-         for (let i = 0, n = service.emotes.cheer[prefix].length; i < n; i++)
-         {
-          if (parseInt(amt, 10) < service.emotes.cheer[prefix][i].min)
-           continue;
-          const sName = prefix + service.emotes.cheer[prefix][i].min;
-          p.push({svc: cSources.service.cheer, url: service.emotes.cheer[prefix][i].img, str: sName});
-          break;
-         }
-        }
-       }
        if (cfg.event.twitch.cheer.useMsg)
        {
         const a = await _eListFromCmd(cmd);
         p.push(...a);
        }
        else
-        await twitch.parse.line(cmd);
+       {
+        const b = twitch.parse.content.bits(cmd);
+        p.push(...b);
+        await twitch.parse.line(cmd, false);
+       }
        p = _handleDuplicates(p);
        if (p.length === 0)
         return false;
@@ -8654,12 +8669,14 @@
       return true;
      }
 
-     async function _eListFromCmd(cmd, dup = null)
+     async function _eListFromCmd(cmd, dup = null, andCheers = true)
      {
       const r = [];
       const u = _parseUser(cmd, true);
       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
        return r;
+      if (andCheers && cmd.tags.hasOwnProperty('bits') && cmd.tags.bits > 0)
+       r.push(...twitch.parse.content.bits(cmd));
       r.push(...twitch.parse.content.twitch(cmd, dup));
       if (cfg.display.useEmoji)
        r.push(...await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
