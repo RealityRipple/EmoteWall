@@ -6359,6 +6359,21 @@
          display.kappa.show(false, rd, {'%USER%': dName, '%AMOUNT%': dAmt});
         }
 
+        function _goal_type(t)
+        {
+         switch (t)
+         {
+          case 'follow': return 'Follows';
+          case 'subscription':
+          case 'subscription_count': return 'Subscriptions';
+          case 'new_subscription':
+          case 'new_subscription_count': return 'New Subscriptions';
+          case 'new_bit': return 'Bits';
+          case 'new_cheerer': return 'Cheerers';
+         }
+         return t.replace('_', ' ');
+        }
+
         function _goal_begin(ev)
         {
          if (cfg.event.twitch.goal === false)
@@ -6373,7 +6388,7 @@
           return;
          if (!ev.hasOwnProperty('target_amount'))
           return;
-         display.kappa.show(false, cfg.event.twitch.goal.begin, {'%TITLE%': ev.description, '%TYPE%': ev.type, '%AMOUNT%': ev.target_amount});
+         display.kappa.show(false, cfg.event.twitch.goal.begin, {'%TITLE%': ev.description, '%TYPE%': _goal_type(ev.type), '%AMOUNT%': ev.target_amount});
         }
 
         function _goal_end(ev)
@@ -6392,7 +6407,7 @@
           return;
          if (!ev.hasOwnProperty('is_achieved') || ev.is_achieved !== true)
           return;
-         display.kappa.show(false, cfg.event.twitch.goal.achieved, {'%TITLE%': ev.description, '%TYPE%': ev.type, '%AMOUNT%': ev.current_amount});
+         display.kappa.show(false, cfg.event.twitch.goal.achieved, {'%TITLE%': ev.description, '%TYPE%': _goal_type(ev.type), '%AMOUNT%': ev.current_amount});
         }
 
         return $c_notification;
