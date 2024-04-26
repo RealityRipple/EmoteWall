@@ -218,6 +218,7 @@
       tag: {
        styles: true,
        access: -1,
+       onReply: false,
        targetEmotes: true,
        targetExtendedEmotes: false
       },
@@ -7932,6 +7933,8 @@
        if (!_aTagged.hasOwnProperty(uTagged))
         return false;
        const uID = _aTagged[uTagged];
+       if (!cfg.event.twitch.tag.onReply && cmd.tags.hasOwnProperty('reply-parent-user-id') && uID === cmd.tags['reply-parent-user-id'])
+        return false;
        let rq = cfg.display.kappa.access;
        if (cfg.event.twitch.tag.hasOwnProperty('access') && cfg.event.twitch.tag.access >= 0)
         rq = cfg.event.twitch.tag.access;

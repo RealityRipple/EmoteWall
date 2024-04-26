@@ -625,6 +625,11 @@ Configuration Information
         *A bitwise flag representing which users can trigger this kappagen with a command.*  
         This value will fall back to the general kappagen access value if missing or less than `0`.
 
+      * `onReply`  
+        *A boolean to bypass tag kappagens when the mention is caused by a reply in chat*
+        - [ ] If `true`, replying to the tagged user will count as a tag.
+        - [ ] If `false`, replies will not count as tagging a user, and will not trigger a kappagen.
+
       * `targetEmotes`  
         *A boolean to toggle the use of the target channel's emotes for tag kappagens.*
         - [ ] If `true`, tag kappagens will use channel emotes from the target's channel.
