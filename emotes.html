@@ -75,8 +75,7 @@
       },
       recheck: false
      },
-     share: false,
-     feedback: false /* help improve support for monetized YouTube events, such as memberships, superchat, and gifts */
+     share: false
     },
     kick: {
      channel: 'CHANNEL_NAME'
@@ -1275,10 +1274,6 @@
        t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
        yt: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2yt.php',
        se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php'
-      },
-      feedback: {
-       ytmonetized: 'https://realityripple.com/Tools/Twitch/EmoteWall/ytsurvey.php',
-       yterrors: 'https://realityripple.com/Tools/Twitch/EmoteWall/yterrors.php'
       }
      }
     },
@@ -9158,7 +9153,6 @@
          }
         }
         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Streams: ' + r.code);
-        _errorReport('broadcasts._getActiveStreams', cURLs.api.youtube.broadcasts, r);
         return null;
        }
        if (j === null)
@@ -9417,7 +9411,6 @@
            }
           }
          }
-         _errorReport('broadcasts.getMessages.start', q, r);
          if (page !== false)
          {
           if (!_tM.hasOwnProperty(chatID))
@@ -9446,28 +9439,6 @@
          nextPage = j.nextPageToken;
         if (j.hasOwnProperty('items') && Array.isArray(j.items) && j.items.length > 0)
         {
-         for (let i = 0, l = j.items.length; i < l; i++)
-         {
-          if (!j.items[i].hasOwnProperty('snippet'))
-           continue;
-          if (!j.items[i].snippet.hasOwnProperty('type'))
-           continue;
-          switch (j.items[i].snippet.type)
-          {
-           case 'textMessageEvent':
-           case 'messageDeletedEvent':
-           case 'userBannedEvent':
-           case 'sponsorOnlyModeStartedEvent':
-           case 'sponsorOnlyModeEndedEvent':
-           case 'tombstone':
-           case 'giftMembershipReceivedEvent':
-           case 'chatEndedEvent':
-            break;
-           default:
-            _feedback(j.items[i].snippet.type, JSON.stringify(j.items[i]));
-            break;
-          }
-         }
          const pNow = new Date().getTime();
          for (let i = 0, l = j.items.length; i < l; i++)
          {
@@ -9739,7 +9710,6 @@
          }
         }
         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Subscribers: ' + r.code);
-        _errorReport('subscribers._getChange', url, r);
         return false;
        }
        if (j === null)
@@ -9962,10 +9932,7 @@
        const a = oR.access_token;
        let r2 = r;
        if (oR.hasOwnProperty('refresh_token'))
-       {
-        _errorReport('oAuth.update', cURLs.api.rr.refresh.yt, 'Received a Refresh Token during OAuth Token refresh!');
         r2 = oR.refresh_token;
-       }
        const oV = await _validate(a);
        if (oV === false)
        {
@@ -10053,7 +10020,6 @@
          }
         }
         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting OAuth Token: ' + r.code);
-        _errorReport('oAuth._getToken', url, r);
         return false;
        }
        if (j === null)
@@ -11118,24 +11084,6 @@
       };
      }
      return true;
-    }
-
-    function _feedback(type, data)
-    {
-     if (cfg.youtube.feedback !== true)
-      return;
-     const h = {'Content-Type': 'application/x-www-form-urlencoded'};
-     const b = 'type=' + encodeURIComponent(type) + '&value=' + encodeURIComponent(window.btoa(data));
-     shared.httpRequest('POST', cURLs.api.rr.feedback.ytmonetized, h, b, false, false);
-    }
-
-    function _errorReport(f, u, r)
-    {
-     if (cfg.youtube.feedback !== true)
-      return;
-     const h = {'Content-Type': 'application/x-www-form-urlencoded'};
-     const b = 'function=' + encodeURIComponent(window.btoa(f)) + '&url=' + encodeURIComponent(window.btoa(u)) + '&code=' + encodeURIComponent(window.btoa(r.code)) + '&data=' + encodeURIComponent(window.btoa(r.data));
-     shared.httpRequest('POST', cURLs.api.rr.feedback.yterrors, h, b, false, false);
     }
 
     return {
