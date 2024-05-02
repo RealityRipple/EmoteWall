@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.9.4 BETA
+    * v0.9.4.1 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -75,8 +75,7 @@
       },
       recheck: false
      },
-     share: false,
-     feedback: false /* help improve support for monetized YouTube events, such as memberships, superchat, and gifts */
+     share: false
     },
     kick: {
      channel: 'CHANNEL_NAME'
@@ -218,6 +217,7 @@
       tag: {
        styles: true,
        access: -1,
+       onReply: false,
        targetEmotes: true,
        targetExtendedEmotes: false
       },
@@ -1274,10 +1274,6 @@
        t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
        yt: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2yt.php',
        se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php'
-      },
-      feedback: {
-       ytmonetized: 'https://realityripple.com/Tools/Twitch/EmoteWall/ytsurvey.php',
-       yterrors: 'https://realityripple.com/Tools/Twitch/EmoteWall/yterrors.php'
       }
      }
     },
@@ -6359,6 +6355,21 @@
          display.kappa.show(false, rd, {'%USER%': dName, '%AMOUNT%': dAmt});
         }
 
+        function _goal_type(t)
+        {
+         switch (t)
+         {
+          case 'follow': return 'Follows';
+          case 'subscription':
+          case 'subscription_count': return 'Subscriptions';
+          case 'new_subscription':
+          case 'new_subscription_count': return 'New Subscriptions';
+          case 'new_bit': return 'Bits';
+          case 'new_cheerer': return 'Cheerers';
+         }
+         return t.replace('_', ' ');
+        }
+
         function _goal_begin(ev)
         {
          if (cfg.event.twitch.goal === false)
@@ -6373,7 +6384,7 @@
           return;
          if (!ev.hasOwnProperty('target_amount'))
           return;
-         display.kappa.show(false, cfg.event.twitch.goal.begin, {'%TITLE%': ev.description, '%TYPE%': ev.type, '%AMOUNT%': ev.target_amount});
+         display.kappa.show(false, cfg.event.twitch.goal.begin, {'%TITLE%': ev.description, '%TYPE%': _goal_type(ev.type), '%AMOUNT%': ev.target_amount});
         }
 
         function _goal_end(ev)
@@ -6392,7 +6403,7 @@
           return;
          if (!ev.hasOwnProperty('is_achieved') || ev.is_achieved !== true)
           return;
-         display.kappa.show(false, cfg.event.twitch.goal.achieved, {'%TITLE%': ev.description, '%TYPE%': ev.type, '%AMOUNT%': ev.current_amount});
+         display.kappa.show(false, cfg.event.twitch.goal.achieved, {'%TITLE%': ev.description, '%TYPE%': _goal_type(ev.type), '%AMOUNT%': ev.current_amount});
         }
 
         return $c_notification;
@@ -7917,6 +7928,8 @@
        if (!_aTagged.hasOwnProperty(uTagged))
         return false;
        const uID = _aTagged[uTagged];
+       if (!cfg.event.twitch.tag.onReply && cmd.tags.hasOwnProperty('reply-parent-user-id') && uID === cmd.tags['reply-parent-user-id'])
+        return false;
        let rq = cfg.display.kappa.access;
        if (cfg.event.twitch.tag.hasOwnProperty('access') && cfg.event.twitch.tag.access >= 0)
         rq = cfg.event.twitch.tag.access;
@@ -9140,7 +9153,6 @@
          }
         }
         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Streams: ' + r.code);
-        _errorReport('broadcasts._getActiveStreams', cURLs.api.youtube.broadcasts, r);
         return null;
        }
        if (j === null)
@@ -9399,7 +9411,6 @@
            }
           }
          }
-         _errorReport('broadcasts.getMessages.start', q, r);
          if (page !== false)
          {
           if (!_tM.hasOwnProperty(chatID))
@@ -9428,28 +9439,6 @@
          nextPage = j.nextPageToken;
         if (j.hasOwnProperty('items') && Array.isArray(j.items) && j.items.length > 0)
         {
-         for (let i = 0, l = j.items.length; i < l; i++)
-         {
-          if (!j.items[i].hasOwnProperty('snippet'))
-           continue;
-          if (!j.items[i].snippet.hasOwnProperty('type'))
-           continue;
-          switch (j.items[i].snippet.type)
-          {
-           case 'textMessageEvent':
-           case 'messageDeletedEvent':
-           case 'userBannedEvent':
-           case 'sponsorOnlyModeStartedEvent':
-           case 'sponsorOnlyModeEndedEvent':
-           case 'tombstone':
-           case 'giftMembershipReceivedEvent':
-           case 'chatEndedEvent':
-            break;
-           default:
-            _feedback(j.items[i].snippet.type, JSON.stringify(j.items[i]));
-            break;
-          }
-         }
          const pNow = new Date().getTime();
          for (let i = 0, l = j.items.length; i < l; i++)
          {
@@ -9721,7 +9710,6 @@
          }
         }
         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting Subscribers: ' + r.code);
-        _errorReport('subscribers._getChange', url, r);
         return false;
        }
        if (j === null)
@@ -9944,10 +9932,7 @@
        const a = oR.access_token;
        let r2 = r;
        if (oR.hasOwnProperty('refresh_token'))
-       {
-        _errorReport('oAuth.update', cURLs.api.rr.refresh.yt, 'Received a Refresh Token during OAuth Token refresh!');
         r2 = oR.refresh_token;
-       }
        const oV = await _validate(a);
        if (oV === false)
        {
@@ -10035,7 +10020,6 @@
          }
         }
         notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting OAuth Token: ' + r.code);
-        _errorReport('oAuth._getToken', url, r);
         return false;
        }
        if (j === null)
@@ -11100,24 +11084,6 @@
       };
      }
      return true;
-    }
-
-    function _feedback(type, data)
-    {
-     if (cfg.youtube.feedback !== true)
-      return;
-     const h = {'Content-Type': 'application/x-www-form-urlencoded'};
-     const b = 'type=' + encodeURIComponent(type) + '&value=' + encodeURIComponent(window.btoa(data));
-     shared.httpRequest('POST', cURLs.api.rr.feedback.ytmonetized, h, b, false, false);
-    }
-
-    function _errorReport(f, u, r)
-    {
-     if (cfg.youtube.feedback !== true)
-      return;
-     const h = {'Content-Type': 'application/x-www-form-urlencoded'};
-     const b = 'function=' + encodeURIComponent(window.btoa(f)) + '&url=' + encodeURIComponent(window.btoa(u)) + '&code=' + encodeURIComponent(window.btoa(r.code)) + '&data=' + encodeURIComponent(window.btoa(r.data));
-     shared.httpRequest('POST', cURLs.api.rr.feedback.yterrors, h, b, false, false);
     }
 
     return {
@@ -12873,7 +12839,7 @@
           return false;
         }
         addList[e.id]++;
-        return {svc: cSources.service.emoji, url: e.url, str: c, pos: p};
+        return {svc: cSources.service.emoji, url: e.url, str: c, pos: p, width: e.width, height: e.height};
        }
 
        function _showCrew(addList, p, dup = null)
@@ -12891,7 +12857,7 @@
         const svgC = shared.rnd(18);
         const svgCSS = '.st0{fill:#484C4D;}.st1{fill:#' + crewColors[svgC][0] + ';}.st2{fill:#A3D3E3;}.st3{opacity:0.5;fill:#' + crewColors[svgC][1] + ';}.st4{opacity:0.45;fill:#5B7882;}.st5{fill:#FFFFFF;}' + (shared.rnd(2) === 1 ? 'svg{transform: scaleX(-1);}' : '');
         const crew = crewSVG.replace('%CSS%', encodeURIComponent(svgCSS));
-        return {svc: cSources.service.emoji, url: crew, str: _sus, pos: p};
+        return {svc: cSources.service.emoji, url: crew, str: _sus, pos: p, width: 112, height: 112};
        }
 
        return $c_emoji;
