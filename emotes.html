@@ -7669,12 +7669,17 @@
          const amt = msg[m].slice(firstChars);
          if (!shared.nReg.i.test(amt))
           continue;
+         let iP = 0;
+         for (let j = 0; j < m; j++)
+         {
+          iP += msg[j].length + 1;
+         }
          for (let i = 0, n = service.emotes.cheer[prefix].length; i < n; i++)
          {
           if (parseInt(amt, 10) < service.emotes.cheer[prefix][i].min)
            continue;
           const sName = prefix + service.emotes.cheer[prefix][i].min;
-          p.push({svc: cSources.service.cheer, url: service.emotes.cheer[prefix][i].img, str: sName});
+          p.push({svc: cSources.service.cheer, url: service.emotes.cheer[prefix][i].img, str: sName, pos: p});
           break;
          }
         }
