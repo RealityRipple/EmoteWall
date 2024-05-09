@@ -5111,7 +5111,7 @@
        }
        if (cfg.display.useEmoji !== false)
        {
-        const eMoji = await service.parse.content.emoji(s[i], cfg.display.useEmoji, true);
+        const eMoji = await service.parse.content.emoji(s[i], true);
         if (eMoji.length > 0)
         {
          v.svc = cSources.service.emoji;
@@ -7599,12 +7599,12 @@
 
      const $content = function()
      {
-      async function $emoji(cmd, set, dup = null)
+      async function $emoji(cmd, dup = null)
       {
        if (cmd.params.length < 2)
         return [];
        const msg = cmd.params[1];
-       return service.parse.content.emoji(msg, set, dup);
+       return service.parse.content.emoji(msg, dup);
       }
 
       function $twitch(cmd, dup = null)
@@ -8726,7 +8726,7 @@
        r.push(...twitch.parse.content.bits(cmd));
       r.push(...twitch.parse.content.twitch(cmd, dup));
       if (cfg.display.useEmoji)
-       r.push(...await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+       r.push(...await twitch.parse.content.emoji(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
        r.push(...twitch.parse.content['3rdparty'].ffz.general(cmd, dup));
@@ -10185,12 +10185,12 @@
 
      const $content = function()
      {
-      async function $emoji(cmd, set, dup = null)
+      async function $emoji(cmd, dup = null)
       {
        const msg = _getMessage(cmd);
        if (msg === false)
         return [];
-       return service.parse.content.emoji(msg, set, dup);
+       return service.parse.content.emoji(msg, dup);
       }
 
       const $youtube = function()
@@ -10856,7 +10856,7 @@
        return r;
       r.push(...await youtube.parse.content.youtube(cmd, dup));
       if (cfg.display.useEmoji)
-       r.push(...await youtube.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+       r.push(...await youtube.parse.content.emoji(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
        r.push(...youtube.parse.content['3rdparty'].ffz.general(cmd, dup));
@@ -11832,12 +11832,12 @@
     {
      const $content = function()
      {
-      async function $emoji(cmd, set, dup = null)
+      async function $emoji(cmd, dup = null)
       {
        if (!cmd.hasOwnProperty('content') || cmd.content === null)
         return [];
        const msg = cmd.content;
-       return service.parse.content.emoji(msg, set, dup);
+       return service.parse.content.emoji(msg, dup);
       }
 
       function $kick(cmd, dup = null)
@@ -12461,7 +12461,7 @@
        return r;
       r.push(...kick.parse.content.kick(cmd, dup));
       if (cfg.display.useEmoji)
-       r.push(...await kick.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+       r.push(...await kick.parse.content.emoji(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
        r.push(...kick.parse.content['3rdparty'].ffz.general(cmd, dup));
@@ -12726,7 +12726,7 @@
       {
        const _sus = '0d9e';
 
-       function $c_emoji(msg, set, dup = null)
+       function $c_emoji(msg, dup = null)
        {
         if (!service.emotes.hasOwnProperty('emoji'))
          return [];
@@ -12753,18 +12753,16 @@
          return [];
         if (dup === null)
          dup = cfg.display.duplicates;
-        if (set === true)
-         set = 'twemoji';
         const addList = {};
         const rets = [];
         for (let i = 0, l = emList.length; i < l; i++)
         {
-         rets.push(..._parseEm(addList, emList[i], set, dup));
+         rets.push(..._parseEm(addList, emList[i], dup));
         }
         return rets;
        }
 
-       function _parseEm(addList, emI, set, dup = null)
+       function _parseEm(addList, emI, dup = null)
        {
         const ret = [];
         const cpList = [];
@@ -14109,7 +14107,7 @@
       const chID = 'twitch:' + twitch.net.channelID;
       r.push(..._parseTwitch(msg));
       if (cfg.display.useEmoji)
-       r.push(...await service.parse.content.emoji(msg, cfg.display.useEmoji));
+       r.push(...await service.parse.content.emoji(msg));
       if (cfg.display.extended.useFFZ)
       {
        r.push(...service.parse.content['3rdparty'].ffz.general(msg, chID));
