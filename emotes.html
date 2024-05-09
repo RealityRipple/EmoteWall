@@ -10978,45 +10978,21 @@
         continue;
        if (!j[jIDs[i]].hasOwnProperty('image'))
         continue;
-       if (cfg.ignore.emotes !== false)
-       {
-        let isOK = true;
-        for (let k = 0, c = j[jIDs[i]].name.length; k < c; k++)
-        {
-         let eName = j[jIDs[i]].name[k];
-         if (eName.slice(0, 1) !== ':')
-          continue;
-         if (eName.slice(-1) !== ':')
-          continue;
-         eName = eName.slice(1, -1);
-         if (cfg.ignore.emotes.includes(eName))
-         {
-          isOK = false;
-          break;
-         }
-        }
-        if (!isOK)
-         continue;
-       }
+       const aN = _retrNames(j[jIds[i]]);
+       if (cfg.ignore.emotes !== false && _arrayInArray(aN, cfg.ignore.emotes))
+        continue;
        const eURL = cURLs.cdn.youtube.emoji.replaceAll('%EMOJI_ID%', j[jIDs[i]].image);
-       if (n !== false)
-       {
-        for (let k = 0, c = j[jIDs[i]].name.length; k < c; k++)
-        {
-         let eName = j[jIDs[i]].name[k];
-         if (eName.slice(0, 1) !== ':')
-          continue;
-         if (eName.slice(-1) !== ':')
-          continue;
-         eName = eName.slice(1, -1);
-         n[eName] = {
-          scope: cSources.scope.channel,
-          url: eURL,
-          id: jIDs[i]
-         };
-        }
-       }
        ret.push({url: eURL});
+       if (n === false)
+        continue;
+       for (let k = 0, c = aN.length; k < c; k++)
+       {
+        n[aN[k]] = {
+         scope: cSources.scope.channel,
+         url: eURL,
+         id: jIDs[i]
+        };
+       }
       }
       _chList[chName] = {t: new Date().getTime(), value: ret};
       return ret;
@@ -11041,15 +11017,16 @@
      const jIDs = Object.keys(j);
      for (let i = 0, l = jIDs.length; i < l; i++)
      {
-      for (let k = 0, c = j[jIDs[i]].name.length; k < c; k++)
+      if (!j.hasOwnProperty(jIDs[i]))
+       continue;
+      if (!j[jIDs[i]].hasOwnProperty('name'))
+       continue;
+      if (!j[jIDs[i]].hasOwnProperty('image'))
+       continue;
+      const aN = _retrNames(j[jIDs[i]]);
+      for (let k = 0, c = aN.length; k < c; k++)
       {
-       let eName = j[jIDs[i]].name[k];
-       if (eName.slice(0, 1) !== ':')
-        continue;
-       if (eName.slice(-1) !== ':')
-        continue;
-       eName = eName.slice(1, -1);
-       service.emotes.youtube[eName] = {
+       service.emotes.youtube[aN[k]] = {
         scope: cSources.scope.global,
         url: cURLs.cdn.youtube.emoji.replaceAll('%EMOJI_ID%', j[jIDs[i]].image),
         id: jIDs[i]
@@ -11057,6 +11034,32 @@
       }
      }
      return true;
+    }
+
+    function _retrNames(o)
+    {
+     const r = [];
+     for (let i = 0, l = o.name.length; i < l; i++)
+     {
+      let eName = o.name[i];
+      if (eName.slice(0, 1) !== ':')
+       continue;
+      if (eName.slice(-1) !== ':')
+       continue;
+      eName = eName.slice(1, -1);
+      r.push(eName);
+     }
+     return r;
+    }
+
+    function _arrayInArray(find, subject)
+    {
+     for (let i = 0, l = find.length; i < l; i++)
+     {
+      if (subject.includes(find[i]))
+       return true;
+     }
+     return false;
     }
 
     async function $stickers()
