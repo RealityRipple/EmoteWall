@@ -14095,7 +14095,18 @@
        {
         p += m[j].length + 1;
        }
-       ret.push({svc: cSources.service.twitch, url: service.emotes.twitch[m[i]].url, str: m[i], pos: p, scope: service.emotes.twitch[m[i]].scope, width: service.emotes.twitch[m[i]].width, height: service.emotes.twitch[m[i]].height});
+       const o = {
+        svc: cSources.service.twitch,
+        url: service.emotes.twitch[m[i]].url,
+        str: m[i],
+        pos: p,
+        scope: service.emotes.twitch[m[i]].scope
+       };
+       if (service.emotes.twitch[m[i]].hasOwnProperty('width'))
+        o.width = service.emotes.twitch[m[i]].width;
+       if (service.emotes.twitch[m[i]].hasOwnProperty('height'))
+        o.height = service.emotes.twitch[m[i]].height;
+       ret.push(o);
       }
       return ret;
      }
@@ -14216,10 +14227,7 @@
        continue;
       let p = false;
       if (cfg.event.tip.useMsgEmotes && m !== false)
-      {
-       await thirdparty.tips.streamlabs();
        p = await service.parse.eListFromMsg(n, m);
-      }
       if (p === false && cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
@@ -14537,10 +14545,7 @@
       return;
      let p = false;
      if (cfg.event.tip.useMsgEmotes && dMsg !== false)
-     {
-      await thirdparty.tips.streamelements();
       p = await service.parse.eListFromMsg(dName, dMsg);
-     }
      if (p === false && cfg.event.tip.useProfileImage && dName !== false)
      {
       let u = false;
