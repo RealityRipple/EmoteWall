@@ -8963,6 +8963,8 @@
        continue;
       if (!j.data[i].hasOwnProperty('name'))
        continue;
+      if (cfg.ignore.emotes !== false && cfg.ignore.emotes.includes(j.data[i].name))
+       continue;
       service.emotes.twitch[j.data[i].name] = {
        scope: cSources.scope.global,
        url: cURLs.cdn.twitch.emote.replaceAll('%EMOTE_ID%', j.data[i].id),
@@ -11024,6 +11026,8 @@
       if (!j[jIDs[i]].hasOwnProperty('image'))
        continue;
       const aN = _retrNames(j[jIDs[i]]);
+      if (cfg.ignore.emotes !== false && _arrayInArray(aN, cfg.ignore.emotes))
+       continue;
       for (let k = 0, c = aN.length; k < c; k++)
       {
        service.emotes.youtube[aN[k]] = {
