@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.9.4.1 BETA
+    * v0.9.4.2 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -5111,7 +5111,7 @@
        }
        if (cfg.display.useEmoji !== false)
        {
-        const eMoji = await service.parse.content.emoji(s[i], cfg.display.useEmoji, true);
+        const eMoji = await service.parse.content.emoji(s[i], true);
         if (eMoji.length > 0)
         {
          v.svc = cSources.service.emoji;
@@ -7599,12 +7599,12 @@
 
      const $content = function()
      {
-      async function $emoji(cmd, set, dup = null)
+      async function $emoji(cmd, dup = null)
       {
        if (cmd.params.length < 2)
         return [];
        const msg = cmd.params[1];
-       return service.parse.content.emoji(msg, set, dup);
+       return service.parse.content.emoji(msg, dup);
       }
 
       function $twitch(cmd, dup = null)
@@ -7669,12 +7669,17 @@
          const amt = msg[m].slice(firstChars);
          if (!shared.nReg.i.test(amt))
           continue;
+         let iP = 0;
+         for (let j = 0; j < m; j++)
+         {
+          iP += msg[j].length + 1;
+         }
          for (let i = 0, n = service.emotes.cheer[prefix].length; i < n; i++)
          {
           if (parseInt(amt, 10) < service.emotes.cheer[prefix][i].min)
            continue;
           const sName = prefix + service.emotes.cheer[prefix][i].min;
-          p.push({svc: cSources.service.cheer, url: service.emotes.cheer[prefix][i].img, str: sName});
+          p.push({svc: cSources.service.cheer, url: service.emotes.cheer[prefix][i].img, str: sName, pos: p, scope: null});
           break;
          }
         }
@@ -8721,7 +8726,7 @@
        r.push(...twitch.parse.content.bits(cmd));
       r.push(...twitch.parse.content.twitch(cmd, dup));
       if (cfg.display.useEmoji)
-       r.push(...await twitch.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+       r.push(...await twitch.parse.content.emoji(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
        r.push(...twitch.parse.content['3rdparty'].ffz.general(cmd, dup));
@@ -8957,6 +8962,8 @@
       if (!j.data[i].hasOwnProperty('id'))
        continue;
       if (!j.data[i].hasOwnProperty('name'))
+       continue;
+      if (cfg.ignore.emotes !== false && cfg.ignore.emotes.includes(j.data[i].name))
        continue;
       service.emotes.twitch[j.data[i].name] = {
        scope: cSources.scope.global,
@@ -10180,12 +10187,12 @@
 
      const $content = function()
      {
-      async function $emoji(cmd, set, dup = null)
+      async function $emoji(cmd, dup = null)
       {
        const msg = _getMessage(cmd);
        if (msg === false)
         return [];
-       return service.parse.content.emoji(msg, set, dup);
+       return service.parse.content.emoji(msg, dup);
       }
 
       const $youtube = function()
@@ -10851,7 +10858,7 @@
        return r;
       r.push(...await youtube.parse.content.youtube(cmd, dup));
       if (cfg.display.useEmoji)
-       r.push(...await youtube.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+       r.push(...await youtube.parse.content.emoji(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
        r.push(...youtube.parse.content['3rdparty'].ffz.general(cmd, dup));
@@ -10973,45 +10980,21 @@
         continue;
        if (!j[jIDs[i]].hasOwnProperty('image'))
         continue;
-       if (cfg.ignore.emotes !== false)
-       {
-        let isOK = true;
-        for (let k = 0, c = j[jIDs[i]].name.length; k < c; k++)
-        {
-         let eName = j[jIDs[i]].name[k];
-         if (eName.slice(0, 1) !== ':')
-          continue;
-         if (eName.slice(-1) !== ':')
-          continue;
-         eName = eName.slice(1, -1);
-         if (cfg.ignore.emotes.includes(eName))
-         {
-          isOK = false;
-          break;
-         }
-        }
-        if (!isOK)
-         continue;
-       }
+       const aN = _retrNames(j[jIds[i]]);
+       if (cfg.ignore.emotes !== false && _arrayInArray(aN, cfg.ignore.emotes))
+        continue;
        const eURL = cURLs.cdn.youtube.emoji.replaceAll('%EMOJI_ID%', j[jIDs[i]].image);
-       if (n !== false)
-       {
-        for (let k = 0, c = j[jIDs[i]].name.length; k < c; k++)
-        {
-         let eName = j[jIDs[i]].name[k];
-         if (eName.slice(0, 1) !== ':')
-          continue;
-         if (eName.slice(-1) !== ':')
-          continue;
-         eName = eName.slice(1, -1);
-         n[eName] = {
-          scope: cSources.scope.channel,
-          url: eURL,
-          id: jIDs[i]
-         };
-        }
-       }
        ret.push({url: eURL});
+       if (n === false)
+        continue;
+       for (let k = 0, c = aN.length; k < c; k++)
+       {
+        n[aN[k]] = {
+         scope: cSources.scope.channel,
+         url: eURL,
+         id: jIDs[i]
+        };
+       }
       }
       _chList[chName] = {t: new Date().getTime(), value: ret};
       return ret;
@@ -11036,15 +11019,18 @@
      const jIDs = Object.keys(j);
      for (let i = 0, l = jIDs.length; i < l; i++)
      {
-      for (let k = 0, c = j[jIDs[i]].name.length; k < c; k++)
+      if (!j.hasOwnProperty(jIDs[i]))
+       continue;
+      if (!j[jIDs[i]].hasOwnProperty('name'))
+       continue;
+      if (!j[jIDs[i]].hasOwnProperty('image'))
+       continue;
+      const aN = _retrNames(j[jIDs[i]]);
+      if (cfg.ignore.emotes !== false && _arrayInArray(aN, cfg.ignore.emotes))
+       continue;
+      for (let k = 0, c = aN.length; k < c; k++)
       {
-       let eName = j[jIDs[i]].name[k];
-       if (eName.slice(0, 1) !== ':')
-        continue;
-       if (eName.slice(-1) !== ':')
-        continue;
-       eName = eName.slice(1, -1);
-       service.emotes.youtube[eName] = {
+       service.emotes.youtube[aN[k]] = {
         scope: cSources.scope.global,
         url: cURLs.cdn.youtube.emoji.replaceAll('%EMOJI_ID%', j[jIDs[i]].image),
         id: jIDs[i]
@@ -11052,6 +11038,32 @@
       }
      }
      return true;
+    }
+
+    function _retrNames(o)
+    {
+     const r = [];
+     for (let i = 0, l = o.name.length; i < l; i++)
+     {
+      let eName = o.name[i];
+      if (eName.slice(0, 1) !== ':')
+       continue;
+      if (eName.slice(-1) !== ':')
+       continue;
+      eName = eName.slice(1, -1);
+      r.push(eName);
+     }
+     return r;
+    }
+
+    function _arrayInArray(find, subject)
+    {
+     for (let i = 0, l = find.length; i < l; i++)
+     {
+      if (subject.includes(find[i]))
+       return true;
+     }
+     return false;
     }
 
     async function $stickers()
@@ -11827,12 +11839,12 @@
     {
      const $content = function()
      {
-      async function $emoji(cmd, set, dup = null)
+      async function $emoji(cmd, dup = null)
       {
        if (!cmd.hasOwnProperty('content') || cmd.content === null)
         return [];
        const msg = cmd.content;
-       return service.parse.content.emoji(msg, set, dup);
+       return service.parse.content.emoji(msg, dup);
       }
 
       function $kick(cmd, dup = null)
@@ -12456,7 +12468,7 @@
        return r;
       r.push(...kick.parse.content.kick(cmd, dup));
       if (cfg.display.useEmoji)
-       r.push(...await kick.parse.content.emoji(cmd, cfg.display.useEmoji, dup));
+       r.push(...await kick.parse.content.emoji(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
        r.push(...kick.parse.content['3rdparty'].ffz.general(cmd, dup));
@@ -12721,7 +12733,7 @@
       {
        const _sus = '0d9e';
 
-       function $c_emoji(msg, set, dup = null)
+       function $c_emoji(msg, dup = null)
        {
         if (!service.emotes.hasOwnProperty('emoji'))
          return [];
@@ -12748,18 +12760,16 @@
          return [];
         if (dup === null)
          dup = cfg.display.duplicates;
-        if (set === true)
-         set = 'twemoji';
         const addList = {};
         const rets = [];
         for (let i = 0, l = emList.length; i < l; i++)
         {
-         rets.push(..._parseEm(addList, emList[i], set, dup));
+         rets.push(..._parseEm(addList, emList[i], dup));
         }
         return rets;
        }
 
-       function _parseEm(addList, emI, set, dup = null)
+       function _parseEm(addList, emI, dup = null)
        {
         const ret = [];
         const cpList = [];
@@ -12809,17 +12819,18 @@
         for (let j = 0, lP = cpList.length; j < lP; j++)
         {
          let s = cpList[j];
-         pos += s.replaceAll(/[^\-]/g, '').length + 1;
          if (s === _sus)
          {
           const rC = _showCrew(addList, pos, dup);
           if (rC !== false)
            ret.push(rC);
+          pos += s.replaceAll(/[^\-]/g, '').length + 1;
           continue;
          }
          const rE = _showEmoji(addList, s, pos, dup);
          if (rE !== false)
           ret.push(rE);
+         pos += s.replaceAll(/[^\-]/g, '').length + 1;
         }
         return ret;
        }
@@ -14091,7 +14102,18 @@
        {
         p += m[j].length + 1;
        }
-       ret.push({svc: cSources.service.twitch, url: service.emotes.twitch[m[i]].url, str: m[i], pos: p, scope: service.emotes.twitch[m[i]].scope, width: service.emotes.twitch[m[i]].width, height: service.emotes.twitch[m[i]].height});
+       const o = {
+        svc: cSources.service.twitch,
+        url: service.emotes.twitch[m[i]].url,
+        str: m[i],
+        pos: p,
+        scope: service.emotes.twitch[m[i]].scope
+       };
+       if (service.emotes.twitch[m[i]].hasOwnProperty('width'))
+        o.width = service.emotes.twitch[m[i]].width;
+       if (service.emotes.twitch[m[i]].hasOwnProperty('height'))
+        o.height = service.emotes.twitch[m[i]].height;
+       ret.push(o);
       }
       return ret;
      }
@@ -14104,7 +14126,7 @@
       const chID = 'twitch:' + twitch.net.channelID;
       r.push(..._parseTwitch(msg));
       if (cfg.display.useEmoji)
-       r.push(...await service.parse.content.emoji(msg, cfg.display.useEmoji));
+       r.push(...await service.parse.content.emoji(msg));
       if (cfg.display.extended.useFFZ)
       {
        r.push(...service.parse.content['3rdparty'].ffz.general(msg, chID));
@@ -14212,10 +14234,7 @@
        continue;
       let p = false;
       if (cfg.event.tip.useMsgEmotes && m !== false)
-      {
-       await thirdparty.tips.streamlabs();
        p = await service.parse.eListFromMsg(n, m);
-      }
       if (p === false && cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
@@ -14533,10 +14552,7 @@
       return;
      let p = false;
      if (cfg.event.tip.useMsgEmotes && dMsg !== false)
-     {
-      await thirdparty.tips.streamelements();
       p = await service.parse.eListFromMsg(dName, dMsg);
-     }
      if (p === false && cfg.event.tip.useProfileImage && dName !== false)
      {
       let u = false;
@@ -16741,7 +16757,7 @@
      const unqSkip = ['00a9', '00ae', '2122', '24c2'];
      if (set === true)
       set = 'twemoji';
-     const r = await shared.httpRequest('GET', cURLs.cdn.emoji.list.replaceAll('%SET_ID%', set));
+     const r = await shared.httpRequest('GET', cURLs.cdn.emoji.list);
      if (!r.success)
       return;
      const j = r.json;
