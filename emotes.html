@@ -6272,7 +6272,9 @@
           return;
          if (!ev.hasOwnProperty('level'))
           return;
-         const rs = shared.findInMaybeRange(cfg.event.twitch.hypetrain.success, ev.level);
+         if (ev.level < 2)
+          return;
+         const rs = shared.findInMaybeRange(cfg.event.twitch.hypetrain.success, ev.level - 1);
          if (rs === false)
           return;
          display.kappa.show(false, rs);
