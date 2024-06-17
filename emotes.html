@@ -1175,8 +1175,6 @@
    // don't mess with things below this line without knowing what you're doing //
    //////////////////////////////////////////////////////////////////////////////
 
-   let cList = [];
-   let cSafe = [];
    const wWS = 5;
    const oauthClient = {
     t: '4umzcpmjkg6ar78b81s7302jlj33t8',
@@ -5176,7 +5174,7 @@
        }
       }
       if (!Array.isArray(kList) || kList.length < 1)
-       kList = JSON.parse(JSON.stringify(cSafe));
+       kList = JSON.parse(JSON.stringify(service.cSafe));
       if (!Array.isArray(kList) || kList.length < 1)
        kList = JSON.parse(JSON.stringify(bareList));
       if (gOrigin !== false && Array.isArray(kList) && kList.length > 0)
@@ -7156,8 +7154,8 @@
       const r = await _findEmote_channel(chID, service.emotes.twitch);
       if (r === false)
        return false;
-      if (cList.length === 0)
-       cList = r;
+      if (service.cList.length === 0)
+       service.cList = r;
       else
       {
        for (const n in service.emotes.twitch)
@@ -7166,21 +7164,21 @@
          continue;
         if (service.emotes.twitch[n].scope !== cSources.scope.channel)
          continue;
-        for (let c = cList.length - 1; c >= 0; c--)
+        for (let c = service.cList.length - 1; c >= 0; c--)
         {
-         if (cList[c].url !== service.emotes.twitch[n].url)
+         if (service.cList[c].url !== service.emotes.twitch[n].url)
           continue;
-         cList.splice(c, 1);
+         service.cList.splice(c, 1);
          break;
         }
        }
        for (let i = 0, l = r.length; i < l; i++)
        {
-        if (!cList.includes(r[i]))
-         cList.push(r[i]);
+        if (!service.cList.includes(r[i]))
+         service.cList.push(r[i]);
        }
       }
-      cSafe = JSON.parse(JSON.stringify(cList));
+      service.syncList();
       return true;
      }
 
@@ -9908,8 +9906,8 @@
       const r = await _findEmote_channel(chName, service.emotes.youtube);
       if (r === false)
        return false;
-      if (cList.length === 0)
-       cList = r;
+      if (service.cList.length === 0)
+       service.cList = r;
       else
       {
        for (const n in service.emotes.youtube)
@@ -9918,21 +9916,21 @@
          continue;
         if (service.emotes.youtube[n].scope !== cSources.scope.channel)
          continue;
-        for (let c = cList.length - 1; c >= 0; c--)
+        for (let c = service.cList.length - 1; c >= 0; c--)
         {
-         if (cList[c].url !== service.emotes.youtube[n].url)
+         if (service.cList[c].url !== service.emotes.youtube[n].url)
           continue;
-         cList.splice(c, 1);
+         service.cList.splice(c, 1);
          break;
         }
        }
        for (let i = 0, l = r.length; i < l; i++)
        {
-        if (!cList.includes(r[i]))
-         cList.push(r[i]);
+        if (!service.cList.includes(r[i]))
+         service.cList.push(r[i]);
        }
       }
-      cSafe = JSON.parse(JSON.stringify(cList));
+      service.syncList();
      }
 
      const $oAuth = function()
@@ -11819,8 +11817,8 @@
       const r = await _findEmote_channel(chName, service.emotes.kick);
       if (r === false)
        return false;
-      if (cList.length === 0)
-       cList = r;
+      if (service.cList.length === 0)
+       service.cList = r;
       else
       {
        for (const n in service.emotes.kick)
@@ -11829,21 +11827,21 @@
          continue;
         if (service.emotes.kick[n].scope !== cSources.scope.channel)
          continue;
-        for (let c = cList.length - 1; c >= 0; c--)
+        for (let c = service.cList.length - 1; c >= 0; c--)
         {
-         if (cList[c].url !== service.emotes.kick[n].url)
+         if (service.cList[c].url !== service.emotes.kick[n].url)
           continue;
-         cList.splice(c, 1);
+         service.cList.splice(c, 1);
          break;
         }
        }
        for (let i = 0, l = r.length; i < l; i++)
        {
-        if (!cList.includes(r[i]))
-         cList.push(r[i]);
+        if (!service.cList.includes(r[i]))
+         service.cList.push(r[i]);
        }
       }
-      cSafe = JSON.parse(JSON.stringify(cList));
+      service.syncList();
      }
 
      const $oAuth = function()
@@ -14294,9 +14292,17 @@
      };
     }();
 
+    function $syncList()
+    {
+     service.cSafe = JSON.parse(JSON.stringify(service.cList));
+    }
+
     return {
      parse: $parse,
-     emotes: {}
+     syncList: $syncList,
+     emotes: {},
+     cList: [],
+     cSafe: []
     };
    }();
 
@@ -15152,7 +15158,7 @@
      if (ch !== false)
       list[code].channel.push(ch);
      if (scope === cSources.scope.channel && !zwe)
-      cList.push({url: url, width: w, height: h});
+      service.cList.push({url: url, width: w, height: h});
     }
 
     function _removeEmote(list, scope, code, ch = false)
@@ -15173,11 +15179,11 @@
      }
      if (scope === cSources.scope.channel)
      {
-      for (let c = cList.length - 1; c >= 0; c--)
+      for (let c = service.cList.length - 1; c >= 0; c--)
       {
-       if (cList[c].url !== list[code].url)
+       if (service.cList[c].url !== list[code].url)
         continue;
-       cList.splice(c, 1);
+       service.cList.splice(c, 1);
        break;
       }
      }
@@ -15276,7 +15282,7 @@
       }
       if (!j.hasOwnProperty('user_ids'))
       {
-       cSafe = JSON.parse(JSON.stringify(cList));
+       service.syncList();
        return true;
       }
       for (const setID in j.user_ids)
@@ -15335,7 +15341,7 @@
         }
        }
       }
-      cSafe = JSON.parse(JSON.stringify(cList));
+      service.syncList();
       return true;
      }
 
@@ -15405,7 +15411,7 @@
        }
        _addEmote(service.emotes.ffz, cSources.scope.channel, r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
       }
-      cSafe = JSON.parse(JSON.stringify(cList));
+      service.syncList();
       return true;
      }
 
@@ -15485,7 +15491,7 @@
        }
        _addEmote(service.emotes.bttv, cSources.scope.global, j[i].code, j[i].id, eURL, false, w, h);
       }
-      cSafe = JSON.parse(JSON.stringify(cList));
+      service.syncList();
       return true;
      }
 
@@ -15555,7 +15561,7 @@
        }
        _addEmote(service.emotes.bttv, cSources.scope.channel, r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
       }
-      cSafe = JSON.parse(JSON.stringify(cList));
+      service.syncList();
       return true;
      }
 
@@ -15664,7 +15670,7 @@
           }
           _addEmote(service.emotes.bttvU[usr], cSources.scope.user, d.data.emotes[i].code, d.data.emotes[i].id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emotes[i].id), false, w, h);
          }
-         cSafe = JSON.parse(JSON.stringify(cList));
+         service.syncList();
          break;
         case 'emote_create':
          if (!d.data.hasOwnProperty('channel'))
@@ -15684,7 +15690,7 @@
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
          _addEmote(service.emotes.bttv, cSources.scope.channel, d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), d.data.channel, wC, hC);
-         cSafe = JSON.parse(JSON.stringify(cList));
+         service.syncList();
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
         case 'emote_delete':
@@ -15695,7 +15701,7 @@
          if (thirdparty.bttv.timer !== false)
           window.clearTimeout(thirdparty.bttv.timer);
          _removeEmoteByID(service.emotes.bttv, cSources.scope.channel, d.data.emoteId, d.data.channel);
-         cSafe = JSON.parse(JSON.stringify(cList));
+         service.syncList();
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
         case 'emote_update':
@@ -15717,7 +15723,7 @@
           window.clearTimeout(thirdparty.bttv.timer);
          _removeEmoteByID(service.emotes.bttv, cSources.scope.channel, d.data.emote.id, d.data.channel);
          _addEmote(service.emotes.bttv, cSources.scope.channel, d.data.emote.code, d.data.emote.id, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', d.data.emote.id), d.data.channel, wU, hU);
-         cSafe = JSON.parse(JSON.stringify(cList));
+         service.syncList();
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, _rBE);
          break;
        }
@@ -15847,7 +15853,7 @@
        }
        _addEmote(service.emotes['7tv'], cSources.scope.global, j.emotes[i].name, j.emotes[i].data.id, jInf.url, false, jInf.width, jInf.height);
       }
-      cSafe = JSON.parse(JSON.stringify(cList));
+      service.syncList();
       return true;
      }
 
@@ -15909,7 +15915,7 @@
        }
        _addEmote(service.emotes['7tv'], cSources.scope.channel, r[i].name, r[i].id, r[i].url, svcName + ':' + chID, r[i].width, r[i].height);
       }
-      cSafe = JSON.parse(JSON.stringify(cList));
+      service.syncList();
       return true;
      }
 
