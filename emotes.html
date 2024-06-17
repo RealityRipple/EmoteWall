@@ -292,6 +292,13 @@
        achieved: false
       },
       charity: false,
+      powerup: {
+       message: {
+        simmer: false,
+        eclipse: false
+       },
+       emote: false
+      },
       timeout: false,
       ban: false
      },
@@ -7873,6 +7880,8 @@
        const u = _parseUser(cmd, true);
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
         return;
+       if (await _parsePowerUp(cmd))
+        return;
        if (await _parseCustomReward(cmd))
         return;
        if (cmd.params.length < 2)
@@ -7890,6 +7899,74 @@
        display.emote.addToShowList(p);
        display.emote.showEmotes();
       }
+
+      const _parsePowerUp = function()
+      {
+       async function $c_parse(cmd)
+       {
+        if (!cmd.hasOwnProperty('tags'))
+         return false;
+        if (!cmd.tags.hasOwnProperty('msg-id'))
+         return false;
+        const pwrID = cmd.tags['msg-id'];
+        switch (pwrID)
+        {
+         case 'gigantified-emote-message': return _gigantified(cmd);
+         case 'animated-message': return _animated(cmd);
+        }
+        return false;
+       }
+
+       async function _gigantified(cmd)
+       {
+        if (cfg.event.twitch.powerup.emote === false)
+         return false;
+        const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+        if (a.length < 1)
+         return false;
+        const u = _parseUser(cmd, true);
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        const g = a.pop();
+        display.kappa.show([g], cfg.event.twitch.powerup.emote, {'%USER%': dn});
+        if (a.length < 1)
+         return true;
+        display.emote.addToShowList(a);
+        display.emote.showEmotes();
+        return true;
+       }
+
+       async function _animated(cmd)
+       {
+        if (!cmd.hasOwnProperty('tags'))
+         return false;
+        if (!cmd.tags.hasOwnProperty('animation-id'))
+         return false;
+        const u = _parseUser(cmd, true);
+        let dn = 'Anonymous';
+        if (u.hasOwnProperty('display-name'))
+         dn = u['display-name'];
+        const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+        const animID = cmd.tags['animation-id'];
+        switch (animID)
+        {
+         case 'simmer':
+          if (cfg.event.twitch.powerup.message.simmer === false)
+           return false;
+          display.kappa.show(a, cfg.event.twitch.powerup.message.simmer, {'%USER%': dn});
+          return true;
+         case 'rainbow-eclipse':
+          if (cfg.event.twitch.powerup.message.eclipse === false)
+           return false;
+          display.kappa.show(a, cfg.event.twitch.powerup.message.eclipse, {'%USER%': dn});
+          return true;
+        }
+        return false;
+       }
+
+       return $c_parse;
+      }();
 
       async function _parseCustomReward(cmd)
       {
