@@ -119,7 +119,8 @@
       useBTTV: true,
       use7TV: true,
       useZWE: true,
-      fillZWE: false
+      fillZWE: false,
+      holidayZWE: true
      },
      toroidal: false,
      hue: false,
@@ -643,6 +644,14 @@
     '58017c088faabf4b3d008460': ['zweHat'],            //HalloFedora
     '5801777f8faabf4b3d008434': ['zweHat'],            //HalloWitch
     '5802e7a5d336345f3d4e1ed5': ['zweHat']             //HalloPirate
+   };
+
+   // force-append these zero-width emotes on holidays
+   const bttvHoliday = {
+    '5802e7a5d336345f3d4e1ed5': {min: {month:  9, day: 19}, max: {month:  9, day: 19}, code: 'HalloPirate', width: 30, height: 38},
+    '5801777f8faabf4b3d008434': {min: {month: 10, day: 31}, max: {month: 10, day: 31}, code: 'HalloWitch',  width: 30, height: 38},
+    '58487cc6f52be01a7ee5f205': {min: {month: 12, day: 24}, max: {month: 12, day: 25}, code: 'SantaHat',    width: 31, height: 38},
+    '5849c9c8f52be01a7ee5f79e': {min: {month: 12, day: 31}, max: {month: 12, day: 31}, code: 'TopHat',      width: 30, height: 38}
    };
 
    // distribution of emotes for letters in message kappagens
@@ -3321,7 +3330,7 @@
       const style = cfg.display.styles[shared.rnd(cfg.display.styles.length)];
       if (style === undefined)
        return;
-      display.emote.list[style](e, sW, sH, eH);
+      display.emote.list[style](_appendHolidayZWE(e), sW, sH, eH);
      }
 
      function $showEmotes()
@@ -5012,6 +5021,10 @@
       }
       _eActive += waitFor;
       const lK = kList.length;
+      for (let i = 0; i < lK; i++)
+      {
+       kList[i] = _appendHolidayZWE(kList[i]);
+      }
       const tInit = new Date().getTime();
       let estMS = Math.floor(cfg.emote.time * 1000);
       if (timing.kappa.hasOwnProperty(kStyle.style) && timing.kappa[kStyle.style].hasOwnProperty('time'))
@@ -5389,6 +5402,42 @@
       vT = Math.floor((hT - h) * slope + v);
      const l = Math.sqrt(Math.abs(h - hT) ** 2 + Math.abs(v - vT) ** 2);
      return (l > Math.ceil(r / 2));
+    }
+
+    function _appendHolidayZWE(e)
+    {
+     if (!cfg.display.extended.useZWE)
+      return e;
+     if (!cfg.display.extended.holidayZWE)
+      return e;
+     let nowM = new Date().getMonth() + 1;
+     let nowD = new Date().getDate();
+     for (const hID in bttvHoliday)
+     {
+      if (!bttvHoliday.hasOwnProperty(hID))
+       continue;
+      if (bttvHoliday[hID].min.month < nowM)
+       continue;
+      if (bttvHoliday[hID].min.month === nowM && bttvHoliday[hID].min.day < nowD)
+       continue;
+      if (bttvHoliday[hID].max.month > nowM)
+       continue;
+      if (bttvHoliday[hID].max.month === nowM && bttvHoliday[hID].max.day > nowD)
+       continue;
+      let idx = e.pos;
+      if (!e.hasOwnProperty('zwe'))
+       e.zwe = [];
+      else
+      {
+       for (let i = 0, l = e.zwe.length; i < l; i++)
+       {
+        if (idx < e.zwe[i].pos)
+         idx = e.zwe[i].pos;
+       }
+      }
+      e.zwe.push({svc: service.emotes.zwe.bttv, scope: cSources.scope.global, pos: idx + 1, str: bttvHoliday[hID].code, url: cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', hID), width: bttvHoliday[hID].width, height: bttvHoliday[hID].height});
+     }
+     return e;
     }
 
     function _addEmoteAndZWEs(tInit, eInf, variationSize, attrs = {}, oGC = {}, oT = false)
@@ -15370,6 +15419,13 @@
        return false;
       if (!Array.isArray(j))
        return false;
+      let hasList = JSON.parse(JSON.stringify(bttvHoliday));
+      for (const hID in hasList)
+      {
+       if (!hasList.hasOwnProperty(hID))
+        continue;
+       hasList[hID].found = false;
+      }
       for (let i = 0, l = j.length; i < l; i++)
       {
        if (!j[i].hasOwnProperty('code'))
@@ -15378,6 +15434,8 @@
         continue;
        if (j[i].hasOwnProperty('modifier') && j[i].modifier === true)
         continue;
+       if (hasList.hasOwnProperty(j[i].id))
+        hasList[j[i].id].found = true;
        const eURL = cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', j[i].id);
        let w = _defSize;
        let h = _defSize;
@@ -15392,6 +15450,27 @@
         continue;
        }
        _addEmote(service.emotes.bttv, cSources.scope.global, j[i].code, j[i].id, eURL, false, w, h);
+      }
+      if (cfg.display.extended.useZWE && cfg.display.extended.holidayZWE)
+      {
+       let nowM = new Date().getMonth() + 1;
+       let nowD = new Date().getDate();
+       for (const hID in hasList)
+       {
+        if (!hasList.hasOwnProperty(hID))
+         continue;
+        if (hasList[hID].found)
+         continue;
+        if (hasList[hID].min.month < nowM)
+         continue;
+        if (hasList[hID].min.month === nowM && hasList[hID].min.day < nowD)
+         continue;
+        if (hasList[hID].max.month > nowM)
+         continue;
+        if (hasList[hID].max.month === nowM && hasList[hID].max.day > nowD)
+         continue;
+        _addEmote(service.emotes.zwe.bttv, cSources.scope.global, hasList[hID].code, hID, cURLs.cdn.bttv.emote.replaceAll('%EMOTE_ID%', hID), false, hasList[hID].width, hasList[hID].height, true);
+       }
       }
       service.syncList();
       return true;
