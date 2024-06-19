@@ -5649,9 +5649,12 @@
      display.erasedMsgs.push(oID);
      const imgs = document.querySelectorAll('img[data-msgid="' + oID + '"]');
      const death = dieList[shared.rnd(dieList.length)];
-     for (let i = 0, l = imgs.length; i < l; i++)
+     for (let i = imgs.length - 1; i >= 0; i--)
      {
-      imgs[i].src = death.url;
+      if (imgs[i].classList.contains('zwe'))
+       imgs[i].parentNode.removeChild(imgs[i]);
+      else
+       imgs[i].src = death.url;
      }
      window.setTimeout(_eraseMsgPart2, death.time, oID);
     }
@@ -5698,9 +5701,12 @@
      display.kappa.hide();
      const imgs = document.getElementsByTagName('img');
      const death = dieList[shared.rnd(dieList.length)];
-     for (let i = 0, l = imgs.length; i < l; i++)
+     for (let i = imgs.length - 1; i >= 0; i--)
      {
-      imgs[i].src = death.url;
+      if (imgs[i].classList.contains('zwe'))
+       imgs[i].parentNode.removeChild(imgs[i]);
+      else
+       imgs[i].src = death.url;
      }
      window.setTimeout(_eraseAllPart2, death.time);
     }
