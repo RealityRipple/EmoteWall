@@ -1190,7 +1190,7 @@
    // don't mess with things below this line without knowing what you're doing //
    //////////////////////////////////////////////////////////////////////////////
 
-   const wWS = 5;
+   const wsRetryBase = 5;
    const oauthClient = {
     t: '4umzcpmjkg6ar78b81s7302jlj33t8',
     yt: '71876675824-aepsnb3onligbj62r1i2qakfjh9sr8kg.apps.googleusercontent.com'
@@ -5806,7 +5806,7 @@
         return;
        if (_wsURL.length > cURLs.ws.twitch.eventSub.length && _wsURL.slice(0, cURLs.ws.twitch.eventSub.length) === cURLs.ws.twitch.eventSub)
         _wsURL = cURLs.ws.twitch.eventSub;
-       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+       const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
        window.setTimeout(_eventSub, wsWait);
@@ -5935,7 +5935,7 @@
          _tOldTimeout = window.setTimeout(_oldWSTimeout, _lOldTimeout);
          _ws = null;
         }
-        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+        const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
         if (_wsRetry < 2)
          _wsRetry += 0.2;
         window.setTimeout(_eventSub, wsWait);
@@ -6621,7 +6621,7 @@
        _ws = null;
        if (twitch.net.dead)
         return;
-       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+       const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
        window.setTimeout(twitch.net.irc, wsWait);
@@ -11114,7 +11114,7 @@
        _ws = null;
        if (kick.net.dead)
         return;
-       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+       const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
        window.setTimeout(kick.net.socket, wsWait);
@@ -11213,7 +11213,7 @@
         }
         if (j.data.code >= 4100 && j.data.code <= 4199)
         {
-         const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+         const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
          if (_wsRetry < 2)
           _wsRetry += 0.2;
          window.setTimeout(kick.net.socket, wsWait);
@@ -14278,7 +14278,7 @@
       _ws = null;
       if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        return;
-      const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+      const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
        _wsRetry += 0.2;
       window.setTimeout(streamlabs.socket, wsWait);
@@ -14560,7 +14560,7 @@
       _ws = null;
       if (twitch.net.dead && youtube.net.dead && kick.net.dead)
        return;
-      const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+      const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
        _wsRetry += 0.2;
       window.setTimeout(streamelements.socket, wsWait);
@@ -15483,7 +15483,7 @@
        _ws = null;
        if (twitch.net.dead && youtube.net.dead)
         return;
-       const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+       const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
        if (_wsRetry < 2)
         _wsRetry += 0.2;
        window.setTimeout(thirdparty.bttv.socket.init, wsWait);
@@ -15952,7 +15952,7 @@
         _ws = null;
         if (twitch.net.dead && youtube.net.dead && kick.net.dead)
          return;
-        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+        const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
         if (_wsRetry < 2)
          _wsRetry += 0.2;
         window.setTimeout(_socket.init, wsWait);
@@ -16044,7 +16044,7 @@
            _ws.onclose = null;
            _ws.close();
            _ws = null;
-           const wsRedo = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+           const wsRedo = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
            if (_wsRetry < 2)
             _wsRetry += 0.2;
            window.setTimeout(_socket.init, wsRedo);
@@ -16152,13 +16152,13 @@
              wsWait = Math.max(wsWait, 5 * 60 * 1000);
              break;
             case 4007:
-             wsWait = 5 * 60 * 1000 + Math.floor(wWS ** (1 + _wsR_M) * 1000) - 5000;
+             wsWait = 5 * 60 * 1000 + Math.floor(wsRetryBase ** (1 + _wsR_M) * 1000) - 5000;
              if (_wsR_M < 2)
               _wsR_M += 0.2;
              break;
             case 4000:
             case 4008:
-             wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+             wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
              if (_wsRetry < 2)
               _wsRetry += 0.2;
              break;
@@ -16395,7 +16395,7 @@
         _sse = null;
         if (twitch.net.dead && youtube.net.dead && kick.net.dead)
          return;
-        const wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+        const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
         if (_wsRetry < 2)
          _wsRetry += 0.2;
         if (_tInit !== false)
@@ -16496,7 +16496,7 @@
            _sse.removeEventListener('end of stream', _sseMessage);
            _sse.close();
            _sse = null;
-           const wsRedo = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+           const wsRedo = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
            if (_wsRetry < 2)
             _wsRetry += 0.2;
            if (_tInit !== false)
@@ -16582,13 +16582,13 @@
              wsWait = Math.max(wsWait, 5 * 60 * 1000);
              break;
             case 4007:
-             wsWait = 5 * 60 * 1000 + Math.floor(wWS ** (1 + _wsR_M) * 1000) - 5000;
+             wsWait = 5 * 60 * 1000 + Math.floor(wsRetryBase ** (1 + _wsR_M) * 1000) - 5000;
              if (_wsR_M < 2)
               _wsR_M += 0.2;
              break;
             case 4000:
             case 4008:
-             wsWait = Math.floor(wWS ** (1 + _wsRetry) * 1000);
+             wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
              if (_wsRetry < 2)
               _wsRetry += 0.2;
              break;
