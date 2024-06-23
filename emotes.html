@@ -1376,6 +1376,15 @@
      warning: Symbol(),
      error: Symbol()
     };
+    const idNoticeLine = 'noticeLine';
+    const idNotices = 'notices';
+    const idNotice = 'notice%DESC%';
+    const idBadge = 'badge';
+    const cFader = 'fader';
+    const cFaded = 'faded';
+    const cFade = 'fade';
+    const cHide = 'hide';
+    const evMove = 'mousemove';
 
     function $info(i)
     {
@@ -1540,53 +1549,58 @@
 
     function _buildNotices()
     {
-     if (document.getElementById('notices'))
+     if (document.getElementById(idNotices))
       return;
      const n = document.createElement('div');
-     n.setAttribute('id', 'notices');
+     n.setAttribute('id', idNotices);
      const b = document.createElement('div');
-     b.setAttribute('id', 'badge');
+     b.setAttribute('id', idBadge);
      b.dataset.alerts = 0;
      b.innerHTML = b.dataset.alerts;
      n.appendChild(b);
      document.body.prepend(n);
     }
 
+    function _nDesc(id)
+    {
+     return idNotice.replaceAll('%DESC%', id.description);
+    }
+
     function _setNotice(id, state, msg, t = 0)
     {
-     const n = document.getElementById('notices');
+     const n = document.getElementById(idNotices);
      if (!n)
       return;
-     const b = document.getElementById('badge');
+     const b = document.getElementById(idBadge);
      if (!b)
       return;
-     b.classList.remove('fade');
+     b.classList.remove(cFade);
      let hasFader = false;
-     const lines = n.getElementsByClassName('noticeLine');
+     const lines = n.getElementsByClassName(idNoticeLine);
      for (let i = 0, l = lines.length; i < l; i++)
      {
-      if (!lines[i].classList.contains('fader'))
+      if (!lines[i].classList.contains(cFader))
       {
        hasFader = true;
        break;
       }
      }
      if (!hasFader)
-      b.classList.remove('fader');
-     let nID = document.getElementById('notice' + id.description);
+      b.classList.remove(cFader);
+     let nID = document.getElementById(_nDesc(id));
      if (!nID)
      {
       b.dataset.alerts++;
       b.innerHTML = b.dataset.alerts;
       nID = document.createElement('div');
-      nID.setAttribute('id', 'notice' + id.description);
+      nID.setAttribute('id', _nDesc(id));
       n.appendChild(nID);
      }
-     nID.setAttribute('class', 'noticeLine ' + state);
+     nID.setAttribute('class', idNoticeLine + ' ' + state);
      nID.innerHTML = msg;
      if (t > 0)
      {
-      document.removeEventListener('mousemove', _triggerFadeInNotice(id));
+      document.removeEventListener(evMove, _triggerFadeInNotice(id));
       if (_timers[id] !== false)
        window.clearTimeout(_timers[id]);
       _timers[id] = window.setTimeout(_clearNoticeBegin, t * 1000, id);
@@ -1601,10 +1615,10 @@
 
     function _clearNoticeBegin(id)
     {
-     const nID = document.getElementById('notice' + id.description);
+     const nID = document.getElementById(_nDesc(id));
      if (!nID)
       return;
-     nID.classList.add('hide');
+     nID.classList.add(cHide);
      if (_timers[id] !== false)
       window.clearTimeout(_timers[id]);
      _timers[id] = window.setTimeout(_clearNoticeEnd, 300, id);
@@ -1617,14 +1631,14 @@
       window.clearTimeout(_timers[id]);
       _timers[id] = false;
      }
-     const n = document.getElementById('notices');
+     const n = document.getElementById(idNotices);
      if (!n)
       return;
-     const nID = document.getElementById('notice' + id.description);
+     const nID = document.getElementById(_nDesc(id));
      if (!nID)
       return;
      n.removeChild(nID);
-     const b = document.getElementById('badge');
+     const b = document.getElementById(idBadge);
      if (!b)
       return;
      b.dataset.alerts--;
@@ -1633,23 +1647,23 @@
 
     function _hideNotice(id)
     {
-     const nID = document.getElementById('notice' + id.description);
+     const nID = document.getElementById(_nDesc(id));
      if (!nID)
       return;
-     nID.classList.add('fader');
-     nID.classList.add('fade');
-     document.addEventListener('mousemove', _triggerFadeInNotice(id));
+     nID.classList.add(cFader);
+     nID.classList.add(cFade);
+     document.addEventListener(evMove, _triggerFadeInNotice(id));
      if (_timers[id] !== false)
       window.clearTimeout(_timers[id]);
      _timers[id] = window.setTimeout(_fadeOutEnd, 500, id);
-     const n = document.getElementById('notices');
+     const n = document.getElementById(idNotices);
      if (!n)
       return;
      let hasVis = false;
-     const lines = n.getElementsByClassName('noticeLine');
+     const lines = n.getElementsByClassName(idNoticeLine);
      for (let i = 0, l = lines.length; i < l; i++)
      {
-      if (!lines[i].classList.contains('fade'))
+      if (!lines[i].classList.contains(cFade))
       {
        hasVis = true;
        break;
@@ -1657,11 +1671,11 @@
      }
      if (!hasVis)
      {
-      const b = document.getElementById('badge');
+      const b = document.getElementById(idBadge);
       if (!b)
        return;
-      b.classList.add('fader');
-      b.classList.add('fade');
+      b.classList.add(cFader);
+      b.classList.add(cFade);
      }
     }
 
@@ -1675,41 +1689,41 @@
 
     function _fadeInNotice(id)
     {
-     const nID = document.getElementById('notice' + id.description);
+     const nID = document.getElementById(_nDesc(id));
      if (!nID)
       return;
-     nID.classList.remove('faded');
-     nID.classList.remove('fade');
+     nID.classList.remove(cFaded);
+     nID.classList.remove(cFade);
      if (_timers[id] !== false)
       window.clearTimeout(_timers[id]);
-     if (!nID.classList.contains('fader'))
+     if (!nID.classList.contains(cFader))
       return;
      _timers[id] = window.setTimeout(_fadeOutNotice, _visTime, id);
-     const b = document.getElementById('badge');
+     const b = document.getElementById(idBadge);
      if (!b)
       return;
-     b.classList.remove('fade');
+     b.classList.remove(cFade);
     }
 
     function _fadeOutNotice(id)
     {
-     const nID = document.getElementById('notice' + id.description);
+     const nID = document.getElementById(_nDesc(id));
      if (!nID)
       return;
      if (_timers[id] !== false)
       window.clearTimeout(_timers[id]);
-     if (!nID.classList.contains('fader'))
+     if (!nID.classList.contains(cFader))
       return;
      _timers[id] = window.setTimeout(_fadeOutEnd, 500, id);
-     nID.classList.add('fade');
-     const n = document.getElementById('notices');
+     nID.classList.add(cFade);
+     const n = document.getElementById(idNotices);
      if (!n)
       return;
      let hasVis = false;
-     const lines = n.getElementsByClassName('noticeLine');
+     const lines = n.getElementsByClassName(idNoticeLine);
      for (let i = 0, l = lines.length; i < l; i++)
      {
-      if (!lines[i].classList.contains('fade'))
+      if (!lines[i].classList.contains(cFade))
       {
        hasVis = true;
        break;
@@ -1717,16 +1731,16 @@
      }
      if (!hasVis)
      {
-      const b = document.getElementById('badge');
+      const b = document.getElementById(idBadge);
       if (!b)
        return;
-      b.classList.add('fade');
+      b.classList.add(cFade);
      }
     }
 
     function _fadeOutEnd(id)
     {
-     const nID = document.getElementById('notice' + id.description);
+     const nID = document.getElementById(_nDesc(id));
      if (!nID)
       return;
      if (_timers[id] !== false)
@@ -1734,9 +1748,9 @@
       window.clearTimeout(_timers[id]);
       _timers[id] = false;
      }
-     if (!nID.classList.contains('fader'))
+     if (!nID.classList.contains(cFader))
       return;
-     nID.classList.add('faded');
+     nID.classList.add(cFaded);
     }
 
     function _activeCheck()
@@ -1746,7 +1760,7 @@
       window.clearTimeout(_tHide);
       _tHide = false;
      }
-     const b = document.getElementById('badge');
+     const b = document.getElementById(idBadge);
      if (!b)
      {
       notice.initHide();
@@ -1770,7 +1784,7 @@
      const css = document.getElementsByTagName('STYLE')[0];
      let spc = {indent: 0};
      let h = shared.unIndent(css.innerHTML, spc);
-     h = h.replace('\n#notices\n{\n', '\n#notices\n{\n display: none;\n');
+     h = h.replace(notice.Hide.FIND, notice.Hide.REPLACE);
      h = shared.reIndent(h, spc);
      css.innerHTML = h;
     }
@@ -1799,6 +1813,10 @@
      copyAndOpen: $copyAndOpen,
      expect: 0,
      active: 0,
+     Hide: Object.freeze({
+      FIND: '\n#notices\n{\n',
+      REPLACE: '\n#notices\n{\n display: none;\n'
+     }),
      Type: Object.freeze({
       GLOBAL_CFG: Symbol(0x01),
       GLOBAL_OBS: Symbol(0x09),
@@ -18299,7 +18317,7 @@
      function _gui(h)
      {
       if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === false)
-       h = h.replace('\n#notices\n{\n', '\n#notices\n{\n display: none;\n');
+       h = h.replace(notice.Hide.FIND, notice.Hide.REPLACE);
       if (cfg.hasOwnProperty('twitch') && cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null)
        h = h.replace('\nbutton.twitch\n{\n', '\nbutton.twitch\n{\n display: none;\n');
       if (cfg.hasOwnProperty('youtube') && cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null)
