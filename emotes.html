@@ -3050,145 +3050,38 @@
         const cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
         cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
-        if (!eInf.hasOwnProperty('zwe') || eInf.zwe.length === 0)
+        const sFaces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+        for (let i = 0; i < 6; i++)
         {
-         const cubeF = document.createElement('img');
-         _setImgSrc(cubeF, eInf.url);
-         cubeF.dataset.face = 'front';
-         cubeF.dataset.msgid = eInf.origin;
-         cube.appendChild(cubeF);
-         const cubeB = document.createElement('img');
-         _setImgSrc(cubeB, eInf.url);
-         cubeB.dataset.face = 'back';
-         cubeB.dataset.msgid = eInf.origin;
-         cube.appendChild(cubeB);
-         const cubeR = document.createElement('img');
-         _setImgSrc(cubeR, eInf.url);
-         cubeR.dataset.face = 'right';
-         cubeR.dataset.msgid = eInf.origin;
-         cube.appendChild(cubeR);
-         const cubeL = document.createElement('img');
-         _setImgSrc(cubeL, eInf.url);
-         cubeL.dataset.face = 'left';
-         cubeL.dataset.msgid = eInf.origin;
-         cube.appendChild(cubeL);
-         const cubeT = document.createElement('img');
-         _setImgSrc(cubeT, eInf.url);
-         cubeT.dataset.face = 'top';
-         cubeT.dataset.msgid = eInf.origin;
-         cube.appendChild(cubeT);
-         const cubeU = document.createElement('img');
-         _setImgSrc(cubeU, eInf.url);
-         cubeU.dataset.face = 'bottom';
-         cubeU.dataset.msgid = eInf.origin;
-         cube.appendChild(cubeU);
-        }
-        else
-        {
-         const btzwCE = _btzwClassForEmote(eInf.zwe);
-         const lZ = eInf.zwe.length;
-         const cubeF = document.createElement('div');
-         cubeF.dataset.face = 'front';
-         const pctF = document.createElement('img');
-         pctF.setAttribute('class', btzwCE.join(' '));
-         _setImgSrc(pctF, eInf.url);
-         pctF.dataset.msgid = eInf.origin;
-         cubeF.appendChild(pctF);
-         for (let i = 0; i < lZ; i++)
+         if (!eInf.hasOwnProperty('zwe') || eInf.zwe.length === 0)
          {
-          const btzwCZ = _btzwClassForZWE(btzwCE, eInf.zwe[i].url);
-          const pctZ = document.createElement('img');
-          pctZ.setAttribute('class', btzwCZ.join(' '));
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.dataset.msgid = eInf.origin;
-          cubeF.appendChild(pctZ);
+          const iFace = document.createElement('img');
+          _setImgSrc(iFace, eInf.url);
+          iFace.dataset.face = sFaces[i];
+          iFace.dataset.msgid = eInf.origin;
+          cube.appendChild(iFace);
          }
-         cube.appendChild(cubeF);
-         const cubeB = document.createElement('div');
-         cubeB.dataset.face = 'back';
-         const pctB = document.createElement('img');
-         pctB.setAttribute('class', btzwCE.join(' '));
-         _setImgSrc(pctB, eInf.url);
-         pctB.dataset.msgid = eInf.origin;
-         cubeB.appendChild(pctB);
-         for (let i = 0; i < lZ; i++)
+         else
          {
-          const btzwCZ = _btzwClassForZWE(btzwCE, eInf.zwe[i].url);
-          const pctZ = document.createElement('img');
-          pctZ.setAttribute('class', btzwCZ.join(' '));
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.dataset.msgid = eInf.origin;
-          cubeB.appendChild(pctZ);
+          const dFace = document.createElement('div');
+          dFace.dataset.face = sFaces[i];
+          const pFace = document.createElement('img');
+          const btzwCE = _btzwClassForEmote(eInf.zwe);
+          pFace.setAttribute('class', btzwCE.join(' '));
+          _setImgSrc(pFace, eInf.url);
+          pFace.dataset.msgid = eInf.origin;
+          dFace.appendChild(pFace);
+          for (let j = 0, l = eInf.zwe.length; j < l; j++)
+          {
+           const pctZ = document.createElement('img');
+           const btzwCZ = _btzwClassForZWE(btzwCE, eInf.zwe[j].url);
+           pctZ.setAttribute('class', btzwCZ.join(' '));
+           _setImgSrc(pctZ, eInf.zwe[j].url);
+           pctZ.dataset.msgid = eInf.origin;
+           dFace.appendChild(pctZ);
+          }
+          cube.appendChild(dFace);
          }
-         cube.appendChild(cubeB);
-         const cubeR = document.createElement('div');
-         cubeR.dataset.face = 'right';
-         const pctR = document.createElement('img');
-         pctR.setAttribute('class', btzwCE.join(' '));
-         _setImgSrc(pctR, eInf.url);
-         pctR.dataset.msgid = eInf.origin;
-         cubeR.appendChild(pctR);
-         for (let i = 0; i < lZ; i++)
-         {
-          const btzwCZ = _btzwClassForZWE(btzwCE, eInf.zwe[i].url);
-          const pctZ = document.createElement('img');
-          pctZ.setAttribute('class', btzwCZ.join(' '));
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.dataset.msgid = eInf.origin;
-          cubeR.appendChild(pctZ);
-         }
-         cube.appendChild(cubeR);
-         const cubeL = document.createElement('div');
-         cubeL.dataset.face = 'left';
-         const pctL = document.createElement('img');
-         pctL.setAttribute('class', btzwCE.join(' '));
-         _setImgSrc(pctL, eInf.url);
-         pctL.dataset.msgid = eInf.origin;
-         cubeL.appendChild(pctL);
-         for (let i = 0; i < lZ; i++)
-         {
-          const btzwCZ = _btzwClassForZWE(btzwCE, eInf.zwe[i].url);
-          const pctZ = document.createElement('img');
-          pctZ.setAttribute('class', btzwCZ.join(' '));
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.dataset.msgid = eInf.origin;
-          cubeL.appendChild(pctZ);
-         }
-         cube.appendChild(cubeL);
-         const cubeT = document.createElement('div');
-         cubeT.dataset.face = 'top';
-         const pctT = document.createElement('img');
-         pctT.setAttribute('class', btzwCE.join(' '));
-         _setImgSrc(pctT, eInf.url);
-         pctT.dataset.msgid = eInf.origin;
-         cubeT.appendChild(pctT);
-         for (let i = 0; i < lZ; i++)
-         {
-          const btzwCZ = _btzwClassForZWE(btzwCE, eInf.zwe[i].url);
-          const pctZ = document.createElement('img');
-          pctZ.setAttribute('class', btzwCZ.join(' '));
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.dataset.msgid = eInf.origin;
-          cubeT.appendChild(pctZ);
-         }
-         cube.appendChild(cubeT);
-         const cubeU = document.createElement('div');
-         cubeU.dataset.face = 'bottom';
-         const pctU = document.createElement('img');
-         pctU.setAttribute('class', btzwCE.join(' '));
-         _setImgSrc(pctU, eInf.url);
-         pctU.dataset.msgid = eInf.origin;
-         cubeU.appendChild(pctU);
-         for (let i = 0; i < lZ; i++)
-         {
-          const btzwCZ = _btzwClassForZWE(btzwCE, eInf.zwe[i].url);
-          const pctZ = document.createElement('img');
-          pctZ.setAttribute('class', btzwCZ.join(' '));
-          _setImgSrc(pctZ, eInf.zwe[i].url);
-          pctZ.dataset.msgid = eInf.origin;
-          cubeU.appendChild(pctZ);
-         }
-         cube.appendChild(cubeU);
         }
         scene.appendChild(cube);
         const h = shared.rnd(sW) - eHh;
