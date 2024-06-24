@@ -6020,10 +6020,10 @@
           return;
          switch (r.metadata.subscription_type)
          {
-          case 'channel.channel_points_custom_reward_redemption.add':
+          case twitch.net.eventSubCtl.sub.redeem:
            await _channel_points_redeem(r.payload.event);
            return;
-          case 'channel.update':
+          case twitch.net.eventSubCtl.sub.tag:
            await _channel_update(r.payload.event);
            return;
          }
@@ -6031,40 +6031,40 @@
           return;
          switch (r.metadata.subscription_type)
          {
-          case 'channel.follow':
+          case twitch.net.eventSubCtl.sub.follow:
            _follow(r.payload.event);
            break;
-          case 'channel.shoutout.create':
+          case twitch.net.eventSubCtl.sub.shoutout.create:
            await _shoutout_create(r.payload.event);
            break;
-          case 'channel.shoutout.receive':
+          case twitch.net.eventSubCtl.sub.shoutout.receive:
            await _shoutout_receive(r.payload.event);
            break;
-          case 'channel.hype_train.begin':
+          case twitch.net.eventSubCtl.sub.hypetrain.begin:
            _train_begin();
            return;
-          case 'channel.hype_train.end':
+          case twitch.net.eventSubCtl.sub.hypetrain.end:
            _train_end(r.payload.event);
            break;
-          case 'channel.poll.begin':
+          case twitch.net.eventSubCtl.sub.poll.begin:
            _poll_begin(r.payload.event);
            break;
-          case 'channel.poll.end':
+          case twitch.net.eventSubCtl.sub.poll.end:
            _poll_end(r.payload.event);
            break;
-          case 'channel.prediction.begin':
+          case twitch.net.eventSubCtl.sub.prediction.begin:
            _prediction_begin(r.payload.event);
            break;
-          case 'channel.prediction.end':
+          case twitch.net.eventSubCtl.sub.prediction.end:
            _prediction_end(r.payload.event);
            break;
-          case 'channel.charity_campaign.donate':
+          case twitch.net.eventSubCtl.sub.charity:
            _charity(r.payload.event);
            break;
-          case 'channel.goal.begin':
+          case twitch.net.eventSubCtl.sub.goal.begin:
            _goal_begin(r.payload.event);
            break;
-          case 'channel.goal.end':
+          case twitch.net.eventSubCtl.sub.goal.end:
            _goal_end(r.payload.event);
            break;
          }
@@ -6374,20 +6374,20 @@
       async function $init()
       {
        const aSubs = [
-        {id: 'channel.follow', v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']},
-        {id: 'channel.channel_points_custom_reward_redemption.add', scope: [cScopes.twitch.redemptions], cfg: false},
-        {id: 'channel.shoutout.create', scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']},
-        {id: 'channel.shoutout.receive', scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']},
-        {id: 'channel.hype_train.begin', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
-        {id: 'channel.hype_train.end', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.success']},
-        {id: 'channel.poll.begin', scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.begin']},
-        {id: 'channel.poll.end', scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.end']},
-        {id: 'channel.prediction.begin', scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.begin']},
-        {id: 'channel.prediction.end', scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.resolved']},
-        {id: 'channel.goal.begin', scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.begin']},
-        {id: 'channel.goal.end', scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.achieved']},
-        {id: 'channel.charity_campaign.donate', scope: [cScopes.twitch.charity], cfg: ['event.twitch.charity']},
-        {id: 'channel.update', scope: false, cfg: ['event.twitch.tag.styles']}
+        {id: twitch.net.eventSubCtl.sub.follow, v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']},
+        {id: twitch.net.eventSubCtl.sub.redeem, scope: [cScopes.twitch.redemptions], cfg: false},
+        {id: twitch.net.eventSubCtl.sub.shoutout.create, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']},
+        {id: twitch.net.eventSubCtl.sub.shoutout.receive, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']},
+        {id: twitch.net.eventSubCtl.sub.hypetrain.begin, scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
+        {id: twitch.net.eventSubCtl.sub.hypetrain.end, scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.success']},
+        {id: twitch.net.eventSubCtl.sub.poll.begin, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.begin']},
+        {id: twitch.net.eventSubCtl.sub.poll.end, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.end']},
+        {id: twitch.net.eventSubCtl.sub.prediction.begin, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.begin']},
+        {id: twitch.net.eventSubCtl.sub.prediction.end, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.resolved']},
+        {id: twitch.net.eventSubCtl.sub.goal.begin, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.begin']},
+        {id: twitch.net.eventSubCtl.sub.goal.end, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.achieved']},
+        {id: twitch.net.eventSubCtl.sub.charity, scope: [cScopes.twitch.charity], cfg: ['event.twitch.charity']},
+        {id: twitch.net.eventSubCtl.sub.tag, scope: false, cfg: ['event.twitch.tag.styles']}
        ];
        const aActive = await _cleanAndRecover();
        let didSomething = aActive.length > 0;
@@ -6443,7 +6443,7 @@
         if (found === false)
          return false;
        }
-       else if (sub.id === 'channel.channel_points_custom_reward_redemption.add')
+       else if (sub.id === twitch.net.eventSubCtl.sub.redeem)
        {
         let found = false;
         for (const k of cfg.commands)
@@ -6565,9 +6565,9 @@
        };
        switch (type)
        {
-        case 'channel.follow':
-        case 'channel.shoutout.create':
-        case 'channel.shoutout.receive':
+        case twitch.net.eventSubCtl.sub.follow:
+        case twitch.net.eventSubCtl.sub.shoutout.create:
+        case twitch.net.eventSubCtl.sub.shoutout.receive:
          d.condition.moderator_user_id = twitch.net.eventSubCtl.channelID;
          break;
        }
@@ -6596,7 +6596,33 @@
        subscribe: $subscribe,
        erase: $erase,
        channelID: 0,
-       sessionID: null
+       sessionID: null,
+       sub: Object.freeze({
+        follow: 'channel.follow',
+        redeem: 'channel.channel_points_custom_reward_redemption.add',
+        shoutout: {
+         create: 'channel.shoutout.create',
+         receive: 'channel.shoutout.receive'
+        },
+        hypetrain: {
+         begin: 'channel.hype_train.begin',
+         end: 'channel.hype_train.end'
+        },
+        poll: {
+         begin: 'channel.poll.begin',
+         end: 'channel.poll.end'
+        },
+        prediction: {
+         begin: 'channel.prediction.begin',
+         end: 'channel.prediction.end'
+        },
+        goal: {
+         begin: 'channel.goal.begin',
+         end: 'channel.goal.end'
+        },
+        charity: 'channel.charity_campaign.donate',
+        tag: 'channel.update'
+       })
       };
      }();
 
