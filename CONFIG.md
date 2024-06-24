@@ -273,6 +273,17 @@ Configuration Information
       - [ ] If `true`, ZWEs will be stretched or squashed to fit non-square emotes.
       - [ ] If `false`, ZWEs will be placed in the center of non-square emotes.
 
+    * `holidayZWE`  
+      *Toggles enforced ZWEs on specific dates, as controlled by the `bttvHoliday` list.*
+      - [ ] If `true`, a BTTV "hat" ZWE will be overlaid on every emote on specific days of the year.
+        | Date            | Emote                                                                           | Code          |
+        | :-------------- | :------------------------------------------------------------------------------ | :------------ |
+        | `Sept 19`       | ![Pirate Hat](https://cdn.betterttv.net/emote/5802e7a5d336345f3d4e1ed5/1x.webp) | `HalloPirate` |
+        | `Oct 31`        | ![Witch Hat](https://cdn.betterttv.net/emote/5801777f8faabf4b3d008434/1x.webp)  | `HalloWitch`  |
+        | `Dec 24-25`     | ![Santa Hat](https://cdn.betterttv.net/emote/58487cc6f52be01a7ee5f205/1x.webp)  | `SantaHat`    |
+        | `Dec 31`        | ![Top Hat](https://cdn.betterttv.net/emote/5849c9c8f52be01a7ee5f79e/1x.webp)    | `TopHat`      |
+      - [ ] If `false`, no enforced ZWEs will ever be applied.
+
   * `toroidal`  
     *Toggles an infinite Asteroids-esque loop for emotes. Applies to StraightLine, Rise, and Drop animations and kappas.*
     - [ ] If `true`, emotes will loop around to the opposite side when moving off the edge of the screen.
@@ -894,6 +905,33 @@ Configuration Information
       - [ ] If `true`, a kappagen will occur.
       - [ ] If `false`, no kappagen will occur.
       - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `powerup`  
+      *Settings related to Power-ups.*
+
+      * `message`  
+        *A "Message Effect" Power-up has been used in your channel.*
+
+        * `simmer`  
+          *The "simmer" effect has been applied to a message.*  
+          This value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+        * `eclipse`  
+          *The "rainbow-eclipse" effect has been applied to a message.*  
+          This value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `emote`  
+        *The "Gigantify an Emote" Power-up has been used in your channel.*  
+        This value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
 
     * `timeout`  
       *Minimum time for a kappagen when a user is timed out.*  
