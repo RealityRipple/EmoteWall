@@ -5776,11 +5776,7 @@
       if (!service.emotes.hasOwnProperty('cheer'))
        service.emotes.cheer = {};
       const url = cURLs.api.twitch.bits.cheermotes.replaceAll(cVARs.url.channelID, chID);
-      const h = {
-       'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
-       'Client-Id': twitch.net.oAuth.auth.client_id
-      };
-      const r = await shared.httpRequest('GET', url, h);
+      const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
       if (!r.success)
        return false;
       const j = r.json;
@@ -6477,11 +6473,7 @@
 
       async function _getList()
       {
-       const h = {
-        'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
-        'Client-Id': twitch.net.oAuth.auth.client_id
-       };
-       const r = await shared.httpRequest('GET', cURLs.api.twitch.eventSub.get, h);
+       const r = await shared.httpRequest('GET', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers());
        if (!r.success)
         return [];
        const j = r.json;
@@ -6579,12 +6571,7 @@
          d.condition.moderator_user_id = twitch.net.eventSubCtl.channelID;
          break;
        }
-       const h = {
-        'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
-        'Client-Id': twitch.net.oAuth.auth.client_id,
-        'Content-Type': 'application/json'
-       };
-       const r = await shared.httpRequest('POST', cURLs.api.twitch.eventSub.get, h, JSON.stringify(d), false);
+       const r = await shared.httpRequest('POST', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers(true), JSON.stringify(d), false);
        if (r.success)
         return true;
        if (r.code === 429)
@@ -6598,11 +6585,7 @@
 
       async function _unsubscribe(id)
       {
-       const h = {
-        'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
-        'Client-Id': twitch.net.oAuth.auth.client_id
-       };
-       const r = await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll(cVARs.url.eventID, id), h, null, false);
+       const r = await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll(cVARs.url.eventID, id), twitch.net.oAuth.headers(), null, false);
        if (!r.success)
         return false;
        return true;
@@ -7093,11 +7076,7 @@
       let url = cURLs.api.twitch.users.name.replaceAll(cVARs.url.user, u);
       if (isID)
        url = cURLs.api.twitch.users.id.replaceAll(cVARs.url.userID, u);
-      const h = {
-       'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
-       'Client-Id': twitch.net.oAuth.auth.client_id
-      };
-      const r = await shared.httpRequest('GET', url, h);
+      const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
       if (!r.success)
        return false;
       const j = r.json;
@@ -7113,11 +7092,7 @@
      async function _getChannelTitleTags(chID)
      {
       const url = cURLs.api.twitch.channels.root.replaceAll(cVARs.url.channelID, chID);
-      const h = {
-       'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
-       'Client-Id': twitch.net.oAuth.auth.client_id
-      };
-      const r = await shared.httpRequest('GET', url, h);
+      const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
       if (!r.success)
        return;
       const j = r.json;
@@ -7283,11 +7258,10 @@
       async function _refresh(t)
       {
        const url = cURLs.api.rr.refresh.t;
-       const h = {'Content-Type': 'application/x-www-form-urlencoded'};
        let b = 'refresh=' + encodeURIComponent(t);
        if (cfg.twitch.share)
         b += '&share=1';
-       const r = await shared.httpRequest('POST', url, h, b, false);
+       const r = await shared.httpRequest('POST', url, {}, b, false);
        if (!r.success)
        {
         if (r.code === 401)
@@ -7395,12 +7369,24 @@
        return r;
       }
 
+      function $headers(post = false)
+      {
+       const h = {
+        'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
+        'Client-Id': twitch.net.oAuth.auth.client_id
+       };
+       if (post)
+        h['Content-Type'] = 'application/json'
+       return h;
+      }
+
       return {
        init: $init,
        update: $update,
        reinit: $reinit,
        clear: $clear,
        cfgVals: $cfgVals,
+       headers: $headers,
        auth: {
         client_id: false,
         channel: false,
@@ -8565,11 +8551,7 @@
          return twitch.net.fList[uID].value;
        }
        const url = cURLs.api.twitch.channels.followers.replaceAll(cVARs.url.userID, uID).replaceAll(cVARs.url.channelID, cmd.tags['room-id']);
-       const h = {
-        'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
-        'Client-Id': twitch.net.oAuth.auth.client_id
-       };
-       const r = await shared.httpRequest('GET', url, h);
+       const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
        if (!r.success)
        {
         if (r.code === 401)
@@ -8813,11 +8795,7 @@
         return _chList[chID].value;
       }
       const url = cURLs.api.twitch.chat.emotes.root.replaceAll(cVARs.url.channelID, chID);
-      const h = {
-       'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
-       'Client-Id': twitch.net.oAuth.auth.client_id
-      };
-      const r = await shared.httpRequest('GET', url, h);
+      const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
       if (!r.success)
       {
        if (r.code === 401)
@@ -8916,11 +8894,7 @@
      if (!service.emotes.hasOwnProperty('twitch'))
       service.emotes.twitch = {};
      const url = cURLs.api.twitch.chat.emotes.global;
-     const h = {
-      'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
-      'Client-Id': twitch.net.oAuth.auth.client_id
-     };
-     const r = await shared.httpRequest('GET', url, h);
+     const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
      if (!r.success)
      {
       if (r.code === 401)
@@ -9086,11 +9060,7 @@
         youtube.net.dead = true;
         return null;
        }
-       const h = {
-        'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
-        'Accept': 'application/json'
-       };
-       const r = await shared.httpRequest('GET', cURLs.api.youtube.broadcasts, h);
+       const r = await shared.httpRequest('GET', cURLs.api.youtube.broadcasts, youtube.net.oAuth.headers());
        const j = r.json;
        if (!r.success)
        {
@@ -9320,11 +9290,7 @@
         }
         q = q.replaceAll(cVARs.url.chatID, encodeURIComponent(chatID));
         q = q.replaceAll(cVARs.url.part, encodeURIComponent('snippet,authorDetails'));
-        const h = {
-         'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
-         'Accept': 'application/json'
-        };
-        const r = await shared.httpRequest('GET', q, h);
+        const r = await shared.httpRequest('GET', q, youtube.net.oAuth.headers());
         const j = r.json;
         if (!r.success)
         {
@@ -9659,11 +9625,7 @@
       async function _getChange()
       {
        const url = cURLs.api.youtube.subscriptions.recent.replaceAll(cVARs.url.part, encodeURIComponent('snippet,subscriberSnippet'));
-       const h = {
-        'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
-        'Accept': 'application/json'
-       };
-       const r = await shared.httpRequest('GET', url, h);
+       const r = await shared.httpRequest('GET', url, youtube.net.oAuth.headers());
        const j = r.json;
        if (!r.success)
        {
@@ -9758,11 +9720,7 @@
          return youtube.net.sList[chID][uID].value;
        }
        const url = cURLs.api.youtube.subscriptions.match.replaceAll(cVARs.url.part, encodeURIComponent('subscriberSnippet')).replaceAll(cVARs.url.user, encodeURIComponent(uID)).replaceAll(cVARs.url.channelID, encodeURIComponent(chID));
-       const h = {
-        'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
-        'Accept': 'application/json'
-       };
-       const r = await shared.httpRequest('GET', url, h);
+       const r = await shared.httpRequest('GET', url, youtube.net.oAuth.headers());
        const j = r.json;
        if (!r.success)
        {
@@ -9955,11 +9913,10 @@
       async function _refresh(t, retries = false)
       {
        const url = cURLs.api.rr.refresh.yt;
-       const h = {'Content-Type': 'application/x-www-form-urlencoded'};
        let b = 'refresh=' + encodeURIComponent(t);
        if (cfg.youtube.share)
         b += '&share=1';
-       const r = await shared.httpRequest('POST', url, h, b, false);
+       const r = await shared.httpRequest('POST', url, {}, b, false);
        const j = r.json;
        if (!r.success)
        {
@@ -10102,11 +10059,20 @@
        return r;
       }
 
+      function $headers()
+      {
+       return {
+        'Authorization': 'Bearer ' + youtube.net.oAuth.auth.access_token,
+        'Accept': 'application/json'
+       };
+      }
+
       return {
        init: $init,
        update: $update,
        clear: $clear,
        cfgVals: $cfgVals,
+       headers: $headers,
        auth: {
         client_id: false,
         scope: [],
@@ -10943,9 +10909,8 @@
         return _chList[chName].value;
       }
       const url = cURLs.api.youtube.livechat.emojis;
-      const h = {'Content-Type': 'application/x-www-form-urlencoded'};
       const b = 'u=' + encodeURIComponent(chName);
-      const r = await shared.httpRequest('POST', url, h, b);
+      const r = await shared.httpRequest('POST', url, {}, b);
       if (!r.success)
        return false;
       const j = r.json;
@@ -14920,9 +14885,8 @@
      async function _refresh(t)
      {
       const url = cURLs.api.rr.refresh.se;
-      const h = {'Content-Type': 'application/x-www-form-urlencoded'};
       const b = 'refresh=' + encodeURIComponent(t);
-      const r = await shared.httpRequest('POST', url, h, b, false);
+      const r = await shared.httpRequest('POST', url, {}, b, false);
       if (!r.success)
       {
        notice.error(notice.Type.STREAMELEMENTS_TOKEN);
@@ -16906,6 +16870,8 @@
          url += '?';
         url += '_=' + (0xFFFFFFFF + shared.rnd(0xFFFFFFFF));
        }
+       if (type === 'POST' && !hdrs.hasOwnProperty('Content-Type'))
+        hdrs['Content-Type'] = 'application/x-www-form-urlencoded';
        x.open(type, url);
        x.timeout = 10000;
        for (const hK in hdrs)
