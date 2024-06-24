@@ -1924,17 +1924,25 @@
         eW = eInf.width / eInf.height * eH;
        const h = shared.rnd(sW - eW);
        const v = shared.rnd(sH - eH);
-       let s = 'top: ' + v + 'px;';
-       s += ' left: ' + h + 'px;';
-       s += ' --emote-height: ' + eH + 'px;';
-       s += ' --emote-width: ' + eW + 'px;';
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Still.time);
-       s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
+       const s = 'top: ' + v + 'px;' +
+        ' left: ' + h + 'px;' +
+        ' --emote-height: ' + eH + 'px;' +
+        ' --emote-width: ' + eW + 'px;' +
+        _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
        _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s}, {space: false, time: tMS});
       }
 
       const $StraightLine = function()
       {
+       const _Sides = {
+        NONE: 0x00,
+        LEFT: 0x01,
+        RIGHT: 0x02,
+        TOP: 0x04,
+        BOTTOM: 0x08
+       };
+
        function $c_StraightLine(eInf, sW, sH, eH, x = false, y = false, canV = true, tInit = 0)
        {
         if (tInit === 0)
@@ -1993,12 +2001,14 @@
         }
         const hD = Math.floor(h + r * Math.cos(th));
         const vD = Math.floor(v + r * Math.sin(th));
-        let s = '--emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eW + 'px;';
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time);
-        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-        _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: ['etStraightLine']}, {time: tMS}, {x: hD, y: vD});
+        const sO = 'transform: translate(' + h + 'px, ' + v + 'px);';
+        const s = '--emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eW + 'px;' +
+         ' ' + sO +
+         _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
+        const aC = ['etStraightLine'];
+        _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: aC}, {time: tMS}, {x: hD, y: vD});
         if (cfg.display.toroidal)
         {
          let pastL = (h > hD && hD < 0) ? Math.floor((Math.abs(hD) + sW) / sW) : 0;
@@ -2007,23 +2017,24 @@
          let pastB = (v < vD && vD > (sH - eH)) ? Math.floor(vD / sH) : 0;
          const negW = -1 * eW;
          const negH = -1 * eH;
+         const sZ = 'transform: translate(%X%px, %Y%px);';
          while (pastT)
          {
           const lH = sH * pastT;
           const lowerV = v + lH;
           const lowerVD = vD + lH;
-          const sB = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + h + 'px, ' + lowerV + 'px);');
+          const sB = s.replace(sO, sZ.replace('%X%', h).replace('%Y%', lowerV));
           if (_csClip(negW, negH, sW, sH, h, lowerV, hD, lowerVD))
-           _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sB, classes: ['etStraightLine']}, {space: false, time: tMS}, {x: hD, y: lowerVD});
+           _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sB, classes: aC}, {space: false, time: tMS}, {x: hD, y: lowerVD});
           let tL = pastL;
           while (tL)
           {
            const lW = sW * tL;
            const righterH = h + lW;
            const righterHD = hD + lW;
-           const sR = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + righterH + 'px, ' + lowerV + 'px);');
+           const sR = s.replace(sO, sZ.replace('%X%', righterH).replace('%Y%', lowerV));
            if (_csClip(negW, negH, sW, sH, righterH, lowerV, righterHD, lowerVD))
-            _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sR, classes: ['etStraightLine']}, {space: false, time: tMS}, {x: righterHD, y: lowerVD});
+            _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sR, classes: aC}, {space: false, time: tMS}, {x: righterHD, y: lowerVD});
            tL--;
           }
           let tR = pastR;
@@ -2032,9 +2043,9 @@
            const lW = sW * tR;
            const lefterH = h - lW;
            const lefterHD = hD - lW;
-           const sL = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + lefterH + 'px, ' + lowerV + 'px);');
+           const sL = s.replace(sO, sZ.replace('%X%', lefterH).replace('%Y%', lowerV));
            if (_csClip(negW, negH, sW, sH, lefterH, lowerV, lefterHD, lowerVD))
-            _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sL, classes: ['etStraightLine']}, {space: false, time: tMS}, {x: lefterHD, y: lowerVD});
+            _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sL, classes: aC}, {space: false, time: tMS}, {x: lefterHD, y: lowerVD});
            tR--;
           }
           pastT--;
@@ -2044,18 +2055,18 @@
           const lH = sH * pastB;
           const higherV = v - lH;
           const higherVD = vD - lH;
-          const sT = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + h + 'px, ' + higherV + 'px);');
+          const sT = s.replace(sO, sZ.replace('%X%', h).replace('%Y%', higherV));
           if (_csClip(negW, negH, sW, sH, h, higherV, hD, higherVD))
-           _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sT, classes: ['etStraightLine']}, {space: false, time: tMS}, {x: hD, y: higherVD});
+           _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sT, classes: aC}, {space: false, time: tMS}, {x: hD, y: higherVD});
           let bL = pastL;
           while (bL)
           {
            const lW = sW * bL;
            const righterH = h + lW;
            const righterHD = hD + lW;
-           const sR = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + righterH + 'px, ' + higherV + 'px);');
+           const sR = s.replace(sO, sZ.replace('%X%', righterH).replace('%Y%', higherV));
            if (_csClip(negW, negH, sW, sH, righterH, higherV, righterHD, higherVD))
-            _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sR, classes: ['etStraightLine']}, {space: false, time: tMS}, {x: righterHD, y: higherVD});
+            _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sR, classes: aC}, {space: false, time: tMS}, {x: righterHD, y: higherVD});
            bL--;
           }
           let bR = pastR;
@@ -2064,9 +2075,9 @@
            const lW = sW * bR;
            const lefterH = h - lW;
            const lefterHD = hD - lW;
-           const sL = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + lefterH + 'px, ' + higherV + 'px);');
+           const sL = s.replace(sO, sZ.replace('%X%', lefterH).replace('%Y%', higherV));
            if (_csClip(negW, negH, sW, sH, lefterH, higherV, lefterHD, higherVD))
-            _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sL, classes: ['etStraightLine']}, {space: false, time: tMS}, {x: lefterHD, y: higherVD});
+            _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sL, classes: aC}, {space: false, time: tMS}, {x: lefterHD, y: higherVD});
            bR--;
           }
           pastB--;
@@ -2076,9 +2087,9 @@
           const lW = sW * pastL;
           const righterH = h + lW;
           const righterHD = hD + lW;
-          const sR = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + righterH + 'px, ' + v + 'px);');
+          const sR = s.replace(sO, sZ.replace('%X%', righterH).replace('%Y%', v));
           if (_csClip(negW, negH, sW, sH, righterH, v, righterHD, vD))
-           _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sR, classes: ['etStraightLine']}, {space: false, time: tMS}, {x: righterHD, y: vD});
+           _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sR, classes: aC}, {space: false, time: tMS}, {x: righterHD, y: vD});
           pastL--;
          }
          while (pastR)
@@ -2086,9 +2097,9 @@
           const lW = sW * pastR;
           const lefterH = h - lW;
           const lefterHD = hD - lW;
-          const sL = s.replace('transform: translate(' + h + 'px, ' + v + 'px);', 'transform: translate(' + lefterH + 'px, ' + v + 'px);');
+          const sL = s.replace(sO, sZ.replace('%X%', lefterH).replace('%Y%', v));
           if (_csClip(negW, negH, sW, sH, lefterH, v, lefterHD, vD))
-           _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sL, classes: ['etStraightLine']}, {space: false, time: tMS}, {x: lefterHD, y: vD});
+           _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sL, classes: aC}, {space: false, time: tMS}, {x: lefterHD, y: vD});
           pastR--;
          }
         }
@@ -2105,32 +2116,32 @@
         let a = false;
         while (true)
         {
-         if ((outcode0 | outcode1) === 0)
+         if ((outcode0 | outcode1) === _Sides.NONE)
          {
           a = true;
           break;
          }
-         if ((outcode0 & outcode1) !== 0)
+         if ((outcode0 & outcode1) !== _Sides.NONE)
           break;
          let x;
          let y;
          let outcodeOut = Math.max(outcode1, outcode0);
-         if ((outcodeOut & 0x08) === 0x08)
+         if ((outcodeOut & _Sides.BOTTOM) === _Sides.BOTTOM)
          {
           x = x0 + (x1 - x0) * (yMax - y0) / (y1 - y0);
           y = yMax;
          }
-         else if ((outcodeOut & 0x04) === 0x04)
+         else if ((outcodeOut & _Sides.TOP) === _Sides.TOP)
          {
           x = x0 + (x1 - x0) * (yMin - y0) / (y1 - y0);
           y = yMin;
          }
-         else if ((outcodeOut & 0x02) === 0x02)
+         else if ((outcodeOut & _Sides.RIGHT) === _Sides.RIGHT)
          {
           y = y0 + (y1 - y0) * (xMax - x0) / (x1 - x0);
           x = xMax;
          }
-         else if ((outcodeOut & 0x01) === 0x01)
+         else if ((outcodeOut & _Sides.LEFT) === _Sides.LEFT)
          {
           y = y0 + (y1 - y0) * (xMin - x0) / (x1 - x0);
           x = xMin;
@@ -2153,15 +2164,15 @@
 
        function _csOutCode(xMin, yMin, xMax, yMax, x, y)
        {
-        let code = 0x00;
+        let code = _Sides.NONE;
         if (x < xMin)
-         code |= 0x01;
+         code |= _Sides.LEFT;
         else if (x > xMax)
-         code |= 0x02;
+         code |= _Sides.RIGHT;
         if (y < yMin)
-         code |= 0x04;
+         code |= _Sides.TOP;
         else if (y > yMax)
-         code |= 0x08;
+         code |= _Sides.BOTTOM;
         return code;
        }
 
@@ -2208,13 +2219,6 @@
        const eWh = Math.ceil(eW / 2);
        const h = shared.rnd(sW) - eWh;
        const v = Math.floor(sH * _rndFromRange(timing.display.Rise.origin));
-       let s = 'left: ' + h + 'px;';
-       s += ' --emote-height: ' + eH + 'px;';
-       s += ' --emote-width: ' + eW + 'px;';
-       if (cfg.emote.out.fade || cfg.emote.out.zoom)
-        s += ' offset-path: path("M 0 ' + v + ' L 0 ' + Math.floor(v * 0.05) + '") ;';
-       else
-        s += ' offset-path: path("M 0 ' + v + ' L 0 -' + eH + '") ;';
        const aNames = [];
        const aDelays = [];
        const aDurs = [];
@@ -2239,20 +2243,29 @@
        aTimings.push('linear');
        aFills.push('forwards');
        aIters.push('1');
-       s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
+       const sO = 'left: ' + h + 'px;';
+       let pY = '-' + eH;
+       if (cfg.emote.out.fade || cfg.emote.out.zoom)
+        pY = Math.floor(v * 0.05);
+       const s = sO +
+        ' --emote-height: ' + eH + 'px;' +
+        ' --emote-width: ' + eW + 'px;' +
+        ' offset-path: path("M 0 ' + v + ' L 0 ' + pY + '") ;' +
+        _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
        _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s}, {space: false, time: tMS});
        if (cfg.display.toroidal)
        {
         const pastL = h < eW;
         const pastR = h > (sW - eW);
+        const sZ = 'left: %X%px;';
         if (pastL)
         {
-         const sR = s.replace('left: ' + h + 'px;', 'left: ' + (h + sW) + 'px;');
+         const sR = s.replace(sO, sZ.replace('%X%', (h + sW));
          _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sR}, {space: false, time: tMS});
         }
         if (pastR)
         {
-         const sL = s.replace('left: ' + h + 'px;', 'left: ' + (h - sW) + 'px;');
+         const sL = s.replace(sO, sZ.replace('%X%', h - sW));
          _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sL}, {space: false, time: tMS});
         }
        }
@@ -2307,10 +2320,10 @@
         const velV = _rndFromRange(timing.display.Bounce.velocity.v);
         if (h + eWh > sWm)
          velH = -1 * velH;
-        let s = '--emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eW + 'px;';
-        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
+        const s = '--emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eW + 'px;' +
+         ' transform: translate(' + h + 'px, ' + v + 'px);' +
+         _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
         const bX = h;
         const bY = v;
         const iArr = _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s}, {time: tMS});
@@ -2399,10 +2412,6 @@
        const sWm = Math.ceil(sW / 2);
        const h = shared.rnd(sW) - eWh;
        const v = Math.floor(sH * _rndFromRange(timing.display.Speed.origin));
-       let s = 'top: ' + v + 'px;';
-       s += ' left: ' + h + 'px;';
-       s += ' --emote-height: ' + eH + 'px;';
-       s += ' --emote-width: ' + eW + 'px;';
        const aNames = [];
        const aDelays = [];
        const aDurs = [];
@@ -2427,7 +2436,11 @@
        aTimings.push('ease-in');
        aFills.push('forwards');
        aIters.push('1');
-       s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
+       const s = 'top: ' + v + 'px;' +
+        ' left: ' + h + 'px;' +
+        ' --emote-height: ' + eH + 'px;' +
+        ' --emote-width: ' + eW + 'px;' +
+        _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
        _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, dataset: dsO}, {time: tMS});
       }
 
@@ -2470,9 +2483,6 @@
         eW = eInf.width / eInf.height * eH;
        const eWh = Math.ceil(eW / 2);
        const h = shared.rnd(sW) - eWh;
-       let s = 'left: ' + h + 'px;';
-       s += ' --emote-height: ' + eH + 'px;';
-       s += ' --emote-width: ' + eW + 'px;';
        const aNames = [];
        const aDelays = [];
        const aDurs = [];
@@ -2496,20 +2506,25 @@
        aTimings.push('ease-in');
        aFills.push('forwards');
        aIters.push('1');
-       s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
+       const sO = 'left: ' + h + 'px;';
+       const s = sO +
+        ' --emote-height: ' + eH + 'px;' +
+        ' --emote-width: ' + eW + 'px;' +
+        _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
        _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, dataset: dsO}, {space: false, time: tMS});
        if (cfg.display.toroidal)
        {
         const pastL = h < eW;
         const pastR = h > (sW - eW);
+        const sZ = 'left: %X%px;';
         if (pastL)
         {
-         const sR = s.replace('left: ' + h + 'px;', 'left: ' + (h + sW) + 'px;');
+         const sR = s.replace(sO, sZ.replace('%X%', h + sW));
          _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sR, dataset: dsO}, {space: false, time: tMS});
         }
         if (pastR)
         {
-         const sL = s.replace('left: ' + h + 'px;', 'left: ' + (h - sW) + 'px;');
+         const sL = s.replace(sO, sZ.replace('%X%', h - sW));
          _addEmoteAndZWEs(tInit, eInf, variationSize, {style: sL, dataset: dsO}, {space: false, time: tMS});
         }
        }
@@ -2523,6 +2538,15 @@
         * offset-path requires support for offset-anchor/offset-position
         * due to transform-origin changes during squash
         */
+       const _Wall = {
+        NONE: 0,
+        LEFT: 1,
+        TOP: 2,
+        RIGHT: 3,
+        BOTTOM: 4
+       };
+       const _Origin = ['center', 'left', 'top', 'right', 'bottom'];
+       const _Squash = ['no', 'horizontal', 'vertical', 'horizontal', 'vertical'];
 
        function $c_Crazy(eInf, sW, sH, eH, canV = true, tInit = 0)
        {
@@ -2565,10 +2589,6 @@
         const sB = sH - eH;
         const h = shared.rnd(sR - 5) + 10;
         const v = shared.rnd(sB - 5) + 10;
-        let s = 'top: ' + v + 'px;';
-        s += ' left: ' + h + 'px;';
-        s += ' --emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eW + 'px;';
         const dests = [];
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Crazy.time);
         const rate = Math.sqrt(timing.display.Crazy.distance ** 2 / 2) / tMS;
@@ -2587,40 +2607,44 @@
          pos.x += traj.x;
          pos.y += traj.y;
          pos.t += 1;
-         let wall = false;
+         let wall = _Wall.NONE;
          if (pos.x <= 0)
          {
           pos.x = 0;
           traj.x *= -1;
-          wall = 1;
+          wall = _Wall.LEFT;
          }
          else if (pos.x >= sR)
          {
           pos.x = sR;
           traj.x *= -1;
-          wall = 3;
+          wall = _Wall.RIGHT;
          }
          if (pos.y <= 0)
          {
           pos.y = 0;
           traj.y *= -1;
-          wall = 2;
+          wall = _Wall.TOP;
          }
          else if (pos.y >= sB)
          {
           pos.y = sB;
           traj.y *= -1;
-          wall = 4;
+          wall = _Wall.BOTTOM;
          }
-         if (wall !== false)
+         if (wall !== _Wall.NONE)
          {
           bCt++;
           dests.push({x: Math.floor(pos.x), y: Math.floor(pos.y), t: pos.t - lastT, w: wall});
           lastT = pos.t;
          }
         }
-        dests.push({x: pos.x, y: pos.y, t: pos.t - lastT, w: 0});
-        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
+        dests.push({x: pos.x, y: pos.y, t: pos.t - lastT, w: _Wall.NONE});
+        const s = 'top: ' + v + 'px;' +
+         ' left: ' + h + 'px;' +
+         ' --emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eW + 'px;' +
+         _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
         const iArr = _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s}, {space: false, time: tMS});
         if (iArr.length < 1)
          return;
@@ -2641,8 +2665,8 @@
         const squashT = Math.floor(cfg.emote.time * 1000 * timing.display.Crazy.time * timing.display.Crazy.squash.time);
         for (let i = 0; i < lA; i++)
         {
-         iArr[i].dataset.origin = 'center';
-         iArr[i].dataset.squash = 'no';
+         iArr[i].dataset.origin = _Origin[0];
+         iArr[i].dataset.squash = _Squash[0];
          iArr[i].style.top = dests[d].y + 'px';
          iArr[i].style.left = dests[d].x + 'px';
          iArr[i].style.transition = 'top ' + dests[d].t + 'ms linear, left ' + dests[d].t + 'ms linear, transform ' + squashT + 'ms linear';
@@ -2660,25 +2684,10 @@
         const squashT = Math.floor(cfg.emote.time * 1000 * timing.display.Crazy.time * timing.display.Crazy.squash.time);
         for (let i = 0; i < lA; i++)
         {
-         switch (dests[d - 1].w)
-         {
-          case 1:
-           iArr[i].dataset.origin = 'left';
-           iArr[i].dataset.squash = 'horizontal';
-           break;
-          case 2:
-           iArr[i].dataset.origin = 'top';
-           iArr[i].dataset.squash = 'vertical';
-           break;
-          case 3:
-           iArr[i].dataset.origin = 'right';
-           iArr[i].dataset.squash = 'horizontal';
-           break;
-          case 4:
-           iArr[i].dataset.origin = 'bottom';
-           iArr[i].dataset.squash = 'vertical';
-           break;
-         }
+         if (dests[d - 1].w === _Wall.NONE)
+          continue;
+         iArr[i].dataset.origin = _Origin[dests[d - 1].w];
+         iArr[i].dataset.squash = _Squash[dests[d - 1].w];
         }
         window.setTimeout(_tUnsquash, squashT, tInit, oID, lA, iArr, lD, dests, d);
        }
@@ -2692,7 +2701,7 @@
         const squashT = Math.floor(cfg.emote.time * 1000 * timing.display.Crazy.time * timing.display.Crazy.squash.time);
         for (let i = 0; i < lA; i++)
         {
-         iArr[i].dataset.squash = 'no';
+         iArr[i].dataset.squash = _Squash[0];
         }
         window.setTimeout(_tLoop, squashT, tInit, oID, lA, iArr, lD, dests, d);
        }
@@ -2739,9 +2748,6 @@
         eW = eInf.width / eInf.height * eH;
        const eWh = Math.ceil(eW / 2);
        const h = shared.rnd(sW) - eWh;
-       let s = 'left: ' + h + 'px;';
-       s += ' --emote-height: ' + eH + 'px;';
-       s += ' --emote-width: ' + eW + 'px;';
        const aNames = [];
        const aDelays = [];
        const aDurs = [];
@@ -2766,7 +2772,10 @@
        aTimings.push('linear');
        aFills.push('forwards');
        aIters.push('1');
-       s += _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, false, tMS);
+       const s = 'left: ' + h + 'px;' +
+        ' --emote-height: ' + eH + 'px;' +
+        ' --emote-width: ' + eW + 'px;' +
+        _styleEmote(aNames, aDelays, aDurs, aTimings, aFills, aIters, false, false, cfg.emote.out.fade, false, tMS);
        _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s}, {space: false, time: tMS});
       }
 
@@ -2819,15 +2828,9 @@
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time);
         const t2 = Math.floor(tMS * timing.display.Throw.toss);
         const t3 = Math.floor(tMS * timing.display.Throw.drop);
-        let s = '--emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eW + 'px;';
-        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-        let s2 = '--emote-height: ' + eH + 'px;';
-        s2 += ' --emote-width: ' + eW + 'px;';
-        let r = '360';
-        if (h > 0)
-         r = '-360';
-        s2 += ' transform: translate(' + hD + 'px, ' + (sH - dH) + 'px) rotate(' + r + 'deg);';
+        const s = '--emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eW + 'px;' +
+         ' transform: translate(' + h + 'px, ' + v + 'px);';
         const aNames = [];
         const aDelays = [];
         const aDurs = [];
@@ -2865,7 +2868,13 @@
          aFills.push('forwards');
          aIters.push('1');
         }
-        s2 += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
+        let r = '360';
+        if (h > 0)
+         r = '-360';
+        const s2 = '--emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eW + 'px;' +
+         ' transform: translate(' + hD + 'px, ' + (sH - dH) + 'px) rotate(' + r + 'deg);' +
+         _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
         const iArr = _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: ['etThrowTwist']}, {space: false, time: tMS});
         if (iArr.length < 1)
          return;
@@ -2954,10 +2963,6 @@
         const t5 = Math.floor(tMS * timing.display.Pop.jump.up);
         const t6 = Math.floor(tMS * timing.display.Pop.jump.pause);
         const t7 = Math.floor(tMS * timing.display.Pop.jump.down);
-        let s = '--emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eW + 'px;';
-        s += ' left: ' + h + 'px;';
-        s += ' transform: translateY(' + v + 'px);';
         const aNames = [];
         const aDelays = [];
         const aDurs = [];
@@ -2995,7 +3000,11 @@
          aFills.push('forwards');
          aIters.push('1');
         }
-        s += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
+        const s = '--emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eW + 'px;' +
+         ' left: ' + h + 'px;' +
+         ' transform: translateY(' + v + 'px);'+
+         _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
         const iArr = _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: ['etPopPeek']}, {space: false, time: tMS});
         if (iArr.length < 1)
          return;
@@ -3026,6 +3035,8 @@
 
       const $TheCube = function()
       {
+       const _faces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+
        function $c_TheCube(eInf, sW, sH, eH, canV = true, tInit = 0)
        {
         if (tInit === 0)
@@ -3068,21 +3079,20 @@
         const cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
         cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
-        const sFaces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
         for (let i = 0; i < 6; i++)
         {
          if (!eInf.hasOwnProperty('zwe') || eInf.zwe.length === 0)
          {
           const iFace = document.createElement('img');
           _setImgSrc(iFace, eInf.url);
-          iFace.dataset.face = sFaces[i];
+          iFace.dataset.face = _faces[i];
           iFace.dataset.msgid = eInf.origin;
           cube.appendChild(iFace);
          }
          else
          {
           const dFace = document.createElement('div');
-          dFace.dataset.face = sFaces[i];
+          dFace.dataset.face = _faces[i];
           const pFace = document.createElement('img');
           const btzwCE = _btzwClassForEmote(eInf.zwe);
           pFace.setAttribute('class', btzwCE.join(' '));
@@ -3113,12 +3123,12 @@
         }
         const hD = Math.floor(h + r * Math.cos(th));
         const vD = Math.floor(v + r * Math.sin(th));
-        let s = '--emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eH + 'px;';
-        s += ' --cube-depth: ' + eHh + 'px;';
-        s += ' perspective: ' + eH * 3 + 'px;';
-        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, tMS);
+        const s = '--emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eH + 'px;' +
+         ' --cube-depth: ' + eHh + 'px;' +
+         ' perspective: ' + eH * 3 + 'px;' +
+         ' transform: translate(' + h + 'px, ' + v + 'px);' +
+         _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, tMS);
         scene.setAttribute('style', s);
         _eActive += 6;
         document.body.appendChild(scene);
@@ -3195,10 +3205,6 @@
         hD = h - shared.rnd(sR * 0.2);
        else
         hD = h + shared.rnd(sR * 0.2);
-       let s = '--emote-height: ' + eH + 'px;';
-       s += ' --emote-width: ' + eW + 'px;';
-       s += ' transform: translateX(' + h + 'px);';
-       s += ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY * sH + shared.rnd(sB / 2)) + ' L 0 ' + (sH + eH) + '");';
        const aNames = [];
        const aDelays = [];
        const aDurs = [];
@@ -3211,7 +3217,11 @@
        aTimings.push('cubic-bezier(0, 0.9, 1, 0.15)');
        aFills.push('forwards');
        aIters.push('1');
-       s += _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
+       const s = '--emote-height: ' + eH + 'px;' +
+        ' --emote-width: ' + eW + 'px;' +
+        ' transform: translateX(' + h + 'px);' +
+        ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY * sH + shared.rnd(sB / 2)) + ' L 0 ' + (sH + eH) + '");' +
+        _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
        _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: ['etFountain']}, {time: tMS, space: false}, {x: hD});
       }
 
@@ -3375,9 +3385,9 @@
         const cY = sH * timing.kappa.Fireworks.dest.y[shared.rnd(timing.kappa.Fireworks.dest.y.length)];
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time);
         const sendUp = Math.floor(tMS * timing.kappa.Fireworks.speed.rocket);
-        let s = '--emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eW + 'px;';
-        s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
+        const s = '--emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eW + 'px;' +
+         ' transform: translate(' + oX + 'px, ' + oY + 'px);';
         _eActive--;
         const iArr = _addEmoteAndZWEs(tInit, oK, 1, {style: s, classes: ['ktFireworkRocket']}, false, {x: cX - eWh, y: cY});
         if (iArr.length < 1)
@@ -3498,10 +3508,10 @@
         const hD = Math.floor(eX + r * Math.cos(th));
         const vD = Math.floor(cY + r * Math.sin(th));
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time);
-        let s = '--emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eW + 'px;';
-        s += ' transform: translate(' + eX + 'px, ' + cY + 'px);';
-        s += _styleEmote([], [], [], [], [], [], true, false, true, false, tMS);
+        const s = '--emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eW + 'px;' +
+         ' transform: translate(' + eX + 'px, ' + cY + 'px);' +
+         _styleEmote([], [], [], [], [], [], true, false, true, false, tMS);
         _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: ['ktFireworkSparkler']}, {space: false, time: tMS}, {x: hD, y: vD});
        }
 
@@ -3578,10 +3588,10 @@
         const hD = Math.floor(oX + r * Math.cos(th));
         const vD = Math.floor(oY + r * Math.sin(th));
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time);
-        let s = '--emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eW + 'px;';
-        s += ' transform: translate(' + oX + 'px, ' + oY + 'px);';
-        s += _styleEmote([], [], [], [], [], [], true, false, true, false, tMS);
+        const s = '--emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eW + 'px;' +
+         ' transform: translate(' + oX + 'px, ' + oY + 'px);' +
+         _styleEmote([], [], [], [], [], [], true, false, true, false, tMS);
         _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: ['ktSpiral']}, {space: false, time: tMS}, {x: hD, y: vD});
        }
 
@@ -3660,24 +3670,17 @@
         const h = Math.floor(eH * x);
         const v = -1 * eH;
         const vD = sH - eH * dX;
-        let s = 'left: ' + h + 'px;';
-        let fH = sH;
+        let pad = 2;
         if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false && shared.shadowCSS(cfg.display.shadow) !== false)
-        {
-         s += ' top: -12px;';
-         fH += 12;
-        }
-        else
-        {
-         s += ' top: -2px;';
-         fH += 2;
-        }
-        s += ' --emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eH + 'px;';
-        s += ' transform: translateY(' + v + 'px);';
+         pad += 10;
+        const s = 'left: ' + h + 'px;' +
+         ' top: -' + pad + 'px;' +
+         ' --emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eH + 'px;' +
+         ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, oID, img, fH);
+        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, oID, img, sH + pad);
         window.setTimeout(_tMove, t, tInit, oID, img, vD);
        }
 
@@ -3779,24 +3782,17 @@
         const h = oX + eH * x;
         const v = -1 * eH;
         const vD = sH - eH * dX;
-        let s = 'left: ' + h + 'px;';
-        let fH = sH;
+        let pad = 2;
         if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false && shared.shadowCSS(cfg.display.shadow) !== false)
-        {
-         s += ' top: -12px;';
-         fH += 12;
-        }
-        else
-        {
-         s += ' top: -2px;';
-         fH += 2;
-        }
-        s += ' --emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eH + 'px;';
-        s += ' transform: translateY(' + v + 'px);';
+         pad += 10;
+        const s = 'left: ' + h + 'px;' +
+         ' top: -' + pad + 'px;' +
+         ' --emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eH + 'px;' +
+         ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
-        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, oID, img, fH);
+        window.setTimeout(_tDrop, Math.floor(t / 10 + aT), tInit, oID, img, sH + pad);
         window.setTimeout(_tMove, t, tInit, oID, img, vD);
        }
 
@@ -3942,17 +3938,13 @@
         const h = -2 * maxW;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time);
         const tSpeed = Math.floor(tMS * timing.kappa.Stampede.speed);
-        let s = '--emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eW + 'px;';
-        if (d)
-         s += ' transform: translate(' + sW + 'px, ' + v + 'px);';
-        else
-         s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-        s += _styleEmoteString([], [], [], [], [], []);
-        let useX = sW;
-        if (d)
-         useX = h;
-        const r = _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: ['ktStampede']}, {space: false, time: tSpeed}, {x: useX, y: v});
+        const oX = d ? h : sW;
+        const dX = d ? sW : h;
+        const s = '--emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eW + 'px;' +
+         ' transform: translate(' + oX + 'px, ' + v + 'px);' +
+          _styleEmoteString([], [], [], [], [], []);
+        const r = _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: ['ktStampede']}, {space: false, time: tSpeed}, {x: dX, y: v});
         if (r.length < 1)
          return null;
         window.setTimeout(_tMark, tSpeed, tInit, eInf.origin, r[0]);
@@ -4133,8 +4125,8 @@
         img.setAttribute('class', ['dancer', ...cAppend].join(' '));
         _setImgSrc(img, url);
         img.dataset.msgid = oID;
-        let s = '--emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eH + 'px;';
+        const s = '--emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eH + 'px;';
         img.setAttribute('style', s);
         let sE = bS * col + xtra;
         let sB = sE - sW;
@@ -4143,13 +4135,13 @@
          sE = bS * (ct - 1 - col) + xtra;
          sB = sE + sW;
         }
-        s = 'top: ' + v + 'px;';
-        s += ' left: 0px;';
-        s += ' height: ' + bS + 'px;';
-        s += ' width: ' + bS + 'px;';
-        s += ' z-index: ' + v + ';';
-        s += ' transform: translateX(' + sB + 'px);';
-        box.setAttribute('style', s);
+        const s2 = 'top: ' + v + 'px;' +
+         ' left: 0px;' +
+         ' height: ' + bS + 'px;' +
+         ' width: ' + bS + 'px;' +
+         ' z-index: ' + v + ';' +
+         ' transform: translateX(' + sB + 'px);';
+        box.setAttribute('style', s2);
         _eActive++;
         box.appendChild(img);
         document.body.appendChild(box);
@@ -4186,6 +4178,8 @@
 
       const $TheCube = function()
       {
+       const _faces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+
        function $c_TheCube(kList, sW, sH, eH, bC, iR)
        {
         const tInit = new Date().getTime();
@@ -4201,7 +4195,6 @@
         const cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
         cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
-        const sFaces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
         let kClean = [];
         for (let i = 0, l = kList.length; i < l; i++)
         {
@@ -4222,14 +4215,14 @@
          {
           const iFace = document.createElement('img');
           _setImgSrc(iFace, eFaces[i].url);
-          iFace.dataset.face = sFaces[i];
+          iFace.dataset.face = _faces[i];
           iFace.dataset.msgid = eFaces[i].origin;
           cube.appendChild(iFace);
          }
          else
          {
           const dFace = document.createElement('div');
-          dFace.dataset.face = sFaces[i];
+          dFace.dataset.face = _faces[i];
           const pFace = document.createElement('img');
           const btzwCE = _btzwClassForEmote(eFaces[i].zwe);
           pFace.setAttribute('class', btzwCE.join(' '));
@@ -4256,12 +4249,12 @@
          h = Math.floor(sWm - eHh);
          v = Math.floor(sHm - eHh);
         }
-        let s = '--emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eH + 'px;';
-        s += ' --cube-depth: ' + eHh + 'px;';
-        s += ' perspective: ' + eH * 3 + 'px;';
-        s += ' transform: translate(' + h + 'px, ' + v + 'px);';
-        s += _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, tMS);
+        const s = '--emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eH + 'px;' +
+         ' --cube-depth: ' + eHh + 'px;' +
+         ' perspective: ' + eH * 3 + 'px;' +
+         ' transform: translate(' + h + 'px, ' + v + 'px);' +
+         _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, false, cfg.emote.out.fade, false, tMS);
         scene.setAttribute('style', s);
         document.body.appendChild(scene);
         _gc.hook(scene, false, 6, tMS);
@@ -4410,27 +4403,20 @@
         const h = oX + eH * x;
         const v = -1 * eH;
         const vD = vH - eH * dX;
-        let s = 'left: ' + h + 'px;';
-        let fH = sH;
+        let pad = 2;
         if (cfg.display.hasOwnProperty('shadow') && cfg.display.shadow !== false && shared.shadowCSS(cfg.display.shadow) !== false)
-        {
-         s += ' top: -12px;';
-         fH += 12;
-        }
-        else
-        {
-         s += ' top: -2px;';
-         fH += 2;
-        }
-        s += ' --emote-height: ' + eH + 'px;';
-        s += ' --emote-width: ' + eH + 'px;';
-        s += ' transition: transform ' + tPerB + 'ms ease-in;';
-        s += ' transform: translateY(' + v + 'px);';
+         pad += 10;
+        const s = 'left: ' + h + 'px;' +
+         ' top: -' + pad + 'px;' +
+         ' --emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eH + 'px;' +
+         ' transition: transform ' + tPerB + 'ms ease-in;' +
+         ' transform: translateY(' + v + 'px);';
         img.setAttribute('style', s);
         document.body.appendChild(img);
         _eActive++;
         const tMS = Math.floor(iTime * 1000 * timing.kappa.Text.time);
-        window.setTimeout(_tDrop, Math.floor(eT + tMS + t / 10), tInit, oID, img, fH, tMS);
+        window.setTimeout(_tDrop, Math.floor(eT + tMS + t / 10), tInit, oID, img, sH + pad, tMS);
         window.setTimeout(_tMove, t, tInit, oID, img, vD);
        }
 
