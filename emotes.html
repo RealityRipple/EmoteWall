@@ -140,6 +140,7 @@
        'Stampede': {},    // Stampede of emotes     (no fade/zoom)
        'Confetti': {},    // Fall like confetti     (no zoom, no fade in, only fade out; small emotes)
        'Conga': {},       // Start a conga line     (no fade/zoom)
+       'Coaster': {},     // Rollercoaster ride     (no fade/zoom)
        'TheCube': {       // Rotate a 3D cube of an emote (no zoom, only fade)
         size: 8/10,
         center: true,
@@ -598,6 +599,21 @@
       size: 5/3,      /* height of animation space for row in emote heights */
       height: 5/6,    /* height of each row of dancers in emote heights (padding) */
       avoidMiddle: 6  /* rows to use when avoiding the middle (half top, half bottom; please use even numbers) */
+     },
+     'Coaster': {
+      time: 1/4,
+      bottom: {
+       min: 7/10,
+       max: 9/10
+      },
+      top: {
+       min: 2/10,
+       max: 4/10
+      },
+      at: {
+       min: 1/5,
+       max: 1/3
+      }
      },
      'TheCube': {
       time: 1
@@ -4234,6 +4250,131 @@
        return $c_Conga;
       }();
 
+      const $Coaster = function()
+      {
+       async function $c_Coaster(kList, sW, sH, eH, iKC)
+       {
+        const tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
+        const d = shared.rnd(2) === 0;
+        let kClean = [];
+        for (let j = 0, l = kList.length; j < l; j++)
+        {
+         if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
+          continue;
+         kClean.push(kList[j]);
+        }
+        if (kClean.length < 1)
+         return;
+        let maxW = 0;
+        let kCars = [];
+        for (let i = 0; i < iKC; i++)
+        {
+         const oK = kClean[shared.rnd(kClean.length)];
+         kCars.push(oK);
+         let eW = eH;
+         if (oK.hasOwnProperty('width') && oK.hasOwnProperty('height'))
+          eW = oK.width / oK.height * eH;
+         if (eW > maxW)
+          maxW = eW;
+        }
+        const tMS = cfg.emote.time * 1000 * timing.kappa.Coaster.time;
+        const yBase = Math.floor(sH * _rndFromRange(timing.kappa.Coaster.bottom));
+        const yCrest = Math.floor(sH * _rndFromRange(timing.kappa.Coaster.top));
+        const xAt = Math.floor((sW + maxW) * _rndFromRange(timing.kappa.Coaster.at));
+        const dist = xAt + ((yBase - yCrest) * Math.PI);
+        const vel = tMS / dist;
+        for (let i = 0; i < iKC; i++)
+        {
+         let eW = eH;
+         if (kCars[i].hasOwnProperty('width') && kCars[i].hasOwnProperty('height'))
+          eW = kCars[i].width / kCars[i].height * eH;
+         let ms = Math.ceil(eW * vel);
+         if (ms < shared.mspf.value)
+          ms = shared.mspf.value;
+         if (d)
+          await _sleep(ms);
+         shared.doNextFrame(_car, tInit, kCars[i], d, vel, yBase, yCrest, xAt, sW, eH, maxW);
+         if (!d)
+          await _sleep(ms);
+        }
+       }
+
+       function _car(tInit, eInf, d, vel, yBase, yCrest, xAt, sW, eH, maxW)
+       {
+        if (_iTitanic > tInit)
+         return;
+        if (typeof eInf.origin !== 'undefined' && display.erasedMsgs.includes(eInf.origin))
+         return;
+        let eW = eH;
+        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+         eW = eInf.width / eInf.height * eH;
+        const oX = d ? sW : -1 * maxW;
+        const oR = (yBase - yCrest) / 2;
+        const xForm = {
+         str: 'perspective(10px) translateZ(0px) translateX(%Apx) rotate(%Bdeg) translateZ(%Cpx)',
+         a: 0,
+         b: 0,
+         c: 0,
+         val: function()
+         {
+          return this.str.replaceAll('%A', this.a).
+                          replaceAll('%B', this.b).
+                          replaceAll('%C', this.c);
+         }
+        };
+        const s = 'left: ' + oX + 'px;' +
+         ' top: ' + yBase + 'px;' +
+         ' --emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eW + 'px;' +
+         ' transform: ' + xForm.val() + ';' +
+         ' transform-origin: center -' + oR + 'px;' +
+         ' transition: transform linear 0ms;' +
+          _styleEmoteString([], [], [], [], [], []);
+        const tLoop = cfg.emote.time * 1000 * timing.kappa.Coaster.time;
+        const r = _addEmoteAndZWEs(tInit, eInf, 1, {style: s}, {space: false, time: tLoop});
+        if (r.length < 1)
+         return;
+        shared.doNextFrame(_straight, tInit, r, eInf.origin, d, vel, xForm, yBase, yCrest, xAt);
+       }
+
+       function _straight(tInit, r, oID, d, vel, xForm, yBase, yCrest, xAt)
+       {
+        if (_iTitanic > tInit)
+         return 0;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
+         return;
+        xForm.a = d ? -1 * xAt : xAt;
+        const tNext = Math.floor(vel * xAt);
+        for (let i = 0, l = r.length; i < l; i++)
+        {
+         r[i].style.transitionDuration = tNext + 'ms';
+         r[i].style.transform = xForm.val();
+        }
+        window.setTimeout(_loop, tNext, tInit, r, oID, d, vel, xForm, yBase, yCrest);
+       }
+
+       function _loop(tInit, r, oID, d, vel, xForm, yBase, yCrest)
+       {
+        if (_iTitanic > tInit)
+         return 0;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
+         return;
+        const xLoop = (yBase - yCrest) * Math.PI;
+        xForm.b = d ? 360 : -360;
+        xForm.c = 7;
+        const tNext = Math.floor(vel * xLoop);
+        for (let i = 0, l = r.length; i < l; i++)
+        {
+         r[i].style.transitionDuration = tNext + 'ms';
+         r[i].style.transform = xForm.val();
+        }
+       }
+
+       return $c_Coaster;
+      }();
+
       const $TheCube = function()
       {
        const _faces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
@@ -4509,6 +4650,7 @@
        SmallPyramid: $SmallPyramid,
        Stampede: $Stampede,
        Conga: $Conga,
+       Coaster: $Coaster,
        TheCube: $TheCube,
        Text: $Text
       };
@@ -5012,6 +5154,9 @@
         if (kStyle.prefs.hasOwnProperty('avoidMiddle') && kStyle.prefs.avoidMiddle === true)
          avoidMiddle = true;
         _list.Conga(kList, sW, sH, eH, avoidMiddle);
+        break;
+       case 'Coaster':
+        _list.Coaster(kList, sW, sH, eHh, kStyle.count);
         break;
        case 'Text':
         _eActive -= waitFor;
