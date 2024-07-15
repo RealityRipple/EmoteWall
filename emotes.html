@@ -1858,7 +1858,7 @@
      const css = document.getElementsByTagName('STYLE')[0];
      let spc = {indent: 0};
      let h = shared.unIndent(css.innerHTML, spc);
-     h = h.replace(notice.Hide.FIND, notice.Hide.REPLACE);
+     h = h.replaceAll('/* {INSERT:NOTICE_OFF} *\/', 'display: none;');
      h = shared.reIndent(h, spc);
      css.innerHTML = h;
     }
@@ -1887,10 +1887,6 @@
      copyAndOpen: $copyAndOpen,
      expect: 0,
      active: 0,
-     Hide: Object.freeze({
-      FIND: '\n#notices\n{\n',
-      REPLACE: '\n#notices\n{\n display: none;\n'
-     }),
      Type: Object.freeze({
       GLOBAL_CFG: Symbol(0x01),
       GLOBAL_OBS: Symbol(0x09),
@@ -18323,6 +18319,9 @@
 
     const _css = function()
     {
+     const _unShadow = new RegExp(/\n[^\n]+\/\* {DELETE:SHADOW} \*\/\s*\n/, 'g');
+     const _zPad = new RegExp(/padding:\s*([^;]+)\s+0;\s*\/\* {REPLACE:ZWE_PAD} \*\//, 'g');
+
      function $c_css()
      {
       const css = document.getElementsByTagName('STYLE')[0];
@@ -18344,41 +18343,51 @@
       {
        if (cfg.display.hue === 'rave')
        {
-        let r = 'html.rave\n';
-        r += '{\n';
-        r += ' animation: rave 3s linear infinite;\n';
-        r += '}\n';
+        let r = 'html.rave\n' +
+         '{\n' +
+         ' animation: rave 3s linear infinite;\n' +
+         '}\n';
+        let ar = 'html.rave button, html.rave div#notices\n' +
+         '{\n' +
+         ' animation: antirave 3s linear infinite;\n' +
+         '}\n';
+
         r += '@keyframes rave\n';
         r += '{\n';
+        ar += '@keyframes antirave\n';
+        ar += '{\n';
         for (let i = 0; i <= 100; i += 10)
         {
-         r += ' ' + i + '%\n';
-         r += ' {\n';
-         r += '  filter: hue-rotate(' + i * 3.6 + 'deg);\n';
-         r += ' }\n';
+         r += ' ' + i + '%\n' +
+          ' {\n' +
+          '  filter: hue-rotate(' + i * 3.6 + 'deg);\n' +
+          ' }\n';
+         ar += ' ' + i + '%\n' +
+          ' {\n' +
+          '  filter: hue-rotate(' + (360 - i * 3.6) + 'deg);\n' +
+          ' }\n';
         }
         r += '}\n';
-        r += 'html.rave button, html.rave div#notices\n';
-        r += '{\n';
-        r += ' animation: antirave 3s linear infinite;\n';
-        r += '}\n';
-        r += '@keyframes antirave\n';
-        r += '{\n';
-        for (let i = 0; i <= 100; i += 10)
-        {
-         r += ' ' + i + '%\n';
-         r += ' {\n';
-         r += '  filter: hue-rotate(' + (360 - i * 3.6) + 'deg);\n';
-         r += ' }\n';
-        }
-        r += '}\n';
-        h = r + h;
+        ar += '}\n';
+
+        h = r + ar + h;
        }
        else if (Number.isInteger(cfg.display.hue))
        {
         const iHue = parseInt(cfg.display.hue, 10);
         if (iHue > 0 && iHue < 360)
-         h = 'html\n{\n filter: hue-rotate(' + iHue + 'deg);\n}\nbutton, div#notices\n{\n filter: hue-rotate(' + (360 - iHue) + 'deg);\n}\n' + h;
+        {
+         const f = 'html\n' +
+          '{\n' +
+          ' filter: hue-rotate(' + iHue + 'deg);\n' +
+          '}\n' +
+          'button, div#notices\n' +
+          '{\n' +
+          ' filter: hue-rotate(' + (360 - iHue) + 'deg);\n' +
+          '}\n';
+
+         h = f + h;
+        }
        }
       }
       return h;
@@ -18391,20 +18400,9 @@
        let sF = shared.shadowCSS(cfg.display.shadow);
        if (sF !== false)
        {
-        let sE = '\nimg.emote\n';
-        sE += '{\n';
-        sE += ' ' + sF + '\n';
-        h = h.replace('\nimg.emote\n{\n', sE);
+        h = h.replaceAll('/* {INSERT:SHADOW} *\/', sF);
 
-        let sD = '\ndiv.scene img.dancer\n';
-        sD += '{\n';
-        sD += ' ' + sF + '\n';
-        h = h.replace('\ndiv.scene img.dancer\n{\n', sD);
-
-        let sC = '\ndiv.scene div.cube [data-face]\n';
-        sC += '{\n';
-        sC += ' ' + sF + '\n';
-        h = h.replace('\ndiv.scene div.cube [data-face]\n{\n background-color: rgba(255, 255, 255, 0.2);\n', sC);
+        h = h.replaceAll(_unShadow, '\n');
        }
       }
       return h;
@@ -18414,175 +18412,199 @@
      {
       if (cfg.display.extended.useZWE && cfg.display.extended.hasOwnProperty('fillZWE') && cfg.display.extended.fillZWE)
       {
-       h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.1)) / 2);');
-       h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.8)) / 2);');
-       h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.95)) / 2);');
-       h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.1)) / 2);');
-       let z = '\nimg.zwe\n';
-       z += '{\n';
-       z += ' object-fit: fill;\n';
-       z += '}';
-       h = h.replace('\nimg.emote\n{\n', z + '\nimg.emote\n{\n');
+       h = h.replaceAll(_zPad, function(m, m1) { return 'padding: ' + m1 + ' ' + m1.replaceAll('--zoom-height', '--zoom-width') + ';';});
+
+       const z = 'img.zwe\n' +
+        '{\n' +
+        ' object-fit: fill;\n' +
+        '}';
+       h = h.replaceAll('/* {INSERT:ZWE} *\/', z);
       }
       return h;
      }
 
      function _anim(h)
      {
-      let t = '\n.' + display.emote.clsID.StraightLine +'\n';
-      t += '{\n';
-      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.emote.clsID.Throw.Twist + '\n';
-      t += '{\n';
-      t += ' transition: transform cubic-bezier(0.32, 0, 0.67, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.twist) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.emote.clsID.Throw.Drop + '\n';
-      t += '{\n';
-      t += ' transition: transform cubic-bezier(0.5, 0, 0.75, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.drop) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.emote.clsID.Pop.PeekUp +'\n';
-      t += '{\n';
-      t += ' transition: transform ease-in-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.up) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.emote.clsID.Pop.PeekDown + '\n';
-      t += '{\n';
-      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.down) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.emote.clsID.Pop.JumpUp + '\n';
-      t += '{\n';
-      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.up) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.emote.clsID.Pop.JumpDown + '\n';
-      t += '{\n';
-      t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.down) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.emote.clsID.Fountain + '\n';
-      t += '{\n';
-      t += ' transition: transform cubic-bezier(0, 0, 0.58, 1) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Fountain.time) + 'ms;\n';
-      t += '}\n';
-      t += 'div.scene.cube:not(.kappa),\n';
-      t += 'div.scene.cube:not(.kappa) div.cube\n';
-      t += '{\n';
-      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.kappa.clsID.Firework.Rocket +'\n';
-      t += '{\n';
-      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time * timing.kappa.Fireworks.speed.rocket) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.kappa.clsID.Firework.Sparkler + '\n';
-      t += '{\n';
-      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.kappa.clsID.Spiral + '\n';
-      t += '{\n';
-      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.kappa.clsID.Pyramid.Show + '\n';
-      t += '{\n';
+      let t = '.' + display.emote.clsID.StraightLine +'\n' +
+       '{\n' +
+       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Throw.Twist + '\n' +
+       '{\n' +
+       ' transition: transform cubic-bezier(0.32, 0, 0.67, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.twist) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Throw.Drop + '\n' +
+       '{\n' +
+       ' transition: transform cubic-bezier(0.5, 0, 0.75, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.drop) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Pop.PeekUp +'\n' +
+       '{\n' +
+       ' transition: transform ease-in-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.up) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Pop.PeekDown + '\n' +
+       '{\n' +
+       ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.down) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Pop.JumpUp + '\n' +
+       '{\n' +
+       ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.up) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Pop.JumpDown + '\n' +
+       '{\n' +
+       ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.down) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Fountain + '\n' +
+       '{\n' +
+       ' transition: transform cubic-bezier(0, 0, 0.58, 1) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Fountain.time) + 'ms;\n' +
+       '}\n';
+
+      t += 'div.scene.cube:not(.kappa),\n' +
+       'div.scene.cube:not(.kappa) div.cube\n' +
+       '{\n' +
+       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.kappa.clsID.Firework.Rocket +'\n' +
+       '{\n' +
+       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time * timing.kappa.Fireworks.speed.rocket) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.kappa.clsID.Firework.Sparkler + '\n' +
+       '{\n' +
+       ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.kappa.clsID.Spiral + '\n' +
+       '{\n' +
+       ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time) + 'ms;\n' +
+       '}\n';
+
       let ctP = 0;
       const lP = pyramidDist.length;
       for (let i = 0; i < lP; i++)
       {
        ctP += pyramidDist[i];
       }
+
       const tP = Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.show.total);
       const tPerB = Math.max(Math.floor(tP / ctP), timing.kappa.Pyramid.show.min);
-      t += ' transition: transform ease-in ' + tPerB + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.kappa.clsID.Pyramid.Drop + '\n';
-      t += '{\n';
-      t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.hide) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.kappa.clsID.SmallPyramid.Show + '\n';
-      t += '{\n';
+      t += '.' + display.kappa.clsID.Pyramid.Show + '\n' +
+       '{\n' +
+       ' transition: transform ease-in ' + tPerB + 'ms;\n' +
+       '}\n' +
+       '.' + display.kappa.clsID.Pyramid.Drop + '\n' +
+       '{\n' +
+       ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.hide) + 'ms;\n' +
+       '}\n';
+
       const tSP = Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.show.total);
       const tPerSB = Math.max(Math.floor(tSP / ctP), timing.kappa.SmallPyramid.show.min);
-      t += ' transition: transform ease-in ' + tPerSB + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.kappa.clsID.SmallPyramid.Drop + '\n';
-      t += '{\n';
-      t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.hide) + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.kappa.clsID.Stampede + '\n';
-      t += '{\n';
-      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time * timing.kappa.Stampede.speed) + 'ms;\n';
-      t += '}\n';
+      t += '.' + display.kappa.clsID.SmallPyramid.Show + '\n' +
+       '{\n' +
+       ' transition: transform ease-in ' + tPerSB + 'ms;\n' +
+       '}\n' +
+       '.' + display.kappa.clsID.SmallPyramid.Drop + '\n' +
+       '{\n' +
+       ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.hide) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.kappa.clsID.Stampede + '\n' +
+       '{\n' +
+       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time * timing.kappa.Stampede.speed) + 'ms;\n' +
+       '}\n';
+
       const congaShowMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.show);
       const congaHideMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.hide);
-      t += '.' + display.kappa.clsID.Conga.In + '\n';
-      t += '{\n';
-      t += ' transition: transform linear ' + congaShowMS + 'ms;\n';
-      t += '}\n';
-      t += '.' + display.kappa.clsID.Conga.Out + '\n';
-      t += '{\n';
-      t += ' transition: transform ease-in ' + congaHideMS + 'ms;\n';
-      t += '}\n';
-      t += 'div.scene.cube.kappa,\n';
-      t += 'div.scene.cube.kappa div.cube\n';
-      t += '{\n';
-      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.TheCube.time) + 'ms;\n';
-      t += '}\n';
-      t += '[data-squash="vertical"]\n';
-      t += '{\n';
-      t += ' transform: scale(' + timing.display.Crazy.squash.width + ', ' + timing.display.Crazy.squash.height + ');\n';
-      t += '}\n';
-      t += '[data-squash="horizontal"]\n';
-      t += '{\n';
-      t += ' transform: scale(' + timing.display.Crazy.squash.height + ', ' + timing.display.Crazy.squash.width + ');\n';
-      t += '}';
-      h = h.replace('\n[data-squash="no"]\n', t + '\n[data-squash="no"]\n');
+      t += '.' + display.kappa.clsID.Conga.In + '\n' +
+       '{\n' +
+       ' transition: transform linear ' + congaShowMS + 'ms;\n' +
+       '}\n' +
+       '.' + display.kappa.clsID.Conga.Out + '\n' +
+       '{\n' +
+       ' transition: transform ease-in ' + congaHideMS + 'ms;\n' +
+       '}\n';
+
+      t += 'div.scene.cube.kappa,\n' +
+       'div.scene.cube.kappa div.cube\n' +
+       '{\n' +
+       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.TheCube.time) + 'ms;\n' +
+       '}\n';
+
+      t += '\n';
+
+      t += '[data-squash="vertical"]\n' +
+       '{\n' +
+       ' transform: scale(' + timing.display.Crazy.squash.width + ', ' + timing.display.Crazy.squash.height + ');\n' +
+       '}\n' +
+       '[data-squash="horizontal"]\n' +
+       '{\n' +
+       ' transform: scale(' + timing.display.Crazy.squash.height + ', ' + timing.display.Crazy.squash.width + ');\n' +
+       '}';
+
+      h = h.replaceAll('/* {INSERT:ANIM} *\/', t);
       return h;
      }
 
      function _gui(h)
      {
       if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === false)
-       h = h.replace(notice.Hide.FIND, notice.Hide.REPLACE);
+       h = h.replaceAll('/* {INSERT:NOTICE_OFF} *\/', 'display: none;');
+
       if (cfg.hasOwnProperty('twitch') && cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null)
-       h = h.replace('\nbutton.twitch\n{\n', '\nbutton.twitch\n{\n display: none;\n');
+       h = h.replaceAll('/* {INSERT:TWITCH_OFF} *\/', 'display: none;');
+
       if (cfg.hasOwnProperty('youtube') && cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null)
-       h = h.replace('\nbutton.youtube\n{\n', '\nbutton.youtube\n{\n display: none;\n');
+       h = h.replaceAll('/* {INSERT:YOUTUBE_OFF} *\/', 'display: none;');
+
       if (cfg.hasOwnProperty('kick') && cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null)
-       h = h.replace('\nbutton.kick\n{\n', '\nbutton.kick\n{\n display: none;\n');
+       h = h.replaceAll('/* {INSERT:KICK_OFF} *\/', 'display: none;');
+
       return h;
      }
 
      function _variations(h)
      {
+      let v = '.eSize-1_000\n' +
+       '{\n' +
+       ' --zoom-height: var(--emote-height);\n' +
+       ' --zoom-width: var(--emote-width);\n' +
+       '}\n';
+
       if (cfg.emote.size.variation !== false && typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
       {
-       let v = '\n.eSize-1_000\n';
-       v += '{\n';
-       v += ' --zoom-height: var(--emote-height);\n';
-       v += ' --zoom-width: var(--emote-width);\n';
-       v += '}\n';
-       v += '.eSize-0_500\n';
-       v += '{\n';
-       v += ' --zoom-height: calc(var(--emote-height) / 2);\n';
-       v += ' --zoom-width: calc(var(--emote-width) / 2);\n';
-       v += '}\n';
-       v += '.eSize-2_000\n';
-       v += '{\n';
-       v += ' --zoom-height: calc(var(--emote-height) * 2);\n';
-       v += ' --zoom-width: calc(var(--emote-width) * 2);\n';
-       v += '}\n';
-       let v2 = '\n.eSize-1_000\n';
-       v2 += '{\n';
-       v2 += ' --zoom-height: var(--emote-height);\n';
-       v2 += ' --zoom-width: var(--emote-width);\n';
-       v2 += '}\n';
        for (let i = 0, l = cfg.emote.size.variation.range.length; i < l; i++)
        {
         const rV = cfg.emote.size.variation.range[i].toFixed(3);
-        v2 += '.eSize-' + rV.replace('.', '_') + '\n';
-        v2 += '{\n';
-        v2 += ' --zoom-height: calc(var(--emote-height) * ' + rV + ');\n';
-        v2 += ' --zoom-width: calc(var(--emote-width) * ' + rV + ');\n';
-        v2 += '}\n';
+        v += '.eSize-' + rV.replace('.', '_') + '\n' +
+         '{\n' +
+         ' --zoom-height: calc(var(--emote-height) * ' + rV + ');\n' +
+         ' --zoom-width: calc(var(--emote-width) * ' + rV + ');\n' +
+         '}\n';
        }
-       h = h.replace(v, v2);
       }
+      else
+      {
+       v += '.eSize-0_500\n' +
+        '{\n' +
+        ' --zoom-height: calc(var(--emote-height) / 2);\n' +
+        ' --zoom-width: calc(var(--emote-width) / 2);\n' +
+        '}\n';
+
+       v += '.eSize-2_000\n' +
+        '{\n' +
+        ' --zoom-height: calc(var(--emote-height) * 2);\n' +
+        ' --zoom-width: calc(var(--emote-width) * 2);\n' +
+        '}\n';
+      }
+
+      h = h.replaceAll('/* {INSERT:ESIZE} *\/', v);
       return h;
      }
 
@@ -18636,7 +18658,9 @@
     margin: 0;
     padding: 0;
     offset-rotate: 0deg;
+    /* {INSERT:SHADOW} */
    }
+   /* {INSERT:ZWE} */
 
    div.scene
    {
@@ -18669,8 +18693,9 @@
    }
    div.scene div.cube [data-face]
    {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.2); /* {DELETE:SHADOW} */
     position: absolute;
+    /* {INSERT:SHADOW} */
    }
    div.scene div.cube [data-face="front"]
    {
@@ -18702,6 +18727,7 @@
     text-align: center;
     position: relative;
     animation: dance 4s linear infinite;
+    /* {INSERT:SHADOW} */
    }
 
    @keyframes dance
@@ -18957,22 +18983,8 @@
     }
    }
 
-   .eSize-1_000
-   {
-    --zoom-height: var(--emote-height);
-    --zoom-width: var(--emote-width);
-   }
-   .eSize-0_500
-   {
-    --zoom-height: calc(var(--emote-height) / 2);
-    --zoom-width: calc(var(--emote-width) / 2);
-   }
-   .eSize-2_000
-   {
-    --zoom-height: calc(var(--emote-height) * 2);
-    --zoom-width: calc(var(--emote-width) * 2);
-   }
-
+   /* {INSERT:ESIZE} */
+   /* {INSERT:ANIM} */
    [data-squash="no"]
    {
     transform: scale(1, 1);
@@ -19047,7 +19059,7 @@
    {
     0%
     {
-     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;
+     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0; /* {REPLACE:ZWE_PAD} */
     }
     24% /* 4% */
     {
@@ -19055,7 +19067,7 @@
     }
     47% /* 8% */
     {
-     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) 0;
+     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) 0; /* {REPLACE:ZWE_PAD} */
     }
     71% /* 12% */
     {
@@ -19063,7 +19075,7 @@
     }
     88% /* 15% */
     {
-     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) 0;
+     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) 0; /* {REPLACE:ZWE_PAD} */
     }
     100% /* 17% */
     {
@@ -19079,7 +19091,7 @@
     }
     100%
     {
-     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;
+     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0; /* {REPLACE:ZWE_PAD} */
     }
    }
 
@@ -19147,6 +19159,7 @@
 
    #notices
    {
+    /* {INSERT:NOTICE_OFF} */
     position: absolute;
     top: 8px;
     left: 8px;
@@ -19371,6 +19384,7 @@
 
    button.twitch
    {
+    /* {INSERT:TWITCH_OFF} */
     background-color: #7D5BBE;
    }
    button.twitch:focus, button.twitch:hover
@@ -19384,6 +19398,7 @@
 
    button.kick
    {
+    /* {INSERT:KICK_OFF} */
     background-color: #00FF00;
     color: #000000;
    }
@@ -19398,6 +19413,7 @@
 
    button.youtube
    {
+    /* {INSERT:YOUTUBE_OFF} */
     background-color: #E93223;
    }
    button.youtube:focus, button.youtube:hover
