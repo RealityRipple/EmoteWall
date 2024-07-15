@@ -2081,7 +2081,7 @@
          ' --emote-width: ' + eW + 'px;' +
          ' ' + sO +
          _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-        const aC = ['etStraightLine'];
+        const aC = [display.emote.clsID.StraightLine];
         _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: aC}, {time: tMS}, {x: hD, y: vD});
         if (cfg.display.toroidal)
         {
@@ -2949,7 +2949,7 @@
          ' --emote-width: ' + eW + 'px;' +
          ' transform: translate(' + hD + 'px, ' + (sH - dH) + 'px) rotate(' + r + 'deg);' +
          _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
-        const iArr = _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: ['etThrowTwist']}, {space: false, time: tMS});
+        const iArr = _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: [display.emote.clsID.Throw.Twist]}, {space: false, time: tMS});
         if (iArr.length < 1)
          return;
         shared.doNextFrame(_tMove, tInit, eInf.origin, iArr, hD, vD);
@@ -2976,7 +2976,7 @@
          return;
         for (let i = 0, l = iArr.length; i < l; i++)
         {
-         iArr[i].classList.replace('etThrowTwist', 'etThrowDrop');
+         iArr[i].classList.replace(display.emote.clsID.Throw.Twist, display.emote.clsID.Throw.Drop);
          iArr[i].setAttribute('style', s2);
         }
        }
@@ -3079,7 +3079,7 @@
          ' left: ' + h + 'px;' +
          ' transform: translateY(' + v + 'px);'+
          _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
-        const iArr = _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: ['etPopPeek']}, {space: false, time: tMS});
+        const iArr = _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: [display.emote.clsID.Pop.Peek]}, {space: false, time: tMS});
         if (iArr.length < 1)
          return;
         shared.doNextFrame(_tMove, tInit, eInf.origin, iArr, sB);
@@ -3096,10 +3096,10 @@
          return;
         for (let i = 0, l = iArr.length; i < l; i++)
         {
-         iArr[i].classList.replace('etPopJumpUp', 'etPopJumpDown');
-         iArr[i].classList.replace('etPopPeekDown', 'etPopJumpUp');
-         iArr[i].classList.replace('etPopPeekUp', 'etPopPeekDown');
-         iArr[i].classList.replace('etPopPeek', 'etPopPeekUp');
+         iArr[i].classList.replace(display.emote.clsID.Pop.JumpUp, display.emote.clsID.Pop.JumpDown);
+         iArr[i].classList.replace(display.emote.clsID.Pop.PeekDown, display.emote.clsID.Pop.JumpUp);
+         iArr[i].classList.replace(display.emote.clsID.Pop.PeekUp, display.emote.clsID.Pop.PeekDown);
+         iArr[i].classList.replace(display.emote.clsID.Pop.Peek, display.emote.clsID.Pop.PeekUp);
          iArr[i].style.transform = 'translateY( ' + vD + 'px)';
         }
        }
@@ -3296,7 +3296,7 @@
         ' transform: translateX(' + h + 'px);' +
         ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY * sH + shared.rnd(sB / 2)) + ' L 0 ' + (sH + eH) + '");' +
         _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
-       _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: ['etFountain']}, {time: tMS, space: false}, {x: hD});
+       _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: [display.emote.clsID.Fountain]}, {time: tMS, space: false}, {x: hD});
       }
 
       return {
@@ -3418,7 +3418,22 @@
      return {
       showEmotes: $showEmotes,
       addToShowList: $addToShowList,
-      list: $list
+      list: $list,
+      clsID: Object.freeze({
+       StraightLine: 'etStraightLine',
+       Throw: {
+        Twist: 'etThrowTwist',
+        Drop: 'etThrowDrop'
+       },
+       Pop: {
+        Peek: 'etPopPeek',
+        PeekUp: 'etPopPeekUp',
+        PeekDown: 'etPopPeekDown',
+        JumpUp: 'etPopJumpUp',
+        JumpDown: 'etPopJumpDown'
+       },
+       Fountain: 'etFountain'
+      })
      };
     }();
 
@@ -3463,7 +3478,7 @@
          ' --emote-width: ' + eW + 'px;' +
          ' transform: translate(' + oX + 'px, ' + oY + 'px);';
         _eActive--;
-        const iArr = _addEmoteAndZWEs(tInit, oK, 1, {style: s, classes: ['ktFireworkRocket']}, false, {x: cX - eWh, y: cY});
+        const iArr = _addEmoteAndZWEs(tInit, oK, 1, {style: s, classes: [display.kappa.clsID.Firework.Rocket]}, false, {x: cX - eWh, y: cY});
         if (iArr.length < 1)
          return;
         window.setTimeout(_explode, sendUp, tInit, kList, iArr, cX, cY, eH, sW, sH, iKC);
@@ -3586,7 +3601,7 @@
          ' --emote-width: ' + eW + 'px;' +
          ' transform: translate(' + eX + 'px, ' + cY + 'px);' +
          _styleEmote([], [], [], [], [], [], true, false, true, false, tMS);
-        _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: ['ktFireworkSparkler']}, {space: false, time: tMS}, {x: hD, y: vD});
+        _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: [display.kappa.clsID.Firework.Sparkler]}, {space: false, time: tMS}, {x: hD, y: vD});
        }
 
        return $c_Fireworks;
@@ -3666,7 +3681,7 @@
          ' --emote-width: ' + eW + 'px;' +
          ' transform: translate(' + oX + 'px, ' + oY + 'px);' +
          _styleEmote([], [], [], [], [], [], true, false, true, false, tMS);
-        _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: ['ktSpiral']}, {space: false, time: tMS}, {x: hD, y: vD});
+        _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: [display.kappa.clsID.Spiral]}, {space: false, time: tMS}, {x: hD, y: vD});
        }
 
        return $c_Spiral;
@@ -3738,7 +3753,7 @@
         if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const img = document.createElement('img');
-        img.setAttribute('class', ['emote', 'ktPyramid', ...cAppend].join(' '));
+        img.setAttribute('class', ['emote', display.kappa.clsID.Pyramid.Show, ...cAppend].join(' '));
         _setImgSrc(img, url);
         img.dataset.msgid = oID;
         const h = Math.floor(eH * x);
@@ -3775,7 +3790,7 @@
          return;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time);
         const pT = Math.floor(tMS * timing.kappa.Pyramid.hide);
-        img.classList.replace('ktPyramid', 'ktPyramidDrop');
+        img.classList.replace(display.kappa.clsID.Pyramid.Show, display.kappa.clsID.Pyramid.Drop);
         img.style.transform = 'translateY(' + sH + 'px)';
         _gc.hook(img, false, true, pT);
        }
@@ -3850,7 +3865,7 @@
         if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const img = document.createElement('img');
-        img.setAttribute('class', ['emote', 'ktSmallPyramid', ...cAppend].join(' '));
+        img.setAttribute('class', ['emote', display.kappa.clsID.SmallPyramid.Show, ...cAppend].join(' '));
         _setImgSrc(img, url);
         img.dataset.msgid = oID;
         const h = oX + eH * x;
@@ -3887,7 +3902,7 @@
          return;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time);
         const pT = Math.floor(tMS * timing.kappa.SmallPyramid.hide);
-        img.classList.replace('ktSmallPyramid', 'ktSmallPyramidDrop');
+        img.classList.replace(display.kappa.clsID.SmallPyramid.Show, display.kappa.clsID.SmallPyramid.Drop);
         img.style.transform = 'translateY(' + sH + 'px)';
         _gc.hook(img, false, true, pT);
        }
@@ -4018,7 +4033,7 @@
          ' --emote-width: ' + eW + 'px;' +
          ' transform: translate(' + oX + 'px, ' + v + 'px);' +
           _styleEmoteString([], [], [], [], [], []);
-        const r = _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: ['ktStampede']}, {space: false, time: tSpeed}, {x: dX, y: v});
+        const r = _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: [display.kappa.clsID.Stampede]}, {space: false, time: tSpeed}, {x: dX, y: v});
         if (r.length < 1)
          return null;
         window.setTimeout(_tMark, tSpeed, tInit, eInf.origin, r[0]);
@@ -4194,7 +4209,7 @@
         if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const box = document.createElement('div');
-        box.setAttribute('class', 'scene ktCongaIn');
+        box.setAttribute('class', 'scene ' + display.kappa.clsID.Conga.In);
         const img = document.createElement('img');
         img.setAttribute('class', ['dancer', ...cAppend].join(' '));
         _setImgSrc(img, url);
@@ -4235,7 +4250,7 @@
          sE = sB - sW;
         }
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.hide);
-        box.classList.replace('ktCongaIn', 'ktCongaOut');
+        box.classList.replace(display.kappa.clsID.Conga.In, display.kappa.clsID.Conga.Out);
         _gc.hook(box, true, true, Math.ceil(tMS * 1.25));
         shared.doNextFrame(_tMove, tInit, box, sE);
        }
@@ -5402,7 +5417,27 @@
      return {
       show: $show,
       hide: $hide,
-      eraseConga: $eraseConga
+      eraseConga: $eraseConga,
+      clsID: Object.freeze({
+       Firework: {
+        Rocket: 'ktFireworkRocket',
+        Sparkler: 'ktFireworkSparkler'
+       },
+       Spiral: 'ktSpiral',
+       Pyramid: {
+        Show: 'ktPyramid',
+        Drop: 'ktPyramidDrop'
+       },
+       SmallPyramid: {
+        Show: 'ktSmallPyramid',
+        Drop: 'ktSmallPyramidDrop'
+       },
+       Stampede: 'ktStampede',
+       Conga: {
+        In: 'ktCongaIn',
+        Out: 'ktCongaOut'
+       }
+      })
      };
     }();
 
@@ -18394,35 +18429,35 @@
 
      function _anim(h)
      {
-      let t = '\n.etStraightLine\n';
+      let t = '\n.' + display.emote.clsID.StraightLine +'\n';
       t += '{\n';
       t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time) + 'ms;\n';
       t += '}\n';
-      t += '.etThrowTwist\n';
+      t += '.' + display.emote.clsID.Throw.Twist + '\n';
       t += '{\n';
       t += ' transition: transform cubic-bezier(0.32, 0, 0.67, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.twist) + 'ms;\n';
       t += '}\n';
-      t += '.etThrowDrop\n';
+      t += '.' + display.emote.clsID.Throw.Drop + '\n';
       t += '{\n';
       t += ' transition: transform cubic-bezier(0.5, 0, 0.75, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.drop) + 'ms;\n';
       t += '}\n';
-      t += '.etPopPeekUp\n';
+      t += '.' + display.emote.clsID.Pop.PeekUp +'\n';
       t += '{\n';
       t += ' transition: transform ease-in-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.up) + 'ms;\n';
       t += '}\n';
-      t += '.etPopPeekDown\n';
+      t += '.' + display.emote.clsID.Pop.PeekDown + '\n';
       t += '{\n';
       t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.down) + 'ms;\n';
       t += '}\n';
-      t += '.etPopJumpUp\n';
+      t += '.' + display.emote.clsID.Pop.JumpUp + '\n';
       t += '{\n';
       t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.up) + 'ms;\n';
       t += '}\n';
-      t += '.etPopJumpDown\n';
+      t += '.' + display.emote.clsID.Pop.JumpDown + '\n';
       t += '{\n';
       t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.down) + 'ms;\n';
       t += '}\n';
-      t += '.etFountain\n';
+      t += '.' + display.emote.clsID.Fountain + '\n';
       t += '{\n';
       t += ' transition: transform cubic-bezier(0, 0, 0.58, 1) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Fountain.time) + 'ms;\n';
       t += '}\n';
@@ -18431,19 +18466,19 @@
       t += '{\n';
       t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time) + 'ms;\n';
       t += '}\n';
-      t += '.ktFireworkRocket\n';
+      t += '.' + display.kappa.clsID.Firework.Rocket +'\n';
       t += '{\n';
       t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time * timing.kappa.Fireworks.speed.rocket) + 'ms;\n';
       t += '}\n';
-      t += '.ktFireworkSparkler\n';
+      t += '.' + display.kappa.clsID.Firework.Sparkler + '\n';
       t += '{\n';
       t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time) + 'ms;\n';
       t += '}\n';
-      t += '.ktSpiral\n';
+      t += '.' + display.kappa.clsID.Spiral + '\n';
       t += '{\n';
       t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time) + 'ms;\n';
       t += '}\n';
-      t += '.ktPyramid\n';
+      t += '.' + display.kappa.clsID.Pyramid.Show + '\n';
       t += '{\n';
       let ctP = 0;
       const lP = pyramidDist.length;
@@ -18455,31 +18490,31 @@
       const tPerB = Math.max(Math.floor(tP / ctP), timing.kappa.Pyramid.show.min);
       t += ' transition: transform ease-in ' + tPerB + 'ms;\n';
       t += '}\n';
-      t += '.ktPyramidDrop\n';
+      t += '.' + display.kappa.clsID.Pyramid.Drop + '\n';
       t += '{\n';
       t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.hide) + 'ms;\n';
       t += '}\n';
-      t += '.ktSmallPyramid\n';
+      t += '.' + display.kappa.clsID.SmallPyramid.Show + '\n';
       t += '{\n';
       const tSP = Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.show.total);
       const tPerSB = Math.max(Math.floor(tSP / ctP), timing.kappa.SmallPyramid.show.min);
       t += ' transition: transform ease-in ' + tPerSB + 'ms;\n';
       t += '}\n';
-      t += '.ktSmallPyramidDrop\n';
+      t += '.' + display.kappa.clsID.SmallPyramid.Drop + '\n';
       t += '{\n';
       t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.hide) + 'ms;\n';
       t += '}\n';
-      t += '.ktStampede\n';
+      t += '.' + display.kappa.clsID.Stampede + '\n';
       t += '{\n';
       t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time * timing.kappa.Stampede.speed) + 'ms;\n';
       t += '}\n';
       const congaShowMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.show);
       const congaHideMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.hide);
-      t += '.ktCongaIn\n';
+      t += '.' + display.kappa.clsID.Conga.In + '\n';
       t += '{\n';
       t += ' transition: transform linear ' + congaShowMS + 'ms;\n';
       t += '}\n';
-      t += '.ktCongaOut\n';
+      t += '.' + display.kappa.clsID.Conga.Out + '\n';
       t += '{\n';
       t += ' transition: transform ease-in ' + congaHideMS + 'ms;\n';
       t += '}\n';
