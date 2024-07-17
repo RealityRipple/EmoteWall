@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.9.5 BETA
+    * v0.9.6 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -140,6 +140,7 @@
        'Stampede': {},    // Stampede of emotes     (no fade/zoom)
        'Confetti': {},    // Fall like confetti     (no zoom, no fade in, only fade out; small emotes)
        'Conga': {},       // Start a conga line     (no fade/zoom)
+       'Coaster': {},     // Rollercoaster ride     (no fade/zoom)
        'TheCube': {       // Rotate a 3D cube of an emote (no zoom, only fade)
         size: 8/10,
         center: true,
@@ -599,6 +600,21 @@
       height: 5/6,    /* height of each row of dancers in emote heights (padding) */
       avoidMiddle: 6  /* rows to use when avoiding the middle (half top, half bottom; please use even numbers) */
      },
+     'Coaster': {
+      time: 1/4,
+      bottom: {       /* starting location of rollercoaster */
+       min: 7/10,     /*  percentages of the screen height */
+       max: 9/10
+      },
+      top: {          /* apex of rollercoaster */
+       min: 2/10,     /*  percentages of the screen height */
+       max: 4/10
+      },
+      at: {           /* initiation of loop */
+       min: 1/5,      /*  percentages of the screen width (from either side) */
+       max: 1/3
+      }
+     },
      'TheCube': {
       time: 1
      },
@@ -629,7 +645,7 @@
    const pyramidDist = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
 
    // treat these BTTV emotes as zero-width (overlapping) emotes
-   const bttvZWE = {
+   const bttvZWE = Object.freeze({
     '567b5b520e984428652809b6': [],                    //SoSnowy
     '5849c9a4f52be01a7ee5f79d': ['zweFramed'],         //IceCold
     '58487cc6f52be01a7ee5f205': ['zweHat', 'zweLPad'], //SantaHat
@@ -644,15 +660,15 @@
     '58017c088faabf4b3d008460': ['zweHat'],            //HalloFedora
     '5801777f8faabf4b3d008434': ['zweHat'],            //HalloWitch
     '5802e7a5d336345f3d4e1ed5': ['zweHat']             //HalloPirate
-   };
+   });
 
    // force-append these zero-width emotes on holidays
-   const bttvHoliday = {
-    '5802e7a5d336345f3d4e1ed5': {min: {month:  9, day: 19}, max: {month:  9, day: 19}, code: 'HalloPirate', width: 30, height: 38},
-    '5801777f8faabf4b3d008434': {min: {month: 10, day: 31}, max: {month: 10, day: 31}, code: 'HalloWitch',  width: 30, height: 38},
-    '58487cc6f52be01a7ee5f205': {min: {month: 12, day: 24}, max: {month: 12, day: 25}, code: 'SantaHat',    width: 31, height: 38},
-    '5849c9c8f52be01a7ee5f79e': {min: {month: 12, day: 31}, max: {month: 12, day: 31}, code: 'TopHat',      width: 30, height: 38}
-   };
+   const bttvHoliday = Object.freeze({
+    '5802e7a5d336345f3d4e1ed5': Object.freeze({min: Object.freeze({month:  9, day: 19}), max: Object.freeze({month:  9, day: 19}), code: 'HalloPirate', width: 30, height: 38}),
+    '5801777f8faabf4b3d008434': Object.freeze({min: Object.freeze({month: 10, day: 31}), max: Object.freeze({month: 10, day: 31}), code: 'HalloWitch',  width: 30, height: 38}),
+    '58487cc6f52be01a7ee5f205': Object.freeze({min: Object.freeze({month: 12, day: 24}), max: Object.freeze({month: 12, day: 25}), code: 'SantaHat',    width: 31, height: 38}),
+    '5849c9c8f52be01a7ee5f79e': Object.freeze({min: Object.freeze({month: 12, day: 31}), max: Object.freeze({month: 12, day: 31}), code: 'TopHat',      width: 30, height: 38})
+   });
 
    // distribution of emotes for letters in message kappagens
    const alnumDist = {
@@ -1187,20 +1203,20 @@
    //////////////////////////////////////////////////////////////////////////////
 
    const wsRetryBase = 5;
-   const oauthClient = {
+   const oauthClient = Object.freeze({
     t: '4umzcpmjkg6ar78b81s7302jlj33t8',
     yt: '71876675824-aepsnb3onligbj62r1i2qakfjh9sr8kg.apps.googleusercontent.com'
-   };
-   const cVARs = {
-    crew: {
+   });
+   const cVARs = Object.freeze({
+    crew: Object.freeze({
      st1: '#%ST1%',
      st3: '#%ST3%'
-    },
-    css: {
+    }),
+    css: Object.freeze({
      x: '%X%',
      y: '%Y%'
-    },
-    evt: {
+    }),
+    evt: Object.freeze({
      amount: '%AMOUNT%',
      result: '%RESULT%',
      sender: '%SENDER%',
@@ -1208,11 +1224,11 @@
      title: '%TITLE%',
      type: '%TYPE%',
      user: '%USER%'
-    },
-    notice: {
+    }),
+    notice: Object.freeze({
      desc: '%DESC%'
-    },
-    url: {
+    }),
+    url: Object.freeze({
      channelID: '%CHANNEL_ID%',
      channelName: '%CHANNEL_NAME%',
      chatID: '%CHAT_ID%',
@@ -1230,143 +1246,143 @@
      user: '%USER%',
      userID: '%USER_ID%',
      uri: '%URI%'
-    }
-   };
-   const cURLs = {
-    ws: {
-     twitch: {
+    })
+   });
+   const cURLs = Object.freeze({
+    ws: Object.freeze({
+     twitch: Object.freeze({
       irc: 'wss://irc-ws.chat.twitch.tv',
       eventSub: 'wss://eventsub.wss.twitch.tv/ws'
-     },
+     }),
      kick: 'wss://ws-us2.pusher.com/app/eb1d5f283081a78b932c?protocol=7&client=js&version=7.6.0&flash=false',
      streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket&token=' + cVARs.url.token,
      streamelements: 'wss://realtime.streamelements.com/socket.io/?transport=websocket',
      bttv: 'wss://sockets.betterttv.net/ws',
      '7tv': 'wss://events.7tv.io/v3'
-    },
-    sse: {
+    }),
+    sse: Object.freeze({
      '7tv': 'https://events.7tv.io/v3'
-    },
-    api: {
-     twitch: {
-      users: {
+    }),
+    api: Object.freeze({
+     twitch: Object.freeze({
+      users: Object.freeze({
        name: 'https://api.twitch.tv/helix/users?login=' + cVARs.url.user,
        id: 'https://api.twitch.tv/helix/users?id=' + cVARs.url.userID,
-      },
-      bits: {
+      }),
+      bits: Object.freeze({
        cheermotes: 'https://api.twitch.tv/helix/bits/cheermotes?broadcaster_id=' + cVARs.url.channelID
-      },
-      channels: {
+      }),
+      channels: Object.freeze({
        root: 'https://api.twitch.tv/helix/channels?broadcaster_id=' + cVARs.url.channelID,
        followers: 'https://api.twitch.tv/helix/channels/followers?user_id=' + cVARs.url.userID + '&broadcaster_id=' + cVARs.url.channelID
-      },
-      chat: {
-       emotes: {
+      }),
+      chat: Object.freeze({
+       emotes: Object.freeze({
         root: 'https://api.twitch.tv/helix/chat/emotes?broadcaster_id=' + cVARs.url.channelID,
         global: 'https://api.twitch.tv/helix/chat/emotes/global'
-       }
-      },
-      eventSub: {
+       })
+      }),
+      eventSub: Object.freeze({
        get: 'https://api.twitch.tv/helix/eventsub/subscriptions',
        delete: 'https://api.twitch.tv/helix/eventsub/subscriptions?id=' + cVARs.url.eventID
-      },
+      }),
       validate: 'https://id.twitch.tv/oauth2/validate'
-     },
-     youtube: {
+     }),
+     youtube: Object.freeze({
       broadcasts: 'https://youtube.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status&broadcastStatus=all&broadcastType=all&maxResults=50',
-      livechat: {
-       messages: {
+      livechat: Object.freeze({
+       messages: Object.freeze({
         init: 'https://youtube.googleapis.com/youtube/v3/liveChat/messages?liveChatId=' + cVARs.url.chatID + '&part=' + cVARs.url.part + '&maxResults=2000',
         page: 'https://youtube.googleapis.com/youtube/v3/liveChat/messages?liveChatId=' + cVARs.url.chatID + '&part=' + cVARs.url.part + '&pageToken=' + cVARs.url.page + '&maxResults=2000'
-       },
+       }),
        emojis: 'https://realityripple.com/Tools/ytEmojiDB/read.php',
        superstickers: 'https://cdn.jsdelivr.net/gh/realityripple/yt-super-stickers/list.json'
-      },
-      subscriptions: {
+      }),
+      subscriptions: Object.freeze({
        recent: 'https://www.googleapis.com/youtube/v3/subscriptions?part=' + cVARs.url.part + '&myRecentSubscribers=true&maxResults=50',
        match: 'https://www.googleapis.com/youtube/v3/subscriptions?part=' + cVARs.url.part + '&channelId=' + cVARs.url.user + '&forChannelId=' + cVARs.url.channelID
-      },
+      }),
       tokeninfo: 'https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=' + cVARs.url.token
-     },
-     kick: {
+     }),
+     kick: Object.freeze({
       users: 'https://kick.com/api/v2/channels/' + cVARs.url.channelName + '/users/' + cVARs.url.user,
       channels: 'https://kick.com/api/v2/channels/' + cVARs.url.channelName,
       followers: 'https://kick.com/api/internal/v1/channels/' + cVARs.url.channelName + '/followers-count',
       emotes: 'https://kick.com/emotes/' + cVARs.url.channelName
-     },
-     ffz: {
-      set: {
+     }),
+     ffz: Object.freeze({
+      set: Object.freeze({
        global: 'https://api.frankerfacez.com/v1/set/global'
-      },
-      room: {
+      }),
+      room: Object.freeze({
        twitch: 'https://api.frankerfacez.com/v1/room/id/' + cVARs.url.channelID,
        youtube: 'https://api.frankerfacez.com/v1/room/yt/' + cVARs.url.channelID
-      }
-     },
-     bttv: {
-      emotes: {
+      })
+     }),
+     bttv: Object.freeze({
+      emotes: Object.freeze({
        global: 'https://api.betterttv.net/3/cached/emotes/global'
-      },
-      users: {
+      }),
+      users: Object.freeze({
        twitch: 'https://api.betterttv.net/3/cached/users/twitch/' + cVARs.url.channelID,
        youtube: 'https://api.betterttv.net/3/cached/users/youtube/' + cVARs.url.channelID
-      }
-     },
-     '7tv': {
-      emotes: {
+      })
+     }),
+     '7tv': Object.freeze({
+      emotes: Object.freeze({
        global: 'https://7tv.io/v3/emote-sets/global',
        set: 'https://7tv.io/v3/emote-sets/' + cVARs.url.setID
-      },
-      users: {
+      }),
+      users: Object.freeze({
        twitch: 'https://7tv.io/v3/users/twitch/' + cVARs.url.channelID,
        youtube: 'https://7tv.io/v3/users/youtube/' + cVARs.url.channelID,
        kick: 'https://7tv.io/v3/users/kick/' + cVARs.url.channelID
-      }
-     },
-     streamelements: {
+      })
+     }),
+     streamelements: Object.freeze({
       validate: 'https://api.streamelements.com/oauth2/validate'
-     },
-     rr: {
-      refresh: {
+     }),
+     rr: Object.freeze({
+      refresh: Object.freeze({
        t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
        yt: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2yt.php',
        se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php'
-      }
-     }
-    },
-    cdn: {
-     twitch: {
+      })
+     })
+    }),
+    cdn: Object.freeze({
+     twitch: Object.freeze({
       emote: 'https://static-cdn.jtvnw.net/emoticons/v2/' + cVARs.url.emoteID + '/default/dark/3.0'
-     },
-     youtube: {
+     }),
+     youtube: Object.freeze({
       emoji: 'https://yt3.ggpht.com/' + cVARs.url.emojiID + '=w112-h112-c-k-nd',
       sticker: 'https://yt3.ggpht.com/' + cVARs.url.stickerID + '=s256-rwa'
-     },
-     kick: {
+     }),
+     kick: Object.freeze({
       emote: 'https://files.kick.com/emotes/' + cVARs.url.emoteID + '/fullsize'
-     },
-     emoji: {
+     }),
+     emoji: Object.freeze({
       list: 'https://cdn.jsdelivr.net/gh/realityripple/emoji/list.min.json',
       image: 'https://cdn.jsdelivr.net/gh/realityripple/emoji/' + cVARs.url.setID + '/' + cVARs.url.emojiID + '.png'
-     },
-     bttv: {
+     }),
+     bttv: Object.freeze({
       emote: 'https://cdn.betterttv.net/emote/' + cVARs.url.emoteID + '/3x'
-     }
-    },
-    html: {
-     rr: {
-      auth: {
+     })
+    }),
+    html: Object.freeze({
+     rr: Object.freeze({
+      auth: Object.freeze({
        t: 'https://realityripple.com/Tools/Twitch/EmoteWall/twitch.php',
        yt: 'https://realityripple.com/Tools/Twitch/EmoteWall/youtube.php'
-      },
+      }),
       redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php'
-     },
+     }),
      twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=' + cVARs.url.clientID + '&redirect_uri=' + cVARs.url.uri + '&response_type=code&scope=' + cVARs.url.scope + '&state=redirto_' + cVARs.url.origin + '&force_verify=true',
      youtube: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=' + cVARs.url.clientID + '&redirect_uri=' + cVARs.url.uri + '&response_type=code&access_type=offline&scope=' + cVARs.url.scope + '&state=redirto_' + cVARs.url.origin + '&prompt=consent%20select_account&include_granted_scopes=false'
-    }
-   };
-   const cScopes = {
-    twitch: {
+    })
+   });
+   const cScopes = Object.freeze({
+    twitch: Object.freeze({
      read: 'chat:read',
      followers: 'moderator:read:followers',
      shoutouts: 'moderator:read:shoutouts',
@@ -1376,14 +1392,14 @@
      predictions: 'channel:read:predictions',
      goals: 'channel:read:goals',
      charity: 'channel:read:charity'
-    },
-    youtube: {
+    }),
+    youtube: Object.freeze({
      readonly: 'https://www.googleapis.com/auth/youtube.readonly',
      memberships: 'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
-    }
-   };
-   const cSources = {
-    service: {
+    })
+   });
+   const cSources = Object.freeze({
+    service: Object.freeze({
      url: Symbol(),
      cheer: Symbol(),
      twitch: Symbol(),
@@ -1393,33 +1409,33 @@
      bttv: Symbol(),
      '7tv': Symbol(),
      emoji: Symbol()
-    },
-    scope: {
+    }),
+    scope: Object.freeze({
      user: Symbol(),
      global: Symbol(),
      channel: Symbol()
-    }
-   };
-   const cCrew = {
+    })
+   });
+   const cCrew = Object.freeze({
     id: '0d9e',
     prefix: 'data:image/svg+xml,',
-    svg: {
-     tag: {
+    svg: Object.freeze({
+     tag: Object.freeze({
       open: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">',
       close: '</svg>'
-     },
+     }),
      body: '<ellipse cx="533.9" cy="929.8" rx="295.8" ry="39.4" class="st0"/><path d="M812 403c25-28 39-63 36-98-3-41-29-80-72-111l-16-11a193 193 0 0 0-77-105c-34-21-70-31-102-39-18-5-33-4-46-3h-24c-37-5-74 3-108 24-31 19-58 47-76 79-25 44-35 93-41 140l-25 1c-27 0-60 0-84 26-20 23-21 53-22 73-3 73-5 150-3 225 1 44 6 89 39 120 26 24 59 30 89 30l10-1 6 60c4 25 8 49 21 71a113 113 0 0 0 116 51c46-8 84-45 94-90 5-22 3-43 2-62l-1-24h33c-8 44 7 91 40 120a115 115 0 0 0 87 27c31-3 57-17 75-39 19-24 26-54 31-82 21-126 28-254 18-382z"/><path d="m760 495-1-52c-20 10-44 18-72 24-26 6-50 9-73 9a184 184 0 0 1-179-123c-14-42-12-91 7-133 20-45 69-58 99-66 46-13 94-13 140-3-9-10-19-20-29-25-26-17-57-26-85-33-9-2-17-1-28-1-11 1-22 2-37 0-53-8-103 33-126 75l-4 6c-25 50-31 109-35 165-9 156-4 313 15 468 3 19 5 37 13 50 11 18 36 28 58 24 23-4 44-24 49-47 4-14 2-29 1-46-1-19-3-40 2-62 3-12 13-21 26-22h2c23 0 135-1 190-5 0 0-28 52-74 59-9 28-2 62 19 80 11 10 28 15 45 13 15-1 28-8 36-18 11-14 15-34 19-56 16-93 24-187 22-281zm-482-99 3-60h-20c-22 0-36 1-43 8-6 8-7 25-7 37l-1 18c-2 68-4 137-3 204 1 32 5 63 22 80 14 12 34 15 56 15-8-101-10-201-7-302z" class="st1"/><path d="M792 322c-3 20-15 40-33 55-20 16-47 27-84 36-42 9-75 10-103 2-38-12-70-42-83-80-11-29-9-63 4-92l6-9c7-8 21-17 57-26a230 230 0 0 1 188 32c39 28 47 55 48 69v13z" class="st2"/><path d="M285 698c-22 0-42-3-56-15-17-17-21-48-21-80-2-67 0-136 2-204 20-8 45-7 68-3-3 101-1 201 7 302zm475-203c-15 58-56 109-111 133-73 32-165 11-215-49-32-39-45-90-54-140-15-87-18-177-8-266-25 50-31 109-35 165-9 156-4 313 15 468 3 19 5 37 13 50 11 18 36 28 58 24 23-4 44-24 49-47 4-14 2-29 1-46-1-19-3-40 2-62 3-12 13-21 26-22h2c23 0 135-1 190-5 0 0-28 52-74 59-9 28-2 62 19 80 11 10 28 15 45 13 15-1 28-8 36-18 11-14 15-34 19-56 16-93 24-187 22-281z" class="st3"/><path d="M792 322c-3 20-15 40-33 55-20 16-47 27-84 36-42 9-75 10-103 2-38-12-70-42-83-80-11-29-9-63 4-92l6-9c7 11 13 40 18 49 10 17 26 33 44 44 38 23 84 28 128 22 35-4 69-15 103-27z" class="st4"/><path d="M614 274c-7-3-13-9-13-17-1-11 11-18 21-22 30-10 63-8 91 3 9 4 17 9 18 18 1 10-9 18-19 19s-20-3-29-4c-23-4-45 11-69 3z" class="st5"/></svg>'
-    },
-    css: {
-     tag: {
+    }),
+    css: Object.freeze({
+     tag: Object.freeze({
       open: '<style type="text/css">',
       close: '</style>'
-     },
+     }),
      body: '.st0{fill:#484C4D;}.st1{fill:' + cVARs.crew.st1 + ';}.st2{fill:#A3D3E3;}.st3{opacity:0.5;fill:' + cVARs.crew.st3 + ';}.st4{opacity:0.45;fill:#5B7882;}.st5{fill:#FFFFFF;}',
      flip: 'svg{transform: scaleX(-1);}'
-    },
+    }),
     colors: [['C51111', '300060'], ['132FD2', '00004A'], ['10802D', '021B2E'], ['ED53B9', '6B05A1'], ['EF7D0E', '730020'], ['F5F558', '8E1800'], ['3F484E', '000000'], ['D5E0EF', '2E4A8D'], ['6B30BC', '0E003C'], ['72491E', '4A040A'], ['39FEDB', '1054A1'], ['50EF3A', '006144'], ['938877', '14000A'], ['E27060', '983262'], ['F5E4A5', 'B89268'], ['F1C6D0', 'DA749C'], ['738593', '162638'], ['761E1C', '4A102C']]
-   };
+   });
 
    const notice = function()
    {
@@ -1429,11 +1445,11 @@
     const _iHide = 5000;
     const _states = {};
     const _timers = {};
-    const _sTypes = {
+    const _sTypes = Object.freeze({
      info: Symbol(),
      warning: Symbol(),
      error: Symbol()
-    };
+    });
     const idNoticeLine = 'noticeLine';
     const idNotices = 'notices';
     const idNotice = 'notice' + cVARs.notice.desc;
@@ -1842,7 +1858,7 @@
      const css = document.getElementsByTagName('STYLE')[0];
      let spc = {indent: 0};
      let h = shared.unIndent(css.innerHTML, spc);
-     h = h.replace(notice.Hide.FIND, notice.Hide.REPLACE);
+     h = h.replaceAll('/* {INSERT:NOTICE_OFF} *\/', 'display: none;');
      h = shared.reIndent(h, spc);
      css.innerHTML = h;
     }
@@ -1871,10 +1887,6 @@
      copyAndOpen: $copyAndOpen,
      expect: 0,
      active: 0,
-     Hide: Object.freeze({
-      FIND: '\n#notices\n{\n',
-      REPLACE: '\n#notices\n{\n display: none;\n'
-     }),
      Type: Object.freeze({
       GLOBAL_CFG: Symbol(0x01),
       GLOBAL_OBS: Symbol(0x09),
@@ -1923,16 +1935,16 @@
     let _eActive = 0;
     let _iTitanic = 0;
     const _cRadius = Math.PI * 2;
-    const _tAnim = {
-     fade: {
+    const _tAnim = Object.freeze({
+     fade: Object.freeze({
       in: 8,
       out: 8
-     },
-     zoom: {
+     }),
+     zoom: Object.freeze({
       in: 17,
       out: 8
-     }
-    };
+     })
+    });
 
     const $emote = function()
     {
@@ -1993,13 +2005,13 @@
 
       const $StraightLine = function()
       {
-       const _Sides = {
+       const _Sides = Object.freeze({
         NONE: 0x00,
         LEFT: 0x01,
         RIGHT: 0x02,
         TOP: 0x04,
         BOTTOM: 0x08
-       };
+       });
 
        function $c_StraightLine(eInf, sW, sH, eH, x = false, y = false, canV = true, tInit = 0)
        {
@@ -2065,7 +2077,7 @@
          ' --emote-width: ' + eW + 'px;' +
          ' ' + sO +
          _styleEmote([], [], [], [], [], [], cfg.emote.in.fade, cfg.emote.in.zoom, cfg.emote.out.fade, cfg.emote.out.zoom, tMS);
-        const aC = ['etStraightLine'];
+        const aC = [display.emote.clsID.StraightLine];
         _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: aC}, {time: tMS}, {x: hD, y: vD});
         if (cfg.display.toroidal)
         {
@@ -2596,13 +2608,13 @@
         * offset-path requires support for offset-anchor/offset-position
         * due to transform-origin changes during squash
         */
-       const _Wall = {
+       const _Wall = Object.freeze({
         NONE: 0,
         LEFT: 1,
         TOP: 2,
         RIGHT: 3,
         BOTTOM: 4
-       };
+       });
        const _Origin = ['center', 'left', 'top', 'right', 'bottom'];
        const _Squash = ['no', 'horizontal', 'vertical', 'horizontal', 'vertical'];
 
@@ -2933,7 +2945,7 @@
          ' --emote-width: ' + eW + 'px;' +
          ' transform: translate(' + hD + 'px, ' + (sH - dH) + 'px) rotate(' + r + 'deg);' +
          _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
-        const iArr = _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: ['etThrowTwist']}, {space: false, time: tMS});
+        const iArr = _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: [display.emote.clsID.Throw.Twist]}, {space: false, time: tMS});
         if (iArr.length < 1)
          return;
         shared.doNextFrame(_tMove, tInit, eInf.origin, iArr, hD, vD);
@@ -2960,7 +2972,7 @@
          return;
         for (let i = 0, l = iArr.length; i < l; i++)
         {
-         iArr[i].classList.replace('etThrowTwist', 'etThrowDrop');
+         iArr[i].classList.replace(display.emote.clsID.Throw.Twist, display.emote.clsID.Throw.Drop);
          iArr[i].setAttribute('style', s2);
         }
        }
@@ -3063,7 +3075,7 @@
          ' left: ' + h + 'px;' +
          ' transform: translateY(' + v + 'px);'+
          _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
-        const iArr = _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: ['etPopPeek']}, {space: false, time: tMS});
+        const iArr = _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: [display.emote.clsID.Pop.Peek]}, {space: false, time: tMS});
         if (iArr.length < 1)
          return;
         shared.doNextFrame(_tMove, tInit, eInf.origin, iArr, sB);
@@ -3080,10 +3092,10 @@
          return;
         for (let i = 0, l = iArr.length; i < l; i++)
         {
-         iArr[i].classList.replace('etPopJumpUp', 'etPopJumpDown');
-         iArr[i].classList.replace('etPopPeekDown', 'etPopJumpUp');
-         iArr[i].classList.replace('etPopPeekUp', 'etPopPeekDown');
-         iArr[i].classList.replace('etPopPeek', 'etPopPeekUp');
+         iArr[i].classList.replace(display.emote.clsID.Pop.JumpUp, display.emote.clsID.Pop.JumpDown);
+         iArr[i].classList.replace(display.emote.clsID.Pop.PeekDown, display.emote.clsID.Pop.JumpUp);
+         iArr[i].classList.replace(display.emote.clsID.Pop.PeekUp, display.emote.clsID.Pop.PeekDown);
+         iArr[i].classList.replace(display.emote.clsID.Pop.Peek, display.emote.clsID.Pop.PeekUp);
          iArr[i].style.transform = 'translateY( ' + vD + 'px)';
         }
        }
@@ -3280,7 +3292,7 @@
         ' transform: translateX(' + h + 'px);' +
         ' offset-path: path("M 0 ' + sH + ' L 0 ' + Math.floor(fY * sH + shared.rnd(sB / 2)) + ' L 0 ' + (sH + eH) + '");' +
         _styleEmoteString(aNames, aDelays, aDurs, aTimings, aFills, aIters, tMS);
-       _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: ['etFountain']}, {time: tMS, space: false}, {x: hD});
+       _addEmoteAndZWEs(tInit, eInf, variationSize, {style: s, classes: [display.emote.clsID.Fountain]}, {time: tMS, space: false}, {x: hD});
       }
 
       return {
@@ -3402,7 +3414,22 @@
      return {
       showEmotes: $showEmotes,
       addToShowList: $addToShowList,
-      list: $list
+      list: $list,
+      clsID: Object.freeze({
+       StraightLine: 'etStraightLine',
+       Throw: Object.freeze({
+        Twist: 'etThrowTwist',
+        Drop: 'etThrowDrop'
+       }),
+       Pop: Object.freeze({
+        Peek: 'etPopPeek',
+        PeekUp: 'etPopPeekUp',
+        PeekDown: 'etPopPeekDown',
+        JumpUp: 'etPopJumpUp',
+        JumpDown: 'etPopJumpDown'
+       }),
+       Fountain: 'etFountain'
+      })
      };
     }();
 
@@ -3423,7 +3450,7 @@
         const tInit = new Date().getTime();
         if (_iTitanic > tInit)
          return;
-        let kClean = [];
+        const kClean = [];
         for (let i = 0, l = kList.length; i < l; i++)
         {
          if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
@@ -3447,7 +3474,7 @@
          ' --emote-width: ' + eW + 'px;' +
          ' transform: translate(' + oX + 'px, ' + oY + 'px);';
         _eActive--;
-        const iArr = _addEmoteAndZWEs(tInit, oK, 1, {style: s, classes: ['ktFireworkRocket']}, false, {x: cX - eWh, y: cY});
+        const iArr = _addEmoteAndZWEs(tInit, oK, 1, {style: s, classes: [display.kappa.clsID.Firework.Rocket]}, false, {x: cX - eWh, y: cY});
         if (iArr.length < 1)
          return;
         window.setTimeout(_explode, sendUp, tInit, kList, iArr, cX, cY, eH, sW, sH, iKC);
@@ -3482,7 +3509,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         let kClean = [];
+         const kClean = [];
          for (let i = 0, l = kList.length; i < l; i++)
          {
           if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
@@ -3508,7 +3535,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         let kClean = [];
+         const kClean = [];
          for (let i = 0, l = kList.length; i < l; i++)
          {
           if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
@@ -3533,7 +3560,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         let kClean = [];
+         const kClean = [];
          for (let i = 0, l = kList.length; i < l; i++)
          {
           if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
@@ -3570,7 +3597,7 @@
          ' --emote-width: ' + eW + 'px;' +
          ' transform: translate(' + eX + 'px, ' + cY + 'px);' +
          _styleEmote([], [], [], [], [], [], true, false, true, false, tMS);
-        _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: ['ktFireworkSparkler']}, {space: false, time: tMS}, {x: hD, y: vD});
+        _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: [display.kappa.clsID.Firework.Sparkler]}, {space: false, time: tMS}, {x: hD, y: vD});
        }
 
        return $c_Fireworks;
@@ -3616,7 +3643,7 @@
           if (th >= _cRadius)
            th -= _cRadius;
          }
-         let kClean = [];
+         const kClean = [];
          for (let j = 0, l = kList.length; j < l; j++)
          {
           if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
@@ -3650,7 +3677,7 @@
          ' --emote-width: ' + eW + 'px;' +
          ' transform: translate(' + oX + 'px, ' + oY + 'px);' +
          _styleEmote([], [], [], [], [], [], true, false, true, false, tMS);
-        _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: ['ktSpiral']}, {space: false, time: tMS}, {x: hD, y: vD});
+        _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: [display.kappa.clsID.Spiral]}, {space: false, time: tMS}, {x: hD, y: vD});
        }
 
        return $c_Spiral;
@@ -3687,7 +3714,7 @@
          {
           x = shared.rnd(lP);
          } while (drawn[x] >= pyramidDist[x]);
-         let kClean = [];
+         const kClean = [];
          for (let j = 0, l = kList.length; j < l; j++)
          {
           if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
@@ -3722,7 +3749,7 @@
         if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const img = document.createElement('img');
-        img.setAttribute('class', ['emote', 'ktPyramid', ...cAppend].join(' '));
+        img.setAttribute('class', ['emote', display.kappa.clsID.Pyramid.Show, ...cAppend].join(' '));
         _setImgSrc(img, url);
         img.dataset.msgid = oID;
         const h = Math.floor(eH * x);
@@ -3759,7 +3786,7 @@
          return;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time);
         const pT = Math.floor(tMS * timing.kappa.Pyramid.hide);
-        img.classList.replace('ktPyramid', 'ktPyramidDrop');
+        img.classList.replace(display.kappa.clsID.Pyramid.Show, display.kappa.clsID.Pyramid.Drop);
         img.style.transform = 'translateY(' + sH + 'px)';
         _gc.hook(img, false, true, pT);
        }
@@ -3799,7 +3826,7 @@
          {
           x = shared.rnd(lP);
          } while (drawn[x] >= pyramidDist[x]);
-         let kClean = [];
+         const kClean = [];
          for (let j = 0, l = kList.length; j < l; j++)
          {
           if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
@@ -3834,7 +3861,7 @@
         if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const img = document.createElement('img');
-        img.setAttribute('class', ['emote', 'ktSmallPyramid', ...cAppend].join(' '));
+        img.setAttribute('class', ['emote', display.kappa.clsID.SmallPyramid.Show, ...cAppend].join(' '));
         _setImgSrc(img, url);
         img.dataset.msgid = oID;
         const h = oX + eH * x;
@@ -3871,7 +3898,7 @@
          return;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time);
         const pT = Math.floor(tMS * timing.kappa.SmallPyramid.hide);
-        img.classList.replace('ktSmallPyramid', 'ktSmallPyramidDrop');
+        img.classList.replace(display.kappa.clsID.SmallPyramid.Show, display.kappa.clsID.SmallPyramid.Drop);
         img.style.transform = 'translateY(' + sH + 'px)';
         _gc.hook(img, false, true, pT);
        }
@@ -3932,7 +3959,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         let kClean = [];
+         const kClean = [];
          for (let j = 0, l = kList.length; j < l; j++)
          {
           if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
@@ -4002,7 +4029,7 @@
          ' --emote-width: ' + eW + 'px;' +
          ' transform: translate(' + oX + 'px, ' + v + 'px);' +
           _styleEmoteString([], [], [], [], [], []);
-        const r = _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: ['ktStampede']}, {space: false, time: tSpeed}, {x: dX, y: v});
+        const r = _addEmoteAndZWEs(tInit, eInf, 1, {style: s, classes: [display.kappa.clsID.Stampede]}, {space: false, time: tSpeed}, {x: dX, y: v});
         if (r.length < 1)
          return null;
         window.setTimeout(_tMark, tSpeed, tInit, eInf.origin, r[0]);
@@ -4075,7 +4102,7 @@
         const ct = Math.floor(sW / bS);
         for (let i = 0; i < ct; i++)
         {
-         let kClean = [];
+         const kClean = [];
          for (let j = 0, l = kList.length; j < l; j++)
          {
           if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
@@ -4178,7 +4205,7 @@
         if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const box = document.createElement('div');
-        box.setAttribute('class', 'scene ktCongaIn');
+        box.setAttribute('class', 'scene ' + display.kappa.clsID.Conga.In);
         const img = document.createElement('img');
         img.setAttribute('class', ['dancer', ...cAppend].join(' '));
         _setImgSrc(img, url);
@@ -4219,7 +4246,7 @@
          sE = sB - sW;
         }
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.hide);
-        box.classList.replace('ktCongaIn', 'ktCongaOut');
+        box.classList.replace(display.kappa.clsID.Conga.In, display.kappa.clsID.Conga.Out);
         _gc.hook(box, true, true, Math.ceil(tMS * 1.25));
         shared.doNextFrame(_tMove, tInit, box, sE);
        }
@@ -4232,6 +4259,131 @@
        }
 
        return $c_Conga;
+      }();
+
+      const $Coaster = function()
+      {
+       async function $c_Coaster(kList, sW, sH, eH, iKC)
+       {
+        const tInit = new Date().getTime();
+        if (_iTitanic > tInit)
+         return;
+        const d = shared.rnd(2) === 0;
+        const kClean = [];
+        for (let j = 0, l = kList.length; j < l; j++)
+        {
+         if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
+          continue;
+         kClean.push(kList[j]);
+        }
+        if (kClean.length < 1)
+         return;
+        let maxW = 0;
+        const kCars = [];
+        for (let i = 0; i < iKC; i++)
+        {
+         const oK = kClean[shared.rnd(kClean.length)];
+         kCars.push(oK);
+         let eW = eH;
+         if (oK.hasOwnProperty('width') && oK.hasOwnProperty('height'))
+          eW = oK.width / oK.height * eH;
+         if (eW > maxW)
+          maxW = eW;
+        }
+        const tMS = cfg.emote.time * 1000 * timing.kappa.Coaster.time;
+        const yBase = Math.floor(sH * _rndFromRange(timing.kappa.Coaster.bottom));
+        const yCrest = Math.floor(sH * _rndFromRange(timing.kappa.Coaster.top));
+        const xAt = Math.floor((sW + maxW) * _rndFromRange(timing.kappa.Coaster.at));
+        const dist = xAt + ((yBase - yCrest) * Math.PI);
+        const vel = tMS / dist;
+        for (let i = 0; i < iKC; i++)
+        {
+         let eW = eH;
+         if (kCars[i].hasOwnProperty('width') && kCars[i].hasOwnProperty('height'))
+          eW = kCars[i].width / kCars[i].height * eH;
+         let ms = Math.ceil(eW * vel);
+         if (ms < shared.mspf.value)
+          ms = shared.mspf.value;
+         if (d)
+          await _sleep(ms);
+         shared.doNextFrame(_car, tInit, kCars[i], d, vel, yBase, yCrest, xAt, sW, eH, maxW);
+         if (!d)
+          await _sleep(ms);
+        }
+       }
+
+       function _car(tInit, eInf, d, vel, yBase, yCrest, xAt, sW, eH, maxW)
+       {
+        if (_iTitanic > tInit)
+         return;
+        if (typeof eInf.origin !== 'undefined' && display.erasedMsgs.includes(eInf.origin))
+         return;
+        let eW = eH;
+        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
+         eW = eInf.width / eInf.height * eH;
+        const oX = d ? sW : -1 * maxW;
+        const oR = (yBase - yCrest) / 2;
+        const xForm = {
+         str: 'perspective(10px) translateZ(0px) translateX(%Apx) rotate(%Bdeg) translateZ(%Cpx)',
+         a: 0,
+         b: 0,
+         c: 0,
+         val: function()
+         {
+          return this.str.replaceAll('%A', this.a).
+                          replaceAll('%B', this.b).
+                          replaceAll('%C', this.c);
+         }
+        };
+        const s = 'left: ' + oX + 'px;' +
+         ' top: ' + yBase + 'px;' +
+         ' --emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eW + 'px;' +
+         ' transform: ' + xForm.val() + ';' +
+         ' transform-origin: center -' + oR + 'px;' +
+         ' transition: transform linear 0ms;' +
+          _styleEmoteString([], [], [], [], [], []);
+        const tLoop = cfg.emote.time * 1000 * timing.kappa.Coaster.time;
+        const r = _addEmoteAndZWEs(tInit, eInf, 1, {style: s}, {space: false, time: tLoop});
+        if (r.length < 1)
+         return;
+        shared.doNextFrame(_straight, tInit, r, eInf.origin, d, vel, xForm, yBase, yCrest, xAt);
+       }
+
+       function _straight(tInit, r, oID, d, vel, xForm, yBase, yCrest, xAt)
+       {
+        if (_iTitanic > tInit)
+         return 0;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
+         return;
+        xForm.a = d ? -1 * xAt : xAt;
+        const tNext = Math.floor(vel * xAt);
+        for (let i = 0, l = r.length; i < l; i++)
+        {
+         r[i].style.transitionDuration = tNext + 'ms';
+         r[i].style.transform = xForm.val();
+        }
+        window.setTimeout(_loop, tNext, tInit, r, oID, d, vel, xForm, yBase, yCrest);
+       }
+
+       function _loop(tInit, r, oID, d, vel, xForm, yBase, yCrest)
+       {
+        if (_iTitanic > tInit)
+         return 0;
+        if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
+         return;
+        const xLoop = (yBase - yCrest) * Math.PI;
+        xForm.b = d ? 360 : -360;
+        xForm.c = 7;
+        const tNext = Math.floor(vel * xLoop);
+        for (let i = 0, l = r.length; i < l; i++)
+        {
+         r[i].style.transitionDuration = tNext + 'ms';
+         r[i].style.transform = xForm.val();
+        }
+       }
+
+       return $c_Coaster;
       }();
 
       const $TheCube = function()
@@ -4253,7 +4405,7 @@
         const cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
         cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
-        let kClean = [];
+        const kClean = [];
         for (let i = 0, l = kList.length; i < l; i++)
         {
          if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
@@ -4383,7 +4535,7 @@
          } while (drawn[x] >= msgDist[x].length);
          if (msgDist[x][drawn[x]] !== 0)
          {
-          let kClean = [];
+          const kClean = [];
           for (let j = 0, l = kList.length; j < l; j++)
           {
            if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
@@ -4509,6 +4661,7 @@
        SmallPyramid: $SmallPyramid,
        Stampede: $Stampede,
        Conga: $Conga,
+       Coaster: $Coaster,
        TheCube: $TheCube,
        Text: $Text
       };
@@ -5013,6 +5166,10 @@
          avoidMiddle = true;
         _list.Conga(kList, sW, sH, eH, avoidMiddle);
         break;
+       case 'Coaster':
+        _eActive -= waitFor;
+        _list.Coaster(kList, sW, sH, eHh, kStyle.count);
+        break;
        case 'Text':
         _eActive -= waitFor;
         let sTM = 'HYPE!';
@@ -5072,7 +5229,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         let kClean = [];
+         const kClean = [];
          for (let j = 0, l = kList.length; j < l; j++)
          {
           if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
@@ -5100,7 +5257,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         let kClean = [];
+         const kClean = [];
          for (let j = 0, l = kList.length; j < l; j++)
          {
           if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
@@ -5122,7 +5279,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         let kClean = [];
+         const kClean = [];
          for (let j = 0, l = kList.length; j < l; j++)
          {
           if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
@@ -5146,7 +5303,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         let kClean = [];
+         const kClean = [];
          for (let j = 0, l = kList.length; j < l; j++)
          {
           if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
@@ -5257,7 +5414,27 @@
      return {
       show: $show,
       hide: $hide,
-      eraseConga: $eraseConga
+      eraseConga: $eraseConga,
+      clsID: Object.freeze({
+       Firework: Object.freeze({
+        Rocket: 'ktFireworkRocket',
+        Sparkler: 'ktFireworkSparkler'
+       }),
+       Spiral: 'ktSpiral',
+       Pyramid: Object.freeze({
+        Show: 'ktPyramid',
+        Drop: 'ktPyramidDrop'
+       }),
+       SmallPyramid: Object.freeze({
+        Show: 'ktSmallPyramid',
+        Drop: 'ktSmallPyramidDrop'
+       }),
+       Stampede: 'ktStampede',
+       Conga: Object.freeze({
+        In: 'ktCongaIn',
+        Out: 'ktCongaOut'
+       })
+      })
      };
     }();
 
@@ -5365,8 +5542,8 @@
       return e;
      if (!cfg.display.extended.holidayZWE)
       return e;
-     let nowM = new Date().getMonth() + 1;
-     let nowD = new Date().getDate();
+     const nowM = new Date().getMonth() + 1;
+     const nowD = new Date().getDate();
      for (const hID in bttvHoliday)
      {
       if (!bttvHoliday.hasOwnProperty(hID))
@@ -6600,26 +6777,26 @@
        sub: Object.freeze({
         follow: 'channel.follow',
         redeem: 'channel.channel_points_custom_reward_redemption.add',
-        shoutout: {
+        shoutout: Object.freeze({
          create: 'channel.shoutout.create',
          receive: 'channel.shoutout.receive'
-        },
-        hypetrain: {
+        }),
+        hypetrain: Object.freeze({
          begin: 'channel.hype_train.begin',
          end: 'channel.hype_train.end'
-        },
-        poll: {
+        }),
+        poll: Object.freeze({
          begin: 'channel.poll.begin',
          end: 'channel.poll.end'
-        },
-        prediction: {
+        }),
+        prediction: Object.freeze({
          begin: 'channel.prediction.begin',
          end: 'channel.prediction.end'
-        },
-        goal: {
+        }),
+        goal: Object.freeze({
          begin: 'channel.goal.begin',
          end: 'channel.goal.end'
-        },
+        }),
         charity: 'channel.charity_campaign.donate',
         tag: 'channel.update'
        })
@@ -6916,7 +7093,7 @@
        {
         if (!cmd.tags.hasOwnProperty('target-msg-id'))
          return;
-        for (let uID in _msgHistory)
+        for (const uID in _msgHistory)
         {
          if (!_msgHistory.hasOwnProperty(uID))
           continue;
@@ -7402,7 +7579,7 @@
         'Client-Id': twitch.net.oAuth.auth.client_id
        };
        if (post)
-        h['Content-Type'] = 'application/json'
+        h['Content-Type'] = 'application/json';
        return h;
       }
 
@@ -7480,8 +7657,7 @@
        for (let i = 0, l = a.length; i < l; i++)
        {
         const k = a[i].slice(0, a[i].indexOf('='));
-        let v = a[i].slice(a[i].indexOf('=') + 1);
-        v = v.replace(/\\s/g, ' ');
+        const v = a[i].slice(a[i].indexOf('=') + 1).replaceAll(/\\s/g, ' ');
         cmd.tags[k] = v;
        }
       }
@@ -7576,7 +7752,7 @@
 
       function $bits(cmd)
       {
-       let p = [];
+       const p = [];
        if (!service.emotes.hasOwnProperty('cheer'))
         return p;
        if (cmd.tags.bits < 1)
@@ -10536,7 +10712,7 @@
         if (lv < 1)
          return false;
         let p = [];
-        let sId = cmd.snippet.superStickerDetails.superStickerMetadata.stickerId;
+        const sId = cmd.snippet.superStickerDetails.superStickerMetadata.stickerId;
         if (_eStickers.hasOwnProperty(sId))
          p.push(_eStickers[sId]);
         if (p.length === 0)
@@ -10657,7 +10833,7 @@
         return;
        if (!cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('displayName'))
         return;
-       let dn = cmd.snippet.userBannedDetails.bannedUserDetails.displayName;
+       const dn = cmd.snippet.userBannedDetails.bannedUserDetails.displayName;
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
         return;
        display.kappa.show(false, cfg.event.youtube.ban, {[cVARs.evt.user]: dn});
@@ -10671,7 +10847,7 @@
         return;
        if (!cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('displayName'))
         return;
-       let dn = cmd.snippet.userBannedDetails.bannedUserDetails.displayName;
+       const dn = cmd.snippet.userBannedDetails.bannedUserDetails.displayName;
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
         return;
        const dDur = cmd.snippet.userBannedDetails.banDurationSeconds;
@@ -11504,7 +11680,7 @@
           return;
          if (!jData.message.hasOwnProperty('id'))
           return;
-         for (let uID in _msgHistory)
+         for (const uID in _msgHistory)
          {
           if (!_msgHistory.hasOwnProperty(uID))
            continue;
@@ -12788,7 +12964,7 @@
         let pos = emI.index;
         for (let j = 0, lP = cpList.length; j < lP; j++)
         {
-         let s = cpList[j];
+         const s = cpList[j];
          if (s === cCrew.id)
          {
           const rC = _showCrew(addList, pos, dup);
@@ -15397,8 +15573,8 @@
       }
       if (cfg.display.extended.useZWE && cfg.display.extended.holidayZWE)
       {
-       let nowM = new Date().getMonth() + 1;
-       let nowD = new Date().getDate();
+       const nowM = new Date().getMonth() + 1;
+       const nowD = new Date().getDate();
        for (const hID in hasList)
        {
         if (!hasList.hasOwnProperty(hID))
@@ -15917,7 +16093,7 @@
 
      const $socketEx = function()
      {
-      const _lDelay = 500;
+      const _lDelay = 3000;
       const _chList = {};
       let _statusWS = null;
       let _statusSSE = null;
@@ -17044,9 +17220,9 @@
      if (typeof r !== 'object' || r === null)
       r = {indent: 0};
      if (!r.hasOwnProperty('indent'))
-      return;
+      return h;
      if (r.indent < 1)
-      return;
+      return h;
      return '\n' + ' '.repeat(r.indent) + h.replaceAll('\n', '\n' + ' '.repeat(r.indent)) + '\n  ';
     }
 
@@ -18143,6 +18319,9 @@
 
     const _css = function()
     {
+     const _unShadow = new RegExp(/\n[^\n]+\/\* {DELETE:SHADOW} \*\/\s*\n/, 'g');
+     const _zPad = new RegExp(/padding:\s*([^;]+)\s+0;\s*\/\* {REPLACE:ZWE_PAD} \*\//, 'g');
+
      function $c_css()
      {
       const css = document.getElementsByTagName('STYLE')[0];
@@ -18164,41 +18343,51 @@
       {
        if (cfg.display.hue === 'rave')
        {
-        let r = 'html.rave\n';
-        r += '{\n';
-        r += ' animation: rave 3s linear infinite;\n';
-        r += '}\n';
+        let r = 'html.rave\n' +
+         '{\n' +
+         ' animation: rave 3s linear infinite;\n' +
+         '}\n';
+        let ar = 'html.rave button, html.rave div#notices\n' +
+         '{\n' +
+         ' animation: antirave 3s linear infinite;\n' +
+         '}\n';
+
         r += '@keyframes rave\n';
         r += '{\n';
+        ar += '@keyframes antirave\n';
+        ar += '{\n';
         for (let i = 0; i <= 100; i += 10)
         {
-         r += ' ' + i + '%\n';
-         r += ' {\n';
-         r += '  filter: hue-rotate(' + i * 3.6 + 'deg);\n';
-         r += ' }\n';
+         r += ' ' + i + '%\n' +
+          ' {\n' +
+          '  filter: hue-rotate(' + i * 3.6 + 'deg);\n' +
+          ' }\n';
+         ar += ' ' + i + '%\n' +
+          ' {\n' +
+          '  filter: hue-rotate(' + (360 - i * 3.6) + 'deg);\n' +
+          ' }\n';
         }
         r += '}\n';
-        r += 'html.rave button, html.rave div#notices\n';
-        r += '{\n';
-        r += ' animation: antirave 3s linear infinite;\n';
-        r += '}\n';
-        r += '@keyframes antirave\n';
-        r += '{\n';
-        for (let i = 0; i <= 100; i += 10)
-        {
-         r += ' ' + i + '%\n';
-         r += ' {\n';
-         r += '  filter: hue-rotate(' + (360 - i * 3.6) + 'deg);\n';
-         r += ' }\n';
-        }
-        r += '}\n';
-        h = r + h;
+        ar += '}\n';
+
+        h = r + ar + h;
        }
        else if (Number.isInteger(cfg.display.hue))
        {
         const iHue = parseInt(cfg.display.hue, 10);
         if (iHue > 0 && iHue < 360)
-         h = 'html\n{\n filter: hue-rotate(' + iHue + 'deg);\n}\nbutton, div#notices\n{\n filter: hue-rotate(' + (360 - iHue) + 'deg);\n}\n' + h;
+        {
+         const f = 'html\n' +
+          '{\n' +
+          ' filter: hue-rotate(' + iHue + 'deg);\n' +
+          '}\n' +
+          'button, div#notices\n' +
+          '{\n' +
+          ' filter: hue-rotate(' + (360 - iHue) + 'deg);\n' +
+          '}\n';
+
+         h = f + h;
+        }
        }
       }
       return h;
@@ -18211,20 +18400,9 @@
        let sF = shared.shadowCSS(cfg.display.shadow);
        if (sF !== false)
        {
-        let sE = '\nimg.emote\n';
-        sE += '{\n';
-        sE += ' ' + sF + '\n';
-        h = h.replace('\nimg.emote\n{\n', sE);
+        h = h.replaceAll('/* {INSERT:SHADOW} *\/', sF);
 
-        let sD = '\ndiv.scene img.dancer\n';
-        sD += '{\n';
-        sD += ' ' + sF + '\n';
-        h = h.replace('\ndiv.scene img.dancer\n{\n', sD);
-
-        let sC = '\ndiv.scene div.cube [data-face]\n';
-        sC += '{\n';
-        sC += ' ' + sF + '\n';
-        h = h.replace('\ndiv.scene div.cube [data-face]\n{\n background-color: rgba(255, 255, 255, 0.2);\n', sC);
+        h = h.replaceAll(_unShadow, '\n');
        }
       }
       return h;
@@ -18234,175 +18412,199 @@
      {
       if (cfg.display.extended.useZWE && cfg.display.extended.hasOwnProperty('fillZWE') && cfg.display.extended.fillZWE)
       {
-       h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.1)) / 2);');
-       h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.8)) / 2);');
-       h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.95)) / 2);');
-       h = h.replace('padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;', 'padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) calc((var(--zoom-width) - (var(--zoom-width) * 0.1)) / 2);');
-       let z = '\nimg.zwe\n';
-       z += '{\n';
-       z += ' object-fit: fill;\n';
-       z += '}';
-       h = h.replace('\nimg.emote\n{\n', z + '\nimg.emote\n{\n');
+       h = h.replaceAll(_zPad, function(m, m1) { return 'padding: ' + m1 + ' ' + m1.replaceAll('--zoom-height', '--zoom-width') + ';';});
+
+       const z = 'img.zwe\n' +
+        '{\n' +
+        ' object-fit: fill;\n' +
+        '}';
+       h = h.replaceAll('/* {INSERT:ZWE} *\/', z);
       }
       return h;
      }
 
      function _anim(h)
      {
-      let t = '\n.etStraightLine\n';
-      t += '{\n';
-      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time) + 'ms;\n';
-      t += '}\n';
-      t += '.etThrowTwist\n';
-      t += '{\n';
-      t += ' transition: transform cubic-bezier(0.32, 0, 0.67, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.twist) + 'ms;\n';
-      t += '}\n';
-      t += '.etThrowDrop\n';
-      t += '{\n';
-      t += ' transition: transform cubic-bezier(0.5, 0, 0.75, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.drop) + 'ms;\n';
-      t += '}\n';
-      t += '.etPopPeekUp\n';
-      t += '{\n';
-      t += ' transition: transform ease-in-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.up) + 'ms;\n';
-      t += '}\n';
-      t += '.etPopPeekDown\n';
-      t += '{\n';
-      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.down) + 'ms;\n';
-      t += '}\n';
-      t += '.etPopJumpUp\n';
-      t += '{\n';
-      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.up) + 'ms;\n';
-      t += '}\n';
-      t += '.etPopJumpDown\n';
-      t += '{\n';
-      t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.down) + 'ms;\n';
-      t += '}\n';
-      t += '.etFountain\n';
-      t += '{\n';
-      t += ' transition: transform cubic-bezier(0, 0, 0.58, 1) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Fountain.time) + 'ms;\n';
-      t += '}\n';
-      t += 'div.scene.cube:not(.kappa),\n';
-      t += 'div.scene.cube:not(.kappa) div.cube\n';
-      t += '{\n';
-      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time) + 'ms;\n';
-      t += '}\n';
-      t += '.ktFireworkRocket\n';
-      t += '{\n';
-      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time * timing.kappa.Fireworks.speed.rocket) + 'ms;\n';
-      t += '}\n';
-      t += '.ktFireworkSparkler\n';
-      t += '{\n';
-      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time) + 'ms;\n';
-      t += '}\n';
-      t += '.ktSpiral\n';
-      t += '{\n';
-      t += ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time) + 'ms;\n';
-      t += '}\n';
-      t += '.ktPyramid\n';
-      t += '{\n';
+      let t = '.' + display.emote.clsID.StraightLine +'\n' +
+       '{\n' +
+       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Throw.Twist + '\n' +
+       '{\n' +
+       ' transition: transform cubic-bezier(0.32, 0, 0.67, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.twist) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Throw.Drop + '\n' +
+       '{\n' +
+       ' transition: transform cubic-bezier(0.5, 0, 0.75, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.drop) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Pop.PeekUp +'\n' +
+       '{\n' +
+       ' transition: transform ease-in-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.up) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Pop.PeekDown + '\n' +
+       '{\n' +
+       ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.down) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Pop.JumpUp + '\n' +
+       '{\n' +
+       ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.up) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Pop.JumpDown + '\n' +
+       '{\n' +
+       ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.down) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.emote.clsID.Fountain + '\n' +
+       '{\n' +
+       ' transition: transform cubic-bezier(0, 0, 0.58, 1) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Fountain.time) + 'ms;\n' +
+       '}\n';
+
+      t += 'div.scene.cube:not(.kappa),\n' +
+       'div.scene.cube:not(.kappa) div.cube\n' +
+       '{\n' +
+       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.kappa.clsID.Firework.Rocket +'\n' +
+       '{\n' +
+       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time * timing.kappa.Fireworks.speed.rocket) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.kappa.clsID.Firework.Sparkler + '\n' +
+       '{\n' +
+       ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.kappa.clsID.Spiral + '\n' +
+       '{\n' +
+       ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time) + 'ms;\n' +
+       '}\n';
+
       let ctP = 0;
       const lP = pyramidDist.length;
       for (let i = 0; i < lP; i++)
       {
        ctP += pyramidDist[i];
       }
+
       const tP = Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.show.total);
       const tPerB = Math.max(Math.floor(tP / ctP), timing.kappa.Pyramid.show.min);
-      t += ' transition: transform ease-in ' + tPerB + 'ms;\n';
-      t += '}\n';
-      t += '.ktPyramidDrop\n';
-      t += '{\n';
-      t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.hide) + 'ms;\n';
-      t += '}\n';
-      t += '.ktSmallPyramid\n';
-      t += '{\n';
+      t += '.' + display.kappa.clsID.Pyramid.Show + '\n' +
+       '{\n' +
+       ' transition: transform ease-in ' + tPerB + 'ms;\n' +
+       '}\n' +
+       '.' + display.kappa.clsID.Pyramid.Drop + '\n' +
+       '{\n' +
+       ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.hide) + 'ms;\n' +
+       '}\n';
+
       const tSP = Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.show.total);
       const tPerSB = Math.max(Math.floor(tSP / ctP), timing.kappa.SmallPyramid.show.min);
-      t += ' transition: transform ease-in ' + tPerSB + 'ms;\n';
-      t += '}\n';
-      t += '.ktSmallPyramidDrop\n';
-      t += '{\n';
-      t += ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.hide) + 'ms;\n';
-      t += '}\n';
-      t += '.ktStampede\n';
-      t += '{\n';
-      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time * timing.kappa.Stampede.speed) + 'ms;\n';
-      t += '}\n';
+      t += '.' + display.kappa.clsID.SmallPyramid.Show + '\n' +
+       '{\n' +
+       ' transition: transform ease-in ' + tPerSB + 'ms;\n' +
+       '}\n' +
+       '.' + display.kappa.clsID.SmallPyramid.Drop + '\n' +
+       '{\n' +
+       ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.hide) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.kappa.clsID.Stampede + '\n' +
+       '{\n' +
+       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time * timing.kappa.Stampede.speed) + 'ms;\n' +
+       '}\n';
+
       const congaShowMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.show);
       const congaHideMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.hide);
-      t += '.ktCongaIn\n';
-      t += '{\n';
-      t += ' transition: transform linear ' + congaShowMS + 'ms;\n';
-      t += '}\n';
-      t += '.ktCongaOut\n';
-      t += '{\n';
-      t += ' transition: transform ease-in ' + congaHideMS + 'ms;\n';
-      t += '}\n';
-      t += 'div.scene.cube.kappa,\n';
-      t += 'div.scene.cube.kappa div.cube\n';
-      t += '{\n';
-      t += ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.TheCube.time) + 'ms;\n';
-      t += '}\n';
-      t += '[data-squash="vertical"]\n';
-      t += '{\n';
-      t += ' transform: scale(' + timing.display.Crazy.squash.width + ', ' + timing.display.Crazy.squash.height + ');\n';
-      t += '}\n';
-      t += '[data-squash="horizontal"]\n';
-      t += '{\n';
-      t += ' transform: scale(' + timing.display.Crazy.squash.height + ', ' + timing.display.Crazy.squash.width + ');\n';
-      t += '}';
-      h = h.replace('\n[data-squash="no"]\n', t + '\n[data-squash="no"]\n');
+      t += '.' + display.kappa.clsID.Conga.In + '\n' +
+       '{\n' +
+       ' transition: transform linear ' + congaShowMS + 'ms;\n' +
+       '}\n' +
+       '.' + display.kappa.clsID.Conga.Out + '\n' +
+       '{\n' +
+       ' transition: transform ease-in ' + congaHideMS + 'ms;\n' +
+       '}\n';
+
+      t += 'div.scene.cube.kappa,\n' +
+       'div.scene.cube.kappa div.cube\n' +
+       '{\n' +
+       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.TheCube.time) + 'ms;\n' +
+       '}\n';
+
+      t += '\n';
+
+      t += '[data-squash="vertical"]\n' +
+       '{\n' +
+       ' transform: scale(' + timing.display.Crazy.squash.width + ', ' + timing.display.Crazy.squash.height + ');\n' +
+       '}\n' +
+       '[data-squash="horizontal"]\n' +
+       '{\n' +
+       ' transform: scale(' + timing.display.Crazy.squash.height + ', ' + timing.display.Crazy.squash.width + ');\n' +
+       '}';
+
+      h = h.replaceAll('/* {INSERT:ANIM} *\/', t);
       return h;
      }
 
      function _gui(h)
      {
       if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === false)
-       h = h.replace(notice.Hide.FIND, notice.Hide.REPLACE);
+       h = h.replaceAll('/* {INSERT:NOTICE_OFF} *\/', 'display: none;');
+
       if (cfg.hasOwnProperty('twitch') && cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null)
-       h = h.replace('\nbutton.twitch\n{\n', '\nbutton.twitch\n{\n display: none;\n');
+       h = h.replaceAll('/* {INSERT:TWITCH_OFF} *\/', 'display: none;');
+
       if (cfg.hasOwnProperty('youtube') && cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null)
-       h = h.replace('\nbutton.youtube\n{\n', '\nbutton.youtube\n{\n display: none;\n');
+       h = h.replaceAll('/* {INSERT:YOUTUBE_OFF} *\/', 'display: none;');
+
       if (cfg.hasOwnProperty('kick') && cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null)
-       h = h.replace('\nbutton.kick\n{\n', '\nbutton.kick\n{\n display: none;\n');
+       h = h.replaceAll('/* {INSERT:KICK_OFF} *\/', 'display: none;');
+
       return h;
      }
 
      function _variations(h)
      {
+      let v = '.eSize-1_000\n' +
+       '{\n' +
+       ' --zoom-height: var(--emote-height);\n' +
+       ' --zoom-width: var(--emote-width);\n' +
+       '}\n';
+
       if (cfg.emote.size.variation !== false && typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
       {
-       let v = '\n.eSize-1_000\n';
-       v += '{\n';
-       v += ' --zoom-height: var(--emote-height);\n';
-       v += ' --zoom-width: var(--emote-width);\n';
-       v += '}\n';
-       v += '.eSize-0_500\n';
-       v += '{\n';
-       v += ' --zoom-height: calc(var(--emote-height) / 2);\n';
-       v += ' --zoom-width: calc(var(--emote-width) / 2);\n';
-       v += '}\n';
-       v += '.eSize-2_000\n';
-       v += '{\n';
-       v += ' --zoom-height: calc(var(--emote-height) * 2);\n';
-       v += ' --zoom-width: calc(var(--emote-width) * 2);\n';
-       v += '}\n';
-       let v2 = '\n.eSize-1_000\n';
-       v2 += '{\n';
-       v2 += ' --zoom-height: var(--emote-height);\n';
-       v2 += ' --zoom-width: var(--emote-width);\n';
-       v2 += '}\n';
        for (let i = 0, l = cfg.emote.size.variation.range.length; i < l; i++)
        {
         const rV = cfg.emote.size.variation.range[i].toFixed(3);
-        v2 += '.eSize-' + rV.replace('.', '_') + '\n';
-        v2 += '{\n';
-        v2 += ' --zoom-height: calc(var(--emote-height) * ' + rV + ');\n';
-        v2 += ' --zoom-width: calc(var(--emote-width) * ' + rV + ');\n';
-        v2 += '}\n';
+        v += '.eSize-' + rV.replace('.', '_') + '\n' +
+         '{\n' +
+         ' --zoom-height: calc(var(--emote-height) * ' + rV + ');\n' +
+         ' --zoom-width: calc(var(--emote-width) * ' + rV + ');\n' +
+         '}\n';
        }
-       h = h.replace(v, v2);
       }
+      else
+      {
+       v += '.eSize-0_500\n' +
+        '{\n' +
+        ' --zoom-height: calc(var(--emote-height) / 2);\n' +
+        ' --zoom-width: calc(var(--emote-width) / 2);\n' +
+        '}\n';
+
+       v += '.eSize-2_000\n' +
+        '{\n' +
+        ' --zoom-height: calc(var(--emote-height) * 2);\n' +
+        ' --zoom-width: calc(var(--emote-width) * 2);\n' +
+        '}\n';
+      }
+
+      h = h.replaceAll('/* {INSERT:ESIZE} *\/', v);
       return h;
      }
 
@@ -18456,7 +18658,9 @@
     margin: 0;
     padding: 0;
     offset-rotate: 0deg;
+    /* {INSERT:SHADOW} */
    }
+   /* {INSERT:ZWE} */
 
    div.scene
    {
@@ -18489,8 +18693,9 @@
    }
    div.scene div.cube [data-face]
    {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.2); /* {DELETE:SHADOW} */
     position: absolute;
+    /* {INSERT:SHADOW} */
    }
    div.scene div.cube [data-face="front"]
    {
@@ -18522,6 +18727,7 @@
     text-align: center;
     position: relative;
     animation: dance 4s linear infinite;
+    /* {INSERT:SHADOW} */
    }
 
    @keyframes dance
@@ -18777,22 +18983,8 @@
     }
    }
 
-   .eSize-1_000
-   {
-    --zoom-height: var(--emote-height);
-    --zoom-width: var(--emote-width);
-   }
-   .eSize-0_500
-   {
-    --zoom-height: calc(var(--emote-height) / 2);
-    --zoom-width: calc(var(--emote-width) / 2);
-   }
-   .eSize-2_000
-   {
-    --zoom-height: calc(var(--emote-height) * 2);
-    --zoom-width: calc(var(--emote-width) * 2);
-   }
-
+   /* {INSERT:ESIZE} */
+   /* {INSERT:ANIM} */
    [data-squash="no"]
    {
     transform: scale(1, 1);
@@ -18867,7 +19059,7 @@
    {
     0%
     {
-     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;
+     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0; /* {REPLACE:ZWE_PAD} */
     }
     24% /* 4% */
     {
@@ -18875,7 +19067,7 @@
     }
     47% /* 8% */
     {
-     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) 0;
+     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.8)) / 2) 0; /* {REPLACE:ZWE_PAD} */
     }
     71% /* 12% */
     {
@@ -18883,7 +19075,7 @@
     }
     88% /* 15% */
     {
-     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) 0;
+     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.95)) / 2) 0; /* {REPLACE:ZWE_PAD} */
     }
     100% /* 17% */
     {
@@ -18899,7 +19091,7 @@
     }
     100%
     {
-     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0;
+     padding: calc((var(--zoom-height) - (var(--zoom-height) * 0.1)) / 2) 0; /* {REPLACE:ZWE_PAD} */
     }
    }
 
@@ -18967,6 +19159,7 @@
 
    #notices
    {
+    /* {INSERT:NOTICE_OFF} */
     position: absolute;
     top: 8px;
     left: 8px;
@@ -19191,6 +19384,7 @@
 
    button.twitch
    {
+    /* {INSERT:TWITCH_OFF} */
     background-color: #7D5BBE;
    }
    button.twitch:focus, button.twitch:hover
@@ -19204,6 +19398,7 @@
 
    button.kick
    {
+    /* {INSERT:KICK_OFF} */
     background-color: #00FF00;
     color: #000000;
    }
@@ -19218,6 +19413,7 @@
 
    button.youtube
    {
+    /* {INSERT:YOUTUBE_OFF} */
     background-color: #E93223;
    }
    button.youtube:focus, button.youtube:hover
