@@ -18207,27 +18207,40 @@
      }
      if (scks.length > 0)
       await Promise.allSettled(scks);
+     const svcs = [];
      if (bT)
-     {
-      if (await _twitch() === false)
-       twitch.net.dead = true;
-     }
+      svcs.push(_twitch());
      else
       twitch.net.dead = true;
      if (bYT)
-     {
-      if (await _youtube() === false)
-       youtube.net.dead = true;
-     }
+      svcs.push(_youtube());
      else
       youtube.net.dead = true;
      if (bK)
-     {
-      if (await _kick() === false)
-       kick.net.dead = true;
-     }
+      svcs.push(_kick());
      else
       kick.net.dead = true;
+     if (svcs.length < 1)
+      return;
+     const rets = await Promise.allSettled(svcs);
+     if (bT)
+     {
+      const rT = rets.shift();
+      if (rT.status !== 'fulfilled' || rT.value === false)
+       twitch.net.dead = true;
+     }
+     if (bYT)
+     {
+      const rYT = rets.shift();
+      if (rYT.status !== 'fulfilled' || rYT.value === false)
+       youtube.net.dead = true;
+     }
+     if (bK)
+     {
+      const rK = rets.shift();
+      if (rK.status !== 'fulfilled' || rK.value === false)
+       kick.net.dead = true;
+     }
     }
 
     async function _twitch()
