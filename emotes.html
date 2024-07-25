@@ -17097,7 +17097,8 @@
          return;
         x.ontimeout = null;
         x.onreadystatechange = null;
-        resolve({code: x.status, data: x.responseText, get success(){return Math.floor(this.code / 100) === 2;}, get json(){try{return JSON.parse(this.data);}catch(ex){return null;}}});
+        const h = _parseHeaders(x.getAllResponseHeaders());
+        resolve({code: x.status, data: x.responseText, headers: h, get success(){return Math.floor(this.code / 100) === 2;}, get json(){try{return JSON.parse(this.data);}catch(ex){return null;}}});
        };
        x.ontimeout = function()
        {
@@ -17116,6 +17117,24 @@
       }
      );
      return p;
+    }
+
+    function _parseHeaders(s)
+    {
+     const a = {};
+     if (s === null)
+      return a;
+     if (s.indexOf('\r\n') === -1)
+      return a;
+     const h = s.split('\r\n');
+     for (let i = 0, l = h.length; i < l; i++)
+     {
+      if (h[i].indexOf(': ') === -1)
+       continue;
+      const kv = h[i].split(': ', 2);
+      a[kv[0].toLowerCase()] = kv[1];
+     }
+     return a;
     }
 
     function $findInMaybeRange(r, v)
