@@ -75,6 +75,7 @@
       },
       recheck: false
      },
+     cdn: 'yt4',
      share: false
     },
     kick: {
@@ -9772,31 +9773,36 @@
      {
       async function $c_cdnTest()
       {
-       const oLowest = {subdomain: _defCDN, ping: Number.MAX_SAFE_INTEGER};
        const stKeys = Object.keys(_eStickers);
-       const oPings = [];
-       for (let i = 0, l = cURLs.cdn.youtube.subdomain.length; i < l; i++)
+       if (cfg.youtube.cdn === true)
        {
-        const stX = shared.rnd(stKeys.length);
-        const u = _eStickers[stKeys[stX]].url.replace('//' + _defCDN + '.', '//' + cURLs.cdn.youtube.subdomain[i] + '.');
-        oPings.push(_ping(u));
-       }
-       const oRets = await Promise.allSettled(oPings);
-       for (let i = 0, l = cURLs.cdn.youtube.subdomain.length; i < l; i++)
-       {
-        if (oRets[i].status !== 'fulfilled')
-         continue;
-        if (oRets[i].value === false)
-         continue;
-        const c = cURLs.cdn.youtube.subdomain[i];
-        const t = oRets[i].value;
-        if (oLowest.ping > t)
+        const oLowest = {subdomain: _defCDN, ping: Number.MAX_SAFE_INTEGER};
+        const oPings = [];
+        for (let i = 0, l = cURLs.cdn.youtube.subdomain.length; i < l; i++)
         {
-         oLowest.subdomain = c;
-         oLowest.ping = t;
+         const stX = shared.rnd(stKeys.length);
+         const u = _eStickers[stKeys[stX]].url.replace('//' + _defCDN + '.', '//' + cURLs.cdn.youtube.subdomain[i] + '.');
+         oPings.push(_ping(u));
         }
+        const oRets = await Promise.allSettled(oPings);
+        for (let i = 0, l = cURLs.cdn.youtube.subdomain.length; i < l; i++)
+        {
+         if (oRets[i].status !== 'fulfilled')
+          continue;
+         if (oRets[i].value === false)
+          continue;
+         const c = cURLs.cdn.youtube.subdomain[i];
+         const t = oRets[i].value;
+         if (oLowest.ping > t)
+         {
+          oLowest.subdomain = c;
+          oLowest.ping = t;
+         }
+        }
+        _bestCDN = oLowest.subdomain;
        }
-       _bestCDN = oLowest.subdomain;
+       else
+        _bestCDN = cfg.youtube.cdn;
        for (let i = 0, l = stKeys.length; i < l; i++)
        {
         _eStickers[stKeys[i]].url = _eStickers[stKeys[i]].url.replace('//' + _defCDN + '.', '//' + _bestCDN + '.');
@@ -9810,7 +9816,7 @@
          service.emotes.youtube[eID].url = service.emotes.youtube[eID].url.replace('//' + _defCDN + '.', '//' + _bestCDN + '.');
         }
        }
-       return oLowest.subdomain;
+       return _bestCDN;
       }
 
       async function _ping(file)
@@ -18115,7 +18121,8 @@
      if (await youtube.global() === false)
       return false;
      await youtube.stickers();
-     youtube.net.cdnTest();
+     if (!!cfg.youtube.cdn)
+      youtube.net.cdnTest();
      notice.expect |= notice.Connection.YOUTUBE;
      if (cfg.event.youtube.sub !== false)
       youtube.net.subscribers.init();
