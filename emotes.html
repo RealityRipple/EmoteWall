@@ -9202,6 +9202,7 @@
        const _mStep = 1000;
        const _mWait = 4000;
        const _mLimit = 15000 - _mInterval;
+       let _tInit = false;
 
        async function $start(stream, page = false)
        {
@@ -9336,6 +9337,14 @@
         }
         if (j === null)
          return;
+        if (page === false || _tInit === false)
+        {
+         const pJitter = (_mWait + _bSlower) * (2 + (_bSlower > 0 ? Math.floor(_mStep / _bSlower) : 0));
+         if (r.headers.hasOwnProperty('date'))
+          _tInit = new Date(r.headers.date).getTime() - pJitter;
+         else
+          _tInit = Date.now() - pJitter;
+        }
         notice.info(notice.Type.YOUTUBE_NETWORK);
         notice.active |= notice.Connection.YOUTUBE;
         notice.resetHide();
@@ -9348,7 +9357,6 @@
          nextPage = j.nextPageToken;
         if (j.hasOwnProperty('items') && Array.isArray(j.items) && j.items.length > 0)
         {
-         const pNow = Date.now();
          for (let i = 0, l = j.items.length; i < l; i++)
          {
           const cmd = j.items[i];
@@ -9359,8 +9367,7 @@
           if (cmd.snippet.hasOwnProperty('publishedAt'))
           {
            const pTime = new Date(cmd.snippet.publishedAt).getTime();
-           const pJitter = (_mWait + _bSlower) * (2 + (_bSlower > 0 ? Math.floor(_mStep / _bSlower) : 0));
-           if (pNow - pTime > pJitter)
+           if (_tInit > pTime)
             continue;
           }
           if (!cmd.hasOwnProperty('_channel'))
