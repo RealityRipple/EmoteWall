@@ -17468,11 +17468,12 @@
      cmdLogin.setAttribute('id', _idLogin);
      cmdLogin.setAttribute('type', 'button');
      cmdLogin.classList.add('twitch');
-     cmdLogin.classList.add('login');
+     cmdLogin.classList.add('auth');
+     cmdLogin.classList.add('unauthorized');
      document.addEventListener('mouseover', _fadeInLogin);
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
-     cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on Twitch</span>';
+     cmdLogin.innerHTML = 'Twitch<br><span>Log In</span>';
      if (auto && ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
@@ -17514,18 +17515,20 @@
      cmdLogout.setAttribute('id', _idLogout);
      cmdLogout.setAttribute('type', 'button');
      cmdLogout.classList.add('twitch');
-     cmdLogout.classList.add('logout');
+     cmdLogout.classList.add('auth');
      document.addEventListener('mousemove', _fadeInLogout);
      if (v)
      {
+      cmdLogout.classList.add('unauthorized');
       cmdLogout.setAttribute('onclick', 'loginT.begin();');
-      cmdLogout.innerHTML = 'Re-Auth';
+      cmdLogout.innerHTML = 'Twitch<br><span>Re-Auth</span>';
       _tL = window.setTimeout(_fadeOutLogout, _visTime);
      }
      else
      {
+      cmdLogout.classList.add('authorized');
       cmdLogout.setAttribute('onclick', 'loginT.logOut();');
-      cmdLogout.innerHTML = 'Log Out';
+      cmdLogout.innerHTML = 'Twitch<br><span>Log Out</span>';
       cmdLogout.classList.add('hidden');
      }
      document.body.appendChild(cmdLogout);
@@ -17681,11 +17684,12 @@
      cmdLogin.setAttribute('id', _idLogin);
      cmdLogin.setAttribute('type', 'button');
      cmdLogin.classList.add('youtube');
-     cmdLogin.classList.add('login');
+     cmdLogin.classList.add('auth');
+     cmdLogin.classList.add('unauthorized');
      document.addEventListener('mouseover', _fadeInLogin);
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginYT.begin();');
-     cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on YouTube</span>';
+     cmdLogin.innerHTML = 'YouTube<br><span>Log In</span>';
      if (auto && ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
@@ -17727,18 +17731,20 @@
      cmdLogout.setAttribute('id', _idLogout);
      cmdLogout.setAttribute('type', 'button');
      cmdLogout.classList.add('youtube');
-     cmdLogout.classList.add('logout');
+     cmdLogout.classList.add('auth');
      document.addEventListener('mouseover', _fadeInLogout);
      if (v)
      {
+      cmdLogout.classList.add('unauthorized');
       cmdLogout.setAttribute('onclick', 'loginYT.begin();');
-      cmdLogout.innerHTML = 'Re-Auth';
+      cmdLogout.innerHTML = 'YouTube<br><span>Re-Auth</span>';
       _tL = window.setTimeout(_fadeOutLogout, _visTime);
      }
      else
      {
+      cmdLogout.classList.add('authorized');
       cmdLogout.setAttribute('onclick', 'loginYT.logOut();');
-      cmdLogout.innerHTML = 'Log Out';
+      cmdLogout.innerHTML = 'YouTube<br><span>Log Out</span>';
       cmdLogout.classList.add('hidden');
      }
      document.body.appendChild(cmdLogout);
@@ -17830,11 +17836,12 @@
      cmdLogin.setAttribute('id', _idLogin);
      cmdLogin.setAttribute('type', 'button');
      cmdLogin.classList.add('kick');
-     cmdLogin.classList.add('login');
+     cmdLogin.classList.add('auth');
+     cmdLogin.classList.add('unauthorized');
      document.addEventListener('mouseover', _fadeInLogin);
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginK.begin();');
-     cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on Kick</span>';
+     cmdLogin.innerHTML = 'Kick<br><span>Log In</span>';
      if (auto && ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
@@ -17878,18 +17885,20 @@
      cmdLogout.setAttribute('id', _idLogout);
      cmdLogout.setAttribute('type', 'button');
      cmdLogout.classList.add('kick');
-     cmdLogout.classList.add('logout');
+     cmdLogout.classList.add('auth');
      document.addEventListener('mousemove', _fadeInLogout);
      if (v)
      {
+      cmdLogout.classList.add('unauthorized');
       cmdLogout.setAttribute('onclick', 'loginK.begin();');
-      cmdLogout.innerHTML = 'Re-Auth';
+      cmdLogout.innerHTML = 'Kick<br><span>Re-Auth</span>';
       _tL = window.setTimeout(_fadeOutLogout, _visTime);
      }
      else
      {
+      cmdLogout.classList.add('authorized');
       cmdLogout.setAttribute('onclick', 'loginK.logOut();');
-      cmdLogout.innerHTML = 'Log Out';
+      cmdLogout.innerHTML = 'Kick<br><span>Log Out</span>';
       cmdLogout.classList.add('hidden');
      }
      document.body.appendChild(cmdLogout);
@@ -19155,6 +19164,7 @@
     z-index: 1000;
     opacity: 1;
     position: absolute;
+    user-select: none;
    }
    button.hidden
    {
@@ -19208,15 +19218,15 @@
     background-color: #FF0000;
    }
 
-   button.login
+   button.auth
    {
     transition: opacity 0.5s;
-    left: calc(50% - 6.5em);
-    width: 13em;
-    font-size: 6vmin;
-    padding: 0.5em;
+    right: 0.5em;
+    width: 7em;
+    font-size: 3.5vmin;
+    padding: 0.3em 0.5em 0.5em 2em;
    }
-   button.login span
+   button.auth span
    {
     font-size: 40%;
     padding: 0;
@@ -19224,38 +19234,35 @@
     bottom: 0.25em;
     right: 0.5em;
    }
-   button.login.twitch
+   button.auth.twitch
    {
-    top: calc(50% - 1em - 2.5em);
+    top: 0.5em;
    }
-   button.login.kick
+   button.auth.kick
    {
-    top: calc(50% - 1em);
+    top: 2.75em;
    }
-   button.login.youtube
+   button.auth.youtube
    {
-    top: calc(50% - 1em + 2.5em);
+    top: 5em;
    }
-
-   button.logout
+   button.auth::before
    {
-    transition: opacity 0.5s;
-    right: 1em;
-    width: 5em;
-    font-size: 2vmin;
-    padding: 0.5em;
+    content: '\1f9c5';
+    position: absolute;
+    left: 0.5em;
    }
-   button.logout.twitch
+   button.auth.unauthorized::before
    {
-    top: 1em;
+    filter: grayscale(1);
    }
-   button.logout.kick
+   button.auth.authorized::after
    {
-    top: 4em;
-   }
-   button.logout.youtube
-   {
-    top: 7em;
+    content: '\1f440';
+    position: absolute;
+    left: 1.6em;
+    top: 1.3em;
+    font-size: 50%;
    }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
