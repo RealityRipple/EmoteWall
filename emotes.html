@@ -1355,6 +1355,15 @@
       emote: 'https://static-cdn.jtvnw.net/emoticons/v2/' + cVARs.url.emoteID + '/default/dark/3.0'
      }),
      youtube: Object.freeze({
+      subdomain: [
+       'ap1', 'ap2',
+       'cp3', 'cp4', 'cp5', 'cp6',
+       'gm1', 'gm2', 'gm3', 'gm4',
+       'gp3', 'gp4', 'gp5', 'gp6',
+       'mua3', 'mua4', 'mua5', 'mua6',
+       'sp1', 'sp3',
+       'yt3', 'yt4'
+      ],
       emoji: 'https://yt3.ggpht.com/' + cVARs.url.emojiID + '=w112-h112-c-k-nd',
       sticker: 'https://yt3.ggpht.com/' + cVARs.url.stickerID + '=s256-rwa'
      }),
@@ -8907,6 +8916,8 @@
    const youtube = function()
    {
     const _eStickers = {};
+    const _defCDN = 'yt3';
+    let _bestCDN = _defCDN;
 
     const $net = function()
     {
@@ -9757,6 +9768,63 @@
       service.syncList();
      }
 
+     const $cdnTest = function()
+     {
+      async function $c_cdnTest()
+      {
+       const oLowest = {subdomain: _defCDN, ping: Number.MAX_SAFE_INTEGER};
+       const stKeys = Object.keys(_eStickers);
+       const oPings = [];
+       for (let i = 0, l = cURLs.cdn.youtube.subdomain.length; i < l; i++)
+       {
+        const stX = shared.rnd(stKeys.length);
+        const u = _eStickers[stKeys[stX]].url.replace('//' + _defCDN + '.', '//' + cURLs.cdn.youtube.subdomain[i] + '.');
+        oPings.push(_ping(u));
+       }
+       const oRets = await Promise.allSettled(oPings);
+       for (let i = 0, l = cURLs.cdn.youtube.subdomain.length; i < l; i++)
+       {
+        if (oRets[i].status !== 'fulfilled')
+         continue;
+        if (oRets[i].value === false)
+         continue;
+        const c = cURLs.cdn.youtube.subdomain[i];
+        const t = oRets[i].value;
+        if (oLowest.ping > t)
+        {
+         oLowest.subdomain = c;
+         oLowest.ping = t;
+        }
+       }
+       _bestCDN = oLowest.subdomain;
+       for (let i = 0, l = stKeys.length; i < l; i++)
+       {
+        _eStickers[stKeys[i]].url = _eStickers[stKeys[i]].url.replace('//' + _defCDN + '.', '//' + _bestCDN + '.');
+       }
+       if (service.emotes.hasOwnProperty('youtube'))
+       {
+        for (const eID in service.emotes.youtube)
+        {
+         if (!service.emotes.youtube.hasOwnProperty(eID))
+          continue;
+         service.emotes.youtube[eID].url = service.emotes.youtube[eID].url.replace('//' + _defCDN + '.', '//' + _bestCDN + '.');
+        }
+       }
+       return oLowest.subdomain;
+      }
+
+      async function _ping(file)
+      {
+       const tStart = Date.now();
+       const r = await shared.httpRequest('HEAD', file, {}, null, true, false);
+       if (!r)
+        return false;
+       return (Date.now() - tStart);
+      }
+
+      return $c_cdnTest;
+     }();
+
      const $oAuth = function()
      {
       const _pathRefresh = '.refresh';
@@ -10062,6 +10130,7 @@
       dead: false,
       broadcasts: $broadcasts,
       subscribers: $subscribers,
+      cdnTest: $cdnTest,
       oAuth: $oAuth
      };
     }();
@@ -10891,7 +10960,7 @@
        const aN = _retrNames(j[jIDs[i]]);
        if (cfg.ignore.emotes !== false && _arrayInArray(aN, cfg.ignore.emotes))
         continue;
-       const eURL = cURLs.cdn.youtube.emoji.replaceAll(cVARs.url.emojiID, j[jIDs[i]].image);
+       const eURL = cURLs.cdn.youtube.emoji.replace('//' + _defCDN + '.', '//' + _bestCDN + '.').replaceAll(cVARs.url.emojiID, j[jIDs[i]].image);
        ret.push({url: eURL});
        if (n === false)
         continue;
@@ -10940,7 +11009,7 @@
       {
        service.emotes.youtube[aN[k]] = {
         scope: cSources.scope.global,
-        url: cURLs.cdn.youtube.emoji.replaceAll(cVARs.url.emojiID, j[jIDs[i]].image),
+        url: cURLs.cdn.youtube.emoji.replace('//' + _defCDN + '.', '//' + _bestCDN + '.').replaceAll(cVARs.url.emojiID, j[jIDs[i]].image),
         id: jIDs[i]
        };
       }
@@ -18046,6 +18115,7 @@
      if (await youtube.global() === false)
       return false;
      await youtube.stickers();
+     youtube.net.cdnTest();
      notice.expect |= notice.Connection.YOUTUBE;
      if (cfg.event.youtube.sub !== false)
       youtube.net.subscribers.init();
