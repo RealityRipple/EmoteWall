@@ -1263,7 +1263,7 @@ Configuration Information
 
   * `redeem`  
     *An array of style-specific channel point reward names which can be used to force-trigger this kappagen.*  
-    Requires `moderator:read:shoutouts` scope.
+    Requires `channel:read:redemptions` scope.
 
   * `erase`  
     *If this property exists, the command will erase the screen rather than showing a kappagen.*  
