@@ -11377,6 +11377,8 @@
         async function $c_App_Events(j)
         {
          const jData = JSON.parse(j.data);
+         if (jData.hasOwnProperty('content') && jData.content !== null)
+          jData.content = jData.content.replaceAll(/\s+/g, ' ');
          switch (j.event.slice(11))
          {
           case 'ChatMessageEvent':
