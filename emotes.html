@@ -3390,7 +3390,11 @@
        {
         if (_iTitanic > tInit)
          return;
-        const c = _cRadius / (_rndFromRange(timing.kappa.Spiral.vectors) + (shared.rnd() * 2));
+        const xt = (shared.rnd(5) + 1) / 7;
+        let fr = _rndFromRange(timing.kappa.Spiral.vectors) + xt;
+        if (fr > iKC)
+         fr = iKC * 0.75 + xt;
+        const c = _cRadius / fr;
         let th = shared.rnd() * _cRadius;
         const o = shared.rnd(2) === 0;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time);
