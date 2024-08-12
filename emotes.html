@@ -3371,7 +3371,16 @@
         const tInit = Date.now();
         if (_iTitanic > tInit)
          return;
-        const oX = shared.rnd() * sW;
+        let maxW = 0;
+        for (let i = 0, l = kList.length; i < l; i++)
+        {
+         let eW = eH;
+         if (kList[i].hasOwnProperty('width') && kList[i].hasOwnProperty('height'))
+          eW = kList[i].width / kList[i].height * eH;
+         if (eW > maxW)
+          maxW = eW;
+        }
+        const oX = shared.rnd(sW - maxW);
         const oY = shared.rnd(sH - eH);
         const r = Math.min(sW, sH);
         shared.doNextFrame(_init, tInit, kList, oX, oY, eH, r, iKC);
