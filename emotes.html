@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.9.6 BETA
+    * v0.9.7 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -75,6 +75,7 @@
       },
       recheck: false
      },
+     cdn: 'yt4',
      share: false
     },
     kick: {
@@ -523,7 +524,7 @@
       }
      },
      'Spiral': {
-      time: 1/2,
+      time: 1/4,
       bulk: 8,       /* max number of emotes to send in bulk (>1 can end up looking chunked) */
       vectors: {     /* number of emote vectors per circle */
        min: 40,
@@ -1355,6 +1356,15 @@
       emote: 'https://static-cdn.jtvnw.net/emoticons/v2/' + cVARs.url.emoteID + '/default/dark/3.0'
      }),
      youtube: Object.freeze({
+      subdomain: [
+       'ap1', 'ap2',
+       'cp3', 'cp4', 'cp5', 'cp6',
+       'gm1', 'gm2', 'gm3', 'gm4',
+       'gp3', 'gp4', 'gp5', 'gp6',
+       'mua3', 'mua4', 'mua5', 'mua6',
+       'sp1', 'sp3',
+       'yt3', 'yt4'
+      ],
       emoji: 'https://yt3.ggpht.com/' + cVARs.url.emojiID + '=w112-h112-c-k-nd',
       sticker: 'https://yt3.ggpht.com/' + cVARs.url.stickerID + '=s256-rwa'
      }),
@@ -1424,14 +1434,14 @@
       open: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">',
       close: '</svg>'
      }),
-     body: '<ellipse cx="533.9" cy="929.8" rx="295.8" ry="39.4" class="st0"/><path d="M812 403c25-28 39-63 36-98-3-41-29-80-72-111l-16-11a193 193 0 0 0-77-105c-34-21-70-31-102-39-18-5-33-4-46-3h-24c-37-5-74 3-108 24-31 19-58 47-76 79-25 44-35 93-41 140l-25 1c-27 0-60 0-84 26-20 23-21 53-22 73-3 73-5 150-3 225 1 44 6 89 39 120 26 24 59 30 89 30l10-1 6 60c4 25 8 49 21 71a113 113 0 0 0 116 51c46-8 84-45 94-90 5-22 3-43 2-62l-1-24h33c-8 44 7 91 40 120a115 115 0 0 0 87 27c31-3 57-17 75-39 19-24 26-54 31-82 21-126 28-254 18-382z"/><path d="m760 495-1-52c-20 10-44 18-72 24-26 6-50 9-73 9a184 184 0 0 1-179-123c-14-42-12-91 7-133 20-45 69-58 99-66 46-13 94-13 140-3-9-10-19-20-29-25-26-17-57-26-85-33-9-2-17-1-28-1-11 1-22 2-37 0-53-8-103 33-126 75l-4 6c-25 50-31 109-35 165-9 156-4 313 15 468 3 19 5 37 13 50 11 18 36 28 58 24 23-4 44-24 49-47 4-14 2-29 1-46-1-19-3-40 2-62 3-12 13-21 26-22h2c23 0 135-1 190-5 0 0-28 52-74 59-9 28-2 62 19 80 11 10 28 15 45 13 15-1 28-8 36-18 11-14 15-34 19-56 16-93 24-187 22-281zm-482-99 3-60h-20c-22 0-36 1-43 8-6 8-7 25-7 37l-1 18c-2 68-4 137-3 204 1 32 5 63 22 80 14 12 34 15 56 15-8-101-10-201-7-302z" class="st1"/><path d="M792 322c-3 20-15 40-33 55-20 16-47 27-84 36-42 9-75 10-103 2-38-12-70-42-83-80-11-29-9-63 4-92l6-9c7-8 21-17 57-26a230 230 0 0 1 188 32c39 28 47 55 48 69v13z" class="st2"/><path d="M285 698c-22 0-42-3-56-15-17-17-21-48-21-80-2-67 0-136 2-204 20-8 45-7 68-3-3 101-1 201 7 302zm475-203c-15 58-56 109-111 133-73 32-165 11-215-49-32-39-45-90-54-140-15-87-18-177-8-266-25 50-31 109-35 165-9 156-4 313 15 468 3 19 5 37 13 50 11 18 36 28 58 24 23-4 44-24 49-47 4-14 2-29 1-46-1-19-3-40 2-62 3-12 13-21 26-22h2c23 0 135-1 190-5 0 0-28 52-74 59-9 28-2 62 19 80 11 10 28 15 45 13 15-1 28-8 36-18 11-14 15-34 19-56 16-93 24-187 22-281z" class="st3"/><path d="M792 322c-3 20-15 40-33 55-20 16-47 27-84 36-42 9-75 10-103 2-38-12-70-42-83-80-11-29-9-63 4-92l6-9c7 11 13 40 18 49 10 17 26 33 44 44 38 23 84 28 128 22 35-4 69-15 103-27z" class="st4"/><path d="M614 274c-7-3-13-9-13-17-1-11 11-18 21-22 30-10 63-8 91 3 9 4 17 9 18 18 1 10-9 18-19 19s-20-3-29-4c-23-4-45 11-69 3z" class="st5"/></svg>'
+     body: '<ellipse cx="533.9" cy="929.8" rx="295.8" ry="39.4" class="st0"/><path d="M812 403c25-28 39-63 36-98-3-41-29-80-72-111l-16-11a193 193 0 0 0-77-105c-34-21-70-31-102-39-18-5-33-4-46-3h-24c-37-5-74 3-108 24-31 19-58 47-76 79-25 44-35 93-41 140l-25 1c-27 0-60 0-84 26-20 23-21 53-22 73-3 73-5 150-3 225 1 44 6 89 39 120 26 24 59 30 89 30l10-1 6 60c4 25 8 49 21 71a113 113 0 0 0 116 51c46-8 84-45 94-90 5-22 3-43 2-62l-1-24h33c-8 44 7 91 40 120a115 115 0 0 0 87 27c31-3 57-17 75-39 19-24 26-54 31-82 21-126 28-254 18-382z"/><path d="m760 495-1-52c-20 10-44 18-72 24-26 6-50 9-73 9a184 184 0 0 1-179-123c-14-42-12-91 7-133 20-45 69-58 99-66 46-13 94-13 140-3-9-10-19-20-29-25-26-17-57-26-85-33-9-2-17-1-28-1-11 1-22 2-37 0-53-8-103 33-126 75l-4 6c-25 50-31 109-35 165-9 156-4 313 15 468 3 19 5 37 13 50 11 18 36 28 58 24 23-4 44-24 49-47 4-14 2-29 1-46-1-19-3-40 2-62 3-12 13-21 26-22h2c23 0 135-1 190-5 0 0-28 52-74 59-9 28-2 62 19 80 11 10 28 15 45 13 15-1 28-8 36-18 11-14 15-34 19-56 16-93 24-187 22-281zm-482-99 3-60h-20c-22 0-36 1-43 8-6 8-7 25-7 37l-1 18c-2 68-4 137-3 204 1 32 5 63 22 80 14 12 34 15 56 15-8-101-10-201-7-302z" class="st1"/><path d="M792 322c-3 20-15 40-33 55-20 16-47 27-84 36-42 9-75 10-103 2-38-12-70-42-83-80-11-29-9-63 4-92l6-9c7-8 21-17 57-26a230 230 0 0 1 188 32c39 28 47 55 48 69v13z" class="st2"/><path d="M285 698c-22 0-42-3-56-15-17-17-21-48-21-80-2-67 0-136 2-204 20-8 45-7 68-3-3 101-1 201 7 302zm475-203c-15 58-56 109-111 133-73 32-165 11-215-49-32-39-45-90-54-140-15-87-18-177-8-266-25 50-31 109-35 165-9 156-4 313 15 468 3 19 5 37 13 50 11 18 36 28 58 24 23-4 44-24 49-47 4-14 2-29 1-46-1-19-3-40 2-62 3-12 13-21 26-22h2c23 0 135-1 190-5 0 0-28 52-74 59-9 28-2 62 19 80 11 10 28 15 45 13 15-1 28-8 36-18 11-14 15-34 19-56 16-93 24-187 22-281z" class="st3"/><path d="M792 322c-3 20-15 40-33 55-20 16-47 27-84 36-42 9-75 10-103 2-38-12-70-42-83-80-11-29-9-63 4-92l6-9c7 11 13 40 18 49 10 17 26 33 44 44 38 23 84 28 128 22 35-4 69-15 103-27z" class="st4"/><path d="M614 274c-7-3-13-9-13-17-1-11 11-18 21-22 30-10 63-8 91 3 9 4 17 9 18 18 1 10-9 18-19 19s-20-3-29-4c-23-4-45 11-69 3z" class="st5"/>'
     }),
     css: Object.freeze({
      tag: Object.freeze({
       open: '<style type="text/css">',
       close: '</style>'
      }),
-     body: '.st0{fill:#484C4D;}.st1{fill:' + cVARs.crew.st1 + ';}.st2{fill:#A3D3E3;}.st3{opacity:0.5;fill:' + cVARs.crew.st3 + ';}.st4{opacity:0.45;fill:#5B7882;}.st5{fill:#FFFFFF;}',
+     body: '.st0{fill:#484C4D;}.st1{fill:#' + cVARs.crew.st1 + ';}.st2{fill:#A3D3E3;}.st3{opacity:0.5;fill:#' + cVARs.crew.st3 + ';}.st4{opacity:0.45;fill:#5B7882;}.st5{fill:#FFFFFF;}',
      flip: 'svg{transform: scaleX(-1);}'
     }),
     colors: [['C51111', '300060'], ['132FD2', '00004A'], ['10802D', '021B2E'], ['ED53B9', '6B05A1'], ['EF7D0E', '730020'], ['F5F558', '8E1800'], ['3F484E', '000000'], ['D5E0EF', '2E4A8D'], ['6B30BC', '0E003C'], ['72491E', '4A040A'], ['39FEDB', '1054A1'], ['50EF3A', '006144'], ['938877', '14000A'], ['E27060', '983262'], ['F5E4A5', 'B89268'], ['F1C6D0', 'DA749C'], ['738593', '162638'], ['761E1C', '4A102C']]
@@ -1958,36 +1968,12 @@
       function $Still(eInf, sW, sH, eH, canV = true, tInit = 0)
       {
        if (tInit === 0)
-        tInit = new Date().getTime();
+        tInit = Date.now();
        if (_iTitanic > tInit)
         return;
        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
         return;
-       let variationSize = 1;
-       if (canV && cfg.emote.size.variation !== false)
-       {
-        if (typeof cfg.emote.size.variation === 'number')
-        {
-         const chances = [];
-         chances.push(0.5);
-         chances.push(2);
-         for (let i = 0; i < cfg.emote.size.variation; i++)
-         {
-          chances.push(1);
-         }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-        {
-         const chances = [];
-         chances.push(...cfg.emote.size.variation.range);
-         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
-         {
-          chances.push(1);
-         }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-       }
+       let variationSize = _rndVar(canV);
        eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
@@ -2016,36 +2002,12 @@
        function $c_StraightLine(eInf, sW, sH, eH, x = false, y = false, canV = true, tInit = 0)
        {
         if (tInit === 0)
-         tInit = new Date().getTime();
+         tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
          return;
-        let variationSize = 1;
-        if (canV && cfg.emote.size.variation !== false)
-        {
-         if (typeof cfg.emote.size.variation === 'number')
-         {
-          const chances = [];
-          chances.push(0.5);
-          chances.push(2);
-          for (let i = 0; i < cfg.emote.size.variation; i++)
-          {
-           chances.push(1);
-          }
-          variationSize = chances[shared.rnd(chances.length)];
-         }
-         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-         {
-          const chances = [];
-          chances.push(...cfg.emote.size.variation.range);
-          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
-          {
-           chances.push(1);
-          }
-          variationSize = chances[shared.rnd(chances.length)];
-         }
-        }
+        let variationSize = _rndVar(canV);
         eH = Math.ceil(eH * variationSize);
         let eW = eH;
         if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
@@ -2252,36 +2214,12 @@
       function $Rise(eInf, sW, sH, eH, canV = true, tInit = 0)
       {
        if (tInit === 0)
-        tInit = new Date().getTime();
+        tInit = Date.now();
        if (_iTitanic > tInit)
         return;
        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
         return;
-       let variationSize = 1;
-       if (canV && cfg.emote.size.variation !== false)
-       {
-        if (typeof cfg.emote.size.variation === 'number')
-        {
-         const chances = [];
-         chances.push(0.5);
-         chances.push(2);
-         for (let i = 0; i < cfg.emote.size.variation; i++)
-         {
-          chances.push(1);
-         }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-        {
-         const chances = [];
-         chances.push(...cfg.emote.size.variation.range);
-         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
-         {
-          chances.push(1);
-         }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-       }
+       let variationSize = _rndVar(canV);
        eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
@@ -2346,36 +2284,12 @@
        function $c_Bounce(eInf, sW, sH, eH, canV = true, tInit = 0)
        {
         if (tInit === 0)
-         tInit = new Date().getTime();
+         tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
          return;
-        let variationSize = 1;
-        if (canV && cfg.emote.size.variation !== false)
-        {
-         if (typeof cfg.emote.size.variation === 'number')
-         {
-          const chances = [];
-          chances.push(0.5);
-          chances.push(2);
-          for (let i = 0; i < cfg.emote.size.variation; i++)
-          {
-           chances.push(1);
-          }
-          variationSize = chances[shared.rnd(chances.length)];
-         }
-         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-         {
-          const chances = [];
-          chances.push(...cfg.emote.size.variation.range);
-          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
-          {
-           chances.push(1);
-          }
-          variationSize = chances[shared.rnd(chances.length)];
-         }
-        }
+        let variationSize = _rndVar(canV);
         eH = Math.ceil(eH * variationSize);
         let eW = eH;
         if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
@@ -2444,36 +2358,12 @@
       function $Speed(eInf, sW, sH, eH, canV = true, tInit = 0)
       {
        if (tInit === 0)
-        tInit = new Date().getTime();
+        tInit = Date.now();
        if (_iTitanic > tInit)
         return;
        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
         return;
-       let variationSize = 1;
-       if (canV && cfg.emote.size.variation !== false)
-       {
-        if (typeof cfg.emote.size.variation === 'number')
-        {
-         const chances = [];
-         chances.push(0.5);
-         chances.push(2);
-         for (let i = 0; i < cfg.emote.size.variation; i++)
-         {
-          chances.push(1);
-         }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-        {
-         const chances = [];
-         chances.push(...cfg.emote.size.variation.range);
-         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
-         {
-          chances.push(1);
-         }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-       }
+       let variationSize = _rndVar(canV);
        eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
@@ -2517,36 +2407,12 @@
       function $Drop(eInf, sW, sH, eH, canV = true, tInit = 0)
       {
        if (tInit === 0)
-        tInit = new Date().getTime();
+        tInit = Date.now();
        if (_iTitanic > tInit)
         return;
        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
         return;
-       let variationSize = 1;
-       if (canV && cfg.emote.size.variation !== false)
-       {
-        if (typeof cfg.emote.size.variation === 'number')
-        {
-         const chances = [];
-         chances.push(0.5);
-         chances.push(2);
-         for (let i = 0; i < cfg.emote.size.variation; i++)
-         {
-          chances.push(1);
-         }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-        {
-         const chances = [];
-         chances.push(...cfg.emote.size.variation.range);
-         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
-         {
-          chances.push(1);
-         }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-       }
+       let variationSize = _rndVar(canV);
        eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
@@ -2621,36 +2487,12 @@
        function $c_Crazy(eInf, sW, sH, eH, canV = true, tInit = 0)
        {
         if (tInit === 0)
-         tInit = new Date().getTime();
+         tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
          return;
-        let variationSize = 1;
-        if (canV && cfg.emote.size.variation !== false)
-        {
-         if (typeof cfg.emote.size.variation === 'number')
-         {
-          const chances = [];
-          chances.push(0.5);
-          chances.push(2);
-          for (let i = 0; i < cfg.emote.size.variation; i++)
-          {
-           chances.push(1);
-          }
-          variationSize = chances[shared.rnd(chances.length)];
-         }
-         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-         {
-          const chances = [];
-          chances.push(...cfg.emote.size.variation.range);
-          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
-          {
-           chances.push(1);
-          }
-          variationSize = chances[shared.rnd(chances.length)];
-         }
-        }
+        let variationSize = _rndVar(canV);
         eH = Math.ceil(eH * variationSize);
         let eW = eH;
         if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
@@ -2782,36 +2624,12 @@
       function $Confetti(eInf, sW, sH, eH, canV = true, tInit = 0)
       {
        if (tInit === 0)
-        tInit = new Date().getTime();
+        tInit = Date.now();
        if (_iTitanic > tInit)
         return;
        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
         return;
-       let variationSize = 1;
-       if (canV && cfg.emote.size.variation !== false)
-       {
-        if (typeof cfg.emote.size.variation === 'number')
-        {
-         const chances = [];
-         chances.push(0.5);
-         chances.push(2);
-         for (let i = 0; i < cfg.emote.size.variation; i++)
-         {
-          chances.push(1);
-         }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-        {
-         const chances = [];
-         chances.push(...cfg.emote.size.variation.range);
-         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
-         {
-          chances.push(1);
-         }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-       }
+       let variationSize = _rndVar(canV);
        eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
@@ -2854,36 +2672,12 @@
        function $c_Throw(eInf, sW, sH, eH, canV = true, tInit = 0)
        {
         if (tInit === 0)
-         tInit = new Date().getTime();
+         tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
          return;
-        let variationSize = 1;
-        if (canV && cfg.emote.size.variation !== false)
-        {
-         if (typeof cfg.emote.size.variation === 'number')
-         {
-          const chances = [];
-          chances.push(0.5);
-          chances.push(2);
-          for (let i = 0; i < cfg.emote.size.variation; i++)
-          {
-           chances.push(1);
-          }
-          variationSize = chances[shared.rnd(chances.length)];
-         }
-         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-         {
-          const chances = [];
-          chances.push(...cfg.emote.size.variation.range);
-          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
-          {
-           chances.push(1);
-          }
-          variationSize = chances[shared.rnd(chances.length)];
-         }
-        }
+        let variationSize = _rndVar(canV);
         eH = Math.ceil(eH * variationSize);
         let eW = eH;
         if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
@@ -2985,36 +2779,12 @@
        function $c_Pop(eInf, sW, sH, eH, canV = true, tInit = 0)
        {
         if (tInit === 0)
-         tInit = new Date().getTime();
+         tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
          return;
-        let variationSize = 1;
-        if (canV && cfg.emote.size.variation !== false)
-        {
-         if (typeof cfg.emote.size.variation === 'number')
-         {
-          const chances = [];
-          chances.push(0.5);
-          chances.push(2);
-          for (let i = 0; i < cfg.emote.size.variation; i++)
-          {
-           chances.push(1);
-          }
-          variationSize = chances[shared.rnd(chances.length)];
-         }
-         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-         {
-          const chances = [];
-          chances.push(...cfg.emote.size.variation.range);
-          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
-          {
-           chances.push(1);
-          }
-          variationSize = chances[shared.rnd(chances.length)];
-         }
-        }
+        let variationSize = _rndVar(canV);
         eH = Math.ceil(eH * variationSize);
         let eW = eH;
         if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
@@ -3110,38 +2880,14 @@
        function $c_TheCube(eInf, sW, sH, eH, canV = true, tInit = 0)
        {
         if (tInit === 0)
-         tInit = new Date().getTime();
+         tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
          return;
         const scene = document.createElement('div');
         scene.setAttribute('class', 'scene cube');
-        let variationSize = 1;
-        if (canV && cfg.emote.size.variation !== false)
-        {
-         if (typeof cfg.emote.size.variation === 'number')
-         {
-          const chances = [];
-          chances.push(0.5);
-          chances.push(2);
-          for (let i = 0; i < cfg.emote.size.variation; i++)
-          {
-           chances.push(1);
-          }
-          variationSize = chances[shared.rnd(chances.length)];
-         }
-         else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-         {
-          const chances = [];
-          chances.push(...cfg.emote.size.variation.range);
-          for (let i = 0; i < cfg.emote.size.variation.chance; i++)
-          {
-           chances.push(1);
-          }
-          variationSize = chances[shared.rnd(chances.length)];
-         }
-        }
+        let variationSize = _rndVar(canV);
         eH = Math.ceil(eH * variationSize);
         const eHh = Math.ceil(eH / 2);
         const nHh = eHh * -1;
@@ -3230,37 +2976,13 @@
       function $Fountain(eInf, sW, sH, eH, fX, fY, canV = true, tInit = 0)
       {
        if (tInit === 0)
-        tInit = new Date().getTime();
+        tInit = Date.now();
        if (_iTitanic > tInit)
         return;
        if (eInf.hasOwnProperty('origin') && display.erasedMsgs.includes(eInf.origin))
         return;
        const tMS = Math.floor(cfg.emote.time * 1000 * timing.display.Fountain.time);
-       let variationSize = 1;
-       if (canV && cfg.emote.size.variation !== false)
-       {
-        if (typeof cfg.emote.size.variation === 'number')
-        {
-         const chances = [];
-         chances.push(0.5);
-         chances.push(2);
-         for (let i = 0; i < cfg.emote.size.variation; i++)
-         {
-          chances.push(1);
-         }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-        else if (typeof cfg.emote.size.variation === 'object' && cfg.emote.size.variation.hasOwnProperty('chance') && cfg.emote.size.variation.hasOwnProperty('range') && Array.isArray(cfg.emote.size.variation.range))
-        {
-         const chances = [];
-         chances.push(...cfg.emote.size.variation.range);
-         for (let i = 0; i < cfg.emote.size.variation.chance; i++)
-         {
-          chances.push(1);
-         }
-         variationSize = chances[shared.rnd(chances.length)];
-        }
-       }
+       let variationSize = _rndVar(canV);
        eH = Math.ceil(eH * variationSize);
        let eW = eH;
        if (eInf.hasOwnProperty('width') && eInf.hasOwnProperty('height'))
@@ -3311,6 +3033,45 @@
       };
      }();
 
+     function _rndVar(canV = true)
+     {
+      if (!canV)
+       return 1;
+      if (cfg.emote.size.variation === false)
+       return 1;
+      const chances = [];
+      switch (typeof cfg.emote.size.variation)
+      {
+       case 'number':
+        chances.push(0.5);
+        chances.push(2);
+        for (let i = 0; i < cfg.emote.size.variation; i++)
+        {
+         chances.push(1);
+        }
+        break;
+       case 'object':
+        if (!cfg.emote.size.variation.hasOwnProperty('chance'))
+         return 1;
+        if (!cfg.emote.size.variation.hasOwnProperty('range'))
+         return 1;
+        if (!Array.isArray(cfg.emote.size.variation.range))
+         return 1;
+        chances.push(...cfg.emote.size.variation.range);
+        for (let i = 0; i < cfg.emote.size.variation.chance; i++)
+        {
+         chances.push(1);
+        }
+        break;
+      }
+      switch(chances.length)
+      {
+       case 0: return 1;
+       case 1: return chances[0];
+      }
+      return chances[shared.rnd(chances.length)];
+     }
+
      function _queueEmote(e)
      {
       const sW = window.innerWidth;
@@ -3351,7 +3112,7 @@
          _toShow.splice(i, 1);
         }
        }
-       const tNow = new Date().getTime();
+       const tNow = Date.now();
        const ctOf = {};
        for (let i = 0, l = _toSift.length; i < l; i++)
        {
@@ -3447,7 +3208,7 @@
       {
        function $c_Fireworks(kList, sW, sH, eH, iKC)
        {
-        const tInit = new Date().getTime();
+        const tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         const kClean = [];
@@ -3607,10 +3368,19 @@
       {
        function $c_Spiral(kList, sW, sH, eH, iKC)
        {
-        const tInit = new Date().getTime();
+        const tInit = Date.now();
         if (_iTitanic > tInit)
          return;
-        const oX = shared.rnd() * sW;
+        let maxW = 0;
+        for (let i = 0, l = kList.length; i < l; i++)
+        {
+         let eW = eH;
+         if (kList[i].hasOwnProperty('width') && kList[i].hasOwnProperty('height'))
+          eW = kList[i].width / kList[i].height * eH;
+         if (eW > maxW)
+          maxW = eW;
+        }
+        const oX = shared.rnd(sW - maxW);
         const oY = shared.rnd(sH - eH);
         const r = Math.min(sW, sH);
         shared.doNextFrame(_init, tInit, kList, oX, oY, eH, r, iKC);
@@ -3620,7 +3390,11 @@
        {
         if (_iTitanic > tInit)
          return;
-        const c = _cRadius / (_rndFromRange(timing.kappa.Spiral.vectors) + (shared.rnd() * 2));
+        const xt = (shared.rnd(5) + 1) / 7;
+        let fr = _rndFromRange(timing.kappa.Spiral.vectors) + xt;
+        if (fr > iKC)
+         fr = iKC * 0.75 + xt;
+        const c = _cRadius / fr;
         let th = shared.rnd() * _cRadius;
         const o = shared.rnd(2) === 0;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time);
@@ -3687,7 +3461,7 @@
       {
        function $c_Pyramid(kList, sW, sH)
        {
-        const tInit = new Date().getTime();
+        const tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         const drawn = [];
@@ -3798,7 +3572,7 @@
       {
        function $c_SmallPyramid(kList, sW, sH)
        {
-        const tInit = new Date().getTime();
+        const tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         const drawn = [];
@@ -3910,7 +3684,7 @@
       {
        async function $c_Stampede(kList, sW, sH, eH, iKC)
        {
-        const tInit = new Date().getTime();
+        const tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         const bandHeight = eH * timing.kappa.Stampede.height;
@@ -4023,8 +3797,8 @@
         const h = -2 * maxW;
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time);
         const tSpeed = Math.floor(tMS * timing.kappa.Stampede.speed);
-        const oX = d ? h : sW;
-        const dX = d ? sW : h;
+        const oX = d ? h : sW + maxW;
+        const dX = d ? sW + maxW : h;
         const s = '--emote-height: ' + eH + 'px;' +
          ' --emote-width: ' + eW + 'px;' +
          ' transform: translate(' + oX + 'px, ' + v + 'px);' +
@@ -4056,7 +3830,7 @@
       {
        async function $c_Conga(kList, sW, sH, eH, nM)
        {
-        const tInit = new Date().getTime();
+        const tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         let v = 0;
@@ -4129,6 +3903,7 @@
         const zimgs = [];
         for (let i = 0; i < ct; i++)
         {
+         _eActive--;
          const btzwCE = _btzwClassForEmote(zurls[i]);
          imgs.push(_dance(tInit, urls[i].url, urls[i].origin, i, sW, v, eH, bS, ct, d, xtra, btzwCE));
          const oZ = [];
@@ -4265,7 +4040,7 @@
       {
        async function $c_Coaster(kList, sW, sH, eH, iKC)
        {
-        const tInit = new Date().getTime();
+        const tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         const d = shared.rnd(2) === 0;
@@ -4344,6 +4119,7 @@
          ' transition: transform linear 0ms;' +
           _styleEmoteString([], [], [], [], [], []);
         const tLoop = cfg.emote.time * 1000 * timing.kappa.Coaster.time;
+        _eActive--;
         const r = _addEmoteAndZWEs(tInit, eInf, 1, {style: s}, {space: false, time: tLoop});
         if (r.length < 1)
          return;
@@ -4392,7 +4168,7 @@
 
        function $c_TheCube(kList, sW, sH, eH, bC, iR)
        {
-        const tInit = new Date().getTime();
+        const tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         const eHh = Math.ceil(eH / 2);
@@ -4495,7 +4271,7 @@
 
        function $c_Text(kList, sW, sH, sMsg, iTime)
        {
-        const tInit = new Date().getTime();
+        const tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         const msgDist = _buildMsgArr(sMsg);
@@ -5133,7 +4909,7 @@
       {
        kList[i] = _appendHolidayZWE(kList[i]);
       }
-      const tInit = new Date().getTime();
+      const tInit = Date.now();
       let estMS = Math.floor(cfg.emote.time * 1000);
       if (timing.kappa.hasOwnProperty(kStyle.style) && timing.kappa[kStyle.style].hasOwnProperty('time'))
        estMS = Math.floor(cfg.emote.time * 1000 * timing.kappa[kStyle.style].time);
@@ -5158,7 +4934,6 @@
         _list.SmallPyramid(kList, sW, sH);
         break;
        case 'Conga':
-        _eActive -= waitFor;
         let avoidMiddle = false;
         if (cfg.display.kappa.conga.hasOwnProperty('avoidMiddle') && cfg.display.kappa.conga.avoidMiddle === true)
          avoidMiddle = true;
@@ -5167,7 +4942,6 @@
         _list.Conga(kList, sW, sH, eH, avoidMiddle);
         break;
        case 'Coaster':
-        _eActive -= waitFor;
         _list.Coaster(kList, sW, sH, eHh, kStyle.count);
         break;
        case 'Text':
@@ -5451,7 +5225,7 @@
       window.clearTimeout(_tGC);
       _tGC = false;
       let done = true;
-      const tNow = new Date().getTime();
+      const tNow = Date.now();
       for (const idx in _toGC)
       {
        if (!_toGC.hasOwnProperty(idx))
@@ -5492,7 +5266,7 @@
       {
        x++;
       } while (_toGC.hasOwnProperty(x));
-      _toGC[x] = {img: img, space: space, dec: decActive, end: new Date().getTime() + t};
+      _toGC[x] = {img: img, space: space, dec: decActive, end: Date.now() + t};
       if (_tGC === false)
        _tGC = window.setTimeout(_doGC, 500);
      }
@@ -5878,7 +5652,7 @@
 
     function $eraseAll()
     {
-     _iTitanic = new Date().getTime();
+     _iTitanic = Date.now();
      display.kappa.hide();
      const imgs = document.getElementsByTagName('img');
      const death = dieList[shared.rnd(dieList.length)];
@@ -6296,7 +6070,7 @@
            return;
           if (!ev.hasOwnProperty('user_name'))
            return;
-          twitch.net.fList[ev.user_id] = {value: true, t: new Date().getTime()};
+          twitch.net.fList[ev.user_id] = {value: true, t: Date.now()};
           if (cfg.event.twitch.follow === false)
            return;
           if (_fHist.includes(ev.user_id))
@@ -7439,7 +7213,7 @@
 
       function _populateAuth(a = null, r = null, j = null)
       {
-       twitch.net.oAuth.auth.time = new Date().getTime();
+       twitch.net.oAuth.auth.time = Date.now();
        if (a === null || r === null || j === null)
        {
         twitch.net.oAuth.auth.client_id = false;
@@ -7468,6 +7242,12 @@
        if (!r.success)
        {
         if (r.code === 401)
+        {
+         notice.error(notice.Type.TWITCH_TOKEN);
+         twitch.net.oAuth.clear();
+        }
+        const eJ = r.json;
+        if (eJ !== null && eJ.hasOwnProperty('message') && eJ.message === 'Invalid refresh token')
         {
          notice.error(notice.Type.TWITCH_TOKEN);
          twitch.net.oAuth.clear();
@@ -7516,7 +7296,7 @@
       {
        if (twitch.net.oAuth.auth.expires > 0)
        {
-        const nowTime = new Date().getTime();
+        const nowTime = Date.now();
         const exTime = twitch.net.oAuth.auth.time + (twitch.net.oAuth.auth.expires * 1000 * 0.75);
         if (nowTime < exTime)
          return;
@@ -8748,7 +8528,7 @@
        const uID = cmd.tags['user-id'];
        if (twitch.net.fList.hasOwnProperty(uID))
        {
-        const tDif = new Date().getTime() - twitch.net.fList[uID].t;
+        const tDif = Date.now() - twitch.net.fList[uID].t;
         if (tDif < _rFH)
          return twitch.net.fList[uID].value;
        }
@@ -8771,10 +8551,10 @@
         return false;
        if (j.hasOwnProperty('data') && j.data.length > 0)
        {
-        twitch.net.fList[uID] = {value: true, t: new Date().getTime()};
+        twitch.net.fList[uID] = {value: true, t: Date.now()};
         return true;
        }
-       twitch.net.fList[uID] = {value: false, t: new Date().getTime()};
+       twitch.net.fList[uID] = {value: false, t: Date.now()};
        return false;
       }
 
@@ -8950,7 +8730,7 @@
          r.splice(i, 1);
        }
       }
-      const t = new Date().getTime();
+      const t = Date.now();
       for (let i = 0, l = r.length; i < l; i++)
       {
        r[i].timestamp = t;
@@ -8992,7 +8772,7 @@
      {
       if (n === false && _chList.hasOwnProperty(chID))
       {
-       const tDif = new Date().getTime() - _chList[chID].t;
+       const tDif = Date.now() - _chList[chID].t;
        if (tDif < _rCH)
         return _chList[chID].value;
       }
@@ -9035,7 +8815,7 @@
        }
        ret.push({url: eURL});
       }
-      _chList[chID] = {t: new Date().getTime(), value: ret};
+      _chList[chID] = {t: Date.now(), value: ret};
       return ret;
      }
 
@@ -9156,6 +8936,8 @@
    const youtube = function()
    {
     const _eStickers = {};
+    const _defCDN = 'yt3';
+    let _bestCDN = _defCDN;
 
     const $net = function()
     {
@@ -9451,6 +9233,7 @@
        const _mStep = 1000;
        const _mWait = 4000;
        const _mLimit = 15000 - _mInterval;
+       let _tInit = false;
 
        async function $start(stream, page = false)
        {
@@ -9585,6 +9368,14 @@
         }
         if (j === null)
          return;
+        if (page === false || _tInit === false)
+        {
+         const pJitter = (_mWait + _bSlower) * (2 + (_bSlower > 0 ? Math.floor(_mStep / _bSlower) : 0));
+         if (r.headers.hasOwnProperty('date'))
+          _tInit = new Date(r.headers.date).getTime() - pJitter;
+         else
+          _tInit = Date.now() - pJitter;
+        }
         notice.info(notice.Type.YOUTUBE_NETWORK);
         notice.active |= notice.Connection.YOUTUBE;
         notice.resetHide();
@@ -9597,7 +9388,6 @@
          nextPage = j.nextPageToken;
         if (j.hasOwnProperty('items') && Array.isArray(j.items) && j.items.length > 0)
         {
-         const pNow = new Date().getTime();
          for (let i = 0, l = j.items.length; i < l; i++)
          {
           const cmd = j.items[i];
@@ -9608,8 +9398,7 @@
           if (cmd.snippet.hasOwnProperty('publishedAt'))
           {
            const pTime = new Date(cmd.snippet.publishedAt).getTime();
-           const pJitter = (_mWait + _bSlower) * (2 + (_bSlower > 0 ? Math.floor(_mStep / _bSlower) : 0));
-           if (pNow - pTime > pJitter)
+           if (_tInit > pTime)
             continue;
           }
           if (!cmd.hasOwnProperty('_channel'))
@@ -9885,7 +9674,7 @@
         const chID = j.items[i].snippet.resourceId.channelId;
         if (!youtube.net.sList.hasOwnProperty(chID))
          youtube.net.sList[chID] = {};
-        youtube.net.sList[chID][j.items[i].subscriberSnippet.channelId] = {value: true, t: new Date().getTime()};
+        youtube.net.sList[chID][j.items[i].subscriberSnippet.channelId] = {value: true, t: Date.now()};
        }
        const findU = _uLS;
        for (let i = 0, l = j.items.length; i < l; i++)
@@ -9917,7 +9706,7 @@
       {
        if (youtube.net.sList.hasOwnProperty(chID) && youtube.net.sList[chID].hasOwnProperty(uID))
        {
-        const tDif = new Date().getTime() - youtube.net.sList[chID][uID].t;
+        const tDif = Date.now() - youtube.net.sList[chID][uID].t;
         if (tDif < _rSH)
          return youtube.net.sList[chID][uID].value;
        }
@@ -9939,7 +9728,7 @@
          return false;
         if (!youtube.net.sList.hasOwnProperty(chID))
          youtube.net.sList[chID] = {};
-        youtube.net.sList[chID][uID] = {value: false, t: new Date().getTime()};
+        youtube.net.sList[chID][uID] = {value: false, t: Date.now()};
         return false;
        }
        if (j === null)
@@ -9952,10 +9741,10 @@
         youtube.net.sList[chID] = {};
        if (j.pageInfo.totalResults > 0)
        {
-        youtube.net.sList[chID][uID] = {value: true, t: new Date().getTime()};
+        youtube.net.sList[chID][uID] = {value: true, t: Date.now()};
         return true;
        }
-       youtube.net.sList[chID][uID] = {value: false, t: new Date().getTime()};
+       youtube.net.sList[chID][uID] = {value: false, t: Date.now()};
        return false;
       }
 
@@ -9998,6 +9787,68 @@
       }
       service.syncList();
      }
+
+     const $cdnTest = function()
+     {
+      async function $c_cdnTest()
+      {
+       const stKeys = Object.keys(_eStickers);
+       if (cfg.youtube.cdn === true)
+       {
+        const oLowest = {subdomain: _defCDN, ping: Number.MAX_SAFE_INTEGER};
+        const oPings = [];
+        for (let i = 0, l = cURLs.cdn.youtube.subdomain.length; i < l; i++)
+        {
+         const stX = shared.rnd(stKeys.length);
+         const u = _eStickers[stKeys[stX]].url.replace('//' + _defCDN + '.', '//' + cURLs.cdn.youtube.subdomain[i] + '.');
+         oPings.push(_ping(u));
+        }
+        const oRets = await Promise.allSettled(oPings);
+        for (let i = 0, l = cURLs.cdn.youtube.subdomain.length; i < l; i++)
+        {
+         if (oRets[i].status !== 'fulfilled')
+          continue;
+         if (oRets[i].value === false)
+          continue;
+         const c = cURLs.cdn.youtube.subdomain[i];
+         const t = oRets[i].value;
+         if (oLowest.ping > t)
+         {
+          oLowest.subdomain = c;
+          oLowest.ping = t;
+         }
+        }
+        _bestCDN = oLowest.subdomain;
+       }
+       else
+        _bestCDN = cfg.youtube.cdn;
+       for (let i = 0, l = stKeys.length; i < l; i++)
+       {
+        _eStickers[stKeys[i]].url = _eStickers[stKeys[i]].url.replace('//' + _defCDN + '.', '//' + _bestCDN + '.');
+       }
+       if (service.emotes.hasOwnProperty('youtube'))
+       {
+        for (const eID in service.emotes.youtube)
+        {
+         if (!service.emotes.youtube.hasOwnProperty(eID))
+          continue;
+         service.emotes.youtube[eID].url = service.emotes.youtube[eID].url.replace('//' + _defCDN + '.', '//' + _bestCDN + '.');
+        }
+       }
+       return _bestCDN;
+      }
+
+      async function _ping(file)
+      {
+       const tStart = Date.now();
+       const r = await shared.httpRequest('HEAD', file, {}, null, true, false);
+       if (!r)
+        return false;
+       return (Date.now() - tStart);
+      }
+
+      return $c_cdnTest;
+     }();
 
      const $oAuth = function()
      {
@@ -10095,7 +9946,7 @@
 
       function _populateAuth(a = null, r = null, j = null)
       {
-       youtube.net.oAuth.auth.time = new Date().getTime();
+       youtube.net.oAuth.auth.time = Date.now();
        if (a === null || r === null || j === null)
        {
         youtube.net.oAuth.auth.client_id = false;
@@ -10216,7 +10067,7 @@
       {
        if (youtube.net.oAuth.auth.expires > 0)
        {
-        const nowTime = new Date().getTime();
+        const nowTime = Date.now();
         const exTime = youtube.net.oAuth.auth.time + (youtube.net.oAuth.auth.expires * 1000 * 0.75);
         if (nowTime < exTime)
          return;
@@ -10304,6 +10155,7 @@
       dead: false,
       broadcasts: $broadcasts,
       subscribers: $subscribers,
+      cdnTest: $cdnTest,
       oAuth: $oAuth
      };
     }();
@@ -11066,7 +10918,7 @@
          r.splice(i, 1);
        }
       }
-      const t = new Date().getTime();
+      const t = Date.now();
       for (let i = 0, l = r.length; i < l; i++)
       {
        r[i].timestamp = t;
@@ -11106,7 +10958,7 @@
      {
       if (n === false && _chList.hasOwnProperty(chName))
       {
-       const tDif = new Date().getTime() - _chList[chName].t;
+       const tDif = Date.now() - _chList[chName].t;
        if (tDif < _rCH)
         return _chList[chName].value;
       }
@@ -11133,7 +10985,7 @@
        const aN = _retrNames(j[jIDs[i]]);
        if (cfg.ignore.emotes !== false && _arrayInArray(aN, cfg.ignore.emotes))
         continue;
-       const eURL = cURLs.cdn.youtube.emoji.replaceAll(cVARs.url.emojiID, j[jIDs[i]].image);
+       const eURL = cURLs.cdn.youtube.emoji.replace('//' + _defCDN + '.', '//' + _bestCDN + '.').replaceAll(cVARs.url.emojiID, j[jIDs[i]].image);
        ret.push({url: eURL});
        if (n === false)
         continue;
@@ -11146,7 +10998,7 @@
         };
        }
       }
-      _chList[chName] = {t: new Date().getTime(), value: ret};
+      _chList[chName] = {t: Date.now(), value: ret};
       return ret;
      }
 
@@ -11182,7 +11034,7 @@
       {
        service.emotes.youtube[aN[k]] = {
         scope: cSources.scope.global,
-        url: cURLs.cdn.youtube.emoji.replaceAll(cVARs.url.emojiID, j[jIDs[i]].image),
+        url: cURLs.cdn.youtube.emoji.replace('//' + _defCDN + '.', '//' + _bestCDN + '.').replaceAll(cVARs.url.emojiID, j[jIDs[i]].image),
         id: jIDs[i]
        };
       }
@@ -11538,6 +11390,8 @@
         async function $c_App_Events(j)
         {
          const jData = JSON.parse(j.data);
+         if (jData.hasOwnProperty('content') && jData.content !== null)
+          jData.content = jData.content.replaceAll(/\s+/g, ' ').replaceAll(/([^ ])\[emote:/g, '$1 [emote:');
          switch (j.event.slice(11))
          {
           case 'ChatMessageEvent':
@@ -11943,7 +11797,7 @@
 
       function _populateAuth(c = null)
       {
-       kick.net.oAuth.auth.time = new Date().getTime();
+       kick.net.oAuth.auth.time = Date.now();
        if (c === null)
        {
         kick.net.oAuth.auth.channel = false;
@@ -12372,7 +12226,7 @@
        if (!cmd.hasOwnProperty('expires_at') || cmd.expires_at === null)
         return;
        const tExp = new Date(cmd.expires_at).getTime();
-       const dDur = Math.ceil((tExp - new Date().getTime()) / 1000);
+       const dDur = Math.ceil((tExp - Date.now()) / 1000);
        const r = shared.findInMaybeRange(cfg.event.kick.timeout, dDur);
        if (r === false)
         return;
@@ -12504,7 +12358,7 @@
        const uID = cmd.sender.id;
        if (kick.net.fList.hasOwnProperty(uID))
        {
-        const tDif = new Date().getTime() - kick.net.fList[uID].t;
+        const tDif = Date.now() - kick.net.fList[uID].t;
         if (tDif < _rFH)
          return kick.net.fList[uID].value;
        }
@@ -12513,10 +12367,10 @@
         return false;
        if (u.follower !== false)
        {
-        kick.net.fList[uID] = {value: true, t: new Date().getTime()};
+        kick.net.fList[uID] = {value: true, t: Date.now()};
         return true;
        }
-       kick.net.fList[uID] = {value: false, t: new Date().getTime()};
+       kick.net.fList[uID] = {value: false, t: Date.now()};
        return false;
       }
 
@@ -12673,7 +12527,7 @@
          r.splice(i, 1);
        }
       }
-      const t = new Date().getTime();
+      const t = Date.now();
       for (let i = 0, l = r.length; i < l; i++)
       {
        r[i].timestamp = t;
@@ -12714,7 +12568,7 @@
      {
       if (n === false && _chList.hasOwnProperty(chName))
       {
-       const tDif = new Date().getTime() - _chList[chName].t;
+       const tDif = Date.now() - _chList[chName].t;
        if (tDif < _rCH)
         return _chList[chName].value;
       }
@@ -12763,7 +12617,7 @@
         }
         ret.push({url: eURL});
        }
-       _chList[chName] = {t: new Date().getTime(), value: ret};
+       _chList[chName] = {t: Date.now(), value: ret};
       }
       return ret;
      }
@@ -13016,7 +12870,7 @@
         const crew = cCrew.prefix +
          encodeURIComponent(cCrew.svg.tag.open + cCrew.css.tag.open) +
          encodeURIComponent(svgCSS) +
-         encodeURIComponent(cCrew.css.tag.close + cCrew.svg.body + cCrew.svg.close);
+         encodeURIComponent(cCrew.css.tag.close + cCrew.svg.body + cCrew.svg.tag.close);
         return {svc: cSources.service.emoji, url: crew, str: cCrew.id, pos: p, width: 112, height: 112};
        }
 
@@ -14064,7 +13918,7 @@
       {
        async function $c_parseCommand(msg, lv, eA = false, mID = false)
        {
-        const kNow = new Date().getTime();
+        const kNow = Date.now();
         let foundAdvCmd = false;
         for (const k of cfg.commands)
         {
@@ -15063,7 +14917,7 @@
 
      function _populateAuth(a = null, r = null, j = null)
      {
-      streamelements.oAuth.auth.time = new Date().getTime();
+      streamelements.oAuth.auth.time = Date.now();
       if (a !== null && r !== null && j !== null)
       {
        streamelements.oAuth.auth.jwt_token = false;
@@ -15131,7 +14985,7 @@
      {
       if (streamelements.oAuth.auth.expires > 0)
       {
-       const nowTime = new Date().getTime();
+       const nowTime = Date.now();
        const exTime = streamelements.oAuth.auth.time + (streamelements.oAuth.auth.expires * 1000 * 0.75);
        if (nowTime < exTime)
         return;
@@ -17097,7 +16951,8 @@
          return;
         x.ontimeout = null;
         x.onreadystatechange = null;
-        resolve({code: x.status, data: x.responseText, get success(){return Math.floor(this.code / 100) === 2;}, get json(){try{return JSON.parse(this.data);}catch(ex){return null;}}});
+        const h = _parseHeaders(x.getAllResponseHeaders());
+        resolve({code: x.status, data: x.responseText, headers: h, get success(){return Math.floor(this.code / 100) === 2;}, get json(){try{return JSON.parse(this.data);}catch(ex){return null;}}});
        };
        x.ontimeout = function()
        {
@@ -17116,6 +16971,24 @@
       }
      );
      return p;
+    }
+
+    function _parseHeaders(s)
+    {
+     const a = {};
+     if (s === null)
+      return a;
+     if (s.indexOf('\r\n') === -1)
+      return a;
+     const h = s.split('\r\n');
+     for (let i = 0, l = h.length; i < l; i++)
+     {
+      if (h[i].indexOf(': ') === -1)
+       continue;
+      const kv = h[i].split(': ', 2);
+      a[kv[0].toLowerCase()] = kv[1];
+     }
+     return a;
     }
 
     function $findInMaybeRange(r, v)
@@ -17698,11 +17571,12 @@
      cmdLogin.setAttribute('id', _idLogin);
      cmdLogin.setAttribute('type', 'button');
      cmdLogin.classList.add('twitch');
-     cmdLogin.classList.add('login');
+     cmdLogin.classList.add('auth');
+     cmdLogin.classList.add('unauthorized');
      document.addEventListener('mouseover', _fadeInLogin);
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
-     cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on Twitch</span>';
+     cmdLogin.innerHTML = 'Twitch<br><span>Log In</span>';
      if (auto && ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
@@ -17744,18 +17618,20 @@
      cmdLogout.setAttribute('id', _idLogout);
      cmdLogout.setAttribute('type', 'button');
      cmdLogout.classList.add('twitch');
-     cmdLogout.classList.add('logout');
+     cmdLogout.classList.add('auth');
      document.addEventListener('mousemove', _fadeInLogout);
      if (v)
      {
+      cmdLogout.classList.add('unauthorized');
       cmdLogout.setAttribute('onclick', 'loginT.begin();');
-      cmdLogout.innerHTML = 'Re-Auth';
+      cmdLogout.innerHTML = 'Twitch<br><span>Re-Auth</span>';
       _tL = window.setTimeout(_fadeOutLogout, _visTime);
      }
      else
      {
+      cmdLogout.classList.add('authorized');
       cmdLogout.setAttribute('onclick', 'loginT.logOut();');
-      cmdLogout.innerHTML = 'Log Out';
+      cmdLogout.innerHTML = 'Twitch<br><span>Log Out</span>';
       cmdLogout.classList.add('hidden');
      }
      document.body.appendChild(cmdLogout);
@@ -17911,11 +17787,12 @@
      cmdLogin.setAttribute('id', _idLogin);
      cmdLogin.setAttribute('type', 'button');
      cmdLogin.classList.add('youtube');
-     cmdLogin.classList.add('login');
+     cmdLogin.classList.add('auth');
+     cmdLogin.classList.add('unauthorized');
      document.addEventListener('mouseover', _fadeInLogin);
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginYT.begin();');
-     cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on YouTube</span>';
+     cmdLogin.innerHTML = 'YouTube<br><span>Log In</span>';
      if (auto && ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
@@ -17957,18 +17834,20 @@
      cmdLogout.setAttribute('id', _idLogout);
      cmdLogout.setAttribute('type', 'button');
      cmdLogout.classList.add('youtube');
-     cmdLogout.classList.add('logout');
+     cmdLogout.classList.add('auth');
      document.addEventListener('mouseover', _fadeInLogout);
      if (v)
      {
+      cmdLogout.classList.add('unauthorized');
       cmdLogout.setAttribute('onclick', 'loginYT.begin();');
-      cmdLogout.innerHTML = 'Re-Auth';
+      cmdLogout.innerHTML = 'YouTube<br><span>Re-Auth</span>';
       _tL = window.setTimeout(_fadeOutLogout, _visTime);
      }
      else
      {
+      cmdLogout.classList.add('authorized');
       cmdLogout.setAttribute('onclick', 'loginYT.logOut();');
-      cmdLogout.innerHTML = 'Log Out';
+      cmdLogout.innerHTML = 'YouTube<br><span>Log Out</span>';
       cmdLogout.classList.add('hidden');
      }
      document.body.appendChild(cmdLogout);
@@ -18060,11 +17939,12 @@
      cmdLogin.setAttribute('id', _idLogin);
      cmdLogin.setAttribute('type', 'button');
      cmdLogin.classList.add('kick');
-     cmdLogin.classList.add('login');
+     cmdLogin.classList.add('auth');
+     cmdLogin.classList.add('unauthorized');
      document.addEventListener('mouseover', _fadeInLogin);
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginK.begin();');
-     cmdLogin.innerHTML = 'Authenticate Emote Wall<br><span>on Kick</span>';
+     cmdLogin.innerHTML = 'Kick<br><span>Log In</span>';
      if (auto && ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
@@ -18108,18 +17988,20 @@
      cmdLogout.setAttribute('id', _idLogout);
      cmdLogout.setAttribute('type', 'button');
      cmdLogout.classList.add('kick');
-     cmdLogout.classList.add('logout');
+     cmdLogout.classList.add('auth');
      document.addEventListener('mousemove', _fadeInLogout);
      if (v)
      {
+      cmdLogout.classList.add('unauthorized');
       cmdLogout.setAttribute('onclick', 'loginK.begin();');
-      cmdLogout.innerHTML = 'Re-Auth';
+      cmdLogout.innerHTML = 'Kick<br><span>Re-Auth</span>';
       _tL = window.setTimeout(_fadeOutLogout, _visTime);
      }
      else
      {
+      cmdLogout.classList.add('authorized');
       cmdLogout.setAttribute('onclick', 'loginK.logOut();');
-      cmdLogout.innerHTML = 'Log Out';
+      cmdLogout.innerHTML = 'Kick<br><span>Log Out</span>';
       cmdLogout.classList.add('hidden');
      }
      document.body.appendChild(cmdLogout);
@@ -18207,27 +18089,40 @@
      }
      if (scks.length > 0)
       await Promise.allSettled(scks);
+     const svcs = [];
      if (bT)
-     {
-      if (await _twitch() === false)
-       twitch.net.dead = true;
-     }
+      svcs.push(_twitch());
      else
       twitch.net.dead = true;
      if (bYT)
-     {
-      if (await _youtube() === false)
-       youtube.net.dead = true;
-     }
+      svcs.push(_youtube());
      else
       youtube.net.dead = true;
      if (bK)
-     {
-      if (await _kick() === false)
-       kick.net.dead = true;
-     }
+      svcs.push(_kick());
      else
       kick.net.dead = true;
+     if (svcs.length < 1)
+      return;
+     const rets = await Promise.allSettled(svcs);
+     if (bT)
+     {
+      const rT = rets.shift();
+      if (rT.status !== 'fulfilled' || rT.value === false)
+       twitch.net.dead = true;
+     }
+     if (bYT)
+     {
+      const rYT = rets.shift();
+      if (rYT.status !== 'fulfilled' || rYT.value === false)
+       youtube.net.dead = true;
+     }
+     if (bK)
+     {
+      const rK = rets.shift();
+      if (rK.status !== 'fulfilled' || rK.value === false)
+       kick.net.dead = true;
+     }
     }
 
     async function _twitch()
@@ -18247,6 +18142,8 @@
      if (await youtube.global() === false)
       return false;
      await youtube.stickers();
+     if (!!cfg.youtube.cdn)
+      youtube.net.cdnTest();
      notice.expect |= notice.Connection.YOUTUBE;
      if (cfg.event.youtube.sub !== false)
       youtube.net.subscribers.init();
@@ -19372,6 +19269,7 @@
     z-index: 1000;
     opacity: 1;
     position: absolute;
+    user-select: none;
    }
    button.hidden
    {
@@ -19425,15 +19323,15 @@
     background-color: #FF0000;
    }
 
-   button.login
+   button.auth
    {
     transition: opacity 0.5s;
-    left: calc(50% - 6.5em);
-    width: 13em;
-    font-size: 6vmin;
-    padding: 0.5em;
+    right: 0.5em;
+    width: 7em;
+    font-size: 3.5vmin;
+    padding: 0.3em 0.5em 0.5em 2em;
    }
-   button.login span
+   button.auth span
    {
     font-size: 40%;
     padding: 0;
@@ -19441,38 +19339,35 @@
     bottom: 0.25em;
     right: 0.5em;
    }
-   button.login.twitch
+   button.auth.twitch
    {
-    top: calc(50% - 1em - 2.5em);
+    top: 0.5em;
    }
-   button.login.kick
+   button.auth.kick
    {
-    top: calc(50% - 1em);
+    top: 2.75em;
    }
-   button.login.youtube
+   button.auth.youtube
    {
-    top: calc(50% - 1em + 2.5em);
+    top: 5em;
    }
-
-   button.logout
+   button.auth::before
    {
-    transition: opacity 0.5s;
-    right: 1em;
-    width: 5em;
-    font-size: 2vmin;
-    padding: 0.5em;
+    content: '\1f9c5';
+    position: absolute;
+    left: 0.5em;
    }
-   button.logout.twitch
+   button.auth.unauthorized::before
    {
-    top: 1em;
+    filter: grayscale(1);
    }
-   button.logout.kick
+   button.auth.authorized::after
    {
-    top: 4em;
-   }
-   button.logout.youtube
-   {
-    top: 7em;
+    content: '\1f440';
+    position: absolute;
+    left: 1.6em;
+    top: 1.3em;
+    font-size: 50%;
    }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1" />

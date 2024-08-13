@@ -106,6 +106,11 @@ Configuration Information
          - No additional connections will be made, even if less than `max`.  
          - No existing broadcasts will be disconnected from.
 
+  * `cdn`  
+    *Choose a CDN subdomain for YouTube images to be loaded from.*  
+     - [ ] If `true`, the script will automatically choose the fastest CDN by downloading a random YouTube supersticker image from each one.
+     - [ ] If a string, the value should be one of these: `'yt3'`, `'yt4'`, `'gp3'`, `'gp4'`, `'gp5'`, `'gp6'`, `'gm1'`, `'gm2'`, `'gm3'`, `'gm4'`, `'cp3'`, `'cp4'`, `'cp5'`, `'cp6'`, `'mua3'`, `'mua4'`, `'mua5'`, `'mua6'`, `'sp1'`, `'sp3'`, `'ap1'`, `'ap4'`.
+
   * `share`  
     *Share your YouTube channel on the Emote Wall home page!*
 
