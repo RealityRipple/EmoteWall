@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.9.7 BETA
+    * v0.9.7.1 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -11721,6 +11721,7 @@
         _uLC = j.data.count;
        if (j.data.count !== _uLC)
        {
+        kick.net.fList = {};
         if (j.data.count > _uLC)
         {
          const cDif = j.data.count - _uLC;
@@ -12286,39 +12287,40 @@
         return r;
        if (!Array.isArray(cmd.sender.identity.badges))
         return r;
-       if (cmd.sender.identity.badges.length < 1)
-        return r;
-       for (let i = 0, l = cmd.sender.identity.badges.length; i < l; i++)
+       if (cmd.sender.identity.badges.length > 0)
        {
-        if (!cmd.sender.identity.badges[i].hasOwnProperty('type') || cmd.sender.identity.badges[i].type === null)
-         continue;
-        switch (cmd.sender.identity.badges[i].type)
+        for (let i = 0, l = cmd.sender.identity.badges.length; i < l; i++)
         {
-         case 'broadcaster':
-          r |= kick.Access.BROADCASTER;
-          break;
-         case 'moderator':
-          r |= kick.Access.MODERATOR;
-          break;
-         case 'founder':
-          r |= kick.Access.FOUNDER;
-          break;
-         case 'vip':
-          r |= kick.Access.VIP;
-          break;
-         case 'og':
-          r |= kick.Access.OG;
-          break;
-         case 'subscriber':
-          r |= kick.Access.SUBSCRIBER;
-          break;
-         case 'verified':
-          r |= kick.Access.VERIFIED;
-          break;
-         case 'sub_gifter':
-          break;
-         case 'staff':
-          break;
+         if (!cmd.sender.identity.badges[i].hasOwnProperty('type') || cmd.sender.identity.badges[i].type === null)
+          continue;
+         switch (cmd.sender.identity.badges[i].type)
+         {
+          case 'broadcaster':
+           r |= kick.Access.BROADCASTER;
+           break;
+          case 'moderator':
+           r |= kick.Access.MODERATOR;
+           break;
+          case 'founder':
+           r |= kick.Access.FOUNDER;
+           break;
+          case 'vip':
+           r |= kick.Access.VIP;
+           break;
+          case 'og':
+           r |= kick.Access.OG;
+           break;
+          case 'subscriber':
+           r |= kick.Access.SUBSCRIBER;
+           break;
+          case 'verified':
+           r |= kick.Access.VERIFIED;
+           break;
+          case 'sub_gifter':
+           break;
+          case 'staff':
+           break;
+         }
         }
        }
        /* api-heavy, only check if follower access is allowed and there's a chance it matters */
