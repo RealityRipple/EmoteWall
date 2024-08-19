@@ -5602,14 +5602,16 @@
     function $eraseMsg(oID)
     {
      display.erasedMsgs.push(oID);
+     const zwes = document.querySelectorAll('img.zwe[data-msgid="' + oID + '"]');
+     for (let i = zwes.length - 1; i >= 0; i--)
+     {
+      zwes[i].parentNode.removeChild(zwes[i]);
+     }
      const imgs = document.querySelectorAll('img[data-msgid="' + oID + '"]');
      const death = dieList[shared.rnd(dieList.length)];
-     for (let i = imgs.length - 1; i >= 0; i--)
+     for (let i = 0; i < imgs.length; i++)
      {
-      if (imgs[i].classList.contains('zwe'))
-       imgs[i].parentNode.removeChild(imgs[i]);
-      else
-       imgs[i].src = death.url;
+      imgs[i].src = death.url;
      }
      window.setTimeout(_eraseMsgPart2, death.time, oID);
     }
@@ -5654,14 +5656,16 @@
     {
      _iTitanic = Date.now();
      display.kappa.hide();
+     const zwes = document.getElementsByClassName('zwe');
+     while (zwes.length)
+     {
+      zwes[0].parentNode.removeChild(zwes[0]);
+     }
      const imgs = document.getElementsByTagName('img');
      const death = dieList[shared.rnd(dieList.length)];
-     for (let i = imgs.length - 1; i >= 0; i--)
+     for (let i = 0; i < imgs.length; i++)
      {
-      if (imgs[i].classList.contains('zwe'))
-       imgs[i].parentNode.removeChild(imgs[i]);
-      else
-       imgs[i].src = death.url;
+      imgs[i].src = death.url;
      }
      window.setTimeout(_eraseAllPart2, death.time);
     }
