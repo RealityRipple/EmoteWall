@@ -9113,22 +9113,13 @@
        if (didSomething && cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('recheck') && cfg.youtube.connect_to.recheck === false)
         return;
        _tS = window.setTimeout(youtube.net.broadcasts.updateStream, _bcInterval);
+       const sC = lStreams.map(function(s){return s.chat;});
        for (let i = _aC.length - 1; i >= 0; i--)
        {
-        let found = false;
-        for (let j = 0, m = lStreams.length; j < m; j++)
-        {
-         if (lStreams[j].chat === _aC[i])
-         {
-          found = true;
-          break;
-         }
-        }
-        if (!found)
-        {
-         youtube.net.broadcasts.getMessages.stop(_aC[i]);
-         _aC.splice(i, 1);
-        }
+        if (sC.includes(_aC[i]))
+         continue;
+        youtube.net.broadcasts.getMessages.stop(_aC[i]);
+        _aC.splice(i, 1);
        }
       }
 
