@@ -137,6 +137,7 @@
        'Spiral': {},      // Burst out from a single emote in a spiral (no fade/zoom; small emotes)
        'Pyramid': {},     // Build a pyramid        (no fade/zoom; specific-size emotes)
        'SmallPyramid': {},// Build a small pyramid  (no fade/zoom; small emotes)
+       'CodeLines': {},   // "Matrix" code columns  (no fade/zoom; small emotes)
        'Fountain': {},    // Spout from a fountain  (no fade/zoom)
        'Stampede': {},    // Stampede of emotes     (no fade/zoom)
        'Confetti': {},    // Fall like confetti     (no zoom, no fade in, only fade out; small emotes)
@@ -548,6 +549,12 @@
       },
       pause: 0.2,
       hide: 0.01
+     },
+     'CodeLines': {
+      time: 1,
+      fade: 1/6,     /* percentage of time to spend fading out each emote */
+      overlap: 3,    /* simultaneous columns to show */
+      opacity: 1/5   /* opacity of emotes to fade-out to after showing */
      },
      'Fountain': {
       time: 1.5,
@@ -3198,6 +3205,7 @@
     {
      const _toKappa = [];
      const _conga = [];
+     const _codeCols = [];
      const _dKappa = 500;
 
      let _tKappa = false;
@@ -3678,6 +3686,198 @@
        }
 
        return $c_SmallPyramid;
+      }();
+
+      const $CodeLines = function()
+      {
+       async function $c_CodeLines(kList, sW, sH, eH, iKC, tInit = -1)
+       {
+        if (tInit === -1)
+         tInit = Date.now();
+        if (_iTitanic > tInit)
+         return;
+        const kClean = [];
+        for (let i = 0, l = kList.length; i < l; i++)
+        {
+         if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
+          continue;
+         kClean.push(kList[i]);
+        }
+        if (kClean.length < 1)
+         return;
+        const rows = Math.floor(sH / eH);
+        const rowSpc = (sH - (rows * eH)) / (rows - 1);
+        const cols = Math.floor(sW / eH);
+        const colSpc = (sW - (cols * eH)) / (cols - 1);
+        const uCols = Math.max(Math.min(Math.ceil(iKC / rows), Math.min(cols, 8)), 2);
+        if (_codeCols.length < cols)
+         _codeCols.length = cols;
+        if (cols - _codeColCt() < uCols)
+        {
+         window.setTimeout(_list.CodeLines, 2000, kList, sW, sH, eH, iKC, tInit);
+         return;
+        }
+        const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.CodeLines.time);
+        const iv = Math.floor(tMS / uCols);
+        const it = Math.floor(iv * (1 / timing.kappa.CodeLines.overlap));
+        const tCL = Math.floor(tMS * timing.kappa.CodeLines.fade);
+        const tEnd = tMS - (uCols * it + tCL);
+        const orX = [];
+        for (let x = 0; x < cols; x++)
+        {
+         orX.push(x);
+        }
+        const shX = [];
+        while (shX.length < uCols)
+        {
+         let r = shared.rnd(orX.length);
+         while (_codeCols[orX[r]])
+          r = shared.rnd(orX.length);
+         shX.push(orX.splice(r, 1));
+        }
+        shX.length = uCols;
+        for (let i = 0; i < uCols; i++)
+        {
+         _codeCols[shX[i]] = true;
+        }
+        let t = 0;
+        const arr = [];
+        for (let i = 0; i < uCols; i++)
+        {
+         const x = shX[i];
+         const c = [];
+         for (let y = 0; y < rows; y++)
+         {
+          const oK = kClean[shared.rnd(kClean.length)];
+          const r = _block(tInit, oK, x * (eH + colSpc), y * (eH + rowSpc), eH, tMS);
+          c.push(r);
+         }
+         arr.push(c);
+         shared.doNextFrame(_colStart, tInit, c, iv);
+         t += it;
+         await _sleep(it);
+        }
+        if (_iTitanic > tInit)
+        {
+         for (let i = 0; i < uCols; i++)
+         {
+          _codeCols[shX[i]] = false;
+         }
+         return;
+        }
+        const et = Math.max(tEnd - t, 0);
+        t = it;
+        while (t < et)
+        {
+         window.setTimeout(_column, t, tInit, arr, iv);
+         t += it;
+        }
+        for (let i = 0; i < uCols; i++)
+        {
+         const x = shX[i];
+         window.setTimeout(_colEnd, et + i * it, tInit, arr[i], x, iv);
+        }
+       }
+
+       function _block(tInit, oK, x, y, eH, tMS)
+       {
+        if (_iTitanic > tInit)
+         return;
+        const s = 'left: ' + x + 'px;' +
+         ' top: ' + y + 'px;' +
+         ' --emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eH + 'px;' +
+         ' opacity: 0;';
+        return _addEmoteAndZWEs(tInit, oK, 1, {style: s, classes: [display.kappa.clsID.CodeLine.show]}, {space: false, time: tMS});
+       }
+
+       function _colStart(tInit, col, t)
+       {
+        if (_iTitanic > tInit)
+         return;
+        let tCt = 0;
+        for (let y = 0; y < col.length; y++)
+        {
+         window.setTimeout(_show, tCt, tInit, col[y]);
+         tCt += Math.floor(t / col.length);
+        }
+       }
+
+       function _column(tInit, arr, t)
+       {
+        if (_iTitanic > tInit)
+         return;
+        const rX = shared.rnd(arr.length);
+        let tCt = 0;
+        for (let y = 0; y < arr[rX].length; y++)
+        {
+         window.setTimeout(_show, tCt, tInit, arr[rX][y]);
+         tCt += Math.floor(t / arr[rX].length);
+        }
+       }
+
+       function _colEnd(tInit, col, x, t)
+       {
+        _codeCols[x] = false;
+        if (_iTitanic > tInit)
+         return;
+        let tCt = 0;
+        for (let y = 0; y < col.length; y++)
+        {
+         window.setTimeout(_show, tCt, tInit, col[y], true);
+         tCt += Math.floor(t / col.length);
+        }
+       }
+
+       function _show(tInit, img, lastShow = false)
+       {
+        if (_iTitanic > tInit)
+         return;
+        for (let z = 0; z < img.length; z++)
+        {
+         img[z].classList.replace(display.kappa.clsID.CodeLine.hide, display.kappa.clsID.CodeLine.show);
+         img[z].style.opacity = 1;
+        }
+        if (lastShow)
+         shared.doNextFrame(_end, tInit, img);
+        else
+         shared.doNextFrame(_hide, tInit, img);
+       }
+
+       function _hide(tInit, img)
+       {
+        if (_iTitanic > tInit)
+         return;
+        for (let z = 0; z < img.length; z++)
+        {
+         img[z].classList.replace(display.kappa.clsID.CodeLine.show, display.kappa.clsID.CodeLine.hide);
+         img[z].style.opacity = timing.kappa.CodeLines.opacity;
+        }
+       }
+
+       function _end(tInit, img)
+       {
+        if (_iTitanic > tInit)
+         return;
+        for (let z = 0; z < img.length; z++)
+        {
+         img[z].classList.replace(display.kappa.clsID.CodeLine.show, display.kappa.clsID.CodeLine.hide);
+         img[z].style.opacity = 0;
+        }
+       }
+
+       function _codeColCt()
+       {
+        let aCt = 0;
+        for (let i = 0; i < _codeCols.length; i++)
+        {
+         if (_codeCols[i])
+          aCt++;
+        }
+        return aCt;
+       }
+
+       return $c_CodeLines;
       }();
 
       const $Stampede = function()
@@ -4435,6 +4635,7 @@
        Spiral: $Spiral,
        Pyramid: $Pyramid,
        SmallPyramid: $SmallPyramid,
+       CodeLines: $CodeLines,
        Stampede: $Stampede,
        Conga: $Conga,
        Coaster: $Coaster,
@@ -4933,6 +5134,10 @@
        case 'SmallPyramid':
         _list.SmallPyramid(kList, sW, sH);
         break;
+       case 'CodeLines':
+        _eActive -= waitFor;
+        _list.CodeLines(kList, sW, sH, eHh, kStyle.count);
+        break;
        case 'Conga':
         let avoidMiddle = false;
         if (cfg.display.kappa.conga.hasOwnProperty('avoidMiddle') && cfg.display.kappa.conga.avoidMiddle === true)
@@ -5107,6 +5312,7 @@
       }
       _toKappa.length = 0;
       _conga.length = 0;
+      _codeCols.length = 0;
      }
 
      function $eraseConga(id)
@@ -5202,6 +5408,10 @@
        SmallPyramid: Object.freeze({
         Show: 'ktSmallPyramid',
         Drop: 'ktSmallPyramidDrop'
+       }),
+       CodeLine: Object.freeze({
+        show: 'ktCodeLineShow',
+        hide: 'ktCodeLineHide'
        }),
        Stampede: 'ktStampede',
        Conga: Object.freeze({
@@ -5607,6 +5817,11 @@
      {
       zwes[i].parentNode.removeChild(zwes[i]);
      }
+     const hLines = document.querySelectorAll('img.' + display.kappa.clsID.CodeLine.hide + '[data-msgid="' + oID + '"]');
+     for (let i = hLines.length - 1; i >= 0; i--)
+     {
+      hLines[i].parentNode.removeChild(hLines[i]);
+     }
      const imgs = document.querySelectorAll('img[data-msgid="' + oID + '"]');
      const death = dieList[shared.rnd(dieList.length)];
      for (let i = 0; i < imgs.length; i++)
@@ -5660,6 +5875,11 @@
      while (zwes.length)
      {
       zwes[0].parentNode.removeChild(zwes[0]);
+     }
+     const hLines = document.getElementsByClassName(display.kappa.clsID.CodeLine.hide);
+     while (hLines.length)
+     {
+      hLines[0].parentNode.removeChild(hLines[0]);
      }
      const imgs = document.getElementsByTagName('img');
      const death = dieList[shared.rnd(dieList.length)];
@@ -18417,6 +18637,16 @@
        '.' + display.kappa.clsID.SmallPyramid.Drop + '\n' +
        '{\n' +
        ' transition: transform ease-in ' + Math.floor(tMS * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.hide) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.kappa.clsID.CodeLine.show + '\n' +
+       '{\n' +
+       ' transition: opacity linear ' + shared.mspf.value + 'ms;\n' +
+       '}\n';
+      const tCL = Math.floor(tMS * timing.kappa.CodeLines.time * timing.kappa.CodeLines.fade);
+      t += '.' + display.kappa.clsID.CodeLine.hide + '\n' +
+       '{\n' +
+       ' transition: opacity ease-out ' + tCL + 'ms;\n' +
        '}\n';
 
       t += '.' + display.kappa.clsID.Stampede + '\n' +
