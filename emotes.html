@@ -4028,9 +4028,10 @@
 
       const $Conga = function()
       {
-       async function $c_Conga(kList, sW, sH, eH, nM)
+       async function $c_Conga(kList, sW, sH, eH, nM, tInit = -1)
        {
-        const tInit = Date.now();
+        if (tInit === -1)
+         tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         let v = 0;
@@ -4041,11 +4042,10 @@
         let lns = sht;
         if (nM)
          lns = timing.kappa.Conga.avoidMiddle;
-        while (_conga.length >= lns)
+        if (_conga.length >= lns)
         {
-         if (_iTitanic > tInit)
-          return;
-         await _sleep(250);
+         window.setTimeout(_list.Conga, _dKappa, kList, sW, sH, eH, nM, tInit);
+         return;
         }
         while (!unique)
         {
