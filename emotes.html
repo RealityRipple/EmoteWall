@@ -5424,7 +5424,7 @@
 
     const _gc = function()
     {
-     const _toGC = {};
+     const _toGC = new Set();
 
      let _tGC = false;
 
@@ -5434,36 +5434,29 @@
        return;
       window.clearTimeout(_tGC);
       _tGC = false;
-      let done = true;
       const tNow = Date.now();
-      for (const idx in _toGC)
+      for (const g of _toGC)
       {
-       if (!_toGC.hasOwnProperty(idx))
-        continue;
-       done = false;
-       const i = _toGC[idx].img;
-       const t = _toGC[idx].end;
-       const d = _toGC[idx].dec;
-       if (_toGC[idx].space)
+       if (g.space)
        {
-        const r = i.getBoundingClientRect();
-        if (t > tNow && r.bottom > 0 && r.right > 0 && r.top < window.innerHeight && r.left < window.innerWidth)
+        const r = g.img.getBoundingClientRect();
+        if (g.end > tNow && r.bottom > 0 && r.right > 0 && r.top < window.innerHeight && r.left < window.innerWidth)
          continue;
        }
        else
        {
-        if (t > tNow)
+        if (g.end > tNow)
          continue;
        }
-       delete _toGC[idx];
-       if (i.parentNode !== null)
-        document.body.removeChild(i);
-       if (d === true)
+       _toGC.delete(g);
+       if (g.img.parentNode !== null)
+        document.body.removeChild(g.img);
+       if (g.dec === true)
         _eActive--;
-       else if (d !== false && Number.isInteger(d))
-        _eActive -= d;
+       else if (g.dec !== false && Number.isInteger(g.dec))
+        _eActive -= g.dec;
       }
-      if (!done)
+      if (_toGC.size > 0)
        _tGC = window.setTimeout(_doGC, 500);
      }
 
@@ -5471,12 +5464,7 @@
      {
       if (t === false)
        t = Math.floor(cfg.emote.time * 1000);
-      let x = 0;
-      do
-      {
-       x++;
-      } while (_toGC.hasOwnProperty(x));
-      _toGC[x] = {img: img, space: space, dec: decActive, end: Date.now() + t};
+      _toGC.add({img: img, space: space, dec: decActive, end: Date.now() + t});
       if (_tGC === false)
        _tGC = window.setTimeout(_doGC, 500);
      }
