@@ -15651,7 +15651,7 @@
      const $socket = function()
      {
       let _wsRetry = 0;
-      const _chList = [];
+      const _chList = {};
       let _ws = null;
 
       function $init()
@@ -15673,9 +15673,14 @@
        notice.active |= notice.Connection.BTTV;
        notice.resetHide();
        _ws.onopen = null;
-       for (let i = 0, l = _chList.length; i < l; i++)
+       for (const svc in _chList)
        {
-        _wsJoin(_chList[i].svc, _chList[i].ch);
+        if (!_chList.hasOwnProperty(svc))
+         continue;
+        for (const ch of _chList[svc])
+        {
+         _wsJoin(svc, ch);
+        }
        }
       }
 
@@ -15814,14 +15819,11 @@
 
       function $join(svcName, chID)
       {
-       for (let i = 0, l = _chList.length; i < l; i++)
-       {
-        if (_chList[i].svc !== svcName)
-         continue;
-        if (_chList[i].ch === chID)
-         return;
-       }
-       _chList.push({svc: svcName, ch: chID});
+       if (!_chList.hasOwnProperty(svcName))
+        _chList[svcName] = new Set();
+       if (_chList[svcName].has(chID))
+        return;
+       _chList[svcName].add(chID);
        _wsJoin(svcName, chID);
       }
 
