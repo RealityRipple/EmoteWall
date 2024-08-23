@@ -3211,7 +3211,7 @@
     const $kappa = function()
     {
      const _toKappa = [];
-     const _conga = [];
+     const _conga = new Map();
      const _codeCols = [];
      const _dKappa = 500;
 
@@ -3998,36 +3998,30 @@
         let lns = sht;
         if (nM)
          lns = timing.kappa.Conga.avoidMiddle;
-        if (_conga.length >= lns)
+        if (_conga.size >= lns)
         {
          window.setTimeout(_list.Conga, _dKappa, kList, sW, sH, eH, nM, tInit);
          return;
         }
-        let unique = false;
-        while (!unique)
+        if (nM)
         {
-         v = shared.rnd(sht) * seg;
-         if (nM)
+         const hMid = Math.floor(timing.kappa.Conga.avoidMiddle / 2);
+         do
          {
           v = shared.rnd(timing.kappa.Conga.avoidMiddle);
-          const hMid = Math.floor(timing.kappa.Conga.avoidMiddle / 2);
           if (v >= hMid)
            v = sht - 1 - (v - hMid);
           v *= seg;
-         }
-         let found = false;
-         for (let i = 0, l = _conga.length; i < l; i++)
-         {
-          if (_conga[i].row === v)
-          {
-           found = true;
-           break;
-          }
-         }
-         if (!found)
-          unique = true;
+         } while(_conga.has(v));
         }
-        _conga.push({row: v, done: false});
+        else
+        {
+         do
+         {
+          v = shared.rnd(sht) * seg;
+         } while(_conga.has(v));
+        }
+        _conga.set(v, false);
         const urls = [];
         const zurls = [];
         const ct = Math.floor(sW / bS);
@@ -4068,41 +4062,19 @@
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.show);
         await _sleep(tMS);
         let full = false;
-        if (_conga.length >= sht)
+        if (_conga.size >= sht)
          full = true;
         await _sleep(Math.floor(cfg.display.kappa.conga.time * 1000));
         if (cfg.display.kappa.conga.contagious)
         {
-         let ex = false;
-         let lC = _conga.length;
-         if (lC > 1)
-          ex = true;
-         for (let i = 0; i < lC; i++)
-         {
-          if (_conga[i].row !== v)
-           continue;
-          _conga[i].done = true;
-          break;
-         }
-         let done = false;
-         while (!done)
+         let ex = _conga.size > 1;
+         _conga.set(v, true);
+         while ([..._conga.values()].includes(false))
          {
           if (_iTitanic > tInit)
            return;
-          lC = _conga.length;
-          if (!ex && lC > 1)
+          if (!ex && _conga.size > 1)
            ex = true;
-          let notDone = false;
-          for (let i = 0; i < lC; i++)
-          {
-           if (_conga[i].done === false)
-           {
-            notDone = true;
-            break;
-           }
-          }
-          if (notDone === false)
-           done = true;
           await _sleep(100);
          }
         }
@@ -4115,13 +4087,7 @@
          }
         }
         await _sleep(tMS);
-        for (let i = 0, l = _conga.length; i < l; i++)
-        {
-         if (_conga[i].row !== v)
-          continue;
-         _conga.splice(i, 1);
-         break;
-        }
+        _conga.delete(v);
        }
 
        function _dance(tInit, url, oID, col, sW, v, eH, bS, ct, d, xtra, cAppend = [])
@@ -4720,7 +4686,7 @@
       }
       let s, p;
       const keys = Object.keys(kS);
-      if (cfg.display.kappa.conga.contagious && _conga.length > 0)
+      if (cfg.display.kappa.conga.contagious && _conga.size > 0)
       {
        s = 'Conga';
        p = {};
@@ -5220,19 +5186,14 @@
        _tKappa = false;
       }
       _toKappa.length = 0;
-      _conga.length = 0;
+      _conga.clear();
       _codeCols.length = 0;
      }
 
      function $eraseConga(id)
      {
-      for (let i = 0, l = _conga.length; i < l; i++)
-      {
-       if (_conga[i].row !== id)
-        continue;
-       _conga.splice(i, 1);
-       break;
-      }
+      if (_conga.has(id))
+       _conga.delete(id);
      }
 
      function _sleep(ms)
