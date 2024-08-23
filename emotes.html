@@ -1966,7 +1966,7 @@
     const $emote = function()
     {
      const _toShow = [];
-     const _toSift = [];
+     const _toSift = new Set();
 
      let _tEmote = false;
 
@@ -3111,19 +3111,19 @@
        const rateE = cfg.emote.threshold.emotes;
        if (_toShow.length > 0)
        {
-        for (let i = _toShow.length - 1; i >= 0; i--)
+        let e = null;
+        while ((e = _toShow.pop()) !== undefined)
         {
-         if (!_toShow[i].hasOwnProperty('url') || !_toShow[i].hasOwnProperty('timestamp'))
+         if (!e.hasOwnProperty('url') || !e.hasOwnProperty('timestamp'))
           continue;
-         _toSift.push(_toShow[i]);
-         _toShow.splice(i, 1);
+         _toSift.add(e);
         }
        }
        const tNow = Date.now();
        const ctOf = {};
-       for (let i = 0, l = _toSift.length; i < l; i++)
+       for (const e of _toSift)
        {
-        const showID = _urlToID(_toSift[i].url);
+        const showID = _urlToID(e.url);
         if (!ctOf.hasOwnProperty(showID))
          ctOf[showID] = 0;
         ctOf[showID]++;
@@ -3137,25 +3137,24 @@
         else
          ctOf[showID] = Math.floor(ctOf[showID] / rateE) * rateE;
        }
-       for (let i = _toSift.length - 1; i >= 0; i--)
+       for (const e of _toSift)
        {
-        const showID = _urlToID(_toSift[i].url);
+        const showID = _urlToID(e.url);
         if (!ctOf.hasOwnProperty(showID))
          continue;
         const ctOfID = ctOf[showID];
         if (ctOfID === 0)
          continue;
-        ctOf[showID] -= 1;
-        const sel = _toSift[i];
-        _toSift.splice(i, 1);
+        ctOf[showID]--;
+        _toSift.delete(e);
         if (ctOfID % rateE === 0)
-         _toShow.push(sel);
+         _toShow.push(e);
        }
        const rateMS = cfg.emote.threshold.seconds * 1000;
-       for (let i = _toSift.length - 1; i >= 0; i--)
+       for (const e of _toSift)
        {
-        if (_toSift[i].timestamp + rateMS < tNow)
-         _toSift.splice(i, 1);
+        if (e.timestamp + rateMS < tNow)
+         _toSift.delete(e);
        }
       }
       let e = null;
@@ -3170,7 +3169,7 @@
         return;
        }
       }
-      if (_toSift.length > 0)
+      if (_toSift.size > 0)
        _tEmote = window.setTimeout(display.emote.showEmotes, 500);
      }
 
