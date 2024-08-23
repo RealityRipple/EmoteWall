@@ -3123,7 +3123,7 @@
        const ctOf = {};
        for (let i = 0, l = _toSift.length; i < l; i++)
        {
-        const showID = _toSift[i].url;
+        const showID = _urlToID(_toSift[i].url);
         if (!ctOf.hasOwnProperty(showID))
          ctOf[showID] = 0;
         ctOf[showID]++;
@@ -3139,7 +3139,7 @@
        }
        for (let i = _toSift.length - 1; i >= 0; i--)
        {
-        const showID = _toSift[i].url;
+        const showID = _urlToID(_toSift[i].url);
         if (!ctOf.hasOwnProperty(showID))
          continue;
         const ctOfID = ctOf[showID];
@@ -3172,6 +3172,14 @@
       }
       if (_toSift.length > 0)
        _tEmote = window.setTimeout(display.emote.showEmotes, 500);
+     }
+
+     function _urlToID(u)
+     {
+      const c = cCrew.prefix + encodeURIComponent(cCrew.svg.tag.open + cCrew.css.tag.open);
+      if (u.slice(0, c.length) === c)
+       return shared.hashCode(c);
+      return shared.hashCode(u);
      }
 
      function $addToShowList(p)
