@@ -15273,19 +15273,12 @@
        return false;
       if (!j.hasOwnProperty('sets'))
        return false;
-      const usedSets = [];
-      if (j.hasOwnProperty('default_sets'))
-      {
-       for (let i = 0, l = j.default_sets.length; i < l; i++)
-       {
-        usedSets.push(j.default_sets[i]);
-       }
-      }
+      const usedSets = new Set(j.default_sets);
       for (const set in j.sets)
       {
        if (!j.sets.hasOwnProperty(set))
         continue;
-       if (!usedSets.includes(j.sets[set].id))
+       if (!usedSets.has(j.sets[set].id))
         continue;
        if (!j.sets[set].hasOwnProperty('emoticons'))
         continue;
