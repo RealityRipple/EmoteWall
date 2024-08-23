@@ -16407,9 +16407,9 @@
         {
          if (!_chList[acct].hasOwnProperty(svc))
           continue;
-         for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
+         for (const ch of _chList[acct][svc])
          {
-          _wsSubCh(svc, _chList[acct][svc][i]);
+          _wsSubCh(svc, ch);
          }
         }
        }
@@ -16420,9 +16420,9 @@
         {
          if (!_chList[acct].hasOwnProperty(svc))
           continue;
-         for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
+         for (const ch of _chList[acct][svc])
          {
-          _wsUnsubCh(svc, _chList[acct][svc][i]);
+          _wsUnsubCh(svc, ch);
          }
         }
        }
@@ -16544,11 +16544,11 @@
          {
           if (!_chList[acct].hasOwnProperty(svc))
            continue;
-          for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
+          for (const ch of _chList[acct][svc])
           {
            if (p !== '')
             p += ',';
-           p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + _chList[acct][svc][i] + '>';
+           p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + ch + '>';
           }
          }
         }
@@ -16560,11 +16560,11 @@
          {
           if (!_chList[_noAcct].hasOwnProperty(svc))
            continue;
-          for (let i = 0, l = _chList[_noAcct][svc].length; i < l; i++)
+          for (const ch of _chList[_noAcct][svc])
           {
            if (p !== '')
             p += ',';
-           p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + _chList[_noAcct][svc][i] + '>';
+           p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + ch + '>';
           }
          }
         }
@@ -16884,16 +16884,16 @@
        if (_chList.hasOwnProperty(accID))
        {
         if (!_chList[accID].hasOwnProperty(svcName))
-         _chList[accID][svcName] = [];
-        if (!_chList[accID][svcName].includes(chID))
-         _chList[accID][svcName].push(chID);
+         _chList[accID][svcName] = new Set();
+        if (!_chList[accID][svcName].has(chID))
+         _chList[accID][svcName].add(chID);
         _socket.joinS(svcName, chID);
         _events.join();
         return;
        }
        _chList[accID] = {};
-       _chList[accID][svcName] = [];
-       _chList[accID][svcName].push(chID);
+       _chList[accID][svcName] = new Set();
+       _chList[accID][svcName].add(chID);
        if (accID !== _noAcct)
         _socket.joinA(accID);
        _socket.joinS(svcName, chID);
@@ -16913,7 +16913,7 @@
         {
          if (!_chList[acct].hasOwnProperty(svc))
           continue;
-         c += _chList[acct][svc].length;
+         c += _chList[acct][svc].size;
         }
        }
        if (_chList.hasOwnProperty(_noAcct))
@@ -16922,7 +16922,7 @@
         {
          if (!_chList[_noAcct].hasOwnProperty(svc))
           continue;
-         c += _chList[_noAcct][svc].length;
+         c += _chList[_noAcct][svc].size;
         }
        }
        return c;
