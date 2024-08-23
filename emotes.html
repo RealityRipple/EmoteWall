@@ -9302,17 +9302,17 @@
        };
        if (cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('sort') && typeof cfg.youtube.connect_to.sort === 'object' && cfg.youtube.connect_to.sort !== null && Object.keys(cfg.youtube.connect_to.sort).length > 0)
         sortOrder = cfg.youtube.connect_to.sort;
-       const sortAttrs = Object.keys(sortOrder);
-       for (let i = 0, l = sortAttrs.length; i < l; i++)
+       const sortMap = new Map(Object.entries(sortOrder));
+       for (const [attr, order] of sortMap)
        {
-        const chooseA = sortOrder[sortAttrs[i]] === 'asc' ? 1 : -1;
+        const chooseA = order === 'asc' ? 1 : -1;
         const chooseB = -1 * chooseA;
-        if (!a.hasOwnProperty(sortAttrs[i]))
+        if (!a.hasOwnProperty(attr))
          return chooseB;
-        if (!b.hasOwnProperty(sortAttrs[i]))
+        if (!b.hasOwnProperty(attr))
          return chooseA;
-        const aA = a[sortAttrs[i]];
-        const aB = b[sortAttrs[i]];
+        const aA = a[attr];
+        const aB = b[attr];
         if (aA === aB)
          continue;
         if (aA === false)
