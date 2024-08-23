@@ -7245,7 +7245,7 @@
        if (cfg.twitch.hasOwnProperty('oauth') && cfg.twitch.oauth !== null && cfg.twitch.oauth !== false && cfg.twitch.oauth !== 'OAUTH_ID')
        {
         loginT.inUse = false;
-        loginT.cfgHash = (shared.hashCode(cfg.twitch.oauth) >>> 0).toString(16);
+        loginT.cfgHash = shared.hashCode(cfg.twitch.oauth);
         await _genAccess(cfg.twitch.oauth);
         return;
        }
@@ -7253,7 +7253,7 @@
        {
         loginT.inUse = false;
         let sRef = cfg.twitch.oauth_refresh;
-        loginT.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
+        loginT.cfgHash = shared.hashCode(sRef);
         const lsRef = shared.storage.getItem(loginT.path() + _pathRefresh);
         if (lsRef !== null)
          sRef = lsRef;
@@ -9967,7 +9967,7 @@
        if (cfg.youtube.hasOwnProperty('oauth') && cfg.youtube.oauth !== null && cfg.youtube.oauth !== false && cfg.youtube.oauth !== 'OAUTH_ID')
        {
         loginYT.inUse = false;
-        loginYT.cfgHash = (shared.hashCode(cfg.youtube.oauth) >>> 0).toString(16);
+        loginYT.cfgHash = shared.hashCode(cfg.youtube.oauth);
         await _genAccess(cfg.youtube.oauth);
         return;
        }
@@ -9975,7 +9975,7 @@
        {
         loginYT.inUse = false;
         let sRef = cfg.youtube.oauth_refresh;
-        loginYT.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
+        loginYT.cfgHash = shared.hashCode(sRef);
         const lsRef = shared.storage.getItem(loginYT.path() + _pathRefresh);
         if (lsRef !== null)
          sRef = lsRef;
@@ -14936,14 +14936,14 @@
       }
       if (cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== null && cfg.streamelements.oauth !== 'OAUTH_ID')
       {
-       streamelements.cfgHash = (shared.hashCode(cfg.streamelements.oauth) >>> 0).toString(16);
+       streamelements.cfgHash = shared.hashCode(cfg.streamelements.oauth);
        _genAccess(cfg.streamelements.oauth);
        return;
       }
       if (cfg.streamelements.hasOwnProperty('oauth_refresh') && cfg.streamelements.oauth_refresh !== null && cfg.streamelements.oauth_refresh !== false && cfg.streamelements.oauth_refresh !== 'OAUTH_REFRESH')
       {
        let sRef = cfg.streamelements.oauth_refresh;
-       streamelements.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
+       streamelements.cfgHash = shared.hashCode(sRef);
        const lsRef = shared.storage.getItem(_path() + _pathRefresh);
        if (lsRef !== null)
         sRef = lsRef;
@@ -17037,16 +17037,176 @@
      return Math.floor(f * m);
     }
 
-    function $hashCode(o)
+    const $hashCode = function()
     {
-     const s = JSON.stringify(o);
-     let h = 0;
-     for (let i = 0, l = s.length; i < l; i++)
+     /* RadioGatun[32]
+      * Copyright (c) 2010-2020 Sam Trenholme
+      * 
+      * TERMS
+      *
+      * Redistribution and use in source and binary forms, with or without
+      * modification, are permitted provided that the following conditions
+      * are met:
+      * 
+      * 1. Redistributions of source code must retain the above copyright
+      *    notice, this list of conditions and the following disclaimer.
+      * 2. Redistributions in binary form must reproduce the above copyright
+      *    notice, this list of conditions and the following disclaimer in the
+      *    documentation and/or other materials provided with the distribution.
+      * 
+      * This software is provided 'as is' with no guarantees of correctness or
+      * fitness for purpose.
+      */
+
+     function $c_hashCode(o)
      {
-      h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+      const input = JSON.stringify(o);
+      const ab = {a: [], b: [], p: 1};
+      for (let c = 0; c < 19; c++)
+      {
+       ab.a[c] = 0;
+      }
+      for (let c = 0; c < 39; c++)
+      {
+       ab.b[c] = 0;
+      }
+      const s = [];
+      for (let v = 0; v <= input.length;)
+      {
+       for (let c = 0 ; c < 3 ; c++)
+       {
+        s[c] = 0;
+       }
+       for (let r = 0; r < 3; r++)
+       {
+        for (let q = 0; q < 4; q++)
+        {
+         if (v >= input.length)
+         {
+          s[r] |= 1 << (q * 8);
+          for (let c = 0; c < 3; c++)
+          {
+           ab.b[c * 13] ^= s[c];
+           ab.a[16 + c] ^= s[c];
+          }	
+          for (let c = 0; c < 18; c++)
+          {
+           _beltmill(ab);
+          }
+          return _fmt64(ab);
+         }
+         let x = input.charCodeAt(v);
+         x &= 0xff;
+         v++;
+         s[r] |= x << (q * 8);
+        }
+       }
+       for (let c = 0; c < 3; c++)
+       {
+        ab.b[c * 13] ^= s[c];
+        ab.a[16 + c] ^= s[c];
+       }	
+       _beltmill(ab);
+      }
+      for (let c = 0; c < 16; c++)
+      {
+       _beltmill(ab);
+      }
+      return _fmt64(ab);
      }
-     return h;
-    }
+
+     function _beltmill(ab)
+     {
+      const q = [];
+      for (let c = 0; c < 3; c++)
+      {
+       q[c] = ab.b[c * 13 + 12];
+      }
+      for (let i = 12; i > 0; i--)
+      {
+       for (let c = 0; c < 3; c++)
+       {
+        ab.b[c * 13 + i] = ab.b[c * 13 + i - 1];
+       }
+      }
+      for (let c = 0; c < 3; c++)
+      {
+       ab.b[c * 13] = q[c];
+      }
+      for (let c = 0; c < 12; c++)
+      {
+       const n = c + 1 + ((c % 3) * 13);
+       ab.b[n] ^= ab.a[c + 1];
+      }
+      const ap = [];
+      for (let c = 0; c < 19; c++)
+      {
+       const y = (c * 7) % 19;
+       const r = (((c * c) + c) / 2) % 32;
+       const x = ab.a[y] ^ (ab.a[(y + 1) % 19] | (ab.a[(y + 2) % 19] ^ 0xffffffff));
+       ap[c] = (x >>> r) | (x << (32 - r));
+      }
+      for (let c = 0; c < 19; c++)
+      {
+       ab.a[c] = ap[c] ^ ap[(c + 1) % 19] ^ ap[(c + 4) % 19];
+      }
+      ab.a[0] ^= 1;
+      for (let c = 0; c < 3; c++)
+      {
+       ab.a[c + 13] ^= q[c];
+      }
+     }
+
+     function _nextword(ab)
+     {
+      let z = ab.a[ab.p];
+      if (z < 0)
+       z += 0x100000000;
+      ab.p++;
+      if (ab.p > 2)
+      {
+       ab.p = 1;
+       _beltmill(ab);
+      }
+      return z;
+     }
+
+     function _rng(ab)
+     {
+      const r = _nextword(ab);
+      return ((r & 0xff000000) >>> 24) |
+             ((r & 0x00ff0000) >>>  8) |
+             ((r & 0x0000ff00) <<   8) |
+             ((r & 0x000000ff) <<  24);
+     }
+
+     function _u8ToBase64(bytes)
+     {
+      let binary = '';
+      for (let i = 0, l = bytes.byteLength; i < l; i++)
+      {
+       binary += String.fromCharCode(bytes[i]);
+      }
+      return window.btoa(binary).replaceAll('/', '_').replaceAll('+', '-').replaceAll('=', '');
+     }
+
+     function _fmt64(ab)
+     {
+      const a = [];
+      for (let i = 0; i < 8; i++)
+      {
+       let z = _rng(ab);
+       if (z < 0)
+        z += 0x100000000;
+       a.push(z);
+      }
+      const b32 = new Uint32Array(a);
+      const b8 = new Uint8Array(b32.buffer);
+      return _u8ToBase64(b8);
+     }
+
+     return $c_hashCode;
+    }();
 
     function $getHashParams()
     {
@@ -18204,7 +18364,7 @@
    {
     async function $c_startup()
     {
-     shared.cfgHash = (shared.hashCode(cfg) >>> 0).toString(16);
+     shared.cfgHash = shared.hashCode(cfg);
      await twitch.net.oAuth.init();
      await youtube.net.oAuth.init();
      kick.net.oAuth.init();
