@@ -3887,7 +3887,7 @@
        {
         if (_iTitanic > tInit)
          return;
-        const imgs = [];
+        const imgs = new Set();
         for (let i = 0; i < ct; i++)
         {
          if (_iTitanic > tInit)
@@ -3904,7 +3904,7 @@
          const oE = _run(tInit, oK, y, d, sW, eW, eH, maxW);
          if (oE === null)
           return;
-         imgs.push(oE);
+         imgs.add(oE);
          if (sA === false)
           await _sleep(_rndFromRange(timing.kappa.Stampede.smallSleep));
          else
@@ -3933,12 +3933,16 @@
          if (_iTitanic > tInit)
           return;
          await _sleep(100);
-         for (let i = imgs.length - 1; i >= 0; i--)
+         for (const img of imgs)
          {
-          if (imgs[i] === null || imgs[i].hasAttribute('deleted'))
-           imgs.splice(i, 1);
+          if (img === null)
+           imgs.delete(img);
+          if (img.parentNode === null)
+           imgs.delete(img);
+          if (img.hasAttribute('deleted'))
+           imgs.delete(img);
          }
-        } while (imgs.length > 0);
+        } while (imgs.size > 0);
        }
 
        function _run(tInit, eInf, v, d, sW, eW, eH, maxW)
