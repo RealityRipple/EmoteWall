@@ -8132,9 +8132,9 @@
       const $sub = function()
       {
        const _bList = {
-        bombs: [],
-        bulk: [],
-        check: []
+        bombs: new Set(),
+        bulk: new Set(),
+        check: new Set()
        };
        let _tGC = null;
 
@@ -8152,16 +8152,16 @@
         const usesBomb = cfg.event.twitch.sub[subPlan].hasOwnProperty('gift') && cfg.event.twitch.sub[subPlan].gift.hasOwnProperty('bomb') && cfg.event.twitch.sub[subPlan].gift.bomb !== false;
         if (mpoi !== false && usesBomb)
         {
-         if (_bList.bombs.includes(mpoi))
+         if (_bList.bombs.has(mpoi))
           return;
          if (mID === 'subgift')
          {
-          if (_bList.bulk.includes(mpoi))
+          if (_bList.bulk.has(mpoi))
            return;
-          if (_bList.check.includes(mpoi))
+          if (_bList.check.has(mpoi))
           {
-           _bList.bulk.push(mpoi);
-           _bList.check.splice(_bList.check.indexOf(mpoi), 1);
+           _bList.bulk.add(mpoi);
+           _bList.check.delete(mpoi);
            _resetGC();
            return;
           }
@@ -8205,22 +8205,22 @@
          mprdn = cmd.tags['msg-param-recipient-display-name'];
         if (mpoi !== false && usesBomb)
         {
-         if (_bList.bombs.includes(mpoi))
+         if (_bList.bombs.has(mpoi))
           return;
          if (mID === 'subgift')
          {
-          if (_bList.bulk.includes(mpoi))
+          if (_bList.bulk.has(mpoi))
            return;
-          if (_bList.check.includes(mpoi))
+          if (_bList.check.has(mpoi))
           {
-           _bList.bulk.push(mpoi);
-           _bList.check.splice(_bList.check.indexOf(mpoi), 1);
+           _bList.bulk.add(mpoi);
+           _bList.check.delete(mpoi);
            _resetGC();
            return;
           }
           if (!cmd.tags.hasOwnProperty('msg-param-sender-count') || cmd.tags['msg-param-sender-count'] === '0')
           {
-           _bList.check.push(mpoi);
+           _bList.check.add(mpoi);
            window.setTimeout(_show, 2000, mID, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a);
            _resetGC();
            return;
@@ -8235,9 +8235,9 @@
         const usesBomb = cfg.event.twitch.sub.hasOwnProperty(subPlan) && cfg.event.twitch.sub[subPlan].hasOwnProperty('gift') && cfg.event.twitch.sub[subPlan].gift.hasOwnProperty('bomb') && cfg.event.twitch.sub[subPlan].gift.bomb !== false;
         if (mpoi !== false && usesBomb)
         {
-         if (_bList.bombs.includes(mpoi))
+         if (_bList.bombs.has(mpoi))
           return;
-         if (id === 'subgift' && _bList.bulk.includes(mpoi))
+         if (id === 'subgift' && _bList.bulk.has(mpoi))
          {
           _resetGC();
           return;
@@ -8308,11 +8308,11 @@
            return;
           if (mpoi !== false)
           {
-           _bList.bombs.push(mpoi);
-           if (_bList.bulk.includes(mpoi))
-            _bList.bulk.splice(_bList.bulk.indexOf(mpoi), 1);
-           if (_bList.check.includes(mpoi))
-            _bList.check.splice(_bList.check.indexOf(mpoi), 1);
+           _bList.bombs.add(mpoi);
+           if (_bList.bulk.has(mpoi))
+            _bList.bulk.delete(mpoi);
+           if (_bList.check.has(mpoi))
+            _bList.check.delete(mpoi);
            _resetGC();
           }
           const gpb = shared.findInMaybeRange(cfg.event.twitch.sub[subPlan].gift.bomb, mpmgc);
@@ -8354,8 +8354,8 @@
          return;
         window.clearTimeout(_tGC);
         _tGC = null;
-        _bList.check = [];
-        _bList.bulk = [];
+        _bList.check.clear();
+        _bList.bulk.clear();
        }
 
        return $c_sub;
