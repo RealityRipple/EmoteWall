@@ -9064,7 +9064,7 @@
     {
      const $broadcasts = function()
      {
-      const _aC = [];
+      const _aC = new Set();
       const _msgHistory = {};
       let  _tS = false;
       const _bcInterval = 30000;
@@ -9114,10 +9114,10 @@
          if (cfg.display.extended.useBTTV)
           thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
         }
-        if (!_aC.includes(lStreams[i].chat))
+        if (!_aC.has(lStreams[i].chat))
         {
          didSomething = true;
-         _aC.push(lStreams[i].chat);
+         _aC.add(lStreams[i].chat);
          window.setTimeout(youtube.net.broadcasts.getMessages.start, 48, lStreams[i]);
         }
        }
@@ -9125,12 +9125,12 @@
         return;
        _tS = window.setTimeout(youtube.net.broadcasts.updateStream, _bcInterval);
        const sC = lStreams.map(function(s){return s.chat;});
-       for (let i = _aC.length - 1; i >= 0; i--)
+       for (const chat of _aC)
        {
-        if (sC.includes(_aC[i]))
+        if (sC.includes(chat))
          continue;
-        youtube.net.broadcasts.getMessages.stop(_aC[i]);
-        _aC.splice(i, 1);
+        youtube.net.broadcasts.getMessages.stop(chat);
+        _aC.delete(chat);
        }
       }
 
@@ -9162,7 +9162,7 @@
        {
         if (r.code === 0 && r.data === '')
         {
-         if (_aC.length !== 0)
+         if (_aC.size !== 0)
           return false;
          notice.error(notice.Type.YOUTUBE_CORS, 'current live streams');
          notice.active &= ~notice.Connection.YOUTUBE;
@@ -9186,14 +9186,14 @@
             youtube.net.dead = true;
             return null;
            case 'SERVICE_UNAVAILABLE':
-            if (_aC.length !== 0)
+            if (_aC.size !== 0)
              return false;
             notice.error(notice.Type.YOUTUBE_NETWORK);
             notice.active &= ~notice.Connection.YOUTUBE;
             notice.resetHide();
             return false;
            case 'backendError':
-            if (_aC.length !== 0)
+            if (_aC.size !== 0)
              return false;
             notice.error(notice.Type.YOUTUBE_NETWORK);
             notice.active &= ~notice.Connection.YOUTUBE;
@@ -9434,13 +9434,7 @@
             case 'liveChatEnded':
             case 'liveChatDisabled':
             case 'liveChatNotFound':
-             for (let i = 0, l = _aC.length; i < l; i++)
-             {
-              if (_aC[i] !== chatID)
-               continue;
-              _aC.splice(i, 1);
-              break;
-             }
+             _aC.delete(chatID);
              youtube.net.broadcasts.getMessages.stop(chatID);
              return;
             case 'rateLimitExceeded':
