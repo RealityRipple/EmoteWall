@@ -6181,7 +6181,7 @@
 
         const _follow = function()
         {
-         const _fHist = [];
+         const _fHist = new Set();
 
          function $c_follow(ev)
          {
@@ -6194,9 +6194,9 @@
           twitch.net.fList[ev.user_id] = {value: true, t: Date.now()};
           if (cfg.event.twitch.follow === false)
            return;
-          if (_fHist.includes(ev.user_id))
+          if (_fHist.has(ev.user_id))
            return;
-          _fHist.push(ev.user_id);
+          _fHist.add(ev.user_id);
           display.kappa.show(false, cfg.event.twitch.follow, {[cVARs.evt.user]: ev.user_name});
          }
 
