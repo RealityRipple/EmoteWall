@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.9.7.1 BETA
+    * v0.9.8 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -137,6 +137,7 @@
        'Spiral': {},      // Burst out from a single emote in a spiral (no fade/zoom; small emotes)
        'Pyramid': {},     // Build a pyramid        (no fade/zoom; specific-size emotes)
        'SmallPyramid': {},// Build a small pyramid  (no fade/zoom; small emotes)
+       'CodeLines': {},   // "Matrix" code columns  (no fade/zoom; small emotes)
        'Fountain': {},    // Spout from a fountain  (no fade/zoom)
        'Stampede': {},    // Stampede of emotes     (no fade/zoom)
        'Confetti': {},    // Fall like confetti     (no zoom, no fade in, only fade out; small emotes)
@@ -298,7 +299,8 @@
       powerup: {
        message: {
         simmer: false,
-        eclipse: false
+        eclipse: false,
+        abyss: false
        },
        emote: false
       },
@@ -548,6 +550,12 @@
       },
       pause: 0.2,
       hide: 0.01
+     },
+     'CodeLines': {
+      time: 1,
+      fade: 1/6,     /* percentage of time to spend fading out each emote */
+      overlap: 3,    /* simultaneous columns to show */
+      opacity: 1/5   /* opacity of emotes to fade-out to after showing */
      },
      'Fountain': {
       time: 1.5,
@@ -1959,7 +1967,7 @@
     const $emote = function()
     {
      const _toShow = [];
-     const _toSift = [];
+     const _toSift = new Set();
 
      let _tEmote = false;
 
@@ -3104,19 +3112,19 @@
        const rateE = cfg.emote.threshold.emotes;
        if (_toShow.length > 0)
        {
-        for (let i = _toShow.length - 1; i >= 0; i--)
+        let e = null;
+        while ((e = _toShow.pop()) !== undefined)
         {
-         if (!_toShow[i].hasOwnProperty('url') || !_toShow[i].hasOwnProperty('timestamp'))
+         if (!e.hasOwnProperty('url') || !e.hasOwnProperty('timestamp'))
           continue;
-         _toSift.push(_toShow[i]);
-         _toShow.splice(i, 1);
+         _toSift.add(e);
         }
        }
        const tNow = Date.now();
        const ctOf = {};
-       for (let i = 0, l = _toSift.length; i < l; i++)
+       for (const e of _toSift)
        {
-        const showID = _toSift[i].url;
+        const showID = _urlToID(e.url);
         if (!ctOf.hasOwnProperty(showID))
          ctOf[showID] = 0;
         ctOf[showID]++;
@@ -3130,25 +3138,24 @@
         else
          ctOf[showID] = Math.floor(ctOf[showID] / rateE) * rateE;
        }
-       for (let i = _toSift.length - 1; i >= 0; i--)
+       for (const e of _toSift)
        {
-        const showID = _toSift[i].url;
+        const showID = _urlToID(e.url);
         if (!ctOf.hasOwnProperty(showID))
          continue;
         const ctOfID = ctOf[showID];
         if (ctOfID === 0)
          continue;
-        ctOf[showID] -= 1;
-        const sel = _toSift[i];
-        _toSift.splice(i, 1);
+        ctOf[showID]--;
+        _toSift.delete(e);
         if (ctOfID % rateE === 0)
-         _toShow.push(sel);
+         _toShow.push(e);
        }
        const rateMS = cfg.emote.threshold.seconds * 1000;
-       for (let i = _toSift.length - 1; i >= 0; i--)
+       for (const e of _toSift)
        {
-        if (_toSift[i].timestamp + rateMS < tNow)
-         _toSift.splice(i, 1);
+        if (e.timestamp + rateMS < tNow)
+         _toSift.delete(e);
        }
       }
       let e = null;
@@ -3163,8 +3170,16 @@
         return;
        }
       }
-      if (_toSift.length > 0)
+      if (_toSift.size > 0)
        _tEmote = window.setTimeout(display.emote.showEmotes, 500);
+     }
+
+     function _urlToID(u)
+     {
+      const c = cCrew.prefix + encodeURIComponent(cCrew.svg.tag.open + cCrew.css.tag.open);
+      if (u.slice(0, c.length) === c)
+       return shared.hashCode(c);
+      return shared.hashCode(u);
      }
 
      function $addToShowList(p)
@@ -3197,7 +3212,8 @@
     const $kappa = function()
     {
      const _toKappa = [];
-     const _conga = [];
+     const _conga = new Map();
+     const _codeCols = [];
      const _dKappa = 500;
 
      let _tKappa = false;
@@ -3211,13 +3227,7 @@
         const tInit = Date.now();
         if (_iTitanic > tInit)
          return;
-        const kClean = [];
-        for (let i = 0, l = kList.length; i < l; i++)
-        {
-         if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
-          continue;
-         kClean.push(kList[i]);
-        }
+        const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
         if (kClean.length < 1)
          return;
         const oK = kClean[shared.rnd(kClean.length)];
@@ -3270,13 +3280,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         const kClean = [];
-         for (let i = 0, l = kList.length; i < l; i++)
-         {
-          if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
-           continue;
-          kClean.push(kList[i]);
-         }
+         const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
          if (kClean.length < 1)
           return;
          const sK = kClean[shared.rnd(kClean.length)];
@@ -3296,13 +3300,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         const kClean = [];
-         for (let i = 0, l = kList.length; i < l; i++)
-         {
-          if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
-           continue;
-          kClean.push(kList[i]);
-         }
+         const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
          if (kClean.length < 1)
           return;
          const sK = kClean[shared.rnd(kClean.length)];
@@ -3321,13 +3319,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         const kClean = [];
-         for (let i = 0, l = kList.length; i < l; i++)
-         {
-          if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
-           continue;
-          kClean.push(kList[i]);
-         }
+         const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
          if (kClean.length < 1)
           return;
          const sK = kClean[shared.rnd(kClean.length)];
@@ -3417,13 +3409,7 @@
           if (th >= _cRadius)
            th -= _cRadius;
          }
-         const kClean = [];
-         for (let j = 0, l = kList.length; j < l; j++)
-         {
-          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
-           continue;
-          kClean.push(kList[j]);
-         }
+         const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
          if (kClean.length < 1)
           return;
          const oK = kClean[shared.rnd(kClean.length)];
@@ -3488,13 +3474,7 @@
          {
           x = shared.rnd(lP);
          } while (drawn[x] >= pyramidDist[x]);
-         const kClean = [];
-         for (let j = 0, l = kList.length; j < l; j++)
-         {
-          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
-           continue;
-          kClean.push(kList[j]);
-         }
+         const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
          if (kClean.length < 1)
           return;
          const oK = kClean[shared.rnd(kClean.length)];
@@ -3600,13 +3580,7 @@
          {
           x = shared.rnd(lP);
          } while (drawn[x] >= pyramidDist[x]);
-         const kClean = [];
-         for (let j = 0, l = kList.length; j < l; j++)
-         {
-          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
-           continue;
-          kClean.push(kList[j]);
-         }
+         const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
          if (kClean.length < 1)
           return;
          const oK = kClean[shared.rnd(kClean.length)];
@@ -3680,6 +3654,192 @@
        return $c_SmallPyramid;
       }();
 
+      const $CodeLines = function()
+      {
+       async function $c_CodeLines(kList, sW, sH, eH, iKC, tInit = -1)
+       {
+        if (tInit === -1)
+         tInit = Date.now();
+        if (_iTitanic > tInit)
+         return;
+        const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
+        if (kClean.length < 1)
+         return;
+        const rows = Math.floor(sH / eH);
+        const rowSpc = (sH - (rows * eH)) / (rows - 1);
+        const cols = Math.floor(sW / eH);
+        const colSpc = (sW - (cols * eH)) / (cols - 1);
+        const uCols = Math.max(Math.min(Math.ceil(iKC / rows), Math.min(cols, 8)), 2);
+        if (_codeCols.length < cols)
+         _codeCols.length = cols;
+        if (cols - _codeColCt() < uCols)
+        {
+         window.setTimeout(_list.CodeLines, _dKappa, kList, sW, sH, eH, iKC, tInit);
+         return;
+        }
+        const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.CodeLines.time);
+        const iv = Math.floor(tMS / uCols);
+        const it = Math.floor(iv * (1 / timing.kappa.CodeLines.overlap));
+        const tCL = Math.floor(tMS * timing.kappa.CodeLines.fade);
+        const tEnd = tMS - (uCols * it + tCL);
+        const orX = [];
+        for (let x = 0; x < cols; x++)
+        {
+         orX.push(x);
+        }
+        const shX = [];
+        while (shX.length < uCols)
+        {
+         let r = shared.rnd(orX.length);
+         while (_codeCols[orX[r]])
+          r = shared.rnd(orX.length);
+         shX.push(orX.splice(r, 1));
+        }
+        shX.length = uCols;
+        for (let i = 0; i < uCols; i++)
+        {
+         _codeCols[shX[i]] = true;
+        }
+        let t = 0;
+        const arr = [];
+        for (let i = 0; i < uCols; i++)
+        {
+         const x = shX[i];
+         const c = [];
+         for (let y = 0; y < rows; y++)
+         {
+          const oK = kClean[shared.rnd(kClean.length)];
+          const r = _block(tInit, oK, x * (eH + colSpc), y * (eH + rowSpc), eH, tMS);
+          c.push(r);
+         }
+         arr.push(c);
+         shared.doNextFrame(_colStart, tInit, c, iv);
+         t += it;
+         await _sleep(it);
+        }
+        if (_iTitanic > tInit)
+        {
+         for (let i = 0; i < uCols; i++)
+         {
+          _codeCols[shX[i]] = false;
+         }
+         return;
+        }
+        const et = Math.max(tEnd - t, 0);
+        t = it;
+        while (t < et)
+        {
+         window.setTimeout(_column, t, tInit, arr, iv);
+         t += it;
+        }
+        for (let i = 0; i < uCols; i++)
+        {
+         const x = shX[i];
+         window.setTimeout(_colEnd, et + i * it, tInit, arr[i], x, iv);
+        }
+       }
+
+       function _block(tInit, oK, x, y, eH, tMS)
+       {
+        if (_iTitanic > tInit)
+         return;
+        const s = 'left: ' + x + 'px;' +
+         ' top: ' + y + 'px;' +
+         ' --emote-height: ' + eH + 'px;' +
+         ' --emote-width: ' + eH + 'px;' +
+         ' opacity: 0;';
+        return _addEmoteAndZWEs(tInit, oK, 1, {style: s, classes: [display.kappa.clsID.CodeLine.show]}, {space: false, time: tMS});
+       }
+
+       function _colStart(tInit, col, t)
+       {
+        if (_iTitanic > tInit)
+         return;
+        let tCt = 0;
+        for (let y = 0; y < col.length; y++)
+        {
+         window.setTimeout(_show, tCt, tInit, col[y]);
+         tCt += Math.floor(t / col.length);
+        }
+       }
+
+       function _column(tInit, arr, t)
+       {
+        if (_iTitanic > tInit)
+         return;
+        const rX = shared.rnd(arr.length);
+        let tCt = 0;
+        for (let y = 0; y < arr[rX].length; y++)
+        {
+         window.setTimeout(_show, tCt, tInit, arr[rX][y]);
+         tCt += Math.floor(t / arr[rX].length);
+        }
+       }
+
+       function _colEnd(tInit, col, x, t)
+       {
+        _codeCols[x] = false;
+        if (_iTitanic > tInit)
+         return;
+        let tCt = 0;
+        for (let y = 0; y < col.length; y++)
+        {
+         window.setTimeout(_show, tCt, tInit, col[y], true);
+         tCt += Math.floor(t / col.length);
+        }
+       }
+
+       function _show(tInit, img, lastShow = false)
+       {
+        if (_iTitanic > tInit)
+         return;
+        for (let z = 0; z < img.length; z++)
+        {
+         img[z].classList.replace(display.kappa.clsID.CodeLine.hide, display.kappa.clsID.CodeLine.show);
+         img[z].style.opacity = 1;
+        }
+        if (lastShow)
+         shared.doNextFrame(_end, tInit, img);
+        else
+         shared.doNextFrame(_hide, tInit, img);
+       }
+
+       function _hide(tInit, img)
+       {
+        if (_iTitanic > tInit)
+         return;
+        for (let z = 0; z < img.length; z++)
+        {
+         img[z].classList.replace(display.kappa.clsID.CodeLine.show, display.kappa.clsID.CodeLine.hide);
+         img[z].style.opacity = timing.kappa.CodeLines.opacity;
+        }
+       }
+
+       function _end(tInit, img)
+       {
+        if (_iTitanic > tInit)
+         return;
+        for (let z = 0; z < img.length; z++)
+        {
+         img[z].classList.replace(display.kappa.clsID.CodeLine.show, display.kappa.clsID.CodeLine.hide);
+         img[z].style.opacity = 0;
+        }
+       }
+
+       function _codeColCt()
+       {
+        let aCt = 0;
+        for (let i = 0; i < _codeCols.length; i++)
+        {
+         if (_codeCols[i])
+          aCt++;
+        }
+        return aCt;
+       }
+
+       return $c_CodeLines;
+      }();
+
       const $Stampede = function()
       {
        async function $c_Stampede(kList, sW, sH, eH, iKC)
@@ -3728,18 +3888,12 @@
        {
         if (_iTitanic > tInit)
          return;
-        const imgs = [];
+        const imgs = new Set();
         for (let i = 0; i < ct; i++)
         {
          if (_iTitanic > tInit)
           return;
-         const kClean = [];
-         for (let j = 0, l = kList.length; j < l; j++)
-         {
-          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
-           continue;
-          kClean.push(kList[j]);
-         }
+         const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
          if (kClean.length < 1)
           return;
          const oK = kClean[shared.rnd(kClean.length)];
@@ -3751,7 +3905,7 @@
          const oE = _run(tInit, oK, y, d, sW, eW, eH, maxW);
          if (oE === null)
           return;
-         imgs.push(oE);
+         imgs.add(oE);
          if (sA === false)
           await _sleep(_rndFromRange(timing.kappa.Stampede.smallSleep));
          else
@@ -3780,12 +3934,16 @@
          if (_iTitanic > tInit)
           return;
          await _sleep(100);
-         for (let i = imgs.length - 1; i >= 0; i--)
+         for (const img of imgs)
          {
-          if (imgs[i] === null || imgs[i].hasAttribute('deleted'))
-           imgs.splice(i, 1);
+          if (img === null)
+           imgs.delete(img);
+          if (img.parentNode === null)
+           imgs.delete(img);
+          if (img.hasAttribute('deleted'))
+           imgs.delete(img);
          }
-        } while (imgs.length > 0);
+        } while (imgs.size > 0);
        }
 
        function _run(tInit, eInf, v, d, sW, eW, eH, maxW)
@@ -3828,61 +3986,49 @@
 
       const $Conga = function()
       {
-       async function $c_Conga(kList, sW, sH, eH, nM)
+       async function $c_Conga(kList, sW, sH, eH, nM, tInit = -1)
        {
-        const tInit = Date.now();
+        if (tInit === -1)
+         tInit = Date.now();
         if (_iTitanic > tInit)
          return;
         let v = 0;
-        let unique = false;
         const bS = Math.ceil(eH * timing.kappa.Conga.size);
         const seg = Math.floor(eH * timing.kappa.Conga.height);
         const sht = Math.floor(sH / seg);
         let lns = sht;
         if (nM)
          lns = timing.kappa.Conga.avoidMiddle;
-        while (_conga.length >= lns)
+        if (_conga.size >= lns)
         {
-         if (_iTitanic > tInit)
-          return;
-         await _sleep(250);
+         window.setTimeout(_list.Conga, _dKappa, kList, sW, sH, eH, nM, tInit);
+         return;
         }
-        while (!unique)
+        if (nM)
         {
-         v = shared.rnd(sht) * seg;
-         if (nM)
+         const hMid = Math.floor(timing.kappa.Conga.avoidMiddle / 2);
+         do
          {
           v = shared.rnd(timing.kappa.Conga.avoidMiddle);
-          const hMid = Math.floor(timing.kappa.Conga.avoidMiddle / 2);
           if (v >= hMid)
            v = sht - 1 - (v - hMid);
           v *= seg;
-         }
-         let found = false;
-         for (let i = 0, l = _conga.length; i < l; i++)
-         {
-          if (_conga[i].row === v)
-          {
-           found = true;
-           break;
-          }
-         }
-         if (!found)
-          unique = true;
+         } while(_conga.has(v));
         }
-        _conga.push({row: v, done: false});
+        else
+        {
+         do
+         {
+          v = shared.rnd(sht) * seg;
+         } while(_conga.has(v));
+        }
+        _conga.set(v, false);
         const urls = [];
         const zurls = [];
         const ct = Math.floor(sW / bS);
         for (let i = 0; i < ct; i++)
         {
-         const kClean = [];
-         for (let j = 0, l = kList.length; j < l; j++)
-         {
-          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
-           continue;
-          kClean.push(kList[j]);
-         }
+         const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
          if (kClean.length < 1)
           return;
          const oK = kClean[shared.rnd(kClean.length)];
@@ -3917,41 +4063,19 @@
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.show);
         await _sleep(tMS);
         let full = false;
-        if (_conga.length === sht)
+        if (_conga.size >= sht)
          full = true;
         await _sleep(Math.floor(cfg.display.kappa.conga.time * 1000));
         if (cfg.display.kappa.conga.contagious)
         {
-         let ex = false;
-         let lC = _conga.length;
-         if (lC > 1)
-          ex = true;
-         for (let i = 0; i < lC; i++)
-         {
-          if (_conga[i].row !== v)
-           continue;
-          _conga[i].done = true;
-          break;
-         }
-         let done = false;
-         while (!done)
+         let ex = _conga.size > 1;
+         _conga.set(v, true);
+         while ([..._conga.values()].includes(false))
          {
           if (_iTitanic > tInit)
            return;
-          lC = _conga.length;
-          if (!ex && lC > 1)
+          if (!ex && _conga.size > 1)
            ex = true;
-          let notDone = false;
-          for (let i = 0; i < lC; i++)
-          {
-           if (_conga[i].done === false)
-           {
-            notDone = true;
-            break;
-           }
-          }
-          if (notDone === false)
-           done = true;
           await _sleep(100);
          }
         }
@@ -3964,13 +4088,7 @@
          }
         }
         await _sleep(tMS);
-        for (let i = 0, l = _conga.length; i < l; i++)
-        {
-         if (_conga[i].row !== v)
-          continue;
-         _conga.splice(i, 1);
-         break;
-        }
+        _conga.delete(v);
        }
 
        function _dance(tInit, url, oID, col, sW, v, eH, bS, ct, d, xtra, cAppend = [])
@@ -4044,13 +4162,7 @@
         if (_iTitanic > tInit)
          return;
         const d = shared.rnd(2) === 0;
-        const kClean = [];
-        for (let j = 0, l = kList.length; j < l; j++)
-        {
-         if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
-          continue;
-         kClean.push(kList[j]);
-        }
+        const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
         if (kClean.length < 1)
          return;
         let maxW = 0;
@@ -4181,13 +4293,7 @@
         const cube = document.createElement('div');
         cube.setAttribute('class', 'cube');
         cube.setAttribute('style', 'transform: translateZ(' + nHh + 'px);');
-        const kClean = [];
-        for (let i = 0, l = kList.length; i < l; i++)
-        {
-         if (kList[i].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[i].origin))
-          continue;
-         kClean.push(kList[i]);
-        }
+        const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
         if (kClean.length < 1)
          return;
         const eFaces = [];
@@ -4311,13 +4417,7 @@
          } while (drawn[x] >= msgDist[x].length);
          if (msgDist[x][drawn[x]] !== 0)
          {
-          const kClean = [];
-          for (let j = 0, l = kList.length; j < l; j++)
-          {
-           if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
-            continue;
-           kClean.push(kList[j]);
-          }
+          const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
           if (kClean.length < 1)
            return;
           const oK = kClean[shared.rnd(kClean.length)];
@@ -4435,6 +4535,7 @@
        Spiral: $Spiral,
        Pyramid: $Pyramid,
        SmallPyramid: $SmallPyramid,
+       CodeLines: $CodeLines,
        Stampede: $Stampede,
        Conga: $Conga,
        Coaster: $Coaster,
@@ -4586,7 +4687,7 @@
       }
       let s, p;
       const keys = Object.keys(kS);
-      if (cfg.display.kappa.conga.contagious && _conga.length > 0)
+      if (cfg.display.kappa.conga.contagious && _conga.size > 0)
       {
        s = 'Conga';
        p = {};
@@ -4933,6 +5034,10 @@
        case 'SmallPyramid':
         _list.SmallPyramid(kList, sW, sH);
         break;
+       case 'CodeLines':
+        _eActive -= waitFor;
+        _list.CodeLines(kList, sW, sH, eHh, kStyle.count);
+        break;
        case 'Conga':
         let avoidMiddle = false;
         if (cfg.display.kappa.conga.hasOwnProperty('avoidMiddle') && cfg.display.kappa.conga.avoidMiddle === true)
@@ -5003,13 +5108,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         const kClean = [];
-         for (let j = 0, l = kList.length; j < l; j++)
-         {
-          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
-           continue;
-          kClean.push(kList[j]);
-         }
+         const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
          if (kClean.length < 1)
           return;
          const rB = shared.rnd(kClean.length);
@@ -5031,13 +5130,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         const kClean = [];
-         for (let j = 0, l = kList.length; j < l; j++)
-         {
-          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
-           continue;
-          kClean.push(kList[j]);
-         }
+         const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
          if (kClean.length < 1)
           return;
          const rF = shared.rnd(kClean.length);
@@ -5053,13 +5146,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         const kClean = [];
-         for (let j = 0, l = kList.length; j < l; j++)
-         {
-          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
-           continue;
-          kClean.push(kList[j]);
-         }
+         const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
          if (kClean.length < 1)
           return;
          const rN = shared.rnd(kClean.length);
@@ -5077,13 +5164,7 @@
         {
          if (_iTitanic > tInit)
           return;
-         const kClean = [];
-         for (let j = 0, l = kList.length; j < l; j++)
-         {
-          if (kList[j].hasOwnProperty('origin') && display.erasedMsgs.includes(kList[j].origin))
-           continue;
-          kClean.push(kList[j]);
-         }
+         const kClean = kList.filter(function(oK){return !(oK.hasOwnProperty('origin') && display.erasedMsgs.includes(oK.origin));});
          if (kClean.length < 1)
           return;
          const r = shared.rnd(kClean.length);
@@ -5106,18 +5187,14 @@
        _tKappa = false;
       }
       _toKappa.length = 0;
-      _conga.length = 0;
+      _conga.clear();
+      _codeCols.length = 0;
      }
 
      function $eraseConga(id)
      {
-      for (let i = 0, l = _conga.length; i < l; i++)
-      {
-       if (_conga[i].row !== id)
-        continue;
-       _conga.splice(i, 1);
-       break;
-      }
+      if (_conga.has(id))
+       _conga.delete(id);
      }
 
      function _sleep(ms)
@@ -5203,6 +5280,10 @@
         Show: 'ktSmallPyramid',
         Drop: 'ktSmallPyramidDrop'
        }),
+       CodeLine: Object.freeze({
+        show: 'ktCodeLineShow',
+        hide: 'ktCodeLineHide'
+       }),
        Stampede: 'ktStampede',
        Conga: Object.freeze({
         In: 'ktCongaIn',
@@ -5214,7 +5295,7 @@
 
     const _gc = function()
     {
-     const _toGC = {};
+     const _toGC = new Set();
 
      let _tGC = false;
 
@@ -5224,36 +5305,29 @@
        return;
       window.clearTimeout(_tGC);
       _tGC = false;
-      let done = true;
       const tNow = Date.now();
-      for (const idx in _toGC)
+      for (const g of _toGC)
       {
-       if (!_toGC.hasOwnProperty(idx))
-        continue;
-       done = false;
-       const i = _toGC[idx].img;
-       const t = _toGC[idx].end;
-       const d = _toGC[idx].dec;
-       if (_toGC[idx].space)
+       if (g.space)
        {
-        const r = i.getBoundingClientRect();
-        if (t > tNow && r.bottom > 0 && r.right > 0 && r.top < window.innerHeight && r.left < window.innerWidth)
+        const r = g.img.getBoundingClientRect();
+        if (g.end > tNow && r.bottom > 0 && r.right > 0 && r.top < window.innerHeight && r.left < window.innerWidth)
          continue;
        }
        else
        {
-        if (t > tNow)
+        if (g.end > tNow)
          continue;
        }
-       delete _toGC[idx];
-       if (i.parentNode !== null)
-        document.body.removeChild(i);
-       if (d === true)
+       _toGC.delete(g);
+       if (g.img.parentNode !== null)
+        g.img.parentNode.removeChild(g.img);
+       if (g.dec === true)
         _eActive--;
-       else if (d !== false && Number.isInteger(d))
-        _eActive -= d;
+       else if (g.dec !== false && Number.isInteger(g.dec))
+        _eActive -= g.dec;
       }
-      if (!done)
+      if (_toGC.size > 0)
        _tGC = window.setTimeout(_doGC, 500);
      }
 
@@ -5261,12 +5335,7 @@
      {
       if (t === false)
        t = Math.floor(cfg.emote.time * 1000);
-      let x = 0;
-      do
-      {
-       x++;
-      } while (_toGC.hasOwnProperty(x));
-      _toGC[x] = {img: img, space: space, dec: decActive, end: Date.now() + t};
+      _toGC.add({img: img, space: space, dec: decActive, end: Date.now() + t});
       if (_tGC === false)
        _tGC = window.setTimeout(_doGC, 500);
      }
@@ -5602,14 +5671,21 @@
     function $eraseMsg(oID)
     {
      display.erasedMsgs.push(oID);
+     const zwes = document.querySelectorAll('img.zwe[data-msgid="' + oID + '"]');
+     for (let i = zwes.length - 1; i >= 0; i--)
+     {
+      zwes[i].parentNode.removeChild(zwes[i]);
+     }
+     const hLines = document.querySelectorAll('img.' + display.kappa.clsID.CodeLine.hide + '[data-msgid="' + oID + '"]');
+     for (let i = hLines.length - 1; i >= 0; i--)
+     {
+      hLines[i].parentNode.removeChild(hLines[i]);
+     }
      const imgs = document.querySelectorAll('img[data-msgid="' + oID + '"]');
      const death = dieList[shared.rnd(dieList.length)];
-     for (let i = imgs.length - 1; i >= 0; i--)
+     for (let i = 0; i < imgs.length; i++)
      {
-      if (imgs[i].classList.contains('zwe'))
-       imgs[i].parentNode.removeChild(imgs[i]);
-      else
-       imgs[i].src = death.url;
+      imgs[i].src = death.url;
      }
      window.setTimeout(_eraseMsgPart2, death.time, oID);
     }
@@ -5654,14 +5730,21 @@
     {
      _iTitanic = Date.now();
      display.kappa.hide();
+     const zwes = document.getElementsByClassName('zwe');
+     while (zwes.length)
+     {
+      zwes[0].parentNode.removeChild(zwes[0]);
+     }
+     const hLines = document.getElementsByClassName(display.kappa.clsID.CodeLine.hide);
+     while (hLines.length)
+     {
+      hLines[0].parentNode.removeChild(hLines[0]);
+     }
      const imgs = document.getElementsByTagName('img');
      const death = dieList[shared.rnd(dieList.length)];
-     for (let i = imgs.length - 1; i >= 0; i--)
+     for (let i = 0; i < imgs.length; i++)
      {
-      if (imgs[i].classList.contains('zwe'))
-       imgs[i].parentNode.removeChild(imgs[i]);
-      else
-       imgs[i].src = death.url;
+      imgs[i].src = death.url;
      }
      window.setTimeout(_eraseAllPart2, death.time);
     }
@@ -6060,7 +6143,7 @@
 
         const _follow = function()
         {
-         const _fHist = [];
+         const _fHist = new Set();
 
          function $c_follow(ev)
          {
@@ -6073,9 +6156,9 @@
           twitch.net.fList[ev.user_id] = {value: true, t: Date.now()};
           if (cfg.event.twitch.follow === false)
            return;
-          if (_fHist.includes(ev.user_id))
+          if (_fHist.has(ev.user_id))
            return;
-          _fHist.push(ev.user_id);
+          _fHist.add(ev.user_id);
           display.kappa.show(false, cfg.event.twitch.follow, {[cVARs.evt.user]: ev.user_name});
          }
 
@@ -6740,8 +6823,8 @@
         if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('user-id') && cmd.tags.hasOwnProperty('id'))
         {
          if (!_msgHistory.hasOwnProperty(cmd.tags['user-id']))
-          _msgHistory[cmd.tags['user-id']] = [];
-         _msgHistory[cmd.tags['user-id']].push(cmd.tags.id);
+          _msgHistory[cmd.tags['user-id']] = new Set();
+         _msgHistory[cmd.tags['user-id']].add(cmd.tags.id);
         }
         if (document.visibilityState === 'hidden')
          return;
@@ -6871,9 +6954,9 @@
         {
          if (!_msgHistory.hasOwnProperty(uID))
           continue;
-         if (!_msgHistory[uID].includes(cmd.tags['target-msg-id']))
+         if (!_msgHistory[uID].has(cmd.tags['target-msg-id']))
           continue;
-         _msgHistory[uID].filter(function(v){return v !== cmd.tags['target-msg-id'];});
+         _msgHistory[uID].delete(cmd.tags['target-msg-id']);
          break;
         }
         const mID = 'twitch:' + cmd.tags['target-msg-id'];
@@ -6892,8 +6975,11 @@
          case 2:
           if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('target-user-id') && _msgHistory.hasOwnProperty(cmd.tags['target-user-id']))
           {
-           while (_msgHistory[cmd.tags['target-user-id']].length > 0)
-            display.eraseMsg('twitch:' + _msgHistory[cmd.tags['target-user-id']].shift());
+           for (const mID of _msgHistory[cmd.tags['target-user-id']])
+           {
+            display.eraseMsg('twitch:' + mID);
+           }
+           delete _msgHistory[cmd.tags['target-user-id']];
           }
           if (document.visibilityState === 'hidden')
            return;
@@ -7135,7 +7221,7 @@
        if (cfg.twitch.hasOwnProperty('oauth') && cfg.twitch.oauth !== null && cfg.twitch.oauth !== false && cfg.twitch.oauth !== 'OAUTH_ID')
        {
         loginT.inUse = false;
-        loginT.cfgHash = (shared.hashCode(cfg.twitch.oauth) >>> 0).toString(16);
+        loginT.cfgHash = shared.hashCode(cfg.twitch.oauth);
         await _genAccess(cfg.twitch.oauth);
         return;
        }
@@ -7143,7 +7229,7 @@
        {
         loginT.inUse = false;
         let sRef = cfg.twitch.oauth_refresh;
-        loginT.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
+        loginT.cfgHash = shared.hashCode(sRef);
         const lsRef = shared.storage.getItem(loginT.path() + _pathRefresh);
         if (lsRef !== null)
          sRef = lsRef;
@@ -7835,6 +7921,11 @@
            return false;
           display.kappa.show(a, cfg.event.twitch.powerup.message.eclipse, {[cVARs.evt.user]: dn});
           return true;
+         case 'cosmic-abyss':
+          if (cfg.event.twitch.powerup.message.abyss === false)
+           return false;
+          display.kappa.show(a, cfg.event.twitch.powerup.message.abyss, {[cVARs.evt.user]: dn});
+          return true;
         }
         return false;
        }
@@ -8011,9 +8102,9 @@
       const $sub = function()
       {
        const _bList = {
-        bombs: [],
-        bulk: [],
-        check: []
+        bombs: new Set(),
+        bulk: new Set(),
+        check: new Set()
        };
        let _tGC = null;
 
@@ -8031,16 +8122,16 @@
         const usesBomb = cfg.event.twitch.sub[subPlan].hasOwnProperty('gift') && cfg.event.twitch.sub[subPlan].gift.hasOwnProperty('bomb') && cfg.event.twitch.sub[subPlan].gift.bomb !== false;
         if (mpoi !== false && usesBomb)
         {
-         if (_bList.bombs.includes(mpoi))
+         if (_bList.bombs.has(mpoi))
           return;
          if (mID === 'subgift')
          {
-          if (_bList.bulk.includes(mpoi))
+          if (_bList.bulk.has(mpoi))
            return;
-          if (_bList.check.includes(mpoi))
+          if (_bList.check.has(mpoi))
           {
-           _bList.bulk.push(mpoi);
-           _bList.check.splice(_bList.check.indexOf(mpoi), 1);
+           _bList.bulk.add(mpoi);
+           _bList.check.delete(mpoi);
            _resetGC();
            return;
           }
@@ -8084,22 +8175,22 @@
          mprdn = cmd.tags['msg-param-recipient-display-name'];
         if (mpoi !== false && usesBomb)
         {
-         if (_bList.bombs.includes(mpoi))
+         if (_bList.bombs.has(mpoi))
           return;
          if (mID === 'subgift')
          {
-          if (_bList.bulk.includes(mpoi))
+          if (_bList.bulk.has(mpoi))
            return;
-          if (_bList.check.includes(mpoi))
+          if (_bList.check.has(mpoi))
           {
-           _bList.bulk.push(mpoi);
-           _bList.check.splice(_bList.check.indexOf(mpoi), 1);
+           _bList.bulk.add(mpoi);
+           _bList.check.delete(mpoi);
            _resetGC();
            return;
           }
           if (!cmd.tags.hasOwnProperty('msg-param-sender-count') || cmd.tags['msg-param-sender-count'] === '0')
           {
-           _bList.check.push(mpoi);
+           _bList.check.add(mpoi);
            window.setTimeout(_show, 2000, mID, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a);
            _resetGC();
            return;
@@ -8114,9 +8205,9 @@
         const usesBomb = cfg.event.twitch.sub.hasOwnProperty(subPlan) && cfg.event.twitch.sub[subPlan].hasOwnProperty('gift') && cfg.event.twitch.sub[subPlan].gift.hasOwnProperty('bomb') && cfg.event.twitch.sub[subPlan].gift.bomb !== false;
         if (mpoi !== false && usesBomb)
         {
-         if (_bList.bombs.includes(mpoi))
+         if (_bList.bombs.has(mpoi))
           return;
-         if (id === 'subgift' && _bList.bulk.includes(mpoi))
+         if (id === 'subgift' && _bList.bulk.has(mpoi))
          {
           _resetGC();
           return;
@@ -8187,11 +8278,11 @@
            return;
           if (mpoi !== false)
           {
-           _bList.bombs.push(mpoi);
-           if (_bList.bulk.includes(mpoi))
-            _bList.bulk.splice(_bList.bulk.indexOf(mpoi), 1);
-           if (_bList.check.includes(mpoi))
-            _bList.check.splice(_bList.check.indexOf(mpoi), 1);
+           _bList.bombs.add(mpoi);
+           if (_bList.bulk.has(mpoi))
+            _bList.bulk.delete(mpoi);
+           if (_bList.check.has(mpoi))
+            _bList.check.delete(mpoi);
            _resetGC();
           }
           const gpb = shared.findInMaybeRange(cfg.event.twitch.sub[subPlan].gift.bomb, mpmgc);
@@ -8233,8 +8324,8 @@
          return;
         window.clearTimeout(_tGC);
         _tGC = null;
-        _bList.check = [];
-        _bList.bulk = [];
+        _bList.check.clear();
+        _bList.bulk.clear();
        }
 
        return $c_sub;
@@ -8943,7 +9034,7 @@
     {
      const $broadcasts = function()
      {
-      const _aC = [];
+      const _aC = new Set();
       const _msgHistory = {};
       let  _tS = false;
       const _bcInterval = 30000;
@@ -8993,32 +9084,23 @@
          if (cfg.display.extended.useBTTV)
           thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
         }
-        if (!_aC.includes(lStreams[i].chat))
+        if (!_aC.has(lStreams[i].chat))
         {
          didSomething = true;
-         _aC.push(lStreams[i].chat);
+         _aC.add(lStreams[i].chat);
          window.setTimeout(youtube.net.broadcasts.getMessages.start, 48, lStreams[i]);
         }
        }
        if (didSomething && cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('recheck') && cfg.youtube.connect_to.recheck === false)
         return;
        _tS = window.setTimeout(youtube.net.broadcasts.updateStream, _bcInterval);
-       for (let i = _aC.length - 1; i >= 0; i--)
+       const sC = lStreams.map(function(s){return s.chat;});
+       for (const chat of _aC)
        {
-        let found = false;
-        for (let j = 0, m = lStreams.length; j < m; j++)
-        {
-         if (lStreams[j].chat === _aC[i])
-         {
-          found = true;
-          break;
-         }
-        }
-        if (!found)
-        {
-         youtube.net.broadcasts.getMessages.stop(_aC[i]);
-         _aC.splice(i, 1);
-        }
+        if (sC.includes(chat))
+         continue;
+        youtube.net.broadcasts.getMessages.stop(chat);
+        _aC.delete(chat);
        }
       }
 
@@ -9050,7 +9132,7 @@
        {
         if (r.code === 0 && r.data === '')
         {
-         if (_aC.length !== 0)
+         if (_aC.size !== 0)
           return false;
          notice.error(notice.Type.YOUTUBE_CORS, 'current live streams');
          notice.active &= ~notice.Connection.YOUTUBE;
@@ -9074,14 +9156,14 @@
             youtube.net.dead = true;
             return null;
            case 'SERVICE_UNAVAILABLE':
-            if (_aC.length !== 0)
+            if (_aC.size !== 0)
              return false;
             notice.error(notice.Type.YOUTUBE_NETWORK);
             notice.active &= ~notice.Connection.YOUTUBE;
             notice.resetHide();
             return false;
            case 'backendError':
-            if (_aC.length !== 0)
+            if (_aC.size !== 0)
              return false;
             notice.error(notice.Type.YOUTUBE_NETWORK);
             notice.active &= ~notice.Connection.YOUTUBE;
@@ -9187,17 +9269,17 @@
        };
        if (cfg.youtube.hasOwnProperty('connect_to') && cfg.youtube.connect_to.hasOwnProperty('sort') && typeof cfg.youtube.connect_to.sort === 'object' && cfg.youtube.connect_to.sort !== null && Object.keys(cfg.youtube.connect_to.sort).length > 0)
         sortOrder = cfg.youtube.connect_to.sort;
-       const sortAttrs = Object.keys(sortOrder);
-       for (let i = 0, l = sortAttrs.length; i < l; i++)
+       const sortMap = new Map(Object.entries(sortOrder));
+       for (const [attr, order] of sortMap)
        {
-        const chooseA = sortOrder[sortAttrs[i]] === 'asc' ? 1 : -1;
+        const chooseA = order === 'asc' ? 1 : -1;
         const chooseB = -1 * chooseA;
-        if (!a.hasOwnProperty(sortAttrs[i]))
+        if (!a.hasOwnProperty(attr))
          return chooseB;
-        if (!b.hasOwnProperty(sortAttrs[i]))
+        if (!b.hasOwnProperty(attr))
          return chooseA;
-        const aA = a[sortAttrs[i]];
-        const aB = b[sortAttrs[i]];
+        const aA = a[attr];
+        const aB = b[attr];
         if (aA === aB)
          continue;
         if (aA === false)
@@ -9227,7 +9309,7 @@
 
       const $getMessages = function()
       {
-       const _tM = [];
+       const _tM = {};
        let _bSlower = 0;
        const _mInterval = 1000;
        const _mStep = 1000;
@@ -9322,13 +9404,7 @@
             case 'liveChatEnded':
             case 'liveChatDisabled':
             case 'liveChatNotFound':
-             for (let i = 0, l = _aC.length; i < l; i++)
-             {
-              if (_aC[i] !== chatID)
-               continue;
-              _aC.splice(i, 1);
-              break;
-             }
+             _aC.delete(chatID);
              youtube.net.broadcasts.getMessages.stop(chatID);
              return;
             case 'rateLimitExceeded':
@@ -9456,8 +9532,8 @@
         if (cmd.hasOwnProperty('id') && cmd.authorDetails.hasOwnProperty('channelId'))
         {
          if (!_msgHistory.hasOwnProperty(cmd.authorDetails.channelId))
-          _msgHistory[cmd.authorDetails.channelId] = [];
-         _msgHistory[cmd.authorDetails.channelId].push(cmd.id);
+          _msgHistory[cmd.authorDetails.channelId] = new Set();
+         _msgHistory[cmd.authorDetails.channelId].add(cmd.id);
         }
         await youtube.parse.line(cmd);
        }
@@ -9473,8 +9549,8 @@
         if (cmd.hasOwnProperty('id') && cmd.authorDetails.hasOwnProperty('channelId'))
         {
          if (!_msgHistory.hasOwnProperty(cmd.authorDetails.channelId))
-          _msgHistory[cmd.authorDetails.channelId] = [];
-         _msgHistory[cmd.authorDetails.channelId].push(cmd.id);
+          _msgHistory[cmd.authorDetails.channelId] = new Set();
+         _msgHistory[cmd.authorDetails.channelId].add(cmd.id);
         }
         await youtube.parse.event.superchat(cmd);
        }
@@ -9514,8 +9590,8 @@
         if (cmd.hasOwnProperty('id') && cmd.authorDetails.hasOwnProperty('channelId'))
         {
          if (!_msgHistory.hasOwnProperty(cmd.authorDetails.channelId))
-          _msgHistory[cmd.authorDetails.channelId] = [];
-         _msgHistory[cmd.authorDetails.channelId].push(cmd.id);
+          _msgHistory[cmd.authorDetails.channelId] = new Set();
+         _msgHistory[cmd.authorDetails.channelId].add(cmd.id);
         }
         youtube.parse.event.supersticker(cmd);
        }
@@ -9537,8 +9613,8 @@
          return;
         if (!cmd.snippet.messageDeletedDetails.hasOwnProperty('deletedMessageId'))
          return;
-        if (cmd.hasOwnProperty('authorDetails') && cmd.authorDetails.hasOwnProperty('channelId') && _msgHistory.hasOwnProperty(cmd.authorDetails.channelId) && _msgHistory[cmd.authorDetails.channelId].includes(cmd.snippet.messageDeletedDetails.deletedMessageId))
-         _msgHistory[cmd.authorDetails.channelId].filter(function(v){return v !== cmd.snippet.messageDeletedDetails.deletedMessageId;});
+        if (cmd.hasOwnProperty('authorDetails') && cmd.authorDetails.hasOwnProperty('channelId') && _msgHistory.hasOwnProperty(cmd.authorDetails.channelId) && _msgHistory[cmd.authorDetails.channelId].has(cmd.snippet.messageDeletedDetails.deletedMessageId))
+         _msgHistory[cmd.authorDetails.channelId].delete(cmd.snippet.messageDeletedDetails.deletedMessageId);
         const mID = 'youtube:' + cmd.snippet.messageDeletedDetails.deletedMessageId;
         display.eraseMsg(mID);
        }
@@ -9551,8 +9627,11 @@
          return;
         if (cmd.snippet.userBannedDetails.hasOwnProperty('bannedUserDetails') && cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('channelId') && _msgHistory.hasOwnProperty(cmd.snippet.userBannedDetails.bannedUserDetails.channelId))
         {
-         while (_msgHistory[cmd.snippet.userBannedDetails.bannedUserDetails.channelId].length > 0)
-          display.eraseMsg('youtube:' + _msgHistory[cmd.snippet.userBannedDetails.bannedUserDetails.channelId].shift());
+         for (const mID of _msgHistory[cmd.snippet.userBannedDetails.bannedUserDetails.channelId])
+         {
+          display.eraseMsg('youtube:' + mID);
+         }
+         delete _msgHistory[cmd.snippet.userBannedDetails.bannedUserDetails.channelId];
         }
         if (document.visibilityState === 'hidden')
          return;
@@ -9866,7 +9945,7 @@
        if (cfg.youtube.hasOwnProperty('oauth') && cfg.youtube.oauth !== null && cfg.youtube.oauth !== false && cfg.youtube.oauth !== 'OAUTH_ID')
        {
         loginYT.inUse = false;
-        loginYT.cfgHash = (shared.hashCode(cfg.youtube.oauth) >>> 0).toString(16);
+        loginYT.cfgHash = shared.hashCode(cfg.youtube.oauth);
         await _genAccess(cfg.youtube.oauth);
         return;
        }
@@ -9874,7 +9953,7 @@
        {
         loginYT.inUse = false;
         let sRef = cfg.youtube.oauth_refresh;
-        loginYT.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
+        loginYT.cfgHash = shared.hashCode(sRef);
         const lsRef = shared.storage.getItem(loginYT.path() + _pathRefresh);
         if (lsRef !== null)
          sRef = lsRef;
@@ -10214,12 +10293,12 @@
         }
         if (emList.length === 0)
          return [];
-        const ret = [];
         if (dup === null)
          dup = cfg.display.duplicates;
         if (dup === false)
          dup = 1;
         const lv = await _level(cmd);
+        const ret = [];
         for (let i = 0, l = emList.length; i < l; i++)
         {
          const u = _ttu(emList[i][0]);
@@ -11429,8 +11508,8 @@
          if (jData.hasOwnProperty('id') && jData.id !== null && jData.hasOwnProperty('sender') && jData.sender !== null && jData.sender.hasOwnProperty('id') && jData.sender.id !== null)
          {
           if (!_msgHistory.hasOwnProperty(jData.sender.id))
-           _msgHistory[jData.sender.id] = [];
-          _msgHistory[jData.sender.id].push(jData.id);
+           _msgHistory[jData.sender.id] = new Set();
+          _msgHistory[jData.sender.id].add(jData.id);
          }
          if (document.visibilityState === 'hidden')
           return;
@@ -11441,8 +11520,11 @@
         {
          if (jData.hasOwnProperty('user') && jData.user !== null && jData.user.hasOwnProperty('id') && jData.user.id !== null && _msgHistory.hasOwnProperty(jData.user.id))
          {
-          while (_msgHistory[jData.user.id].length > 0)
-           display.eraseMsg('kick:' + _msgHistory[jData.user.id].shift());
+          for (const mID of _msgHistory[jData.user.id])
+          {
+           display.eraseMsg('kick:' + mID);
+          }
+          delete _msgHistory[jData.user.id];
          }
          if (document.visibilityState === 'hidden')
           return;
@@ -11538,9 +11620,9 @@
          {
           if (!_msgHistory.hasOwnProperty(uID))
            continue;
-          if (!_msgHistory[uID].includes(jData.message.id))
+          if (!_msgHistory[uID].has(jData.message.id))
            continue;
-          _msgHistory[uID].filter(function(v){return v !== jData.message.id;});
+          _msgHistory[uID].delete(jData.message.id);
           break;
          }
          const mID = 'kick:' + jData.message.id;
@@ -14835,14 +14917,14 @@
       }
       if (cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== null && cfg.streamelements.oauth !== 'OAUTH_ID')
       {
-       streamelements.cfgHash = (shared.hashCode(cfg.streamelements.oauth) >>> 0).toString(16);
+       streamelements.cfgHash = shared.hashCode(cfg.streamelements.oauth);
        _genAccess(cfg.streamelements.oauth);
        return;
       }
       if (cfg.streamelements.hasOwnProperty('oauth_refresh') && cfg.streamelements.oauth_refresh !== null && cfg.streamelements.oauth_refresh !== false && cfg.streamelements.oauth_refresh !== 'OAUTH_REFRESH')
       {
        let sRef = cfg.streamelements.oauth_refresh;
-       streamelements.cfgHash = (shared.hashCode(sRef) >>> 0).toString(16);
+       streamelements.cfgHash = shared.hashCode(sRef);
        const lsRef = shared.storage.getItem(_path() + _pathRefresh);
        if (lsRef !== null)
         sRef = lsRef;
@@ -15100,7 +15182,7 @@
      {
       if (!list[code].channel.includes(ch))
        return;
-      list[code].channel.filter(function(v){return v !== ch;});
+      list[code].channel = list[code].channel.filter(function(v){return v !== ch;});
       if (list[code].channel.length > 0)
        return;
      }
@@ -15167,19 +15249,12 @@
        return false;
       if (!j.hasOwnProperty('sets'))
        return false;
-      const usedSets = [];
-      if (j.hasOwnProperty('default_sets'))
-      {
-       for (let i = 0, l = j.default_sets.length; i < l; i++)
-       {
-        usedSets.push(j.default_sets[i]);
-       }
-      }
+      const usedSets = new Set(j.default_sets);
       for (const set in j.sets)
       {
        if (!j.sets.hasOwnProperty(set))
         continue;
-       if (!usedSets.includes(j.sets[set].id))
+       if (!usedSets.has(j.sets[set].id))
         continue;
        if (!j.sets[set].hasOwnProperty('emoticons'))
         continue;
@@ -15315,7 +15390,7 @@
       return ret;
      }
 
-     async function $channel(svcName, chID)
+     async function $channel(svcName, chID, andClr = false)
      {
       if (!service.emotes.hasOwnProperty('ffz'))
        service.emotes.ffz = {};
@@ -15326,6 +15401,8 @@
       const r = await thirdparty.ffz.channelEx(svcName, chID);
       if (r === false)
        return false;
+      if (andClr)
+       _channelClr(svcName, chID);
       for (let i = 0, l = r.length; i < l; i++)
       {
        if (r[i].modifier !== false)
@@ -15340,6 +15417,29 @@
       }
       service.syncList();
       return true;
+     }
+
+     function _channelClr(svcName, chID)
+     {
+      for (const e in service.emotes.ffz)
+      {
+       if (!service.emotes.ffz.hasOwnProperty(e))
+        continue;
+       if (service.emotes.ffz[e].scope !== cSources.scope.channel)
+        continue;
+       _removeEmote(service.emotes.ffz, cSources.scope.channel, e, svcName + ':' + chID);
+      }
+      if (service.emotes.hasOwnProperty('zwe'))
+      {
+       for (const e in service.emotes.zwe.ffz)
+       {
+        if (!service.emotes.zwe.ffz.hasOwnProperty(e))
+         continue;
+        if (service.emotes.zwe.ffz[e].scope !== cSources.scope.channel)
+         continue;
+        _removeEmote(service.emotes.zwe.ffz, cSources.scope.channel, e, svcName + ':' + chID);
+       }
+      }
      }
 
      return {
@@ -15525,7 +15625,7 @@
      const $socket = function()
      {
       let _wsRetry = 0;
-      const _chList = [];
+      const _chList = {};
       let _ws = null;
 
       function $init()
@@ -15547,9 +15647,14 @@
        notice.active |= notice.Connection.BTTV;
        notice.resetHide();
        _ws.onopen = null;
-       for (let i = 0, l = _chList.length; i < l; i++)
+       for (const svc in _chList)
        {
-        _wsJoin(_chList[i].svc, _chList[i].ch);
+        if (!_chList.hasOwnProperty(svc))
+         continue;
+        for (const ch of _chList[svc])
+        {
+         _wsJoin(svc, ch);
+        }
        }
       }
 
@@ -15688,14 +15793,11 @@
 
       function $join(svcName, chID)
       {
-       for (let i = 0, l = _chList.length; i < l; i++)
-       {
-        if (_chList[i].svc !== svcName)
-         continue;
-        if (_chList[i].ch === chID)
-         return;
-       }
-       _chList.push({svc: svcName, ch: chID});
+       if (!_chList.hasOwnProperty(svcName))
+        _chList[svcName] = new Set();
+       if (_chList[svcName].has(chID))
+        return;
+       _chList[svcName].add(chID);
        _wsJoin(svcName, chID);
       }
 
@@ -15763,11 +15865,9 @@
       const find = ['4', '3', '2', '1'];
       for (let i = 0, l = find.length; i < l; i++)
       {
-       for (let j = 0, m = g.length; j < m; j++)
-       {
-        if (g[j].dpp === find[i])
-         return g[j];
-       }
+       const m = g.find(function(e){return e.dpp === find[i];});
+       if (m)
+        return m;
       }
       return false;
      }
@@ -15851,7 +15951,7 @@
       return ret;
      }
 
-     async function $channel(svcName, chID)
+     async function $channel(svcName, chID, andClr = false)
      {
       if (!service.emotes.hasOwnProperty('7tv'))
        service.emotes['7tv'] = {};
@@ -15862,6 +15962,8 @@
       const r = await thirdparty['7tv'].channelEx(svcName, chID, false);
       if (r === false)
        return false;
+      if (andClr)
+       _channelClr(svcName, chID);
       for (let i = 0, l = r.length; i < l; i++)
       {
        if ((r[i].vis & thirdparty['7tv'].Modifier.ZWE) === thirdparty['7tv'].Modifier.ZWE)
@@ -15874,6 +15976,29 @@
       }
       service.syncList();
       return true;
+     }
+
+     function _channelClr(svcName, chID)
+     {
+      for (const e in service.emotes['7tv'])
+      {
+       if (!service.emotes['7tv'].hasOwnProperty(e))
+        continue;
+       if (service.emotes['7tv'][e].scope !== cSources.scope.channel)
+        continue;
+       _removeEmote(service.emotes['7tv'], cSources.scope.channel, e, svcName + ':' + chID);
+      }
+      if (service.emotes.hasOwnProperty('zwe'))
+      {
+       for (const e in service.emotes.zwe['7tv'])
+       {
+        if (!service.emotes.zwe['7tv'].hasOwnProperty(e))
+         continue;
+        if (service.emotes.zwe['7tv'][e].scope !== cSources.scope.channel)
+         continue;
+        _removeEmote(service.emotes.zwe['7tv'], cSources.scope.channel, e, svcName + ':' + chID);
+       }
+      }
      }
 
      async function _load7TV_channelID(svcName, chID)
@@ -16258,9 +16383,9 @@
         {
          if (!_chList[acct].hasOwnProperty(svc))
           continue;
-         for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
+         for (const ch of _chList[acct][svc])
          {
-          _wsSubCh(svc, _chList[acct][svc][i]);
+          _wsSubCh(svc, ch);
          }
         }
        }
@@ -16271,9 +16396,9 @@
         {
          if (!_chList[acct].hasOwnProperty(svc))
           continue;
-         for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
+         for (const ch of _chList[acct][svc])
          {
-          _wsUnsubCh(svc, _chList[acct][svc][i]);
+          _wsUnsubCh(svc, ch);
          }
         }
        }
@@ -16395,11 +16520,11 @@
          {
           if (!_chList[acct].hasOwnProperty(svc))
            continue;
-          for (let i = 0, l = _chList[acct][svc].length; i < l; i++)
+          for (const ch of _chList[acct][svc])
           {
            if (p !== '')
             p += ',';
-           p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + _chList[acct][svc][i] + '>';
+           p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + ch + '>';
           }
          }
         }
@@ -16411,11 +16536,11 @@
          {
           if (!_chList[_noAcct].hasOwnProperty(svc))
            continue;
-          for (let i = 0, l = _chList[_noAcct][svc].length; i < l; i++)
+          for (const ch of _chList[_noAcct][svc])
           {
            if (p !== '')
             p += ',';
-           p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + _chList[_noAcct][svc][i] + '>';
+           p += 'entitlement.*<ctx=channel;platform=' + svc.toUpperCase() + ';id=' + ch + '>';
           }
          }
         }
@@ -16735,16 +16860,16 @@
        if (_chList.hasOwnProperty(accID))
        {
         if (!_chList[accID].hasOwnProperty(svcName))
-         _chList[accID][svcName] = [];
-        if (!_chList[accID][svcName].includes(chID))
-         _chList[accID][svcName].push(chID);
+         _chList[accID][svcName] = new Set();
+        if (!_chList[accID][svcName].has(chID))
+         _chList[accID][svcName].add(chID);
         _socket.joinS(svcName, chID);
         _events.join();
         return;
        }
        _chList[accID] = {};
-       _chList[accID][svcName] = [];
-       _chList[accID][svcName].push(chID);
+       _chList[accID][svcName] = new Set();
+       _chList[accID][svcName].add(chID);
        if (accID !== _noAcct)
         _socket.joinA(accID);
        _socket.joinS(svcName, chID);
@@ -16764,7 +16889,7 @@
         {
          if (!_chList[acct].hasOwnProperty(svc))
           continue;
-         c += _chList[acct][svc].length;
+         c += _chList[acct][svc].size;
         }
        }
        if (_chList.hasOwnProperty(_noAcct))
@@ -16773,7 +16898,7 @@
         {
          if (!_chList[_noAcct].hasOwnProperty(svc))
           continue;
-         c += _chList[_noAcct][svc].length;
+         c += _chList[_noAcct][svc].size;
         }
        }
        return c;
@@ -16835,28 +16960,28 @@
      if (cfg.display.extended.useFFZ)
      {
       if (!twitch.net.dead && twitch.net.channelID !== 0)
-       thirdparty.ffz.channel('twitch', twitch.net.channelID);
+       thirdparty.ffz.channel('twitch', twitch.net.channelID, true);
       if (!youtube.net.dead && youtube.net.channelIDs.length > 0)
       {
        for (let i = 0, l = youtube.net.channelIDs.length; i < l; i++)
        {
-        thirdparty.ffz.channel('youtube', youtube.net.channelIDs[i]);
+        thirdparty.ffz.channel('youtube', youtube.net.channelIDs[i], true);
        }
       }
      }
      if (cfg.display.extended.use7TV)
      {
       if (!twitch.net.dead && twitch.net.channelID !== 0)
-       thirdparty['7tv'].channel('twitch', twitch.net.channelID);
+       thirdparty['7tv'].channel('twitch', twitch.net.channelID, true);
       if (!youtube.net.dead && youtube.net.channelIDs.length > 0)
       {
        for (let i = 0, l = youtube.net.channelIDs.length; i < l; i++)
        {
-        thirdparty['7tv'].channel('youtube', youtube.net.channelIDs[i]);
+        thirdparty['7tv'].channel('youtube', youtube.net.channelIDs[i], true);
        }
       }
       if (!kick.net.dead && kick.net.userID !== 0)
-       thirdparty['7tv'].channel('kick', kick.net.userID);
+       thirdparty['7tv'].channel('kick', kick.net.userID, true);
      }
      thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
     }
@@ -16886,16 +17011,176 @@
      return Math.floor(f * m);
     }
 
-    function $hashCode(o)
+    const $hashCode = function()
     {
-     const s = JSON.stringify(o);
-     let h = 0;
-     for (let i = 0, l = s.length; i < l; i++)
+     /* RadioGatun[32]
+      * Copyright (c) 2010-2020 Sam Trenholme
+      * 
+      * TERMS
+      *
+      * Redistribution and use in source and binary forms, with or without
+      * modification, are permitted provided that the following conditions
+      * are met:
+      * 
+      * 1. Redistributions of source code must retain the above copyright
+      *    notice, this list of conditions and the following disclaimer.
+      * 2. Redistributions in binary form must reproduce the above copyright
+      *    notice, this list of conditions and the following disclaimer in the
+      *    documentation and/or other materials provided with the distribution.
+      * 
+      * This software is provided 'as is' with no guarantees of correctness or
+      * fitness for purpose.
+      */
+
+     function $c_hashCode(o)
      {
-      h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+      const input = JSON.stringify(o);
+      const ab = {a: [], b: [], p: 1};
+      for (let c = 0; c < 19; c++)
+      {
+       ab.a[c] = 0;
+      }
+      for (let c = 0; c < 39; c++)
+      {
+       ab.b[c] = 0;
+      }
+      const s = [];
+      for (let v = 0; v <= input.length;)
+      {
+       for (let c = 0 ; c < 3 ; c++)
+       {
+        s[c] = 0;
+       }
+       for (let r = 0; r < 3; r++)
+       {
+        for (let q = 0; q < 4; q++)
+        {
+         if (v >= input.length)
+         {
+          s[r] |= 1 << (q * 8);
+          for (let c = 0; c < 3; c++)
+          {
+           ab.b[c * 13] ^= s[c];
+           ab.a[16 + c] ^= s[c];
+          }	
+          for (let c = 0; c < 18; c++)
+          {
+           _beltmill(ab);
+          }
+          return _fmt64(ab);
+         }
+         let x = input.charCodeAt(v);
+         x &= 0xff;
+         v++;
+         s[r] |= x << (q * 8);
+        }
+       }
+       for (let c = 0; c < 3; c++)
+       {
+        ab.b[c * 13] ^= s[c];
+        ab.a[16 + c] ^= s[c];
+       }	
+       _beltmill(ab);
+      }
+      for (let c = 0; c < 16; c++)
+      {
+       _beltmill(ab);
+      }
+      return _fmt64(ab);
      }
-     return h;
-    }
+
+     function _beltmill(ab)
+     {
+      const q = [];
+      for (let c = 0; c < 3; c++)
+      {
+       q[c] = ab.b[c * 13 + 12];
+      }
+      for (let i = 12; i > 0; i--)
+      {
+       for (let c = 0; c < 3; c++)
+       {
+        ab.b[c * 13 + i] = ab.b[c * 13 + i - 1];
+       }
+      }
+      for (let c = 0; c < 3; c++)
+      {
+       ab.b[c * 13] = q[c];
+      }
+      for (let c = 0; c < 12; c++)
+      {
+       const n = c + 1 + ((c % 3) * 13);
+       ab.b[n] ^= ab.a[c + 1];
+      }
+      const ap = [];
+      for (let c = 0; c < 19; c++)
+      {
+       const y = (c * 7) % 19;
+       const r = (((c * c) + c) / 2) % 32;
+       const x = ab.a[y] ^ (ab.a[(y + 1) % 19] | (ab.a[(y + 2) % 19] ^ 0xffffffff));
+       ap[c] = (x >>> r) | (x << (32 - r));
+      }
+      for (let c = 0; c < 19; c++)
+      {
+       ab.a[c] = ap[c] ^ ap[(c + 1) % 19] ^ ap[(c + 4) % 19];
+      }
+      ab.a[0] ^= 1;
+      for (let c = 0; c < 3; c++)
+      {
+       ab.a[c + 13] ^= q[c];
+      }
+     }
+
+     function _nextword(ab)
+     {
+      let z = ab.a[ab.p];
+      if (z < 0)
+       z += 0x100000000;
+      ab.p++;
+      if (ab.p > 2)
+      {
+       ab.p = 1;
+       _beltmill(ab);
+      }
+      return z;
+     }
+
+     function _rng(ab)
+     {
+      const r = _nextword(ab);
+      return ((r & 0xff000000) >>> 24) |
+             ((r & 0x00ff0000) >>>  8) |
+             ((r & 0x0000ff00) <<   8) |
+             ((r & 0x000000ff) <<  24);
+     }
+
+     function _u8ToBase64(bytes)
+     {
+      let binary = '';
+      for (let i = 0, l = bytes.byteLength; i < l; i++)
+      {
+       binary += String.fromCharCode(bytes[i]);
+      }
+      return window.btoa(binary).replaceAll('/', '_').replaceAll('+', '-').replaceAll('=', '');
+     }
+
+     function _fmt64(ab)
+     {
+      const a = [];
+      for (let i = 0; i < 8; i++)
+      {
+       let z = _rng(ab);
+       if (z < 0)
+        z += 0x100000000;
+       a.push(z);
+      }
+      const b32 = new Uint32Array(a);
+      const b8 = new Uint8Array(b32.buffer);
+      return _u8ToBase64(b8);
+     }
+
+     return $c_hashCode;
+    }();
 
     function $getHashParams()
     {
@@ -18053,7 +18338,7 @@
    {
     async function $c_startup()
     {
-     shared.cfgHash = (shared.hashCode(cfg) >>> 0).toString(16);
+     shared.cfgHash = shared.hashCode(cfg);
      await twitch.net.oAuth.init();
      await youtube.net.oAuth.init();
      kick.net.oAuth.init();
@@ -18064,7 +18349,7 @@
      _css();
      if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === 'init')
       notice.initHide();
-     if (!window.hasOwnProperty('obsstudio') && !shared.storage.getItem('emotewall.obs_notfound'))
+     if (!window.hasOwnProperty('obsstudio') && !shared.storage.getItem('emotewall.obs_notfound') && navigator.userAgent.indexOf(' XSplitBroadcaster/') === -1)
      {
       shared.storage.setItem('emotewall.obs_notfound', '1');
       notice.error(notice.Type.GLOBAL_OBS);
@@ -18324,65 +18609,66 @@
 
      function _anim(h)
      {
+      const tMS = cfg.emote.time * 1000;
       let t = '.' + display.emote.clsID.StraightLine +'\n' +
        '{\n' +
-       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.StraightLine.time) + 'ms;\n' +
+       ' transition: transform linear ' + Math.floor(tMS * timing.display.StraightLine.time) + 'ms;\n' +
        '}\n';
 
       t += '.' + display.emote.clsID.Throw.Twist + '\n' +
        '{\n' +
-       ' transition: transform cubic-bezier(0.32, 0, 0.67, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.twist) + 'ms;\n' +
+       ' transition: transform cubic-bezier(0.32, 0, 0.67, 0) ' + Math.floor(tMS * timing.display.Throw.time * timing.display.Throw.twist) + 'ms;\n' +
        '}\n';
 
       t += '.' + display.emote.clsID.Throw.Drop + '\n' +
        '{\n' +
-       ' transition: transform cubic-bezier(0.5, 0, 0.75, 0) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Throw.time * timing.display.Throw.drop) + 'ms;\n' +
+       ' transition: transform cubic-bezier(0.5, 0, 0.75, 0) ' + Math.floor(tMS * timing.display.Throw.time * timing.display.Throw.drop) + 'ms;\n' +
        '}\n';
 
       t += '.' + display.emote.clsID.Pop.PeekUp +'\n' +
        '{\n' +
-       ' transition: transform ease-in-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.up) + 'ms;\n' +
+       ' transition: transform ease-in-out ' + Math.floor(tMS * timing.display.Pop.peek.up) + 'ms;\n' +
        '}\n';
 
       t += '.' + display.emote.clsID.Pop.PeekDown + '\n' +
        '{\n' +
-       ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.peek.down) + 'ms;\n' +
+       ' transition: transform ease-out ' + Math.floor(tMS * timing.display.Pop.peek.down) + 'ms;\n' +
        '}\n';
 
       t += '.' + display.emote.clsID.Pop.JumpUp + '\n' +
        '{\n' +
-       ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.up) + 'ms;\n' +
+       ' transition: transform ease-out ' + Math.floor(tMS * timing.display.Pop.jump.up) + 'ms;\n' +
        '}\n';
 
       t += '.' + display.emote.clsID.Pop.JumpDown + '\n' +
        '{\n' +
-       ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.display.Pop.jump.down) + 'ms;\n' +
+       ' transition: transform ease-in ' + Math.floor(tMS * timing.display.Pop.jump.down) + 'ms;\n' +
        '}\n';
 
       t += '.' + display.emote.clsID.Fountain + '\n' +
        '{\n' +
-       ' transition: transform cubic-bezier(0, 0, 0.58, 1) ' + Math.floor(cfg.emote.time * 1000 * timing.display.Fountain.time) + 'ms;\n' +
+       ' transition: transform cubic-bezier(0, 0, 0.58, 1) ' + Math.floor(tMS * timing.display.Fountain.time) + 'ms;\n' +
        '}\n';
 
       t += 'div.scene.cube:not(.kappa),\n' +
        'div.scene.cube:not(.kappa) div.cube\n' +
        '{\n' +
-       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.display.TheCube.time) + 'ms;\n' +
+       ' transition: transform linear ' + Math.floor(tMS * timing.display.TheCube.time) + 'ms;\n' +
        '}\n';
 
       t += '.' + display.kappa.clsID.Firework.Rocket +'\n' +
        '{\n' +
-       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time * timing.kappa.Fireworks.speed.rocket) + 'ms;\n' +
+       ' transition: transform linear ' + Math.floor(tMS * timing.kappa.Fireworks.time * timing.kappa.Fireworks.speed.rocket) + 'ms;\n' +
        '}\n';
 
       t += '.' + display.kappa.clsID.Firework.Sparkler + '\n' +
        '{\n' +
-       ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Fireworks.time) + 'ms;\n' +
+       ' transition: transform ease-out ' + Math.floor(tMS * timing.kappa.Fireworks.time) + 'ms;\n' +
        '}\n';
 
       t += '.' + display.kappa.clsID.Spiral + '\n' +
        '{\n' +
-       ' transition: transform ease-out ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Spiral.time) + 'ms;\n' +
+       ' transition: transform ease-out ' + Math.floor(tMS * timing.kappa.Spiral.time) + 'ms;\n' +
        '}\n';
 
       let ctP = 0;
@@ -18392,7 +18678,7 @@
        ctP += pyramidDist[i];
       }
 
-      const tP = Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.show.total);
+      const tP = Math.floor(tMS * timing.kappa.Pyramid.time * timing.kappa.Pyramid.show.total);
       const tPerB = Math.max(Math.floor(tP / ctP), timing.kappa.Pyramid.show.min);
       t += '.' + display.kappa.clsID.Pyramid.Show + '\n' +
        '{\n' +
@@ -18400,10 +18686,10 @@
        '}\n' +
        '.' + display.kappa.clsID.Pyramid.Drop + '\n' +
        '{\n' +
-       ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Pyramid.time * timing.kappa.Pyramid.hide) + 'ms;\n' +
+       ' transition: transform ease-in ' + Math.floor(tMS * timing.kappa.Pyramid.time * timing.kappa.Pyramid.hide) + 'ms;\n' +
        '}\n';
 
-      const tSP = Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.show.total);
+      const tSP = Math.floor(tMS * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.show.total);
       const tPerSB = Math.max(Math.floor(tSP / ctP), timing.kappa.SmallPyramid.show.min);
       t += '.' + display.kappa.clsID.SmallPyramid.Show + '\n' +
        '{\n' +
@@ -18411,16 +18697,26 @@
        '}\n' +
        '.' + display.kappa.clsID.SmallPyramid.Drop + '\n' +
        '{\n' +
-       ' transition: transform ease-in ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.hide) + 'ms;\n' +
+       ' transition: transform ease-in ' + Math.floor(tMS * timing.kappa.SmallPyramid.time * timing.kappa.SmallPyramid.hide) + 'ms;\n' +
+       '}\n';
+
+      t += '.' + display.kappa.clsID.CodeLine.show + '\n' +
+       '{\n' +
+       ' transition: opacity linear ' + shared.mspf.value + 'ms;\n' +
+       '}\n';
+      const tCL = Math.floor(tMS * timing.kappa.CodeLines.time * timing.kappa.CodeLines.fade);
+      t += '.' + display.kappa.clsID.CodeLine.hide + '\n' +
+       '{\n' +
+       ' transition: opacity ease-out ' + tCL + 'ms;\n' +
        '}\n';
 
       t += '.' + display.kappa.clsID.Stampede + '\n' +
        '{\n' +
-       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.Stampede.time * timing.kappa.Stampede.speed) + 'ms;\n' +
+       ' transition: transform linear ' + Math.floor(tMS * timing.kappa.Stampede.time * timing.kappa.Stampede.speed) + 'ms;\n' +
        '}\n';
 
-      const congaShowMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.show);
-      const congaHideMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.hide);
+      const congaShowMS = Math.floor(tMS * timing.kappa.Conga.time.show);
+      const congaHideMS = Math.floor(tMS * timing.kappa.Conga.time.hide);
       t += '.' + display.kappa.clsID.Conga.In + '\n' +
        '{\n' +
        ' transition: transform linear ' + congaShowMS + 'ms;\n' +
@@ -18433,7 +18729,7 @@
       t += 'div.scene.cube.kappa,\n' +
        'div.scene.cube.kappa div.cube\n' +
        '{\n' +
-       ' transition: transform linear ' + Math.floor(cfg.emote.time * 1000 * timing.kappa.TheCube.time) + 'ms;\n' +
+       ' transition: transform linear ' + Math.floor(tMS * timing.kappa.TheCube.time) + 'ms;\n' +
        '}\n';
 
       t += '\n';
