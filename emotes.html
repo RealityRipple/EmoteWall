@@ -1263,7 +1263,7 @@
       irc: 'wss://irc-ws.chat.twitch.tv',
       eventSub: 'wss://eventsub.wss.twitch.tv/ws'
      }),
-     kick: 'wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=7.6.0&flash=false',
+     kick: 'wss://ws-us2.pusher.com/app/' + cVARs.url.chatID + '?protocol=7&client=js&version=7.6.0&flash=false',
      streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket&token=' + cVARs.url.token,
      streamelements: 'wss://realtime.streamelements.com/socket.io/?transport=websocket',
      bttv: 'wss://sockets.betterttv.net/ws',
@@ -1377,6 +1377,7 @@
       sticker: 'https://yt3.ggpht.com/' + cVARs.url.stickerID + '=s256-rwa'
      }),
      kick: Object.freeze({
+      appid: 'https://cdn.jsdelivr.net/gh/realityripple/kick-appid/app.json',
       emote: 'https://files.kick.com/emotes/' + cVARs.url.emoteID + '/fullsize'
      }),
      emoji: Object.freeze({
@@ -11228,7 +11229,8 @@
        }
        _tPing = 0;
        _firstRS = true;
-       _ws = new WebSocket(cURLs.ws.kick);
+       const appID = await _getAppID();
+       _ws = new WebSocket(cURLs.ws.kick.replaceAll(cVARs.url.chatID, appID));
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
        _ws.onmessage = _wsMessage;
@@ -11707,6 +11709,30 @@
         return;
        kick.net.socket();
       }
+
+      const _getAppID = function()
+      {
+       const _defAppID = '32cbd69e4b950bf97679';
+       let _cachedAppID = false;
+
+       async function $c_getAppID()
+       {
+        if (!!_cachedAppID)
+         return _cachedAppID;
+        const r = await shared.httpRequest('GET', cURLs.cdn.kick.appid);
+        if (!r.success)
+         return _defAppID;
+        const j = r.json;
+        if (j === null)
+         return _defAppID;
+        if (!j.hasOwnProperty('PUSHER_APP_ID') || j.PUSHER_APP_ID === null)
+         return _defAppID;
+        _cachedAppID = j.PUSHER_APP_ID;
+        return j.PUSHER_APP_ID;
+       }
+
+       return $c_getAppID;
+      }();
 
       async function _getChIDs()
       {
