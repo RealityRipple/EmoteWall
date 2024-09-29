@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.9.8.1 BETA
+    * v0.9.8.2 BETA
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -56,7 +56,8 @@
    var cfg = {
     twitch: {
      oauth_refresh: 'OAUTH_REFRESH',
-     share: false
+     share: false,
+     sharedChat: false
     },
     youtube: {
      oauth_refresh: 'OAUTH_REFRESH',
@@ -6829,6 +6830,8 @@
         }
         if (document.visibilityState === 'hidden')
          return;
+        if (!cfg.twitch.sharedChat && cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('source-room-id') && cmd.tags.hasOwnProperty('room-id') && cmd.tags['room-id'] !== cmd.tags['source-room-id'])
+         return;
         if (cmd.params.length > 1)
          cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
         if (await twitch.parse.event.cheer(cmd))
@@ -6919,6 +6922,8 @@
         if (document.visibilityState === 'hidden')
          return;
         if (!cmd.hasOwnProperty('tags'))
+         return;
+        if (!cfg.twitch.sharedChat && cmd.tags.hasOwnProperty('source-room-id') && cmd.tags.hasOwnProperty('room-id') && cmd.tags['room-id'] !== cmd.tags['source-room-id'])
          return;
         if (!cmd.tags.hasOwnProperty('msg-id'))
          return;

@@ -31,6 +31,9 @@ Configuration Information
   * `share`  
     *Share your Twitch channel on the Emote Wall home page!*
 
+  * `sharedChat`  
+    *Show emotes and events from other channels during Shared Chat sessions.*
+
 * `youtube`  
     *Settings related to the YouTube login process.*
 
