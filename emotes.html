@@ -1470,6 +1470,23 @@
      warning: Symbol(),
      error: Symbol()
     });
+    const _nC = Object.freeze({
+     t: Object.freeze({
+      i: 'noticeInfo',
+      w: 'noticeWarning',
+      e: 'noticeError'
+     }),
+     s: Object.freeze({
+      g: 'global',
+      t: 'sTwitch',
+      y: 'sYouTube',
+      k: 'sKick',
+      se: 'tStreamElements',
+      sl: 'tStreamlabs',
+      b: 'eBTTV',
+      '7': 'e7TV'
+     })
+    });
     const idNoticeLine = 'noticeLine';
     const idNotices = 'notices';
     const idNotice = 'notice' + cVARs.notice.desc;
@@ -1492,28 +1509,28 @@
      switch (i)
      {
       case notice.Type.TWITCH_IRC:
-       _setNotice(i, 'noticeInfo sTwitch', 'IRC Connected', tInfo);
+       _setNotice(i, [_nC.t.i, _nC.s.t], 'IRC Connected', tInfo);
        break;
       case notice.Type.TWITCH_EVENTSUB:
-       _setNotice(i, 'noticeInfo sTwitch', 'EventSub Connected', tInfo);
+       _setNotice(i, [_nC.t.i, _nC.s.t], 'EventSub Connected', tInfo);
        break;
       case notice.Type.YOUTUBE_NETWORK:
-       _setNotice(i, 'noticeInfo sYouTube', 'Connected', tInfo);
+       _setNotice(i, [_nC.t.i, _nC.s.y], 'Connected', tInfo);
        break;
       case notice.Type.KICK_NETWORK:
-       _setNotice(i, 'noticeInfo sKick', 'Connected', tInfo);
+       _setNotice(i, [_nC.t.i, _nC.s.k], 'Connected', tInfo);
        break;
       case notice.Type.STREAMELEMENTS_NETWORK:
-       _setNotice(i, 'noticeInfo tStreamElements', 'Connected', tInfo);
+       _setNotice(i, [_nC.t.i, _nC.s.se], 'Connected', tInfo);
        break;
       case notice.Type.STREAMLABS_NETWORK:
-       _setNotice(i, 'noticeInfo tStreamlabs', 'Connected', tInfo);
+       _setNotice(i, [_nC.t.i, _nC.s.sl], 'Connected', tInfo);
        break;
       case notice.Type.BTTV_NETWORK:
-       _setNotice(i, 'noticeInfo eBTTV', 'Connected', tInfo);
+       _setNotice(i, [_nC.t.i, _nC.s.b], 'Connected', tInfo);
        break;
       case notice.Type['7TV_NETWORK']:
-       _setNotice(i, 'noticeInfo e7TV', 'Connected', tInfo);
+       _setNotice(i, [_nC.t.i, _nC.s['7']], 'Connected', tInfo);
        break;
      }
     }
@@ -1530,7 +1547,7 @@
      switch (w)
      {
       case notice.Type.TWITCH_EVENTSUB:
-       _setNotice(w, 'noticeWarning sTwitch', 'Too Many Instances<br>Please use existing (reference) copies wherever possible.', tWarn);
+       _setNotice(w, [_nC.t.w, _nC.s.t], 'Too Many Instances<br>Please use existing (reference) copies wherever possible.', tWarn);
        break;
      }
     }
@@ -1547,39 +1564,39 @@
      switch (e)
      {
       case notice.Type.GLOBAL_CFG:
-       _setNotice(e, 'noticeError global', 'Corrupted Configuration');
+       _setNotice(e, [_nC.t.e, _nC.s.g], 'Corrupted Configuration');
        break;
       case notice.Type.GLOBAL_OBS:
-       _setNotice(e, 'noticeError global', 'OBS Not Detected<br>Please see <a href="https://www.youtube.com/watch?v=1hnsN4RZ3ng" target="_blank" title="Adding Emote Wall to OBS" onclick="notice.copyAndOpen(this.href); return false;">this &quot;How to&quot; video</a> on adding the Emote Wall to OBS.');
+       _setNotice(e, [_nC.t.e, _nC.s.g], 'OBS Not Detected<br>Please see <a href="https://www.youtube.com/watch?v=1hnsN4RZ3ng" target="_blank" title="Adding Emote Wall to OBS" onclick="notice.copyAndOpen(this.href); return false;">this &quot;How to&quot; video</a> on adding the Emote Wall to OBS.');
        break;
       case notice.Type.TWITCH_TOKEN:
        if (typeof loginT !== 'undefined' && loginT.inUse)
        {
-        _setNotice(e, 'noticeError sTwitch', 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
+        _setNotice(e, [_nC.t.e, _nC.s.t], 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
         loginT.showOut(true);
         window.setTimeout(function(){loginT.showIn();}, tRetry);
        }
        else
-        _setNotice(e, 'noticeError sTwitch', 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
+        _setNotice(e, [_nC.t.e, _nC.s.t], 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
        break;
       case notice.Type.TWITCH_IRC:
-       _setNotice(e, 'noticeError sTwitch', 'IRC Disconnected');
+       _setNotice(e, [_nC.t.e, _nC.s.t], 'IRC Disconnected');
        break;
       case notice.Type.TWITCH_EVENTSUB:
-       _setNotice(e, 'noticeError sTwitch', 'EventSub Disconnected');
+       _setNotice(e, [_nC.t.e, _nC.s.t], 'EventSub Disconnected');
        break;
       case notice.Type.YOUTUBE_TOKEN:
        if (typeof loginYT !== 'undefined' && loginYT.inUse)
        {
-        _setNotice(e, 'noticeError sYouTube', 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
+        _setNotice(e, [_nC.t.e, _nC.s.y], 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
         loginYT.showOut(true);
         window.setTimeout(function(){loginYT.showIn();}, tRetry);
        }
        else
-        _setNotice(e, 'noticeError sYouTube', 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
+        _setNotice(e, [_nC.t.e, _nC.s.y], 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
        break;
       case notice.Type.YOUTUBE_NETWORK:
-       _setNotice(e, 'noticeError sYouTube', 'Disconnected');
+       _setNotice(e, [_nC.t.e, _nC.s.y], 'Disconnected');
        break;
       case notice.Type.YOUTUBE_ACCOUNT:
        if (typeof loginYT !== 'undefined' && loginYT.inUse)
@@ -1587,43 +1604,43 @@
         loginYT.showOut(true);
         window.setTimeout(function(){loginYT.showIn();}, tRetry);
        }
-       _setNotice(e, 'noticeError sYouTube', 'Streaming Not Available<br>Your YouTube account does not have streaming enabled.');
+       _setNotice(e, [_nC.t.e, _nC.s.y], 'Streaming Not Available<br>Your YouTube account does not have streaming enabled.');
        break;
       case notice.Type.YOUTUBE_CORS:
-       _setNotice(e, 'noticeError sYouTube', 'YouTube Server Error<br>Unable to retrieve ' + sMsg + ': <a href="https://udn.realityripple.com/docs/Web/HTTP/CORS/Errors/CORSMissingAllowOrigin" target="_blank" title="Reason: CORS header \'Access-Control-Allow-Origin\' missing - HTTP" onclick="notice.copyAndOpen(this.href); return false;">CORS headers</a> not sent by YouTube.');
+       _setNotice(e, [_nC.t.e, _nC.s.y], 'YouTube Server Error<br>Unable to retrieve ' + sMsg + ': <a href="https://udn.realityripple.com/docs/Web/HTTP/CORS/Errors/CORSMissingAllowOrigin" target="_blank" title="Reason: CORS header \'Access-Control-Allow-Origin\' missing - HTTP" onclick="notice.copyAndOpen(this.href); return false;">CORS headers</a> not sent by YouTube.');
        break;
       case notice.Type.YOUTUBE_RATELIMIT:
-       _setNotice(e, 'noticeError sYouTube', 'YouTube Rate Limit Exceeded<br>You have sent too many requests. Please wait a while.');
+       _setNotice(e, [_nC.t.e, _nC.s.y], 'YouTube Rate Limit Exceeded<br>You have sent too many requests. Please wait a while.');
        break;
       case notice.Type.YOUTUBE_UNKNOWN:
-       _setNotice(e, 'noticeError sYouTube', 'Unhandled YouTube Error<br>' + sMsg);
+       _setNotice(e, [_nC.t.e, _nC.s.y], 'Unhandled YouTube Error<br>' + sMsg);
        break;
       case notice.Type.KICK_NAME:
-       _setNotice(e, 'noticeError sKick', 'Connection Rejected<br>Please check your Kick channel name.');
+       _setNotice(e, [_nC.t.e, _nC.s.k], 'Connection Rejected<br>Please check your Kick channel name.');
        break;
       case notice.Type.KICK_NETWORK:
-       _setNotice(e, 'noticeError sKick', 'Disconnected');
+       _setNotice(e, [_nC.t.e, _nC.s.k], 'Disconnected');
        break;
       case notice.Type.KICK_UNKNOWN:
-       _setNotice(e, 'noticeError sKick', 'Kick Connection Error<br>' + sMsg);
+       _setNotice(e, [_nC.t.e, _nC.s.k], 'Kick Connection Error<br>' + sMsg);
        break;
       case notice.Type.STREAMELEMENTS_TOKEN:
-       _setNotice(e, 'noticeError tStreamElements', 'OAuth Token Rejected<br>Please update your StreamElements OAuth Token.');
+       _setNotice(e, [_nC.t.e, _nC.s.se], 'OAuth Token Rejected<br>Please update your StreamElements OAuth Token.');
        break;
       case notice.Type.STREAMELEMENTS_NETWORK:
-       _setNotice(e, 'noticeError tStreamElements', 'Disconnected');
+       _setNotice(e, [_nC.t.e, _nC.s.se], 'Disconnected');
        break;
       case notice.Type.STREAMLABS_TOKEN:
-       _setNotice(e, 'noticeError tStreamlabs', 'Socket Token Rejected<br>Please update your StreamLabs Socket Token.');
+       _setNotice(e, [_nC.t.e, _nC.s.sl], 'Socket Token Rejected<br>Please update your Streamlabs Socket Token.');
        break;
       case notice.Type.STREAMLABS_NETWORK:
-       _setNotice(e, 'noticeError tStreamlabs', 'Disconnected');
+       _setNotice(e, [_nC.t.e, _nC.s.sl], 'Disconnected');
        break;
       case notice.Type.BTTV_NETWORK:
-       _setNotice(e, 'noticeError eBTTV', 'Disconnected');
+       _setNotice(e, [_nC.t.e, _nC.s.b], 'Disconnected');
        break;
       case notice.Type['7TV_NETWORK']:
-       _setNotice(e, 'noticeError e7TV', 'Disconnected');
+       _setNotice(e, [_nC.t.e, _nC.s['7']], 'Disconnected');
        break;
      }
     }
@@ -1690,7 +1707,7 @@
       nID.setAttribute('id', _nDesc(id));
       n.appendChild(nID);
      }
-     nID.setAttribute('class', idNoticeLine + ' ' + state);
+     nID.setAttribute('class', idNoticeLine + ' ' + state.join(' '));
      nID.innerHTML = msg;
      if (t > 0)
      {
