@@ -8939,8 +8939,6 @@
        for (let i = r.length - 1; i >= 0; i--)
        {
         let m = r[i].str;
-        if (r[i].svc === cSources.service.emoji)
-         m = String.fromCharCode(parseInt(m, 16));
         if (cfg.ignore.emotes.includes(m))
          r.splice(i, 1);
        }
@@ -11115,8 +11113,6 @@
        for (let i = r.length - 1; i >= 0; i--)
        {
         let m = r[i].str;
-        if (r[i].svc === cSources.service.emoji)
-         m = String.fromCharCode(parseInt(m, 16));
         if (cfg.ignore.emotes.includes(m))
          r.splice(i, 1);
        }
@@ -12754,8 +12750,6 @@
        for (let i = r.length - 1; i >= 0; i--)
        {
         let m = r[i].str;
-        if (r[i].svc === cSources.service.emoji)
-         m = String.fromCharCode(parseInt(m, 16));
         if (cfg.ignore.emotes.includes(m))
          r.splice(i, 1);
        }
@@ -13083,7 +13077,7 @@
           return false;
         }
         addList[e.id]++;
-        return {svc: cSources.service.emoji, url: e.url, str: c, pos: p, width: e.width, height: e.height};
+        return {svc: cSources.service.emoji, url: e.url, str: String.fromCodePoint(parseInt(c, 16)), pos: p, width: e.width, height: e.height};
        }
 
        function _showCrew(addList, p, dup = null)
@@ -13104,7 +13098,7 @@
          encodeURIComponent(cCrew.svg.tag.open + cCrew.css.tag.open) +
          encodeURIComponent(svgCSS) +
          encodeURIComponent(cCrew.css.tag.close + cCrew.svg.body + cCrew.svg.tag.close);
-        return {svc: cSources.service.emoji, url: crew, str: cCrew.id, pos: p, width: 112, height: 112};
+        return {svc: cSources.service.emoji, url: crew, str: String.fromCodePoint(parseInt(cCrew.id, 16)), pos: p, width: 112, height: 112};
        }
 
        return $c_emoji;
@@ -14415,8 +14409,6 @@
        for (let i = r.length - 1; i >= 0; i--)
        {
         let m = r[i].str;
-        if (r[i].svc === cSources.service.emoji)
-         m = String.fromCharCode(parseInt(m, 16));
         if (cfg.ignore.emotes.includes(m))
          r.splice(i, 1);
        }
