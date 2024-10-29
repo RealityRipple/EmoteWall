@@ -16215,6 +16215,8 @@
 
      const $socketEx = function()
      {
+      const appID = 'emote-wall';
+      const appVer = '1.0';
       const _lDelay = 3000;
       const _chList = {};
       let _statusWS = null;
@@ -16269,7 +16271,7 @@
 
        function $sckInit()
        {
-        _ws = new WebSocket(cURLs.ws['7tv']);
+        _ws = new WebSocket(cURLs.ws['7tv'] + '?app=' + encodeURIComponent(appID) + '&version=' + encodeURIComponent(appVer));
         _ws.onopen = _wsOpen;
         _ws.onclose = _wsClose;
         _ws.onmessage = _wsMessage;
@@ -16687,7 +16689,7 @@
         }
         if (p.length === 0)
          return;
-        const uri = cURLs.sse['7tv'] + '@' + encodeURIComponent(p);
+        const uri = cURLs.sse['7tv'] + '@' + encodeURIComponent(p) + '?app=' + encodeURIComponent(appID) + '&version=' + encodeURIComponent(appVer);
         if (_sse !== null)
         {
          _sse.close();
