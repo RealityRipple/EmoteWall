@@ -284,6 +284,10 @@
        begin: false,
        success: false
       },
+      kappatrain: {
+       begin: false,
+       success: false
+      },
       poll: {
        begin: false,
        end: false
@@ -6195,7 +6199,7 @@
            await _shoutout_receive(r.payload.event);
            break;
           case twitch.net.eventSubCtl.sub.hypetrain.begin:
-           _train_begin();
+           _train_begin(r.payload.event);
            return;
           case twitch.net.eventSubCtl.sub.hypetrain.end:
            _train_end(r.payload.event);
@@ -6305,30 +6309,36 @@
          await twitch.parse.event.shoutoutReceive(ev.from_broadcaster_user_id, ev.from_broadcaster_user_name);
         }
 
-        function _train_begin()
+        function _train_begin(ev)
         {
-         if (cfg.event.twitch.hypetrain === false)
+         let cfTrain = cfg.event.twitch.hypetrain;
+         if (ev.is_golden_kappa_train)
+          cfTrain = cfg.event.twitch.kappatrain;
+         if (cfTrain === false)
           return;
-         if (!cfg.event.twitch.hypetrain.hasOwnProperty('begin'))
+         if (!cfTrain.hasOwnProperty('begin'))
           return;
-         if (cfg.event.twitch.hypetrain.begin === false)
+         if (cfTrain.begin === false)
           return;
-         display.kappa.show(false, cfg.event.twitch.hypetrain.begin);
+         display.kappa.show(false, cfTrain.begin);
         }
 
         function _train_end(ev)
         {
-         if (cfg.event.twitch.hypetrain === false)
+         let cfTrain = cfg.event.twitch.hypetrain;
+         if (ev.is_golden_kappa_train)
+          cfTrain = cfg.event.twitch.kappatrain;
+         if (cfTrain === false)
           return;
-         if (!cfg.event.twitch.hypetrain.hasOwnProperty('success'))
+         if (!cfTrain.hasOwnProperty('success'))
           return;
-         if (cfg.event.twitch.hypetrain.success === false)
+         if (cfTrain.success === false)
           return;
          if (!ev.hasOwnProperty('level'))
           return;
          if (ev.level < 2)
           return;
-         const rs = shared.findInMaybeRange(cfg.event.twitch.hypetrain.success, ev.level - 1);
+         const rs = shared.findInMaybeRange(cfTrain.success, ev.level - 1);
          if (rs === false)
           return;
          display.kappa.show(false, rs);
@@ -17901,6 +17911,8 @@
      if (needF)
       r.push(cScopes.twitch.followers);
      if (cfg.event.twitch.hypetrain !== false && ((cfg.event.twitch.hypetrain.hasOwnProperty('begin') && cfg.event.twitch.hypetrain.begin !== false) || (cfg.event.twitch.hypetrain.hasOwnProperty('success') && cfg.event.twitch.hypetrain.success !== false)))
+      r.push(cScopes.twitch.hypetrains);
+     else if (cfg.event.twitch.kappatrain !== false && ((cfg.event.twitch.kappatrain.hasOwnProperty('begin') && cfg.event.twitch.kappatrain.begin !== false) || (cfg.event.twitch.hypetrain.hasOwnProperty('success') && cfg.event.twitch.kappatrain.success !== false)))
       r.push(cScopes.twitch.hypetrains);
      if (cfg.event.twitch.goal !== false && ((cfg.event.twitch.goal.hasOwnProperty('begin') && cfg.event.twitch.goal.begin !== false) || (cfg.event.twitch.goal.hasOwnProperty('achieved') && cfg.event.twitch.goal.achieved !== false)))
       r.push(cScopes.twitch.goals);
