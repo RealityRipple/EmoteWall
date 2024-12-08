@@ -2003,7 +2003,7 @@
      }
      catch(ex)
      {
-      prompt('Unable to open a new window. Copy this URL:', h);
+      shared.inputBox('Unable to open a new window. Copy this URL:', h, false);
      }
     }
 
@@ -17152,6 +17152,66 @@
 
    const shared = function()
    {
+    function $inputBox(txt, dVal = false, bVal = true)
+    {
+     const p = new Promise(
+      function(resolve)
+      {
+       const dlgInput = document.createElement('dialog');
+       const divText = document.createElement('div');
+       divText.textContent = txt;
+       dlgInput.appendChild(divText);
+       const divInput = document.createElement('div');
+       const txtInput = document.createElement('input');
+       txtInput.setAttribute('type', 'text');
+       if (dVal !== false)
+        txtInput.setAttribute('value', dVal);
+       if (bVal === false)
+       {
+        txtInput.setAttribute('readonly', 'readonly');
+        txtInput.addEventListener('focus', function(){txtInput.select();});
+       }
+       divInput.appendChild(txtInput);
+       dlgInput.appendChild(divInput);
+       const divButtons = document.createElement('div');
+       if (bVal)
+       {
+        const cmdOK = document.createElement('button');
+        cmdOK.setAttribute('type', 'button');
+        cmdOK.setAttribute('class', 'yes');
+        cmdOK.setAttribute('disabled', 'disabled');
+        cmdOK.textContent = 'OK';
+        cmdOK.addEventListener('click', function(){if (txtInput.value.length > 0) resolve(txtInput.value); else resolve(false); dlgInput.close(); document.body.removeChild(dlgInput);});
+        divButtons.appendChild(cmdOK);
+        txtInput.addEventListener('keyup', function(ev){
+         if (txtInput.value.length === 0) 
+          cmdOK.setAttribute('disabled', 'disabled');
+         else
+          cmdOK.removeAttribute('disabled');
+         if (ev.key === 'Enter')
+          cmdOK.click();
+        });
+       }
+       const cmdCancel = document.createElement('button');
+       cmdCancel.setAttribute('type', 'button');
+       cmdCancel.setAttribute('class', 'no');
+       if (bVal)
+        cmdCancel.textContent = 'Cancel';
+       else
+       {
+        cmdCancel.textContent = 'Close';
+        txtInput.addEventListener('keypress', function(ev){if (ev.key === 'Enter') cmdCancel.click();});
+       }
+       cmdCancel.addEventListener('click', function(){resolve(false); dlgInput.close(); document.body.removeChild(dlgInput);});
+       divButtons.appendChild(cmdCancel);
+       dlgInput.appendChild(divButtons);
+       document.body.appendChild(dlgInput);
+       dlgInput.showModal();
+      }
+     );
+     return p;
+    }
+
     function $rnd(m)
     {
      const r = new Uint32Array(1);
@@ -17837,6 +17897,7 @@
     }();
 
     return {
+     inputBox: $inputBox,
      rnd: $rnd,
      hashCode: $hashCode,
      getHashParams: $getHashParams,
@@ -18361,9 +18422,9 @@
      return true;
     }
 
-    function $begin()
+    async function $begin()
     {
-     let r = prompt('Enter your Kick Channel:');
+     let r = await shared.inputBox('Enter your Kick Channel:');
      if (r === '' || r === false || r === null)
       return;
      r = r.toLowerCase();
@@ -18955,7 +19016,7 @@
          '{\n' +
          ' animation: rave 3s linear infinite;\n' +
          '}\n';
-        let ar = 'html.rave button, html.rave div#notices\n' +
+        let ar = 'html.rave button.auth, html.rave div#notices\n' +
          '{\n' +
          ' animation: antirave 3s linear infinite;\n' +
          '}\n';
@@ -18989,7 +19050,7 @@
           '{\n' +
           ' filter: hue-rotate(' + iHue + 'deg);\n' +
           '}\n' +
-          'button, div#notices\n' +
+          'button.auth, div#notices\n' +
           '{\n' +
           ' filter: hue-rotate(' + (360 - iHue) + 'deg);\n' +
           '}\n';
@@ -19774,6 +19835,73 @@
                   0
                   0
                   0;
+   }
+
+   dialog
+   {
+    min-width: 16em;
+    font-size: 4vmin;
+    background-color: #000000;
+    color: #FFFFFF;
+    overflow: hidden;
+    padding-bottom: 2.5em;
+    border-radius: 0.5em;
+    box-shadow: 3px 3px 5px #000000;
+   }
+   dialog::backdrop
+   {
+    background-color: #000000;
+    opacity: 0.5;
+   }
+   dialog div
+   {
+    margin-bottom: 1em;
+   }
+   dialog input
+   {
+    background-color: #000000;
+    color: #FFFFFF;
+    border: 1px solid #FFFFFF;
+    border-radius: 3px;
+    width: 100%;
+    font-size: 3.5vmin;
+   }
+   dialog button
+   {
+    background-color: #505050;
+    transition: opacity 0.5s;
+    width: 7em;
+    font-size: 3.5vmin;
+    padding: 0.3em;
+   }
+   dialog button.yes
+   {
+    left: 1em;
+   }
+   dialog button.yes:focus:not([disabled]), dialog button.yes:hover:not([disabled])
+   {
+    background-color: #007000;
+   }
+   dialog button.yes:active:not([disabled])
+   {
+    background-color: #009000;
+   }
+   dialog button.no
+   {
+    right: 1em;
+   }
+   dialog button.no:focus:not([disabled]), dialog button.no:hover:not([disabled])
+   {
+    background-color: #700000;
+   }
+   dialog button.no:active:not([disabled])
+   {
+    background-color: #900000;
+   }
+   dialog button[disabled]
+   {
+    background-color: #303030;
+    color: #808080;
    }
 
    #notices
