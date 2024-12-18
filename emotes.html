@@ -14459,6 +14459,94 @@
       return r;
      }
 
+     function $handleDuplicates(a)
+     {
+      if (!a)
+       return false;
+      const lA = a.length;
+      if (lA < 1)
+       return a;
+      const r = [];
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.url)
+        r.push(a[i]);
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.cheer)
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].scope === cSources.scope.user)
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.channel)
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
+      {
+       for (let i = 0; i < lA; i++)
+       {
+        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (_notDupe(a[i], r))
+          r.push(a[i]);
+        }
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.global)
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
+      {
+       for (let i = 0; i < lA; i++)
+       {
+        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (_notDupe(a[i], r))
+          r.push(a[i]);
+        }
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.emoji)
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      return r;
+     }
+
+     function _notDupe(add, pend)
+     {
+      for (let i = 0, l = pend.length; i < l; i++)
+      {
+       if (pend[i].str === add.str)
+        return (pend[i].svc === add.svc);
+      }
+      return true;
+     }
+
      function $clearCooldowns()
      {
       _aLast = {};
@@ -14468,6 +14556,7 @@
       content: $content,
       line: $line,
       eListFromMsg: $eListFromMsg,
+      handleDuplicates: $handleDuplicates,
       clearCooldowns: $clearCooldowns
      };
     }();
@@ -14501,7 +14590,10 @@
        continue;
       let p = false;
       if (cfg.event.tip.useMsgEmotes && m !== false)
+      {
        p = await service.parse.eListFromMsg(n, m);
+       p = service.parse.handleDuplicates(p);
+      }
       if (p === false && cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
@@ -14819,7 +14911,10 @@
       return;
      let p = false;
      if (cfg.event.tip.useMsgEmotes && dMsg !== false)
+     {
       p = await service.parse.eListFromMsg(dName, dMsg);
+      p = service.parse.handleDuplicates(p);
+     }
      if (p === false && cfg.event.tip.useProfileImage && dName !== false)
      {
       let u = false;
