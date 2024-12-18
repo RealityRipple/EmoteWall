@@ -292,6 +292,10 @@ Configuration Information
         | `Dec 31`        | ![Top Hat](https://cdn.betterttv.net/emote/5849c9c8f52be01a7ee5f79e/1x.webp)    | `TopHat`      |
       - [ ] If `false`, no enforced ZWEs will ever be applied.
 
+    * `priority`  
+      *Controls the priority of third-party emotes.*  
+      This must always be an array containing the strings `'ffz'`, `'bttv'`, and `'7tv'` in some order. If an emote with the same name exists on multiple third-party services, this order will determine which emote is shown. A good example is FFZ and 7TV both have `BibleThump`.
+
   * `toroidal`  
     *Toggles an infinite Asteroids-esque loop for emotes. Applies to StraightLine, Rise, and Drop animations and kappas.*
     - [ ] If `true`, emotes will loop around to the opposite side when moving off the edge of the screen.
@@ -831,7 +835,7 @@ Configuration Information
     * `hypetrain`  
       *Settings related to hype trains.*  
       Requires `channel:read:hype_train` scope.
- 
+
       * `begin`  
         *A hype train begins in your channel.*  
         This value can be a boolean or array:
@@ -846,6 +850,30 @@ Configuration Information
         - [ ] If `false`, no kappagen will occur on hype train completions.
         - [ ] If Integer, the value is the minimum level required for a hype train to trigger a kappagen.
           - [ ] If `0`, no kappagen will occur on hype train success.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-5'` or `'6-10'`, or an open-maximum range such as `'11+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `kappatrain`  
+      *Settings related to golden kapppa trains.*  
+      Requires `channel:read:hype_train` scope.
+
+      * `begin`  
+        *A golden kappa train begins in your channel.*  
+        This value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `success`  
+        *Minimum level for a kappagen on golden kappa train completion.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on all golden kappa train completions.
+        - [ ] If `false`, no kappagen will occur on golden kappa train completions.
+        - [ ] If Integer, the value is the minimum level required for a golden kappa train to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur on golden kappa train success.
         - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-5'` or `'6-10'`, or an open-maximum range such as `'11+'`.  
         Each value can be a boolean or array:
           - [ ] If `true`, a kappagen will occur.

@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v0.9.9 FINAL BETA
+    * v1.0
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -122,7 +122,8 @@
       use7TV: true,
       useZWE: true,
       fillZWE: false,
-      holidayZWE: true
+      holidayZWE: true,
+      priority: ['ffz', 'bttv', '7tv']
      },
      toroidal: false,
      hue: false,
@@ -281,6 +282,10 @@
        '100': true
       },
       hypetrain: {
+       begin: false,
+       success: false
+      },
+      kappatrain: {
        begin: false,
        success: false
       },
@@ -1999,7 +2004,7 @@
      }
      catch(ex)
      {
-      prompt('Unable to open a new window. Copy this URL:', h);
+      shared.inputBox('Unable to open a new window. Copy this URL:', h, false);
      }
     }
 
@@ -6195,7 +6200,7 @@
            await _shoutout_receive(r.payload.event);
            break;
           case twitch.net.eventSubCtl.sub.hypetrain.begin:
-           _train_begin();
+           _train_begin(r.payload.event);
            return;
           case twitch.net.eventSubCtl.sub.hypetrain.end:
            _train_end(r.payload.event);
@@ -6305,30 +6310,36 @@
          await twitch.parse.event.shoutoutReceive(ev.from_broadcaster_user_id, ev.from_broadcaster_user_name);
         }
 
-        function _train_begin()
+        function _train_begin(ev)
         {
-         if (cfg.event.twitch.hypetrain === false)
+         let cfTrain = cfg.event.twitch.hypetrain;
+         if (ev.is_golden_kappa_train)
+          cfTrain = cfg.event.twitch.kappatrain;
+         if (cfTrain === false)
           return;
-         if (!cfg.event.twitch.hypetrain.hasOwnProperty('begin'))
+         if (!cfTrain.hasOwnProperty('begin'))
           return;
-         if (cfg.event.twitch.hypetrain.begin === false)
+         if (cfTrain.begin === false)
           return;
-         display.kappa.show(false, cfg.event.twitch.hypetrain.begin);
+         display.kappa.show(false, cfTrain.begin);
         }
 
         function _train_end(ev)
         {
-         if (cfg.event.twitch.hypetrain === false)
+         let cfTrain = cfg.event.twitch.hypetrain;
+         if (ev.is_golden_kappa_train)
+          cfTrain = cfg.event.twitch.kappatrain;
+         if (cfTrain === false)
           return;
-         if (!cfg.event.twitch.hypetrain.hasOwnProperty('success'))
+         if (!cfTrain.hasOwnProperty('success'))
           return;
-         if (cfg.event.twitch.hypetrain.success === false)
+         if (cfTrain.success === false)
           return;
          if (!ev.hasOwnProperty('level'))
           return;
          if (ev.level < 2)
           return;
-         const rs = shared.findInMaybeRange(cfg.event.twitch.hypetrain.success, ev.level - 1);
+         const rs = shared.findInMaybeRange(cfTrain.success, ev.level - 1);
          if (rs === false)
           return;
          display.kappa.show(false, rs);
@@ -8833,12 +8844,15 @@
          r.push(a[i]);
        }
       }
-      for (let i = 0; i < lA; i++)
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
       {
-       if (a[i].scope === cSources.scope.channel && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
+       for (let i = 0; i < lA; i++)
        {
-        if (_notDupe(a[i], r))
-         r.push(a[i]);
+        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (_notDupe(a[i], r))
+          r.push(a[i]);
+        }
        }
       }
       for (let i = 0; i < lA; i++)
@@ -8849,12 +8863,15 @@
          r.push(a[i]);
        }
       }
-      for (let i = 0; i < lA; i++)
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
       {
-       if (a[i].scope === cSources.scope.global && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
+       for (let i = 0; i < lA; i++)
        {
-        if (_notDupe(a[i], r))
-         r.push(a[i]);
+        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (_notDupe(a[i], r))
+          r.push(a[i]);
+        }
        }
       }
       for (let i = 0; i < lA; i++)
@@ -8939,8 +8956,6 @@
        for (let i = r.length - 1; i >= 0; i--)
        {
         let m = r[i].str;
-        if (r[i].svc === cSources.service.emoji)
-         m = String.fromCharCode(parseInt(m, 16));
         if (cfg.ignore.emotes.includes(m))
          r.splice(i, 1);
        }
@@ -11011,12 +11026,15 @@
          r.push(a[i]);
        }
       }
-      for (let i = 0; i < lA; i++)
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
       {
-       if (a[i].scope === cSources.scope.channel && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
+       for (let i = 0; i < lA; i++)
        {
-        if (_notDupe(a[i], r))
-         r.push(a[i]);
+        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (_notDupe(a[i], r))
+          r.push(a[i]);
+        }
        }
       }
       for (let i = 0; i < lA; i++)
@@ -11027,12 +11045,15 @@
          r.push(a[i]);
        }
       }
-      for (let i = 0; i < lA; i++)
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
       {
-       if (a[i].scope === cSources.scope.global && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
+       for (let i = 0; i < lA; i++)
        {
-        if (_notDupe(a[i], r))
-         r.push(a[i]);
+        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (_notDupe(a[i], r))
+          r.push(a[i]);
+        }
        }
       }
       for (let i = 0; i < lA; i++)
@@ -11115,8 +11136,6 @@
        for (let i = r.length - 1; i >= 0; i--)
        {
         let m = r[i].str;
-        if (r[i].svc === cSources.service.emoji)
-         m = String.fromCharCode(parseInt(m, 16));
         if (cfg.ignore.emotes.includes(m))
          r.splice(i, 1);
        }
@@ -12645,12 +12664,15 @@
          r.push(a[i]);
        }
       }
-      for (let i = 0; i < lA; i++)
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
       {
-       if (a[i].scope === cSources.scope.channel && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
+       for (let i = 0; i < lA; i++)
        {
-        if (_notDupe(a[i], r))
-         r.push(a[i]);
+        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (_notDupe(a[i], r))
+          r.push(a[i]);
+        }
        }
       }
       for (let i = 0; i < lA; i++)
@@ -12661,12 +12683,15 @@
          r.push(a[i]);
        }
       }
-      for (let i = 0; i < lA; i++)
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
       {
-       if (a[i].scope === cSources.scope.global && (a[i].svc === cSources.service.bttv || a[i].svc === cSources.service.ffz || a[i].svc === cSources.service['7tv']))
+       for (let i = 0; i < lA; i++)
        {
-        if (_notDupe(a[i], r))
-         r.push(a[i]);
+        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (_notDupe(a[i], r))
+          r.push(a[i]);
+        }
        }
       }
       for (let i = 0; i < lA; i++)
@@ -12754,8 +12779,6 @@
        for (let i = r.length - 1; i >= 0; i--)
        {
         let m = r[i].str;
-        if (r[i].svc === cSources.service.emoji)
-         m = String.fromCharCode(parseInt(m, 16));
         if (cfg.ignore.emotes.includes(m))
          r.splice(i, 1);
        }
@@ -13083,7 +13106,7 @@
           return false;
         }
         addList[e.id]++;
-        return {svc: cSources.service.emoji, url: e.url, str: c, pos: p, width: e.width, height: e.height};
+        return {svc: cSources.service.emoji, url: e.url, str: String.fromCodePoint(parseInt(c, 16)), pos: p, width: e.width, height: e.height};
        }
 
        function _showCrew(addList, p, dup = null)
@@ -13104,7 +13127,7 @@
          encodeURIComponent(cCrew.svg.tag.open + cCrew.css.tag.open) +
          encodeURIComponent(svgCSS) +
          encodeURIComponent(cCrew.css.tag.close + cCrew.svg.body + cCrew.svg.tag.close);
-        return {svc: cSources.service.emoji, url: crew, str: cCrew.id, pos: p, width: 112, height: 112};
+        return {svc: cSources.service.emoji, url: crew, str: String.fromCodePoint(parseInt(cCrew.id, 16)), pos: p, width: 112, height: 112};
        }
 
        return $c_emoji;
@@ -14415,8 +14438,6 @@
        for (let i = r.length - 1; i >= 0; i--)
        {
         let m = r[i].str;
-        if (r[i].svc === cSources.service.emoji)
-         m = String.fromCharCode(parseInt(m, 16));
         if (cfg.ignore.emotes.includes(m))
          r.splice(i, 1);
        }
@@ -14438,6 +14459,94 @@
       return r;
      }
 
+     function $handleDuplicates(a)
+     {
+      if (!a)
+       return false;
+      const lA = a.length;
+      if (lA < 1)
+       return a;
+      const r = [];
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.url)
+        r.push(a[i]);
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.cheer)
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].scope === cSources.scope.user)
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.channel)
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
+      {
+       for (let i = 0; i < lA; i++)
+       {
+        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (_notDupe(a[i], r))
+          r.push(a[i]);
+        }
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.global)
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
+      {
+       for (let i = 0; i < lA; i++)
+       {
+        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (_notDupe(a[i], r))
+          r.push(a[i]);
+        }
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.emoji)
+       {
+        if (_notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      return r;
+     }
+
+     function _notDupe(add, pend)
+     {
+      for (let i = 0, l = pend.length; i < l; i++)
+      {
+       if (pend[i].str === add.str)
+        return (pend[i].svc === add.svc);
+      }
+      return true;
+     }
+
      function $clearCooldowns()
      {
       _aLast = {};
@@ -14447,6 +14556,7 @@
       content: $content,
       line: $line,
       eListFromMsg: $eListFromMsg,
+      handleDuplicates: $handleDuplicates,
       clearCooldowns: $clearCooldowns
      };
     }();
@@ -14480,7 +14590,10 @@
        continue;
       let p = false;
       if (cfg.event.tip.useMsgEmotes && m !== false)
+      {
        p = await service.parse.eListFromMsg(n, m);
+       p = service.parse.handleDuplicates(p);
+      }
       if (p === false && cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
@@ -14798,7 +14911,10 @@
       return;
      let p = false;
      if (cfg.event.tip.useMsgEmotes && dMsg !== false)
+     {
       p = await service.parse.eListFromMsg(dName, dMsg);
+      p = service.parse.handleDuplicates(p);
+     }
      if (p === false && cfg.event.tip.useProfileImage && dName !== false)
      {
       let u = false;
@@ -16223,6 +16339,8 @@
 
      const $socketEx = function()
      {
+      const appID = 'emote-wall';
+      const appVer = '1.0';
       const _lDelay = 3000;
       const _chList = {};
       let _statusWS = null;
@@ -16277,7 +16395,7 @@
 
        function $sckInit()
        {
-        _ws = new WebSocket(cURLs.ws['7tv']);
+        _ws = new WebSocket(cURLs.ws['7tv'] + '?app=' + encodeURIComponent(appID) + '&version=' + encodeURIComponent(appVer));
         _ws.onopen = _wsOpen;
         _ws.onclose = _wsClose;
         _ws.onmessage = _wsMessage;
@@ -16695,7 +16813,7 @@
         }
         if (p.length === 0)
          return;
-        const uri = cURLs.sse['7tv'] + '@' + encodeURIComponent(p);
+        const uri = cURLs.sse['7tv'] + '@' + encodeURIComponent(p) + '?app=' + encodeURIComponent(appID) + '&version=' + encodeURIComponent(appVer);
         if (_sse !== null)
         {
          _sse.close();
@@ -17148,6 +17266,66 @@
 
    const shared = function()
    {
+    function $inputBox(txt, dVal = false, bVal = true)
+    {
+     const p = new Promise(
+      function(resolve)
+      {
+       const dlgInput = document.createElement('dialog');
+       const divText = document.createElement('div');
+       divText.textContent = txt;
+       dlgInput.appendChild(divText);
+       const divInput = document.createElement('div');
+       const txtInput = document.createElement('input');
+       txtInput.setAttribute('type', 'text');
+       if (dVal !== false)
+        txtInput.setAttribute('value', dVal);
+       if (bVal === false)
+       {
+        txtInput.setAttribute('readonly', 'readonly');
+        txtInput.addEventListener('focus', function(){txtInput.select();});
+       }
+       divInput.appendChild(txtInput);
+       dlgInput.appendChild(divInput);
+       const divButtons = document.createElement('div');
+       if (bVal)
+       {
+        const cmdOK = document.createElement('button');
+        cmdOK.setAttribute('type', 'button');
+        cmdOK.setAttribute('class', 'yes');
+        cmdOK.setAttribute('disabled', 'disabled');
+        cmdOK.textContent = 'OK';
+        cmdOK.addEventListener('click', function(){if (txtInput.value.length > 0) resolve(txtInput.value); else resolve(false); dlgInput.close(); document.body.removeChild(dlgInput);});
+        divButtons.appendChild(cmdOK);
+        txtInput.addEventListener('keyup', function(ev){
+         if (txtInput.value.length === 0) 
+          cmdOK.setAttribute('disabled', 'disabled');
+         else
+          cmdOK.removeAttribute('disabled');
+         if (ev.key === 'Enter')
+          cmdOK.click();
+        });
+       }
+       const cmdCancel = document.createElement('button');
+       cmdCancel.setAttribute('type', 'button');
+       cmdCancel.setAttribute('class', 'no');
+       if (bVal)
+        cmdCancel.textContent = 'Cancel';
+       else
+       {
+        cmdCancel.textContent = 'Close';
+        txtInput.addEventListener('keypress', function(ev){if (ev.key === 'Enter') cmdCancel.click();});
+       }
+       cmdCancel.addEventListener('click', function(){resolve(false); dlgInput.close(); document.body.removeChild(dlgInput);});
+       divButtons.appendChild(cmdCancel);
+       dlgInput.appendChild(divButtons);
+       document.body.appendChild(dlgInput);
+       dlgInput.showModal();
+      }
+     );
+     return p;
+    }
+
     function $rnd(m)
     {
      const r = new Uint32Array(1);
@@ -17833,6 +18011,7 @@
     }();
 
     return {
+     inputBox: $inputBox,
      rnd: $rnd,
      hashCode: $hashCode,
      getHashParams: $getHashParams,
@@ -17907,6 +18086,8 @@
      if (needF)
       r.push(cScopes.twitch.followers);
      if (cfg.event.twitch.hypetrain !== false && ((cfg.event.twitch.hypetrain.hasOwnProperty('begin') && cfg.event.twitch.hypetrain.begin !== false) || (cfg.event.twitch.hypetrain.hasOwnProperty('success') && cfg.event.twitch.hypetrain.success !== false)))
+      r.push(cScopes.twitch.hypetrains);
+     else if (cfg.event.twitch.kappatrain !== false && ((cfg.event.twitch.kappatrain.hasOwnProperty('begin') && cfg.event.twitch.kappatrain.begin !== false) || (cfg.event.twitch.hypetrain.hasOwnProperty('success') && cfg.event.twitch.kappatrain.success !== false)))
       r.push(cScopes.twitch.hypetrains);
      if (cfg.event.twitch.goal !== false && ((cfg.event.twitch.goal.hasOwnProperty('begin') && cfg.event.twitch.goal.begin !== false) || (cfg.event.twitch.goal.hasOwnProperty('achieved') && cfg.event.twitch.goal.achieved !== false)))
       r.push(cScopes.twitch.goals);
@@ -18355,9 +18536,9 @@
      return true;
     }
 
-    function $begin()
+    async function $begin()
     {
-     let r = prompt('Enter your Kick Channel:');
+     let r = await shared.inputBox('Enter your Kick Channel:');
      if (r === '' || r === false || r === null)
       return;
      r = r.toLowerCase();
@@ -18510,7 +18691,6 @@
      const bT = (twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
      const bYT = (youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
      const bK = (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL;
-     shared.clearAddr();
      const scks = [];
      if (bT | bYT | bK)
      {
@@ -18949,7 +19129,7 @@
          '{\n' +
          ' animation: rave 3s linear infinite;\n' +
          '}\n';
-        let ar = 'html.rave button, html.rave div#notices\n' +
+        let ar = 'html.rave button.auth, html.rave div#notices\n' +
          '{\n' +
          ' animation: antirave 3s linear infinite;\n' +
          '}\n';
@@ -18983,7 +19163,7 @@
           '{\n' +
           ' filter: hue-rotate(' + iHue + 'deg);\n' +
           '}\n' +
-          'button, div#notices\n' +
+          'button.auth, div#notices\n' +
           '{\n' +
           ' filter: hue-rotate(' + (360 - iHue) + 'deg);\n' +
           '}\n';
@@ -19768,6 +19948,73 @@
                   0
                   0
                   0;
+   }
+
+   dialog
+   {
+    min-width: 16em;
+    font-size: 4vmin;
+    background-color: #000000;
+    color: #FFFFFF;
+    overflow: hidden;
+    padding-bottom: 2.5em;
+    border-radius: 0.5em;
+    box-shadow: 3px 3px 5px #000000;
+   }
+   dialog::backdrop
+   {
+    background-color: #000000;
+    opacity: 0.5;
+   }
+   dialog div
+   {
+    margin-bottom: 1em;
+   }
+   dialog input
+   {
+    background-color: #000000;
+    color: #FFFFFF;
+    border: 1px solid #FFFFFF;
+    border-radius: 3px;
+    width: 100%;
+    font-size: 3.5vmin;
+   }
+   dialog button
+   {
+    background-color: #505050;
+    transition: opacity 0.5s;
+    width: 7em;
+    font-size: 3.5vmin;
+    padding: 0.3em;
+   }
+   dialog button.yes
+   {
+    left: 1em;
+   }
+   dialog button.yes:focus:not([disabled]), dialog button.yes:hover:not([disabled])
+   {
+    background-color: #007000;
+   }
+   dialog button.yes:active:not([disabled])
+   {
+    background-color: #009000;
+   }
+   dialog button.no
+   {
+    right: 1em;
+   }
+   dialog button.no:focus:not([disabled]), dialog button.no:hover:not([disabled])
+   {
+    background-color: #700000;
+   }
+   dialog button.no:active:not([disabled])
+   {
+    background-color: #900000;
+   }
+   dialog button[disabled]
+   {
+    background-color: #303030;
+    color: #808080;
    }
 
    #notices

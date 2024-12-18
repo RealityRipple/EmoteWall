@@ -39,13 +39,9 @@ Priority for emotes with identical names (case-sensitive) uses this exact order:
  4) Global Emotes
  5) Emojis
 
-The order between services is always:
- 1) First-Party (Twitch, YouTube, or Kick)
- 2) FrankerFaceZ
- 3) BetterTTV
- 4) 7TV
+The order between services can be re-arranged in the configuration, but first-party (Twitch, YouTube, or Kick) is always first.  
 
-This priority order is slightly different from existing extensions, and prioritizes the ability to override global emotes with channel-themed ones, as well as allowing third-party User emotes to override any others, except cheers.
+This priority order is slightly different from most extensions, and prioritizes the ability to override global emotes with channel-themed ones, as well as allowing third-party User emotes to override any others, except cheers.
 
 ### Cheers
 The cheer style will be used for kappagens. If a user cheers 1000 bits in a single 1000 bit emote, then the kappagen will be made of the 1000-bit cheers. However, if the user cheers 1000 bits using multiple smaller cheer emotes, those emotes will be used for the kappagen instead.
