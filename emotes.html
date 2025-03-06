@@ -312,7 +312,9 @@
       },
       redeem: {
        highlight: false,
-       random_emote: false
+       random_emote: false,
+       chosen_emote: false,
+       modified_emote: false
       },
       timeout: false,
       ban: false
@@ -6281,14 +6283,34 @@
            case 'random_sub_emote_unlock':
             await _random_emote(ev);
             break;
+           case 'chosen_sub_emote_unlock':
+            await _chosen_emote(ev);
+            break;
+           case 'chosen_modified_sub_emote_unlock':
+            await _modified_emote(ev);
+            break;
           }
          }
 
          async function _random_emote(ev)
          {
-          if (!ev.reward.hasOwnProperty('unlocked_emote'))
+          if (!ev.reward.hasOwnProperty('emote'))
            return;
-          await twitch.parse.event.random_emote(ev.reward.unlocked_emote, ev.id);
+          await twitch.parse.event.random_emote(ev.reward.emote, ev.id);
+         }
+
+         async function _chosen_emote(ev)
+         {
+          if (!ev.reward.hasOwnProperty('emote'))
+           return;
+          await twitch.parse.event.chosen_emote(ev.reward.emote, ev.id);
+         }
+
+         async function _modified_emote(ev)
+         {
+          if (!ev.reward.hasOwnProperty('emote'))
+           return;
+          await twitch.parse.event.modified_emote(ev.reward.emote, ev.id);
          }
 
          return $c_channel_points_auto_redeem;
@@ -6576,7 +6598,7 @@
        const aSubs = [
         {id: twitch.net.eventSubCtl.sub.follow, v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']},
         {id: twitch.net.eventSubCtl.sub.redeem, scope: [cScopes.twitch.redemptions], cfg: false},
-        {id: twitch.net.eventSubCtl.sub.auto_redeem, scope: [cScopes.twitch.redemptions], cfg: ['event.twitch.redeem.random_emote']},
+        {id: twitch.net.eventSubCtl.sub.auto_redeem, v: '2', scope: [cScopes.twitch.redemptions], cfg: ['event.twitch.redeem.random_emote', 'event.twitch.redeem.chosen_emote', 'event.twitch.redeem.modified_emote']},
         {id: twitch.net.eventSubCtl.sub.shoutout.create, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']},
         {id: twitch.net.eventSubCtl.sub.shoutout.receive, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']},
         {id: twitch.net.eventSubCtl.sub.hypetrain.begin, scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
@@ -8604,6 +8626,62 @@
        display.kappa.show(p, cfg.event.twitch.redeem.random_emote);
       }
 
+      async function $chosen_emote(cmd, evID)
+      {
+       if (cmd === null)
+        return;
+       if (!cmd.hasOwnProperty('id'))
+        return;
+       if (!cmd.hasOwnProperty('name'))
+        return;
+       const u = cURLs.cdn.twitch.emote.replaceAll(cVARs.url.emoteID, cmd.id);
+       const p = [];
+       p.push({
+        svc: cSources.service.twitch,
+        url: u,
+        str: cmd.name,
+        pos: 0,
+        scope: cSources.scope.channel,
+        timestamp: Date.now(),
+        origin: 'twitch:' + evID
+       });
+       const sz = shared.ec.get(u);
+       if (sz !== null)
+       {
+        p[0].width = sz.width;
+        p[0].height = sz.height;
+       }
+       display.kappa.show(p, cfg.event.twitch.redeem.chosen_emote);
+      }
+
+      async function $modified_emote(cmd, evID)
+      {
+       if (cmd === null)
+        return;
+       if (!cmd.hasOwnProperty('id'))
+        return;
+       if (!cmd.hasOwnProperty('name'))
+        return;
+       const u = cURLs.cdn.twitch.emote.replaceAll(cVARs.url.emoteID, cmd.id);
+       const p = [];
+       p.push({
+        svc: cSources.service.twitch,
+        url: u,
+        str: cmd.name,
+        pos: 0,
+        scope: cSources.scope.channel,
+        timestamp: Date.now(),
+        origin: 'twitch:' + evID
+       });
+       const sz = shared.ec.get(u);
+       if (sz !== null)
+       {
+        p[0].width = sz.width;
+        p[0].height = sz.height;
+       }
+       display.kappa.show(p, cfg.event.twitch.redeem.modified_emote);
+      }
+
       async function $ban(cmd)
       {
        let dn = cmd.params[1];
@@ -8741,6 +8819,8 @@
        badge: $badge,
        redeem: $redeem,
        random_emote: $random_emote,
+       chosen_emote: $chosen_emote,
+       modified_emote: $modified_emote,
        ban: $ban,
        timeout: $timeout,
        shoutoutCreate: $shoutoutCreate,
