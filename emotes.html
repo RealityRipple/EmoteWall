@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v1.0
+    * v1.1
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -310,6 +310,12 @@
        },
        emote: false
       },
+      redeem: {
+       highlight: false,
+       random_emote: false,
+       chosen_emote: false,
+       modified_emote: false
+      },
       timeout: false,
       ban: false
      },
@@ -381,6 +387,10 @@
       origin: {      /* percentages of the screen height */
        min: 0.8,
        max: 1.1
+      },
+      dest: {        /* percentages of the screen height */
+       min: 4/100,   /* only used if fade or zoom transitions are enabled */
+       max: 6/100    /* otherwise, the emote will simply go off-screen */
       },
       time: 1,
       wiggle: {      /* percentages of the above time percentage */
@@ -1815,6 +1825,7 @@
        window.clearTimeout(_timers[id]);
       _timers[id] = window.setTimeout(_hideNotice, _errTime, id);
      }
+     shared.hueSync();
     }
 
     function _clearNoticeBegin(id)
@@ -2360,6 +2371,7 @@
        const eWh = Math.ceil(eW / 2);
        const h = shared.rnd(sW) - eWh;
        const v = Math.floor(sH * _rndFromRange(timing.display.Rise.origin));
+       const vD = Math.floor(sH * _rndFromRange(timing.display.Rise.dest));
        const aNames = [];
        const aDelays = [];
        const aDurs = [];
@@ -2387,7 +2399,7 @@
        const sO = 'left: ' + h + 'px;';
        let pY = '-' + eH;
        if (cfg.emote.out.fade || cfg.emote.out.zoom)
-        pY = Math.floor(v * 0.05);
+        pY = vD;
        const s = sO +
         ' --emote-height: ' + eH + 'px;' +
         ' --emote-width: ' + eW + 'px;' +
@@ -5516,13 +5528,13 @@
      {
       if (!bttvHoliday.hasOwnProperty(hID))
        continue;
-      if (bttvHoliday[hID].min.month < nowM)
+      if (bttvHoliday[hID].min.month > nowM)
        continue;
-      if (bttvHoliday[hID].min.month === nowM && bttvHoliday[hID].min.day < nowD)
+      if (bttvHoliday[hID].min.month === nowM && bttvHoliday[hID].min.day > nowD)
        continue;
-      if (bttvHoliday[hID].max.month > nowM)
+      if (bttvHoliday[hID].max.month < nowM)
        continue;
-      if (bttvHoliday[hID].max.month === nowM && bttvHoliday[hID].max.day > nowD)
+      if (bttvHoliday[hID].max.month === nowM && bttvHoliday[hID].max.day < nowD)
        continue;
       let idx = e.pos;
       if (!e.hasOwnProperty('zwe'))
@@ -6179,9 +6191,6 @@
           return;
          switch (r.metadata.subscription_type)
          {
-          case twitch.net.eventSubCtl.sub.redeem:
-           await _channel_points_redeem(r.payload.event);
-           return;
           case twitch.net.eventSubCtl.sub.tag:
            await _channel_update(r.payload.event);
            return;
@@ -6190,6 +6199,12 @@
           return;
          switch (r.metadata.subscription_type)
          {
+          case twitch.net.eventSubCtl.sub.redeem:
+           await _channel_points_redeem(r.payload.event);
+           return;
+          case twitch.net.eventSubCtl.sub.auto_redeem:
+           await _channel_points_auto_redeem(r.payload.event);
+           return;
           case twitch.net.eventSubCtl.sub.follow:
            _follow(r.payload.event);
            break;
@@ -6258,6 +6273,54 @@
           await twitch.parse.event.redeem(n, _rList[lnID].cmds.shift());
          }
         }
+
+        const _channel_points_auto_redeem = function()
+        {
+         async function $c_channel_points_auto_redeem(ev)
+         {
+          if (!ev.hasOwnProperty('reward'))
+           return;
+          if (!ev.reward.hasOwnProperty('type'))
+           return;
+          if (cfg.ignore.users !== false && ev.hasOwnProperty('user_login') && cfg.ignore.users.includes(ev.user_login))
+           return;
+          switch (ev.reward.type)
+          {
+           case 'random_sub_emote_unlock':
+            await _random_emote(ev);
+            break;
+           case 'chosen_sub_emote_unlock':
+            await _chosen_emote(ev);
+            break;
+           case 'chosen_modified_sub_emote_unlock':
+            await _modified_emote(ev);
+            break;
+          }
+         }
+
+         async function _random_emote(ev)
+         {
+          if (!ev.reward.hasOwnProperty('emote'))
+           return;
+          await twitch.parse.event.random_emote(ev.reward.emote, ev.id);
+         }
+
+         async function _chosen_emote(ev)
+         {
+          if (!ev.reward.hasOwnProperty('emote'))
+           return;
+          await twitch.parse.event.chosen_emote(ev.reward.emote, ev.id);
+         }
+
+         async function _modified_emote(ev)
+         {
+          if (!ev.reward.hasOwnProperty('emote'))
+           return;
+          await twitch.parse.event.modified_emote(ev.reward.emote, ev.id);
+         }
+
+         return $c_channel_points_auto_redeem;
+        }();
 
         async function _channel_update(ev)
         {
@@ -6541,6 +6604,7 @@
        const aSubs = [
         {id: twitch.net.eventSubCtl.sub.follow, v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']},
         {id: twitch.net.eventSubCtl.sub.redeem, scope: [cScopes.twitch.redemptions], cfg: false},
+        {id: twitch.net.eventSubCtl.sub.auto_redeem, v: '2', scope: [cScopes.twitch.redemptions], cfg: ['event.twitch.redeem.random_emote', 'event.twitch.redeem.chosen_emote', 'event.twitch.redeem.modified_emote']},
         {id: twitch.net.eventSubCtl.sub.shoutout.create, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']},
         {id: twitch.net.eventSubCtl.sub.shoutout.receive, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']},
         {id: twitch.net.eventSubCtl.sub.hypetrain.begin, scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
@@ -6765,6 +6829,7 @@
        sub: Object.freeze({
         follow: 'channel.follow',
         redeem: 'channel.channel_points_custom_reward_redemption.add',
+        auto_redeem: 'channel.channel_points_automatic_reward_redemption.add',
         shoutout: Object.freeze({
          create: 'channel.shoutout.create',
          receive: 'channel.shoutout.receive'
@@ -7977,6 +8042,8 @@
         return;
        if (await _parsePowerUp(cmd))
         return;
+       if (await _parseHighlight(cmd))
+        return;
        if (await _parseCustomReward(cmd))
         return;
        if (cmd.params.length < 2)
@@ -8067,6 +8134,21 @@
 
        return $c_parse;
       }();
+
+      async function _parseHighlight(cmd)
+      {
+       if (!cmd.hasOwnProperty('tags'))
+        return false;
+       if (!cmd.tags.hasOwnProperty('msg-id'))
+        return false;
+       if (cmd.tags['msg-id'] !== 'highlighted-message')
+        return false;
+       const p = _handleDuplicates(await _eListFromCmd(cmd));
+       if (p.length === 0)
+        return;
+       display.kappa.show(p, cfg.event.twitch.redeem.highlight);
+       return true;
+      }
 
       async function _parseCustomReward(cmd)
       {
@@ -8522,6 +8604,90 @@
        }
       }
 
+      async function $random_emote(cmd, evID)
+      {
+       if (cmd === null)
+        return;
+       if (!cmd.hasOwnProperty('id'))
+        return;
+       if (!cmd.hasOwnProperty('name'))
+        return;
+       const u = cURLs.cdn.twitch.emote.replaceAll(cVARs.url.emoteID, cmd.id);
+       const p = [];
+       p.push({
+        svc: cSources.service.twitch,
+        url: u,
+        str: cmd.name,
+        pos: 0,
+        scope: cSources.scope.channel,
+        timestamp: Date.now(),
+        origin: 'twitch:' + evID
+       });
+       const sz = shared.ec.get(u);
+       if (sz !== null)
+       {
+        p[0].width = sz.width;
+        p[0].height = sz.height;
+       }
+       display.kappa.show(p, cfg.event.twitch.redeem.random_emote);
+      }
+
+      async function $chosen_emote(cmd, evID)
+      {
+       if (cmd === null)
+        return;
+       if (!cmd.hasOwnProperty('id'))
+        return;
+       if (!cmd.hasOwnProperty('name'))
+        return;
+       const u = cURLs.cdn.twitch.emote.replaceAll(cVARs.url.emoteID, cmd.id);
+       const p = [];
+       p.push({
+        svc: cSources.service.twitch,
+        url: u,
+        str: cmd.name,
+        pos: 0,
+        scope: cSources.scope.channel,
+        timestamp: Date.now(),
+        origin: 'twitch:' + evID
+       });
+       const sz = shared.ec.get(u);
+       if (sz !== null)
+       {
+        p[0].width = sz.width;
+        p[0].height = sz.height;
+       }
+       display.kappa.show(p, cfg.event.twitch.redeem.chosen_emote);
+      }
+
+      async function $modified_emote(cmd, evID)
+      {
+       if (cmd === null)
+        return;
+       if (!cmd.hasOwnProperty('id'))
+        return;
+       if (!cmd.hasOwnProperty('name'))
+        return;
+       const u = cURLs.cdn.twitch.emote.replaceAll(cVARs.url.emoteID, cmd.id);
+       const p = [];
+       p.push({
+        svc: cSources.service.twitch,
+        url: u,
+        str: cmd.name,
+        pos: 0,
+        scope: cSources.scope.channel,
+        timestamp: Date.now(),
+        origin: 'twitch:' + evID
+       });
+       const sz = shared.ec.get(u);
+       if (sz !== null)
+       {
+        p[0].width = sz.width;
+        p[0].height = sz.height;
+       }
+       display.kappa.show(p, cfg.event.twitch.redeem.modified_emote);
+      }
+
       async function $ban(cmd)
       {
        let dn = cmd.params[1];
@@ -8658,6 +8824,9 @@
        sub: $sub,
        badge: $badge,
        redeem: $redeem,
+       random_emote: $random_emote,
+       chosen_emote: $chosen_emote,
+       modified_emote: $modified_emote,
        ban: $ban,
        timeout: $timeout,
        shoutoutCreate: $shoutoutCreate,
@@ -15802,13 +15971,13 @@
          continue;
         if (hasList[hID].found)
          continue;
-        if (hasList[hID].min.month < nowM)
+        if (hasList[hID].min.month > nowM)
          continue;
-        if (hasList[hID].min.month === nowM && hasList[hID].min.day < nowD)
+        if (hasList[hID].min.month === nowM && hasList[hID].min.day > nowD)
          continue;
-        if (hasList[hID].max.month > nowM)
+        if (hasList[hID].max.month < nowM)
          continue;
-        if (hasList[hID].max.month === nowM && hasList[hID].max.day > nowD)
+        if (hasList[hID].max.month === nowM && hasList[hID].max.day < nowD)
          continue;
         _addEmote(service.emotes.zwe.bttv, cSources.scope.global, hasList[hID].code, hID, cURLs.cdn.bttv.emote.replaceAll(cVARs.url.emoteID, hID), false, hasList[hID].width, hasList[hID].height, true);
        }
@@ -17266,6 +17435,8 @@
 
    const shared = function()
    {
+    let _tHue = false;
+
     function $inputBox(txt, dVal = false, bVal = true)
     {
      const p = new Promise(
@@ -17763,6 +17934,44 @@
      return 'filter: drop-shadow(' + s + ');';
     }
 
+    function $hueSync()
+    {
+     if (_tHue !== false)
+     {
+      window.clearTimeout(_tHue);
+      _tHue = false;
+     }
+     if (cfg.display.hue === 'rave')
+      _tHue = window.setTimeout(_hueSync, 100);
+    }
+
+    function _hueSync()
+    {
+     const anims = document.getAnimations();
+     if (anims.length < 1)
+      return;
+     let rIdx = -1;
+     for (let i = 0; i < anims.length; i++)
+     {
+      if (anims[i].animationName !== 'rave')
+       continue;
+      if (anims[i].currentTime === null)
+       continue;
+      rIdx = i;
+      break;
+     }
+     if (rIdx === -1)
+      return;
+     for (let i = 0; i < anims.length; i++)
+     {
+      if (anims[i].animationName !== 'antirave')
+       continue;
+      if (anims[i].currentTime === anims[rIdx].currentTime)
+       continue;
+      anims[i].currentTime = anims[rIdx].currentTime;
+     }
+    }
+
     const $mspf = function()
     {
      let _init = 0;
@@ -18023,6 +18232,7 @@
      unIndent: $unIndent,
      reIndent: $reIndent,
      shadowCSS: $shadowCSS,
+     hueSync: $hueSync,
      mspf: $mspf,
      ec: $ec,
      storage: $storage,
@@ -18197,12 +18407,16 @@
      if (auto && ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
+     shared.hueSync();
     }
 
     function _fadeInLogin()
     {
-     if (document.getElementById(_idLogin))
+     if (document.getElementById(_idLogin) && document.getElementById(_idLogin).classList.contains('hidden'))
+     {
       document.getElementById(_idLogin).classList.remove('hidden');
+      shared.hueSync();
+     }
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -18252,6 +18466,7 @@
       cmdLogout.classList.add('hidden');
      }
      document.body.appendChild(cmdLogout);
+     shared.hueSync();
     }
 
     function $logOut()
@@ -18262,8 +18477,11 @@
 
     function _fadeInLogout()
     {
-     if (document.getElementById(_idLogout))
+     if (document.getElementById(_idLogout) && document.getElementById(_idLogout).classList.contains('hidden'))
+     {
       document.getElementById(_idLogout).classList.remove('hidden');
+      shared.hueSync();
+     }
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -18413,12 +18631,16 @@
      if (auto && ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
+     shared.hueSync();
     }
 
     function _fadeInLogin()
     {
-     if (document.getElementById(_idLogin))
+     if (document.getElementById(_idLogin) && document.getElementById(_idLogin).classList.contains('hidden'))
+     {
       document.getElementById(_idLogin).classList.remove('hidden');
+      shared.hueSync();
+     }
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -18468,6 +18690,7 @@
       cmdLogout.classList.add('hidden');
      }
      document.body.appendChild(cmdLogout);
+     shared.hueSync();
     }
 
     function $logOut()
@@ -18478,8 +18701,11 @@
 
     function _fadeInLogout()
     {
-     if (document.getElementById(_idLogout))
+     if (document.getElementById(_idLogout) && document.getElementById(_idLogout).classList.contains('hidden'))
+     {
       document.getElementById(_idLogout).classList.remove('hidden');
+      shared.hueSync();
+     }
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -18565,12 +18791,16 @@
      if (auto && ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
+     shared.hueSync();
     }
 
     function _fadeInLogin()
     {
-     if (document.getElementById(_idLogin))
+     if (document.getElementById(_idLogin) && document.getElementById(_idLogin).classList.contains('hidden'))
+     {
       document.getElementById(_idLogin).classList.remove('hidden');
+      shared.hueSync();
+     }
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -18622,6 +18852,7 @@
       cmdLogout.classList.add('hidden');
      }
      document.body.appendChild(cmdLogout);
+     shared.hueSync();
     }
 
     function $logOut()
@@ -18632,8 +18863,11 @@
 
     function _fadeInLogout()
     {
-     if (document.getElementById(_idLogout))
+     if (document.getElementById(_idLogout) && document.getElementById(_idLogout).classList.contains('hidden'))
+     {
       document.getElementById(_idLogout).classList.remove('hidden');
+      shared.hueSync();
+     }
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -19153,6 +19387,8 @@
         ar += '}\n';
 
         h = r + ar + h;
+
+        shared.hueSync();
        }
        else if (Number.isInteger(cfg.display.hue))
        {
