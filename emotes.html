@@ -1825,6 +1825,7 @@
        window.clearTimeout(_timers[id]);
       _timers[id] = window.setTimeout(_hideNotice, _errTime, id);
      }
+     shared.hueSync();
     }
 
     function _clearNoticeBegin(id)
@@ -17434,6 +17435,8 @@
 
    const shared = function()
    {
+    let _tHue = false;
+
     function $inputBox(txt, dVal = false, bVal = true)
     {
      const p = new Promise(
@@ -17931,6 +17934,44 @@
      return 'filter: drop-shadow(' + s + ');';
     }
 
+    function $hueSync()
+    {
+     if (_tHue !== false)
+     {
+      window.clearTimeout(_tHue);
+      _tHue = false;
+     }
+     if (cfg.display.hue === 'rave')
+      _tHue = window.setTimeout(_hueSync, 100);
+    }
+
+    function _hueSync()
+    {
+     const anims = document.getAnimations();
+     if (anims.length < 1)
+      return;
+     let rIdx = -1;
+     for (let i = 0; i < anims.length; i++)
+     {
+      if (anims[i].animationName !== 'rave')
+       continue;
+      if (anims[i].currentTime === null)
+       continue;
+      rIdx = i;
+      break;
+     }
+     if (rIdx === -1)
+      return;
+     for (let i = 0; i < anims.length; i++)
+     {
+      if (anims[i].animationName !== 'antirave')
+       continue;
+      if (anims[i].currentTime === anims[rIdx].currentTime)
+       continue;
+      anims[i].currentTime = anims[rIdx].currentTime;
+     }
+    }
+
     const $mspf = function()
     {
      let _init = 0;
@@ -18191,6 +18232,7 @@
      unIndent: $unIndent,
      reIndent: $reIndent,
      shadowCSS: $shadowCSS,
+     hueSync: $hueSync,
      mspf: $mspf,
      ec: $ec,
      storage: $storage,
@@ -18365,12 +18407,16 @@
      if (auto && ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
+     shared.hueSync();
     }
 
     function _fadeInLogin()
     {
-     if (document.getElementById(_idLogin))
+     if (document.getElementById(_idLogin) && document.getElementById(_idLogin).classList.contains('hidden'))
+     {
       document.getElementById(_idLogin).classList.remove('hidden');
+      shared.hueSync();
+     }
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -18420,6 +18466,7 @@
       cmdLogout.classList.add('hidden');
      }
      document.body.appendChild(cmdLogout);
+     shared.hueSync();
     }
 
     function $logOut()
@@ -18430,8 +18477,11 @@
 
     function _fadeInLogout()
     {
-     if (document.getElementById(_idLogout))
+     if (document.getElementById(_idLogout) && document.getElementById(_idLogout).classList.contains('hidden'))
+     {
       document.getElementById(_idLogout).classList.remove('hidden');
+      shared.hueSync();
+     }
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -18581,12 +18631,16 @@
      if (auto && ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
+     shared.hueSync();
     }
 
     function _fadeInLogin()
     {
-     if (document.getElementById(_idLogin))
+     if (document.getElementById(_idLogin) && document.getElementById(_idLogin).classList.contains('hidden'))
+     {
       document.getElementById(_idLogin).classList.remove('hidden');
+      shared.hueSync();
+     }
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -18636,6 +18690,7 @@
       cmdLogout.classList.add('hidden');
      }
      document.body.appendChild(cmdLogout);
+     shared.hueSync();
     }
 
     function $logOut()
@@ -18646,8 +18701,11 @@
 
     function _fadeInLogout()
     {
-     if (document.getElementById(_idLogout))
+     if (document.getElementById(_idLogout) && document.getElementById(_idLogout).classList.contains('hidden'))
+     {
       document.getElementById(_idLogout).classList.remove('hidden');
+      shared.hueSync();
+     }
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -18733,12 +18791,16 @@
      if (auto && ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
+     shared.hueSync();
     }
 
     function _fadeInLogin()
     {
-     if (document.getElementById(_idLogin))
+     if (document.getElementById(_idLogin) && document.getElementById(_idLogin).classList.contains('hidden'))
+     {
       document.getElementById(_idLogin).classList.remove('hidden');
+      shared.hueSync();
+     }
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -18790,6 +18852,7 @@
       cmdLogout.classList.add('hidden');
      }
      document.body.appendChild(cmdLogout);
+     shared.hueSync();
     }
 
     function $logOut()
@@ -18800,8 +18863,11 @@
 
     function _fadeInLogout()
     {
-     if (document.getElementById(_idLogout))
+     if (document.getElementById(_idLogout) && document.getElementById(_idLogout).classList.contains('hidden'))
+     {
       document.getElementById(_idLogout).classList.remove('hidden');
+      shared.hueSync();
+     }
      if (_tL !== false)
      {
       window.clearTimeout(_tL);
@@ -19321,6 +19387,8 @@
         ar += '}\n';
 
         h = r + ar + h;
+
+        shared.hueSync();
        }
        else if (Number.isInteger(cfg.display.hue))
        {
