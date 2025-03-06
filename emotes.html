@@ -310,6 +310,9 @@
        },
        emote: false
       },
+      redeem: {
+       highlight: false
+      },
       timeout: false,
       ban: false
      },
@@ -7977,6 +7980,8 @@
         return;
        if (await _parsePowerUp(cmd))
         return;
+       if (await _parseHighlight(cmd))
+        return;
        if (await _parseCustomReward(cmd))
         return;
        if (cmd.params.length < 2)
@@ -8067,6 +8072,21 @@
 
        return $c_parse;
       }();
+
+      async function _parseHighlight(cmd)
+      {
+       if (!cmd.hasOwnProperty('tags'))
+        return false;
+       if (!cmd.tags.hasOwnProperty('msg-id'))
+        return false;
+       if (cmd.tags['msg-id'] !== 'highlighted-message')
+        return false;
+       const p = _handleDuplicates(await _eListFromCmd(cmd));
+       if (p.length === 0)
+        return;
+       display.kappa.show(p, cfg.event.twitch.redeem.highlight);
+       return true;
+      }
 
       async function _parseCustomReward(cmd)
       {
