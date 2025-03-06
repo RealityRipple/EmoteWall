@@ -388,6 +388,10 @@
        min: 0.8,
        max: 1.1
       },
+      dest: {        /* percentages of the screen height */
+       min: 4/100,   /* only used if fade or zoom transitions are enabled */
+       max: 6/100    /* otherwise, the emote will simply go off-screen */
+      },
       time: 1,
       wiggle: {      /* percentages of the above time percentage */
        delay: {
@@ -2366,6 +2370,7 @@
        const eWh = Math.ceil(eW / 2);
        const h = shared.rnd(sW) - eWh;
        const v = Math.floor(sH * _rndFromRange(timing.display.Rise.origin));
+       const vD = Math.floor(sH * _rndFromRange(timing.display.Rise.dest));
        const aNames = [];
        const aDelays = [];
        const aDurs = [];
@@ -2393,7 +2398,7 @@
        const sO = 'left: ' + h + 'px;';
        let pY = '-' + eH;
        if (cfg.emote.out.fade || cfg.emote.out.zoom)
-        pY = Math.floor(v * 0.05);
+        pY = vD;
        const s = sO +
         ' --emote-height: ' + eH + 'px;' +
         ' --emote-width: ' + eW + 'px;' +
