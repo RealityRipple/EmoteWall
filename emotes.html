@@ -7007,10 +7007,10 @@
        {
         if (_ws.readyState === 1)
          _ws.send('PONG ' + cmd.params[0]);
-        if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.REFRESH_TOKEN) !== shared.cfgVal.REFRESH_TOKEN)
+        if (!twitch.net.oAuth.hasRefresh)
          return;
         await twitch.net.oAuth.update();
-        if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
+        if (!twitch.net.oAuth.hasLogin)
          notice.error(notice.Type.TWITCH_TOKEN);
        }
 
@@ -7608,14 +7608,13 @@
 
       async function $reinit()
       {
-       if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN)
-       {
-        twitch.net.oAuth.auth.expires = 0;
-        await twitch.net.oAuth.update();
-        if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN)
-         return true;
-        twitch.net.oAuth.clear();
-       }
+       if (!twitch.net.oAuth.hasRefresh)
+        return false;
+       twitch.net.oAuth.auth.expires = 0;
+       await twitch.net.oAuth.update();
+       if (twitch.net.oAuth.hasLogin)
+        return true;
+       twitch.net.oAuth.clear();
        return false;
       }
 
@@ -7625,7 +7624,7 @@
        shared.storage.removeItem(loginT.path() + _pathRefresh);
       }
 
-      function $cfgVals()
+      function _cfgVals()
       {
        let r = 0;
        const lsRefresh = shared.storage.getItem(loginT.path() + _pathRefresh);
@@ -7654,7 +7653,8 @@
        update: $update,
        reinit: $reinit,
        clear: $clear,
-       cfgVals: $cfgVals,
+       get hasRefresh() {return (_cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN;},
+       get hasLogin() {return (_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;},
        headers: $headers,
        auth: {
         client_id: false,
@@ -9414,10 +9414,10 @@
 
       async function _getActiveStreams()
       {
-       if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN)
+       if (youtube.net.oAuth.hasRefresh)
        {
         await youtube.net.oAuth.update();
-        if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
+        if (!youtube.net.oAuth.hasLogin)
         {
          notice.error(notice.Type.YOUTUBE_NETWORK);
          notice.error(notice.Type.YOUTUBE_TOKEN);
@@ -9425,7 +9425,7 @@
          return null;
         }
        }
-       if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
+       if (!youtube.net.oAuth.hasLogin)
         return null;
        if (!youtube.net.oAuth.auth.scope.includes(cScopes.youtube.readonly))
        {
@@ -9633,10 +9633,10 @@
         _tM[chatID] = false;
         if (youtube.net.dead)
          return;
-        if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN)
+        if (youtube.net.oAuth.hasRefresh)
         {
          await youtube.net.oAuth.update();
-         if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
+         if (!youtube.net.oAuth.hasLogin)
          {
           notice.error(notice.Type.YOUTUBE_NETWORK);
           notice.error(notice.Type.YOUTUBE_TOKEN);
@@ -9646,7 +9646,7 @@
           return;
          }
         }
-        if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
+        if (!youtube.net.oAuth.hasLogin)
          return;
         if (!youtube.net.oAuth.auth.scope.includes(cScopes.youtube.readonly))
         {
@@ -10486,7 +10486,7 @@
        shared.storage.removeItem(loginYT.path() + _pathRefresh);
       }
 
-      function $cfgVals()
+      function _cfgVals()
       {
        let r = 0;
        const lsRefresh = shared.storage.getItem(loginYT.path() + _pathRefresh);
@@ -10511,7 +10511,8 @@
        init: $init,
        update: $update,
        clear: $clear,
-       cfgVals: $cfgVals,
+       get hasRefresh() {return (_cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN;},
+       get hasLogin() {return (_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;},
        headers: $headers,
        auth: {
         client_id: false,
@@ -12226,7 +12227,7 @@
        kick.net.oAuth.auth.channel = c;
       }
 
-      function $cfgVals()
+      function _cfgVals()
       {
        let r = 0;
        if (kick.net.oAuth.auth.channel !== false)
@@ -12236,7 +12237,7 @@
 
       return {
        init: $init,
-       cfgVals: $cfgVals,
+       get hasLogin() { return (_cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL; },
        auth: {
         channel: false,
         time: 0
@@ -15052,7 +15053,7 @@
      return $c_socket;
     }();
 
-    function $cfgVals()
+    function _cfgVals()
     {
      if (!cfg.hasOwnProperty('streamlabs'))
       return 0;
@@ -15064,7 +15065,7 @@
 
     return {
      socket: $socket,
-     cfgVals: $cfgVals
+     get hasLogin() {return (_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;}
     };
    }();
 
@@ -15223,11 +15224,10 @@
         if (d.slice(1, 2) === '0')
         {
          let a = '';
-         const seCfg = streamelements.oAuth.cfgVals();
-         if ((seCfg & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN)
-          a = JSON.stringify(['authenticate', {'method': 'oauth2', 'token': streamelements.oAuth.auth.access_token}]);
-         else if ((seCfg & shared.cfgVal.JWT_TOKEN) === shared.cfgVal.JWT_TOKEN)
+         if (streamelements.oAuth.usesJWT)
           a = JSON.stringify(['authenticate', {'method': 'jwt', 'token': streamelements.oAuth.auth.jwt_token}]);
+         else
+          a = JSON.stringify(['authenticate', {'method': 'oauth2', 'token': streamelements.oAuth.auth.access_token}]);
          if (_ws.readyState === 1)
           _ws.send('42' + a);
          return;
@@ -15527,7 +15527,7 @@
        shared.storage.setItem(_path() + _pathRefresh, sRefresh);
      }
 
-     function $cfgVals()
+     function _cfgVals()
      {
       let r = 0;
       const lsRefresh = shared.storage.getItem(_path() + _pathRefresh);
@@ -15545,7 +15545,17 @@
      return {
       init: $init,
       update: $update,
-      cfgVals: $cfgVals,
+      get hasRefresh() {return (_cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN;},
+      get hasLogin() {
+       if ((_cfgVals() & shared.cfgVal.JWT_TOKEN) === shared.cfgVal.JWT_TOKEN)
+        return true;
+       return (_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
+      },
+      get usesJWT() {
+       if ((_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN)
+        return false;
+       return (_cfgVals() & shared.cfgVal.JWT_TOKEN) === shared.cfgVal.JWT_TOKEN;
+      },
       auth: {
        client_id: false,
        channel: false,
@@ -18328,7 +18338,7 @@
     {
      if (loginT.inUse === false)
       return false;
-     if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN)
+     if (twitch.net.oAuth.hasLogin)
      {
       loginT.showOut();
       return false;
@@ -18404,7 +18414,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
      cmdLogin.innerHTML = 'Twitch<br><span>Log In</span>';
-     if (auto && ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL))
+     if (auto && (youtube.net.oAuth.hasLogin || kick.net.oAuth.hasLogin))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
      shared.hueSync();
@@ -18552,7 +18562,7 @@
     {
      if (loginYT.inUse === false)
       return false;
-     if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN)
+     if (youtube.net.oAuth.hasLogin)
      {
       loginYT.showOut();
       return false;
@@ -18628,7 +18638,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginYT.begin();');
      cmdLogin.innerHTML = 'YouTube<br><span>Log In</span>';
-     if (auto && ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL))
+     if (auto && (twitch.net.oAuth.hasLogin || kick.net.oAuth.hasLogin))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
      shared.hueSync();
@@ -18753,7 +18763,7 @@
     {
      if (loginK.inUse === false)
       return false;
-     if ((kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL)
+     if (kick.net.oAuth.hasLogin)
      {
       loginK.showOut();
       return false;
@@ -18788,7 +18798,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginK.begin();');
      cmdLogin.innerHTML = 'Kick<br><span>Log In</span>';
-     if (auto && ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN || (twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN))
+     if (auto && (youtube.net.oAuth.hasLogin || twitch.net.oAuth.hasLogin))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
      shared.hueSync();
@@ -18922,9 +18932,9 @@
      loginT.use();
      loginYT.use();
      loginK.use();
-     const bT = (twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
-     const bYT = (youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
-     const bK = (kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL;
+     const bT = twitch.net.oAuth.hasLogin;
+     const bYT = youtube.net.oAuth.hasLogin;
+     const bK = kick.net.oAuth.hasLogin;
      const scks = [];
      if (bT | bYT | bK)
      {
@@ -19246,7 +19256,7 @@
 
     async function _twitch()
     {
-     if ((twitch.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
+     if (!twitch.net.oAuth.hasLogin)
       return false;
      if (await twitch.global() === false)
       return false;
@@ -19256,7 +19266,7 @@
 
     async function _youtube()
     {
-     if ((youtube.net.oAuth.cfgVals() & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
+     if (!youtube.net.oAuth.hasLogin)
       return false;
      if (await youtube.global() === false)
       return false;
@@ -19272,7 +19282,7 @@
 
     async function _kick()
     {
-     if ((kick.net.oAuth.cfgVals() & shared.cfgVal.CHANNEL) !== shared.cfgVal.CHANNEL)
+     if (!kick.net.oAuth.hasLogin)
       return false;
      kick.net.socket();
      if (cfg.event.kick.follow !== false)
@@ -19282,23 +19292,16 @@
 
     function _streamlabs()
     {
-     const slCfg = streamlabs.cfgVals();
-     if ((slCfg & shared.cfgVal.ACCESS_TOKEN) !== shared.cfgVal.ACCESS_TOKEN)
+     if (!streamlabs.hasLogin)
       return;
      streamlabs.socket();
     }
 
     async function _streamelements()
     {
-     let seCfg = streamelements.oAuth.cfgVals();
-     if (seCfg === 0)
-      return;
-     if ((seCfg & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN)
-     {
+     if (streamelements.oAuth.hasRefresh)
       await streamelements.oAuth.update();
-      seCfg = streamelements.oAuth.cfgVals();
-     }
-     if ((seCfg & (shared.cfgVal.ACCESS_TOKEN | shared.cfgVal.JWT_TOKEN)) === 0)
+     if (!streamelements.oAuth.hasLogin)
       return;
      streamelements.socket();
     }
