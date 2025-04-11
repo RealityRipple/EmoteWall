@@ -6731,7 +6731,10 @@
        }
        if (unList.length > 0)
         await Promise.allSettled(unList);
-       window.location.reload();
+       if (window.location.hash.length < 2)
+        window.location.reload();
+       else
+        window.location = window.location.href.slice(0, -1 * window.location.hash.length);
       }
 
       async function _cleanAndRecover()
@@ -18482,7 +18485,10 @@
     function $logOut()
     {
      twitch.net.oAuth.clear();
-     window.location.reload();
+     if (window.location.hash.length < 2)
+      window.location.reload();
+     else
+      window.location = window.location.href.slice(0, -1 * window.location.hash.length);
     }
 
     function _fadeInLogout()
@@ -18706,7 +18712,10 @@
     function $logOut()
     {
      youtube.net.oAuth.clear(true);
-     window.location.reload();
+     if (window.location.hash.length < 2)
+      window.location.reload();
+     else
+      window.location = window.location.href.slice(0, -1 * window.location.hash.length);
     }
 
     function _fadeInLogout()
@@ -18781,7 +18790,10 @@
      if (r.indexOf('kick.com/') > -1)
       r = r.slice(r.indexOf('kick.com/') + 9);
      shared.storage.setItem(loginK.path() + '.channel', r);
-     window.location.reload();
+     if (window.location.hash.length < 2)
+      window.location.reload();
+     else
+      window.location = window.location.href.slice(0, -1 * window.location.hash.length);
     }
 
     function $showIn(auto = false)
@@ -18868,7 +18880,10 @@
     function $logOut()
     {
      shared.storage.removeItem(loginK.path() + '.channel');
-     window.location.reload();
+     if (window.location.hash.length < 2)
+      window.location.reload();
+     else
+      window.location = window.location.href.slice(0, -1 * window.location.hash.length);
     }
 
     function _fadeInLogout()
