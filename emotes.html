@@ -4199,9 +4199,6 @@
         }
         const tMS = Math.floor(cfg.emote.time * 1000 * timing.kappa.Conga.time.show);
         await _sleep(tMS);
-        let full = false;
-        if (_conga.size >= sht)
-         full = true;
         await _sleep(Math.floor(cfg.display.kappa.conga.time * 1000));
         if (cfg.display.kappa.conga.contagious)
         {
@@ -4218,10 +4215,10 @@
         }
         for (let i = 0, l = imgs.length; i < l; i++)
         {
-         _endDance(tInit, imgs[i], i, sW, v, eH, bS, ct, d, xtra);
+         _endDance(tInit, imgs[i], i, sW, bS, ct, d, xtra);
          for (let j = 0, m = zimgs[i].length; j < m; j++)
          {
-          _endDance(tInit, zimgs[i][j], i, sW, v, eH, bS, ct, d, xtra);
+          _endDance(tInit, zimgs[i][j], i, sW, bS, ct, d, xtra);
          }
         }
         await _sleep(tMS);
@@ -4264,7 +4261,7 @@
         return box;
        }
 
-       function _endDance(tInit, box, col, sW, v, eH, bS, ct, d, xtra)
+       function _endDance(tInit, box, col, sW, bS, ct, d, xtra)
        {
         if (_iTitanic > tInit)
          return;
@@ -11520,7 +11517,6 @@
      const $socket = function()
      {
       let _wsRetry = 0;
-      let _firstRS = true;
       let _ws = null;
       let _msgHistory = {};
       let _lPing = 30000;
@@ -11545,7 +11541,6 @@
         }
        }
        _tPing = 0;
-       _firstRS = true;
        const appID = await _getAppID();
        _ws = new WebSocket(cURLs.ws.kick.replaceAll(cVARs.url.chatID, appID));
        _ws.onopen = _wsOpen;
