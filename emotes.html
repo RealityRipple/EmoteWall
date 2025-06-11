@@ -4921,7 +4921,7 @@
       return k.count;
      }
 
-     async function _StringArrayToEmoteArray(s)
+     function _StringArrayToEmoteArray(s)
      {
       const r = [];
       let idx = 0;
@@ -5049,7 +5049,7 @@
        }
        if (cfg.display.useEmoji !== false)
        {
-        const eMoji = await service.parse.content.emoji(s[i], true);
+        const eMoji = service.parse.content.emoji(s[i], true);
         if (eMoji.length > 0)
         {
          v.svc = cSources.service.emoji;
@@ -5103,7 +5103,7 @@
         bForce = true;
        if (bForce)
        {
-        const fList = await _StringArrayToEmoteArray(kForce);
+        const fList = _StringArrayToEmoteArray(kForce);
         if (fList.length > 0)
          kList = fList;
        }
@@ -6199,10 +6199,10 @@
          switch (r.metadata.subscription_type)
          {
           case twitch.net.eventSubCtl.sub.redeem:
-           await _channel_points_redeem(r.payload.event);
+           _channel_points_redeem(r.payload.event);
            return;
           case twitch.net.eventSubCtl.sub.auto_redeem:
-           await _channel_points_auto_redeem(r.payload.event);
+           _channel_points_auto_redeem(r.payload.event);
            return;
           case twitch.net.eventSubCtl.sub.follow:
            _follow(r.payload.event);
@@ -6243,7 +6243,7 @@
          }
         }
 
-        async function _channel_points_redeem(ev)
+        function _channel_points_redeem(ev)
         {
          if (!ev.hasOwnProperty('reward'))
           return;
@@ -6254,7 +6254,7 @@
          const n = ev.reward.title;
          if (!ev.hasOwnProperty('user_input') || ev.user_input === '')
          {
-          await twitch.parse.event.redeem(n, false);
+          twitch.parse.event.redeem(n, false);
           return;
          }
          if (!ev.reward.hasOwnProperty('id'))
@@ -6269,13 +6269,13 @@
           _rList[lnID].name = n;
          while (_rList[lnID].cmds.length > 0)
          {
-          await twitch.parse.event.redeem(n, _rList[lnID].cmds.shift());
+          twitch.parse.event.redeem(n, _rList[lnID].cmds.shift());
          }
         }
 
         const _channel_points_auto_redeem = function()
         {
-         async function $c_channel_points_auto_redeem(ev)
+         function $c_channel_points_auto_redeem(ev)
          {
           if (!ev.hasOwnProperty('reward'))
            return;
@@ -6286,36 +6286,36 @@
           switch (ev.reward.type)
           {
            case 'random_sub_emote_unlock':
-            await _random_emote(ev);
+            _random_emote(ev);
             break;
            case 'chosen_sub_emote_unlock':
-            await _chosen_emote(ev);
+            _chosen_emote(ev);
             break;
            case 'chosen_modified_sub_emote_unlock':
-            await _modified_emote(ev);
+            _modified_emote(ev);
             break;
           }
          }
 
-         async function _random_emote(ev)
+         function _random_emote(ev)
          {
           if (!ev.reward.hasOwnProperty('emote'))
            return;
-          await twitch.parse.event.random_emote(ev.reward.emote, ev.id);
+          twitch.parse.event.random_emote(ev.reward.emote, ev.id);
          }
 
-         async function _chosen_emote(ev)
+         function _chosen_emote(ev)
          {
           if (!ev.reward.hasOwnProperty('emote'))
            return;
-          await twitch.parse.event.chosen_emote(ev.reward.emote, ev.id);
+          twitch.parse.event.chosen_emote(ev.reward.emote, ev.id);
          }
 
-         async function _modified_emote(ev)
+         function _modified_emote(ev)
          {
           if (!ev.reward.hasOwnProperty('emote'))
            return;
-          await twitch.parse.event.modified_emote(ev.reward.emote, ev.id);
+          twitch.parse.event.modified_emote(ev.reward.emote, ev.id);
          }
 
          return $c_channel_points_auto_redeem;
@@ -7768,7 +7768,7 @@
 
      const $content = function()
      {
-      async function $emoji(cmd, dup = null)
+      function $emoji(cmd, dup = null)
       {
        if (cmd.params.length < 2)
         return [];
@@ -8042,22 +8042,22 @@
        const u = _parseUser(cmd, true);
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
         return;
-       if (await _parsePowerUp(cmd))
+       if (_parsePowerUp(cmd))
         return;
-       if (await _parseHighlight(cmd))
+       if (_parseHighlight(cmd))
         return;
-       if (await _parseCustomReward(cmd))
+       if (_parseCustomReward(cmd))
         return;
        if (cmd.params.length < 2)
         return;
        const lv = await _level(cmd);
        if (await _parseTaggedChannel(cmd, lv))
         return;
-       if (await _parseCommand(cmd, lv))
+       if (_parseCommand(cmd, lv))
         return;
        if ((lv & cfg.display.access) === 0)
         return;
-       const p = _handleDuplicates(await _eListFromCmd(cmd, null, andCheers));
+       const p = _handleDuplicates(_eListFromCmd(cmd, null, andCheers));
        if (p.length === 0)
         return;
        display.emote.addToShowList(p);
@@ -8066,7 +8066,7 @@
 
       const _parsePowerUp = function()
       {
-       async function $c_parse(cmd)
+       function $c_parse(cmd)
        {
         if (!cmd.hasOwnProperty('tags'))
          return false;
@@ -8081,11 +8081,11 @@
         return false;
        }
 
-       async function _gigantified(cmd)
+       function _gigantified(cmd)
        {
         if (cfg.event.twitch.powerup.emote === false)
          return false;
-        const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+        const a = _handleDuplicates(_eListFromCmd(cmd, true));
         if (a.length < 1)
          return false;
         const u = _parseUser(cmd, true);
@@ -8101,7 +8101,7 @@
         return true;
        }
 
-       async function _animated(cmd)
+       function _animated(cmd)
        {
         if (!cmd.hasOwnProperty('tags'))
          return false;
@@ -8111,7 +8111,7 @@
         let dn = 'Anonymous';
         if (u.hasOwnProperty('display-name'))
          dn = u['display-name'];
-        const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+        const a = _handleDuplicates(_eListFromCmd(cmd, true));
         const animID = cmd.tags['animation-id'];
         switch (animID)
         {
@@ -8137,7 +8137,7 @@
        return $c_parse;
       }();
 
-      async function _parseHighlight(cmd)
+      function _parseHighlight(cmd)
       {
        if (!cmd.hasOwnProperty('tags'))
         return false;
@@ -8145,14 +8145,14 @@
         return false;
        if (cmd.tags['msg-id'] !== 'highlighted-message')
         return false;
-       const p = _handleDuplicates(await _eListFromCmd(cmd));
+       const p = _handleDuplicates(_eListFromCmd(cmd));
        if (p.length === 0)
         return;
        display.kappa.show(p, cfg.event.twitch.redeem.highlight);
        return true;
       }
 
-      async function _parseCustomReward(cmd)
+      function _parseCustomReward(cmd)
       {
        if (!cmd.hasOwnProperty('tags'))
         return false;
@@ -8167,12 +8167,10 @@
        _rList[lnID].cmds.push(cmd);
        if (_rList[lnID].name === false)
         return true;
-       const pList = [];
        while (_rList[lnID].cmds.length > 0)
        {
-        pList.push(twitch.parse.event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift()));
+        twitch.parse.event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift());
        }
-       await Promise.allSettled(pList);
        return true;
       }
 
@@ -8217,10 +8215,10 @@
        return true;
       }
 
-      async function _parseCommand(cmd, lv)
+      function _parseCommand(cmd, lv)
       {
        const m = cmd.params[1].toLowerCase();
-       const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+       const a = _handleDuplicates(_eListFromCmd(cmd, true));
        let mID = false;
        if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('id'))
         mID = 'twitch:' + cmd.tags.id;
@@ -8254,7 +8252,7 @@
        let p = [];
        if (cfg.event.twitch.cheer.useMsg)
        {
-        const a = await _eListFromCmd(cmd);
+        const a = _eListFromCmd(cmd);
         p.push(...a);
        }
        else
@@ -8360,7 +8358,7 @@
         if (cmd.params.length > 1)
         {
          if (cfg.event.twitch.sub.useMsg)
-          a = await _eListFromCmd(cmd, true);
+          a = _eListFromCmd(cmd, true);
          else
           await twitch.parse.line(cmd);
         }
@@ -8586,7 +8584,7 @@
        display.kappa.show(false, cfg.event.twitch.badge[closest], {[cVARs.evt.user]: dn, [cVARs.evt.amount]: c});
       }
 
-      async function $redeem(title, cmd)
+      function $redeem(title, cmd)
       {
        for (const k of cfg.commands)
        {
@@ -8600,13 +8598,13 @@
          display.kappa.show(false, kC);
          return;
         }
-        const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+        const a = _handleDuplicates(_eListFromCmd(cmd, true));
         display.kappa.show(a, kC);
         return;
        }
       }
 
-      async function $random_emote(cmd, evID)
+      function $random_emote(cmd, evID)
       {
        if (cmd === null)
         return;
@@ -8634,7 +8632,7 @@
        display.kappa.show(p, cfg.event.twitch.redeem.random_emote);
       }
 
-      async function $chosen_emote(cmd, evID)
+      function $chosen_emote(cmd, evID)
       {
        if (cmd === null)
         return;
@@ -8662,7 +8660,7 @@
        display.kappa.show(p, cfg.event.twitch.redeem.chosen_emote);
       }
 
-      async function $modified_emote(cmd, evID)
+      function $modified_emote(cmd, evID)
       {
        if (cmd === null)
         return;
@@ -9066,7 +9064,7 @@
       return true;
      }
 
-     async function _eListFromCmd(cmd, dup = null, andCheers = true)
+     function _eListFromCmd(cmd, dup = null, andCheers = true)
      {
       const r = [];
       const u = _parseUser(cmd, true);
@@ -9076,7 +9074,7 @@
        r.push(...twitch.parse.content.bits(cmd));
       r.push(...twitch.parse.content.twitch(cmd, dup));
       if (cfg.display.useEmoji)
-       r.push(...await twitch.parse.content.emoji(cmd, dup));
+       r.push(...twitch.parse.content.emoji(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
        r.push(...twitch.parse.content['3rdparty'].ffz.general(cmd, dup));
@@ -10580,7 +10578,7 @@
 
      const $content = function()
      {
-      async function $emoji(cmd, dup = null)
+      function $emoji(cmd, dup = null)
       {
        const msg = _getMessage(cmd);
        if (msg === false)
@@ -11257,7 +11255,7 @@
        return r;
       r.push(...await youtube.parse.content.youtube(cmd, dup));
       if (cfg.display.useEmoji)
-       r.push(...await youtube.parse.content.emoji(cmd, dup));
+       r.push(...youtube.parse.content.emoji(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
        r.push(...youtube.parse.content['3rdparty'].ffz.general(cmd, dup));
@@ -11791,7 +11789,7 @@
            _ChatMessageEvent(jData);
            return;
           case 'UserBannedEvent':
-           await _UserBannedEvent(jData);
+           _UserBannedEvent(jData);
            return;
           case 'StreamHostEvent':
            _StreamHostEvent(jData);
@@ -11830,7 +11828,7 @@
          kick.parse.line(jData);
         }
 
-        async function _UserBannedEvent(jData)
+        function _UserBannedEvent(jData)
         {
          if (jData.hasOwnProperty('user') && jData.user !== null && jData.user.hasOwnProperty('id') && jData.user.id !== null && _msgHistory.hasOwnProperty(jData.user.id))
          {
@@ -11845,12 +11843,12 @@
          if (jData.hasOwnProperty('expires_at') && jData.expires_at !== null)
          {
           if (cfg.event.kick.timeout !== false)
-           await kick.parse.event.timeout(jData);
+           kick.parse.event.timeout(jData);
          }
          else
          {
           if (cfg.event.kick.ban !== false)
-           await kick.parse.event.ban(jData);
+           kick.parse.event.ban(jData);
          }
         }
 
@@ -12262,7 +12260,7 @@
     {
      const $content = function()
      {
-      async function $emoji(cmd, dup = null)
+      function $emoji(cmd, dup = null)
       {
        if (!cmd.hasOwnProperty('content') || cmd.content === null)
         return [];
@@ -12523,21 +12521,21 @@
        if (!cmd.hasOwnProperty('content') || cmd.content === null)
         return;
        const lv = await _level(cmd);
-       if (await _parseCommand(cmd, lv))
+       if (_parseCommand(cmd, lv))
         return;
        if ((lv & cfg.display.access) === 0)
         return;
-       const p = _handleDuplicates(await _eListFromCmd(cmd));
+       const p = _handleDuplicates(_eListFromCmd(cmd));
        if (p.length === 0)
         return;
        display.emote.addToShowList(p);
        display.emote.showEmotes();
       }
 
-      async function _parseCommand(cmd, lv)
+      function _parseCommand(cmd, lv)
       {
        const m = cmd.content.toLowerCase();
-       const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+       const a = _handleDuplicates(_eListFromCmd(cmd, true));
        let mID = false;
        if (cmd.hasOwnProperty('id'))
         mID = 'kick:' + cmd.id;
@@ -12578,7 +12576,7 @@
        display.kappa.show(e, r, {[cVARs.evt.user]: u.display, [cVARs.evt.amount]: c});
       }
 
-      async function $sub(cmd)
+      function $sub(cmd)
       {
        if (!cmd.hasOwnProperty('months') || cmd.months === null)
         return;
@@ -12601,7 +12599,7 @@
        display.kappa.show(false, rs, {[cVARs.evt.user]: cmd.username, [cVARs.evt.amount]: cmd.months});
       }
 
-      async function $gift(cmd)
+      function $gift(cmd)
       {
        if (!cmd.hasOwnProperty('gifter_username') || cmd.gifter_username === null)
         return;
@@ -12625,7 +12623,7 @@
        display.kappa.show(false, gpb, {[cVARs.evt.sender]: cmd.gifter_username, [cVARs.evt.amount]: mpmgc});
       }
 
-      async function $ban(cmd)
+      function $ban(cmd)
       {
        if (!cmd.hasOwnProperty('user') || cmd.user === null)
         return;
@@ -12636,7 +12634,7 @@
        display.kappa.show(false, cfg.event.kick.ban, {[cVARs.evt.user]: cmd.user.username});
       }
 
-      async function $timeout(cmd)
+      function $timeout(cmd)
       {
        if (!cmd.hasOwnProperty('user') || cmd.user === null)
         return;
@@ -12885,7 +12883,7 @@
       return true;
      }
 
-     async function _eListFromCmd(cmd, dup = null)
+     function _eListFromCmd(cmd, dup = null)
      {
       const r = [];
       let u = null;
@@ -12898,7 +12896,7 @@
        return r;
       r.push(...kick.parse.content.kick(cmd, dup));
       if (cfg.display.useEmoji)
-       r.push(...await kick.parse.content.emoji(cmd, dup));
+       r.push(...kick.parse.content.emoji(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
        r.push(...kick.parse.content['3rdparty'].ffz.general(cmd, dup));
@@ -14342,13 +14340,13 @@
      {
       const $parseCommand = function()
       {
-       async function $c_parseCommand(msg, lv, eA = false, mID = false)
+       function $c_parseCommand(msg, lv, eA = false, mID = false)
        {
         const kNow = Date.now();
         let foundAdvCmd = false;
         for (const k of cfg.commands)
         {
-         const r = await _adv(msg, lv, k, kNow, eA, mID);
+         const r = _adv(msg, lv, k, kNow, eA, mID);
          if (r.done === true)
           return r.ret;
          if (r.found)
@@ -14387,7 +14385,7 @@
         return true;
        }
 
-       async function _adv(msg, lv, k, kNow, eA = false, mID = false)
+       function _adv(msg, lv, k, kNow, eA = false, mID = false)
        {
         const r = {
          done: false,
@@ -14549,7 +14547,7 @@
       return ret;
      }
 
-     async function $eListFromMsg(user, msg)
+     function $eListFromMsg(user, msg)
      {
       if (cfg.ignore.users !== false && cfg.ignore.users.includes(user))
        return false;
@@ -14557,7 +14555,7 @@
       const chID = 'twitch:' + twitch.net.channelID;
       r.push(..._parseTwitch(msg));
       if (cfg.display.useEmoji)
-       r.push(...await service.parse.content.emoji(msg));
+       r.push(...service.parse.content.emoji(msg));
       if (cfg.display.extended.useFFZ)
       {
        r.push(...service.parse.content['3rdparty'].ffz.general(msg, chID));
@@ -14761,7 +14759,7 @@
       let p = false;
       if (cfg.event.tip.useMsgEmotes && m !== false)
       {
-       p = await service.parse.eListFromMsg(n, m);
+       p = service.parse.eListFromMsg(n, m);
        p = service.parse.handleDuplicates(p);
       }
       if (p === false && cfg.event.tip.useProfileImage && n !== false)
@@ -15082,7 +15080,7 @@
      let p = false;
      if (cfg.event.tip.useMsgEmotes && dMsg !== false)
      {
-      p = await service.parse.eListFromMsg(dName, dMsg);
+      p = service.parse.eListFromMsg(dName, dMsg);
       p = service.parse.handleDuplicates(p);
      }
      if (p === false && cfg.event.tip.useProfileImage && dName !== false)
