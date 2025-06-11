@@ -3225,7 +3225,7 @@
       document.documentElement.style.setProperty('--height', sH + 'px');
       document.documentElement.style.setProperty('--width', sW + 'px');
       const style = cfg.display.styles[shared.rnd(cfg.display.styles.length)];
-      if (style === undefined)
+      if (typeof style === 'undefined')
        return;
       display.emote.list[style](_appendHolidayZWE(e), sW, sH, eH);
      }
@@ -3250,7 +3250,7 @@
        if (_toShow.length > 0)
        {
         let e = null;
-        while ((e = _toShow.pop()) !== undefined)
+        while (typeof (e = _toShow.pop()) !== 'undefined')
         {
          if (!e.hasOwnProperty('url') || !e.hasOwnProperty('timestamp'))
           continue;
@@ -3296,7 +3296,7 @@
        }
       }
       let e = null;
-      while ((e = _toShow.shift()) !== undefined)
+      while (typeof (e = _toShow.shift()) !== 'undefined')
       {
        _queueEmote(e);
        if (cfg.emote.max > 0 && _eActive > cfg.emote.max)
@@ -4712,7 +4712,7 @@
        return;
       }
       let e = null;
-      while ((e = _toKappa.shift()) !== undefined)
+      while (typeof (e = _toKappa.shift()) !== 'undefined')
       {
        nK = false;
        const a = {};
@@ -4842,12 +4842,12 @@
        s = keys[shared.rnd(keys.length)];
        p = kS[s];
       }
-      if (s === undefined)
+      if (typeof s === 'undefined')
        return false;
       let iKC = cfg.display.kappa.count;
       if (cfg.display.kappa.styles.hasOwnProperty(s) && cfg.display.kappa.styles[s].hasOwnProperty('count') && cfg.display.kappa.styles[s].count > 0)
        iKC = cfg.display.kappa.styles[s].count;
-      if (p === undefined)
+      if (typeof p === 'undefined')
        p = {};
       let pMax = cfg.emote.max;
       if (p.hasOwnProperty('count'))
@@ -5085,7 +5085,9 @@
       const kStyle = _getNextKappaEx(kStyles, kParams);
       if (kStyle === false)
        return;
-      if (kStyle.style === undefined)
+      if (!kStyle.hasOwnProperty('style'))
+       return;
+      if (typeof kStyle.style === 'undefined')
        return;
       if (kStyle.prefs.hasOwnProperty('emotes'))
       {
@@ -17515,7 +17517,7 @@
      const r = new Uint32Array(1);
      window.crypto.getRandomValues(r);
      const f = r[0] / 4294967295;
-     if (m === undefined)
+     if (typeof m === 'undefined')
       return f;
      if (m < 1)
       return f * m;
