@@ -257,6 +257,11 @@ Configuration Information
      - [ ] If `'noto'`, emojis will be shown using the "**noto**" font.
      - [ ] If `'blob'`, emojis will be shown using the "**blobmoji**" font.
      - [ ] If `'facebook'`, emojis will be shown using the "**Facebook emoji**" font.
+     - [ ] If `'apple'`, emojis will be shown using the "**Apple emoji**" font.
+     - [ ] If `'joypixels'`, emojis will be shown using the "**Joy Pixels emoji**" font.
+     - [ ] If `'tossface'`, emojis will be shown using the "**Toss Face emoji**" font.
+     - [ ] If `'whatsapp'`, emojis will be shown using the "**WhatsApp emoji**" font.
+     - [ ] If `'oneui'`, emojis will be shown using the "**Samsung OneUI emoji**" font.
 
   * `extended`  
     *Settings related to third-party emotes.*
