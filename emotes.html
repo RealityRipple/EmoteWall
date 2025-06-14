@@ -289,6 +289,10 @@
        begin: false,
        success: false
       },
+      treasuretrain: {
+       begin: false,
+       success: false
+      },
       poll: {
        begin: false,
        end: false
@@ -6375,8 +6379,15 @@
         function _train_begin(ev)
         {
          let cfTrain = cfg.event.twitch.hypetrain;
-         if (ev.is_golden_kappa_train)
-          cfTrain = cfg.event.twitch.kappatrain;
+         switch (ev.type)
+         {
+          case 'golden_kappa':
+           cfTrain = cfg.event.twitch.kappatrain;
+           break;
+          case 'treasure':
+           cfTrain = cfg.event.twitch.treasuretrain;
+           break;
+         }
          if (cfTrain === false)
           return;
          if (!cfTrain.hasOwnProperty('begin'))
@@ -6389,8 +6400,15 @@
         function _train_end(ev)
         {
          let cfTrain = cfg.event.twitch.hypetrain;
-         if (ev.is_golden_kappa_train)
-          cfTrain = cfg.event.twitch.kappatrain;
+         switch (ev.type)
+         {
+          case 'golden_kappa':
+           cfTrain = cfg.event.twitch.kappatrain;
+           break;
+          case 'treasure':
+           cfTrain = cfg.event.twitch.treasuretrain;
+           break;
+         }
          if (cfTrain === false)
           return;
          if (!cfTrain.hasOwnProperty('success'))
@@ -6606,8 +6624,8 @@
         {id: twitch.net.eventSubCtl.sub.auto_redeem, v: '2', scope: [cScopes.twitch.redemptions], cfg: ['event.twitch.redeem.random_emote', 'event.twitch.redeem.chosen_emote', 'event.twitch.redeem.modified_emote']},
         {id: twitch.net.eventSubCtl.sub.shoutout.create, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']},
         {id: twitch.net.eventSubCtl.sub.shoutout.receive, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']},
-        {id: twitch.net.eventSubCtl.sub.hypetrain.begin, scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
-        {id: twitch.net.eventSubCtl.sub.hypetrain.end, scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.success']},
+        {id: twitch.net.eventSubCtl.sub.hypetrain.begin, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
+        {id: twitch.net.eventSubCtl.sub.hypetrain.end, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.success']},
         {id: twitch.net.eventSubCtl.sub.poll.begin, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.begin']},
         {id: twitch.net.eventSubCtl.sub.poll.end, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.end']},
         {id: twitch.net.eventSubCtl.sub.prediction.begin, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.begin']},
@@ -18306,6 +18324,8 @@
      if (cfg.event.twitch.hypetrain !== false && ((cfg.event.twitch.hypetrain.hasOwnProperty('begin') && cfg.event.twitch.hypetrain.begin !== false) || (cfg.event.twitch.hypetrain.hasOwnProperty('success') && cfg.event.twitch.hypetrain.success !== false)))
       r.push(cScopes.twitch.hypetrains);
      else if (cfg.event.twitch.kappatrain !== false && ((cfg.event.twitch.kappatrain.hasOwnProperty('begin') && cfg.event.twitch.kappatrain.begin !== false) || (cfg.event.twitch.kappatrain.hasOwnProperty('success') && cfg.event.twitch.kappatrain.success !== false)))
+      r.push(cScopes.twitch.hypetrains);
+     else if (cfg.event.twitch.treasuretrain !== false && ((cfg.event.twitch.treasuretrain.hasOwnProperty('begin') && cfg.event.twitch.treasuretrain.begin !== false) || (cfg.event.twitch.treasuretrain.hasOwnProperty('success') && cfg.event.twitch.treasuretrain.success !== false)))
       r.push(cScopes.twitch.hypetrains);
      if (cfg.event.twitch.goal !== false && ((cfg.event.twitch.goal.hasOwnProperty('begin') && cfg.event.twitch.goal.begin !== false) || (cfg.event.twitch.goal.hasOwnProperty('achieved') && cfg.event.twitch.goal.achieved !== false)))
       r.push(cScopes.twitch.goals);
