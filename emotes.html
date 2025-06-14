@@ -13176,6 +13176,9 @@
      {
       const $emoji = function()
       {
+       let _lastF = 0;
+       let _lastC = 0;
+
        function $c_emoji(msg, dup = null)
        {
         if (!service.emotes.hasOwnProperty('emoji'))
@@ -13278,11 +13281,35 @@
         return ret;
        }
 
+       function _anyFont()
+       {
+        let base = 30;
+        if (cfg.display.useEmoji.slice(0, 7) === 'rotate:')
+         base = parseInt(cfg.display.useEmoji.slice(7), 10);
+        if (!Number.isInteger(base))
+         base = 30;
+        if (base < 1)
+         base = 30;
+        const rot = base * 60 * 1000;
+        const tNow = Date.now();
+        if (_lastC < tNow - rot)
+        {
+         _lastF = shared.rnd(thirdparty.emoji_fonts.length);
+         _lastC = tNow;
+        }
+        return _lastF;
+       }
+
        function _showEmoji(addList, c, p, dup = null)
        {
         if (!service.emotes.emoji.hasOwnProperty(c))
          return false;
         const e = service.emotes.emoji[c];
+        let sURL = e.url;
+        if (cfg.display.useEmoji === 'rotate' || cfg.display.useEmoji.slice(0, 7) === 'rotate:')
+         sURL = sURL.replaceAll(cVARs.url.setID, thirdparty.emoji_fonts[_anyFont()]);
+        else if (cfg.display.useEmoji === 'shuffle')
+         sURL = sURL.replaceAll(cVARs.url.setID, thirdparty.emoji_fonts[shared.rnd(thirdparty.emoji_fonts.length)]);
         if (!addList.hasOwnProperty(e.id))
          addList[e.id] = 0;
         else
@@ -13293,7 +13320,7 @@
           return false;
         }
         addList[e.id]++;
-        return {svc: cSources.service.emoji, url: e.url, str: String.fromCodePoint(parseInt(c, 16)), pos: p, width: e.width, height: e.height};
+        return {svc: cSources.service.emoji, url: sURL, str: String.fromCodePoint(parseInt(c, 16)), pos: p, width: e.width, height: e.height};
        }
 
        function _showCrew(addList, p, dup = null)
@@ -17394,6 +17421,10 @@
       thirdparty.emoji_fonts = fRet.json;
      if (set === true)
       set = thirdparty.emoji_fonts[0];
+     else if (set.slice(0, 6) === 'rotate')
+      set = false;
+     else if (set === 'shuffle')
+      set = false;
      else if (!thirdparty.emoji_fonts.includes(set))
       set = thirdparty.emoji_fonts[0];
      const r = await shared.httpRequest('GET', cURLs.cdn.emoji.list, {}, null, false);
@@ -17408,15 +17439,18 @@
      {
       if (!j.hasOwnProperty(id))
        continue;
+      let u = cURLs.cdn.emoji.image;
+      if (!!set)
+       u = u.replaceAll(cVARs.url.setID, set);
       if (j[id].hasOwnProperty('t'))
       {
        if (j[id].hasOwnProperty('s') && j[id].s === -1 && unqSkip.includes(id))
         continue;
-       const u = cURLs.cdn.emoji.image.replaceAll(cVARs.url.setID, set).replaceAll(cVARs.url.emojiID, j[id].t);
+       u = u.replaceAll(cVARs.url.emojiID, j[id].t);
        _addEmote(service.emotes.emoji, cSources.scope.global, id, j[id].t, u, false, 112, 112);
        continue;
       }
-      const u = cURLs.cdn.emoji.image.replaceAll(cVARs.url.setID, set).replaceAll(cVARs.url.emojiID, id);
+      u = u.replaceAll(cVARs.url.emojiID, id);
       _addEmote(service.emotes.emoji, cSources.scope.global, id, id, u, false, 112, 112);
      }
     }

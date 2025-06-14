@@ -262,6 +262,9 @@ Configuration Information
      - [ ] If `'tossface'`, emojis will be shown using the "**Toss Face emoji**" font.
      - [ ] If `'whatsapp'`, emojis will be shown using the "**WhatsApp emoji**" font.
      - [ ] If `'oneui'`, emojis will be shown using the "**Samsung OneUI emoji**" font.
+     - [ ] If `'shuffle'`, emojis will be shown using a randomly selected font for every emoji.
+     - [ ] If `'rotate'`, emojis will be shown using a font that is randomly changed every 30 minutes.
+     - [ ] If `'rotate:n'`, emojis will be shown using a font that is randomly changed every n minutes. For example, `'rotate:15'` would choose a new font every 15 minutes.
 
   * `extended`  
     *Settings related to third-party emotes.*
