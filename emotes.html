@@ -1401,6 +1401,7 @@
       emote: 'https://files.kick.com/emotes/' + cVARs.url.emoteID + '/fullsize'
      }),
      emoji: Object.freeze({
+      fonts: 'https://cdn.jsdelivr.net/gh/realityripple/emoji/fonts.min.json',
       list: 'https://cdn.jsdelivr.net/gh/realityripple/emoji/list.min.json',
       image: 'https://cdn.jsdelivr.net/gh/realityripple/emoji/' + cVARs.url.setID + '/' + cVARs.url.emojiID + '.png'
      }),
@@ -17386,8 +17387,15 @@
     async function $emoji(set)
     {
      const unqSkip = ['00a9', '00ae', '2122', '24c2'];
+     const fRet = await shared.httpRequest('GET', cURLs.cdn.emoji.fonts, {}, null, false);
+     if (!fRet.success)
+      thirdparty.emoji_fonts = ['twemoji', 'openmoji', 'noto', 'blob', 'facebook', 'apple', 'joypixels', 'tossface', 'whatsapp', 'oneui'];
+     else
+      thirdparty.emoji_fonts = fRet.json;
      if (set === true)
-      set = 'twemoji';
+      set = thirdparty.emoji_fonts[0];
+     else if (!thirdparty.emoji_fonts.includes(set))
+      set = thirdparty.emoji_fonts[0];
      const r = await shared.httpRequest('GET', cURLs.cdn.emoji.list, {}, null, false);
      if (!r.success)
       return;
@@ -17451,6 +17459,7 @@
     return {
      timer: false,
      interval: 60000,
+     emoji_fonts: [],
      ffz: $ffz,
      bttv: $bttv,
      '7tv': $7tv,
