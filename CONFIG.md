@@ -257,6 +257,14 @@ Configuration Information
      - [ ] If `'noto'`, emojis will be shown using the "**noto**" font.
      - [ ] If `'blob'`, emojis will be shown using the "**blobmoji**" font.
      - [ ] If `'facebook'`, emojis will be shown using the "**Facebook emoji**" font.
+     - [ ] If `'apple'`, emojis will be shown using the "**Apple emoji**" font.
+     - [ ] If `'joypixels'`, emojis will be shown using the "**Joy Pixels emoji**" font.
+     - [ ] If `'tossface'`, emojis will be shown using the "**Toss Face emoji**" font.
+     - [ ] If `'whatsapp'`, emojis will be shown using the "**WhatsApp emoji**" font.
+     - [ ] If `'oneui'`, emojis will be shown using the "**Samsung OneUI emoji**" font.
+     - [ ] If `'shuffle'`, emojis will be shown using a randomly selected font for every emoji.
+     - [ ] If `'rotate'`, emojis will be shown using a font that is randomly changed every 30 minutes.
+     - [ ] If `'rotate:n'`, emojis will be shown using a font that is randomly changed every n minutes. For example, `'rotate:15'` would choose a new font every 15 minutes.
 
   * `extended`  
     *Settings related to third-party emotes.*
@@ -857,7 +865,7 @@ Configuration Information
           - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
 
     * `kappatrain`  
-      *Settings related to golden kapppa trains.*  
+      *Settings related to golden kappa trains.*  
       Requires `channel:read:hype_train` scope.
 
       * `begin`  
@@ -874,6 +882,30 @@ Configuration Information
         - [ ] If `false`, no kappagen will occur on golden kappa train completions.
         - [ ] If Integer, the value is the minimum level required for a golden kappa train to trigger a kappagen.
           - [ ] If `0`, no kappagen will occur on golden kappa train success.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-5'` or `'6-10'`, or an open-maximum range such as `'11+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `treasuretrain`  
+      *Settings related to treasure trains.*  
+      Requires `channel:read:hype_train` scope.
+
+      * `begin`  
+        *A treasure train begins in your channel.*  
+        This value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `success`  
+        *Minimum level for a kappagen on treasure train completion.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on all treasure train completions.
+        - [ ] If `false`, no kappagen will occur on treasure train completions.
+        - [ ] If Integer, the value is the minimum level required for a treasure train to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur on treasure train success.
         - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-5'` or `'6-10'`, or an open-maximum range such as `'11+'`.  
         Each value can be a boolean or array:
           - [ ] If `true`, a kappagen will occur.
