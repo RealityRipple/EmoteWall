@@ -17525,28 +17525,41 @@
        if (bVal === false)
        {
         txtInput.setAttribute('readonly', 'readonly');
-        txtInput.addEventListener('focus', function(){txtInput.select();});
+        txtInput.onfocus = txtInput.select;
        }
        divInput.appendChild(txtInput);
        dlgInput.appendChild(divInput);
        const divButtons = document.createElement('div');
+       let cmdOK = null;
        if (bVal)
        {
-        const cmdOK = document.createElement('button');
+        cmdOK = document.createElement('button');
         cmdOK.setAttribute('type', 'button');
         cmdOK.setAttribute('class', 'yes');
         cmdOK.setAttribute('disabled', 'disabled');
         cmdOK.textContent = 'OK';
-        cmdOK.addEventListener('click', function(){if (txtInput.value.length > 0) resolve(txtInput.value); else resolve(false); dlgInput.close(); document.body.removeChild(dlgInput);});
+        cmdOK.onclick = function()
+        {
+         if (txtInput.value.length > 0)
+          resolve(txtInput.value);
+         else
+          resolve(false);
+         dlgInput.close();
+         txtInput.onkeyup = null;
+         cmdOK.onclick = null;
+         cmdCancel.onclick = null;
+         document.body.removeChild(dlgInput);
+        };
         divButtons.appendChild(cmdOK);
-        txtInput.addEventListener('keyup', function(ev){
+        txtInput.onkeyup = function(ev)
+        {
          if (txtInput.value.length === 0) 
           cmdOK.setAttribute('disabled', 'disabled');
          else
           cmdOK.removeAttribute('disabled');
          if (ev.key === 'Enter')
           cmdOK.click();
-        });
+        };
        }
        const cmdCancel = document.createElement('button');
        cmdCancel.setAttribute('type', 'button');
@@ -17556,13 +17569,35 @@
        else
        {
         cmdCancel.textContent = 'Close';
-        txtInput.addEventListener('keypress', function(ev){if (ev.key === 'Enter') cmdCancel.click();});
+        txtInput.onkeypress = function(ev)
+        {
+         if (ev.key === 'Enter')
+          cmdCancel.click();
+        };
        }
-       cmdCancel.addEventListener('click', function(){resolve(false); dlgInput.close(); document.body.removeChild(dlgInput);});
+       cmdCancel.onclick = function()
+       {
+        resolve(false);
+        dlgInput.close();
+        txtInput.onfocus = null;
+        if (bVal)
+        {
+         txtInput.onkeyup = null;
+         cmdOK.onclick = null;
+        }
+        else
+        {
+         txtInput.onfocus = null;
+         txtInput.onkeypress = null;
+        }
+        cmdCancel.onclick = null;
+        document.body.removeChild(dlgInput);
+       };
        divButtons.appendChild(cmdCancel);
        dlgInput.appendChild(divButtons);
        document.body.appendChild(dlgInput);
        dlgInput.showModal();
+       txtInput.focus();
       }
      );
      return p;
