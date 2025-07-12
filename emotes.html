@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v1.2
+    * v1.3
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -3224,6 +3224,7 @@
 
      function _queueEmote(e)
      {
+      shared.ec.halt();
       const sW = window.innerWidth;
       const sH = window.innerHeight;
       const eH = Math.max(cfg.emote.size.min, Math.min(cfg.emote.size.max, Math.floor(sW * cfg.emote.size.ratio.normal), Math.floor(sH * cfg.emote.size.ratio.normal)));
@@ -5157,6 +5158,7 @@
        estMS = Math.floor(cfg.emote.time * 1000 * timing.kappa[kStyle.style].time);
       else if (timing.display.hasOwnProperty(kStyle.style) && timing.display[kStyle.style].hasOwnProperty('time'))
        estMS = Math.floor(cfg.emote.time * 1000 * timing.display[kStyle.style].time);
+      shared.ec.halt();
       switch (kStyle.style)
       {
        case 'Stampede':
@@ -5656,14 +5658,14 @@
 
     function _setImgSrc(img, url)
     {
+     shared.ec.halt();
      let iTry = 1;
      img.alt = '';
      img.onload = function()
      {
       img.onerror = null;
       img.onload = null;
-      if (img.naturalWidth !== img.naturalHeight)
-       shared.ec.save(url, img.naturalWidth, img.naturalHeight);
+      shared.ec.save(url, img.naturalWidth, img.naturalHeight);
      };
      img.onerror = function()
      {
@@ -8158,6 +8160,10 @@
 
       function _parseHighlight(cmd)
       {
+       if (!cfg.event.twitch.redeem.hasOwnProperty('highlight'))
+        return false;
+       if (cfg.event.twitch.redeem.highlight === false)
+        return false;
        if (!cmd.hasOwnProperty('tags'))
         return false;
        if (!cmd.tags.hasOwnProperty('msg-id'))
@@ -8625,6 +8631,10 @@
 
       function $random_emote(cmd, evID)
       {
+       if (!cfg.event.twitch.redeem.hasOwnProperty('random_emote'))
+        return;
+       if (cfg.event.twitch.redeem.random_emote === false)
+        return;
        if (cmd === null)
         return;
        if (!cmd.hasOwnProperty('id'))
@@ -8653,6 +8663,10 @@
 
       function $chosen_emote(cmd, evID)
       {
+       if (!cfg.event.twitch.redeem.hasOwnProperty('chosen_emote'))
+        return;
+       if (cfg.event.twitch.redeem.chosen_emote === false)
+        return;
        if (cmd === null)
         return;
        if (!cmd.hasOwnProperty('id'))
@@ -8681,6 +8695,10 @@
 
       function $modified_emote(cmd, evID)
       {
+       if (!cfg.event.twitch.redeem.hasOwnProperty('modified_emote'))
+        return;
+       if (cfg.event.twitch.redeem.modified_emote === false)
+        return;
        if (cmd === null)
         return;
        if (!cmd.hasOwnProperty('id'))
@@ -17523,28 +17541,41 @@
        if (bVal === false)
        {
         txtInput.setAttribute('readonly', 'readonly');
-        txtInput.addEventListener('focus', function(){txtInput.select();});
+        txtInput.onfocus = txtInput.select;
        }
        divInput.appendChild(txtInput);
        dlgInput.appendChild(divInput);
        const divButtons = document.createElement('div');
+       let cmdOK = null;
        if (bVal)
        {
-        const cmdOK = document.createElement('button');
+        cmdOK = document.createElement('button');
         cmdOK.setAttribute('type', 'button');
         cmdOK.setAttribute('class', 'yes');
         cmdOK.setAttribute('disabled', 'disabled');
         cmdOK.textContent = 'OK';
-        cmdOK.addEventListener('click', function(){if (txtInput.value.length > 0) resolve(txtInput.value); else resolve(false); dlgInput.close(); document.body.removeChild(dlgInput);});
+        cmdOK.onclick = function()
+        {
+         if (txtInput.value.length > 0)
+          resolve(txtInput.value);
+         else
+          resolve(false);
+         dlgInput.close();
+         txtInput.onkeyup = null;
+         cmdOK.onclick = null;
+         cmdCancel.onclick = null;
+         document.body.removeChild(dlgInput);
+        };
         divButtons.appendChild(cmdOK);
-        txtInput.addEventListener('keyup', function(ev){
+        txtInput.onkeyup = function(ev)
+        {
          if (txtInput.value.length === 0) 
           cmdOK.setAttribute('disabled', 'disabled');
          else
           cmdOK.removeAttribute('disabled');
          if (ev.key === 'Enter')
           cmdOK.click();
-        });
+        };
        }
        const cmdCancel = document.createElement('button');
        cmdCancel.setAttribute('type', 'button');
@@ -17554,13 +17585,35 @@
        else
        {
         cmdCancel.textContent = 'Close';
-        txtInput.addEventListener('keypress', function(ev){if (ev.key === 'Enter') cmdCancel.click();});
+        txtInput.onkeypress = function(ev)
+        {
+         if (ev.key === 'Enter')
+          cmdCancel.click();
+        };
        }
-       cmdCancel.addEventListener('click', function(){resolve(false); dlgInput.close(); document.body.removeChild(dlgInput);});
+       cmdCancel.onclick = function()
+       {
+        resolve(false);
+        dlgInput.close();
+        txtInput.onfocus = null;
+        if (bVal)
+        {
+         txtInput.onkeyup = null;
+         cmdOK.onclick = null;
+        }
+        else
+        {
+         txtInput.onfocus = null;
+         txtInput.onkeypress = null;
+        }
+        cmdCancel.onclick = null;
+        document.body.removeChild(dlgInput);
+       };
        divButtons.appendChild(cmdCancel);
        dlgInput.appendChild(divButtons);
        document.body.appendChild(dlgInput);
        dlgInput.showModal();
+       txtInput.focus();
       }
      );
      return p;
@@ -18077,10 +18130,29 @@
     const $ec = function()
     {
      const _tmpEC = {};
+     const _iHalt = 15000;
+     const _iTDef = 2000;
+     const _iTMin = 500;
+     const _iTStep = 50;
+     const _iPre = 16;
+     let _iTmr = _iTDef;
+     let _bActive = false;
+     let _tCache = false;
+     let _tNext = false;
+
+     function $init()
+     {
+      _bActive = true;
+      _tNext = false;
+      _nextTick();
+     }
 
      function $save(url, w, h)
      {
-      _tmpEC[url] = {width: w, height: h};
+      if (w === h)
+       _tmpEC[url] = null;
+      else
+       _tmpEC[url] = {width: w, height: h};
      }
 
      function $get(url)
@@ -18090,9 +18162,108 @@
       return _tmpEC[url];
      }
 
+     function $halt()
+     {
+      _iTmr = _iTDef;
+      _bActive = false;
+      if (_tCache !== false)
+      {
+       window.clearTimeout(_tCache);
+       _tCache = false;
+      }
+      if (_tNext !== false)
+       window.clearTimeout(_tNext);
+      _tNext = window.setTimeout(_resume, _iHalt);
+     }
+
+     function _resume()
+     {
+      if (_bActive)
+       return;
+      _bActive = true;
+      if (_tNext !== false)
+      {
+       window.clearTimeout(_tNext);
+       _tNext = false;
+      }
+      if (_tCache !== false)
+       window.clearTimeout(_tCache);
+      _tCache = window.setTimeout(_tick, _iTmr);
+     }
+
+     function _tick()
+     {
+      if (!_bActive)
+       return;
+      if (service.cSafe.length === 0)
+      {
+       _iTmr = _iTDef;
+       _nextTick();
+       return;
+      }
+      const toCache = [];
+      for (let i = 0, l = service.cSafe.length; i < l; i++)
+      {
+       if (_tmpEC.hasOwnProperty(service.cSafe[i].url))
+        continue;
+       if (toCache.includes(service.cSafe[i].url))
+        continue;
+       toCache.push(service.cSafe[i].url);
+      }
+      if (toCache.length === 0)
+      {
+       _iTmr = _iTDef;
+       _nextTick();
+       return;
+      }
+      const uNext = toCache[shared.rnd(toCache.length)];
+      _doCache(uNext);
+     }
+
+     function _doCache(url)
+     {
+      const img = new Image();
+      const tStart = Date.now();
+      img.onload = function()
+      {
+       img.onload = null;
+       img.onerror = null;
+       const tDur = Date.now() - tStart;
+       shared.ec.save(url, img.naturalWidth, img.naturalHeight);
+       if (tDur < _iPre)
+       {
+        _tick();
+        return;
+       }
+       _iTmr -= _iTStep;
+       if (_iTmr < _iTMin)
+        _iTmr = _iTMin;
+       _nextTick();
+      };
+      img.onerror = function()
+      {
+       img.onload = null;
+       img.onerror = null;
+       _iTmr = _iTDef;
+       _nextTick();
+      };
+      img.src = url;
+     }
+
+     function _nextTick()
+     {
+      if (!_bActive)
+       return;
+      if (_tCache !== false)
+       window.clearTimeout(_tCache);
+      _tCache = window.setTimeout(_tick, _iTmr);
+     }
+
      return {
+      init: $init,
       save: $save,
-      get: $get
+      get: $get,
+      halt: $halt
      };
     }();
 
@@ -19023,6 +19194,7 @@
      }
      if (scks.length > 0)
       await Promise.allSettled(scks);
+     shared.ec.init();
      const svcs = [];
      if (bT)
       svcs.push(_twitch());
@@ -20290,6 +20462,10 @@
     border-radius: 3px;
     width: 100%;
     font-size: 3.5vmin;
+   }
+   dialog input:read-only
+   {
+    background-color: #282828;
    }
    dialog button
    {
