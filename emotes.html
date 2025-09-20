@@ -1528,6 +1528,9 @@
      const tInfo = 5;
      switch (i)
      {
+      case notice.Type.GLOBAL_NET:
+       _setNotice(i, [_nC.t.i, _nC.s.g], 'Online', 1);
+       break;
       case notice.Type.TWITCH_IRC:
        _setNotice(i, [_nC.t.i, _nC.s.t], 'IRC Connected', tInfo);
        break;
@@ -1593,6 +1596,9 @@
      }
      switch (e)
      {
+      case notice.Type.GLOBAL_NET:
+       _setNotice(e, [_nC.t.e, _nC.s.g], 'No Internet');
+       break;
       case notice.Type.GLOBAL_CFG:
        _setNotice(e, [_nC.t.e, _nC.s.g], 'Corrupted Configuration');
        break;
@@ -2034,6 +2040,7 @@
      expect: 0,
      active: 0,
      Type: Object.freeze({
+      GLOBAL_NET: Symbol(0x00),
       GLOBAL_CFG: Symbol(0x01),
       GLOBAL_OBS: Symbol(0x09),
       GLOBAL_DECRYPT: Symbol(0x0D),
@@ -19161,6 +19168,7 @@
     async function $c_startup()
     {
      shared.cfgHash = shared.hashCode(cfg);
+     await _isOnline();
      await _hashRefreshes();
      await twitch.net.oAuth.init();
      await youtube.net.oAuth.init();
@@ -19233,6 +19241,28 @@
       if (rK.status !== 'fulfilled' || rK.value === false)
        kick.net.dead = true;
      }
+    }
+
+    function _isOnline()
+    {
+     return new Promise(
+      function(resolve)
+      {
+       if (navigator.onLine)
+       {
+        resolve(true);
+        return;
+       }
+       const _evTemp = function()
+       {
+        notice.info(notice.Type.GLOBAL_NET);
+        window.removeEventListener('online', _evTemp);
+        resolve(true);
+       };
+       window.addEventListener('online', _evTemp);
+       notice.error(notice.Type.GLOBAL_NET);
+      }
+     );
     }
 
     const _hashRefreshes = function()
