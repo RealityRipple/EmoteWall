@@ -7338,7 +7338,7 @@
       if (!service.emotes.hasOwnProperty('twitch'))
        service.emotes.twitch = {};
       const r = await _findEmote_channel(chID, service.emotes.twitch);
-      if (r === false)
+      if (r.length === 0)
        return false;
       if (service.cList.length === 0)
        service.cList = r;
@@ -9235,15 +9235,15 @@
         if (!loginT.inUse)
          twitch.net.oAuth.clear();
        }
-       return false;
+       return [];
       }
       const j = r.json;
       if (j === null)
-       return false;
+       return [];
       if (!j.hasOwnProperty('data'))
-       return false;
+       return [];
       if (!Array.isArray(j.data))
-       return false;
+       return [];
       const ret = [];
       for (let i = 0, l = j.data.length; i < l; i++)
       {
@@ -10200,7 +10200,7 @@
       if (!service.emotes.hasOwnProperty('youtube'))
        service.emotes.youtube = {};
       const r = await _findEmote_channel(chName, service.emotes.youtube);
-      if (r === false)
+      if (r.length === 0)
        return false;
       if (service.cList.length === 0)
        service.cList = r;
@@ -11412,12 +11412,12 @@
       const b = 'u=' + encodeURIComponent(chName);
       const r = await shared.httpRequest('POST', url, {}, b);
       if (!r.success)
-       return false;
+       return [];
       const j = r.json;
       if (j === null)
-       return false;
+       return [];
       if (typeof j !== 'object')
-       return false;
+       return [];
       const ret = [];
       const jIDs = Object.keys(j);
       for (let i = 0, l = jIDs.length; i < l; i++)
@@ -12213,7 +12213,7 @@
       if (!service.emotes.hasOwnProperty('kick'))
        service.emotes.kick = {};
       const r = await _findEmote_channel(chName, service.emotes.kick);
-      if (r === false)
+      if (r.length === 0)
        return false;
       if (service.cList.length === 0)
        service.cList = r;
@@ -13057,13 +13057,13 @@
       {
        if (r.code === 404 && chName.includes('_'))
         return _findEmote_channel(chName, n, true);
-       return false;
+       return [];
       }
       const j = r.json;
       if (j === null)
-       return false;
+       return [];
       if (!Array.isArray(j))
-       return false;
+       return [];
       const ret = [];
       for (let i = 0, l = j.length; i < l; i++)
       {
