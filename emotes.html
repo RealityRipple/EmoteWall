@@ -13313,7 +13313,7 @@
        function _anyFont()
        {
         let base = 30;
-        if (cfg.display.useEmoji.slice(0, 7) === 'rotate:')
+        if (typeof cfg.display.useEmoji === 'string' && cfg.display.useEmoji.slice(0, 7) === 'rotate:')
          base = parseInt(cfg.display.useEmoji.slice(7), 10);
         if (!Number.isInteger(base))
          base = 30;
@@ -13335,10 +13335,13 @@
          return false;
         const e = service.emotes.emoji[c];
         let sURL = e.url;
-        if (cfg.display.useEmoji === 'rotate' || cfg.display.useEmoji.slice(0, 7) === 'rotate:')
-         sURL = sURL.replaceAll(cVARs.url.setID, thirdparty.emoji_fonts[_anyFont()]);
-        else if (cfg.display.useEmoji === 'shuffle')
-         sURL = sURL.replaceAll(cVARs.url.setID, thirdparty.emoji_fonts[shared.rnd(thirdparty.emoji_fonts.length)]);
+        if (typeof cfg.display.useEmoji === 'string')
+        {
+         if (cfg.display.useEmoji === 'rotate' || cfg.display.useEmoji.slice(0, 7) === 'rotate:')
+          sURL = sURL.replaceAll(cVARs.url.setID, thirdparty.emoji_fonts[_anyFont()]);
+         else if (cfg.display.useEmoji === 'shuffle')
+          sURL = sURL.replaceAll(cVARs.url.setID, thirdparty.emoji_fonts[shared.rnd(thirdparty.emoji_fonts.length)]);
+        }
         if (!addList.hasOwnProperty(e.id))
          addList[e.id] = 0;
         else
@@ -17450,7 +17453,7 @@
       thirdparty.emoji_fonts = fRet.json;
      if (set === true)
       set = thirdparty.emoji_fonts[0];
-     else if (set.slice(0, 6) === 'rotate')
+     else if (typeof set === 'string' && set.slice(0, 6) === 'rotate')
       set = false;
      else if (set === 'shuffle')
       set = false;
