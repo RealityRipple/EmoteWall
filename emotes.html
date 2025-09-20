@@ -19168,6 +19168,8 @@
     async function $c_startup()
     {
      shared.cfgHash = shared.hashCode(cfg);
+     if (shared.storage.getItem('emotewall.oobe') !== '0' && !window.hasOwnProperty('obsstudio') && navigator.userAgent.indexOf(' XSplitBroadcaster/') === -1)
+      await _inBrowser(window.location.protocol === 'file:');
      await _isOnline();
      await _hashRefreshes();
      await twitch.net.oAuth.init();
@@ -19241,6 +19243,417 @@
       if (rK.status !== 'fulfilled' || rK.value === false)
        kick.net.dead = true;
      }
+    }
+
+    function _inBrowser(local)
+    {
+     return new Promise(
+      function(resolve)
+      {
+       const divOOBE = document.createElement('div');
+       divOOBE.setAttribute('id', 'oobe');
+       const lblPre = document.createElement('h2');
+       if (local)
+        lblPre.textContent = 'Thank you for downloading';
+       else
+        lblPre.textContent = 'Thank you for configuring';
+       divOOBE.appendChild(lblPre);
+       const lblTitle = document.createElement('h1');
+       lblTitle.textContent = 'RealityRipple\'s Home-Made Emote Wall';
+       divOOBE.appendChild(lblTitle);
+       const nsSVG = 'http://www.w3.org/2000/svg';
+       const sGlobe = 'a8,8 0 1 0 .1,0z' +
+        'm-2,2.5c.3,0 .5,.1 .5,.4 0,.2-.1,.4-.3,.4-.3,0-.4,.2-.4,.4v1.2c0,.4-.4,.8-.8,.8-.5,0-.8,.3-.8,.8 0,.4-.4,.8-.8,.8a.8,.8 0 1 0 0,1.6c.4,0 .8,.3.8,.8v2.8a6,6 0 0 1-.5,-8.5l.8,-.7a6,6 0 0 1 1.6,-.8z' +
+        'm4.6,.4h.6l1.3,1h-1.9a.5,.5 0 0 1-.6,-.5c0,-.3.3,-.5.6,-.5z' +
+        'm-2,.9c.2,0 .5,.2.5,.5v.7a.6,.6 0 1 1-1.2,0v-.7c0,-.3.3,-.5.6,-.5z' +
+        'm2.2,.6h2a6,6 0 0 1 1.3,3.6l-.4,.2h-1.2c-.6,0-1.2,.5-1.2,1.2v1.3c0,.5-.3,.8-.8,.8a.8,.8 0 0 1-.8,-.8v-.8c.1,-.3 0,-.7-.4,-.8a.7,.7 0 0 1-.7,-.7v-1.3c0,-.5 .3,-1 .8,-1 .4,0 .7,-.3.7,-.7v-.3c0,-.3.3,-.7.7,-.7z';
+       const pctOBS = document.createElementNS(nsSVG, 'svg');
+       pctOBS.setAttribute('id', 'pctOBS');
+       pctOBS.setAttribute('viewBox', '0 0 1024 768');
+       const rectTitle = document.createElementNS(nsSVG, 'rect');
+       rectTitle.setAttribute('x', 0);
+       rectTitle.setAttribute('y', 0);
+       rectTitle.setAttribute('width', 1024);
+       rectTitle.setAttribute('height', 24);
+       rectTitle.setAttribute('style', 'fill:#2b2b2b');
+       pctOBS.appendChild(rectTitle);
+       const rectBG = document.createElementNS(nsSVG, 'rect');
+       rectBG.setAttribute('x', 0);
+       rectBG.setAttribute('y', 23);
+       rectBG.setAttribute('width', 1024);
+       rectBG.setAttribute('height', 745);
+       rectBG.setAttribute('style', 'fill:#3a393a');
+       pctOBS.appendChild(rectBG);
+       const rectLHead = document.createElementNS(nsSVG, 'rect');
+       rectLHead.setAttribute('x', 0);
+       rectLHead.setAttribute('y', 48);
+       rectLHead.setAttribute('width', 250);
+       rectLHead.setAttribute('height', 32);
+       rectLHead.setAttribute('style', 'fill:#464546');
+       pctOBS.appendChild(rectLHead);
+       const rectL = document.createElementNS(nsSVG, 'rect');
+       rectL.setAttribute('x', 0);
+       rectL.setAttribute('y', 80);
+       rectL.setAttribute('width', 250);
+       rectL.setAttribute('height', 506);
+       rectL.setAttribute('style', 'fill:#26262c');
+       pctOBS.appendChild(rectL);
+       const rectPreview = document.createElementNS(nsSVG, 'rect');
+       rectPreview.setAttribute('x', 256);
+       rectPreview.setAttribute('y', 48);
+       rectPreview.setAttribute('width', 576);
+       rectPreview.setAttribute('height', 538);
+       rectPreview.setAttribute('style', 'fill:#4c4c4c');
+       pctOBS.appendChild(rectPreview);
+       const rectPreDrop = document.createElementNS(nsSVG, 'rect');
+       rectPreDrop.setAttribute('x', 264);
+       rectPreDrop.setAttribute('y', 112);
+       rectPreDrop.setAttribute('width', 560);
+       rectPreDrop.setAttribute('height', 400);
+       rectPreDrop.setAttribute('style', 'fill:#000000;stroke:#ffffff;stroke-width:2;stroke-dasharray:6,3');
+       pctOBS.appendChild(rectPreDrop);
+       const rectRHead = document.createElementNS(nsSVG, 'rect');
+       rectRHead.setAttribute('x', 838);
+       rectRHead.setAttribute('y', 48);
+       rectRHead.setAttribute('width', 186);
+       rectRHead.setAttribute('height', 32);
+       rectRHead.setAttribute('style', 'fill:#464546');
+       pctOBS.appendChild(rectRHead);
+       const rectR = document.createElementNS(nsSVG, 'rect');
+       rectR.setAttribute('x', 838);
+       rectR.setAttribute('y', 80);
+       rectR.setAttribute('width', 186);
+       rectR.setAttribute('height', 506);
+       rectR.setAttribute('style', 'fill:#18181b');
+       pctOBS.appendChild(rectR);
+       const rectLowLHead = document.createElementNS(nsSVG, 'rect');
+       rectLowLHead.setAttribute('x', 0);
+       rectLowLHead.setAttribute('y', 592);
+       rectLowLHead.setAttribute('width', 250);
+       rectLowLHead.setAttribute('height', 32);
+       rectLowLHead.setAttribute('style', 'fill:#464546');
+       pctOBS.appendChild(rectLowLHead);
+       const rectLowL = document.createElementNS(nsSVG, 'rect');
+       rectLowL.setAttribute('x', 0);
+       rectLowL.setAttribute('y', 624);
+       rectLowL.setAttribute('width', 250);
+       rectLowL.setAttribute('height', 120);
+       rectLowL.setAttribute('style', 'fill:#1f1e1f');
+       pctOBS.appendChild(rectLowL);
+       const rectLowMHead = document.createElementNS(nsSVG, 'rect');
+       rectLowMHead.setAttribute('x', 256);
+       rectLowMHead.setAttribute('y', 592);
+       rectLowMHead.setAttribute('width', 576);
+       rectLowMHead.setAttribute('height', 32);
+       rectLowMHead.setAttribute('style', 'fill:#464546');
+       pctOBS.appendChild(rectLowMHead);
+       const txtLowMTitle = document.createElementNS(nsSVG, 'text');
+       txtLowMTitle.setAttribute('x', 520);
+       txtLowMTitle.setAttribute('y', 612);
+       txtLowMTitle.setAttribute('style', 'fill:#ffffff;font-family:sans-serif;font-size:14px');
+       txtLowMTitle.textContent = 'Sources';
+       pctOBS.appendChild(txtLowMTitle);
+       const rectLowM = document.createElementNS(nsSVG, 'rect');
+       rectLowM.setAttribute('x', 256);
+       rectLowM.setAttribute('y', 624);
+       rectLowM.setAttribute('width', 576);
+       rectLowM.setAttribute('height', 120);
+       rectLowM.setAttribute('style', 'fill:#1f1e1f');
+       pctOBS.appendChild(rectLowM);
+       const rectSel = document.createElementNS(nsSVG, 'rect');
+       rectSel.setAttribute('x', 257);
+       rectSel.setAttribute('y', 648);
+       rectSel.setAttribute('width', 574);
+       rectSel.setAttribute('height', 24);
+       rectSel.setAttribute('style', 'fill:#19344c');
+       pctOBS.appendChild(rectSel);
+       const icoGlobe = document.createElementNS(nsSVG, 'path');
+       icoGlobe.setAttribute('d', 'm274,652' + sGlobe);
+       icoGlobe.setAttribute('style', 'fill:#fefefe');
+       pctOBS.appendChild(icoGlobe);
+       const txtLabel = document.createElementNS(nsSVG, 'text');
+       txtLabel.setAttribute('x', 290);
+       txtLabel.setAttribute('y', 665);
+       txtLabel.setAttribute('style', 'fill:#ffffff;font-family:sans-serif;font-size:14px');
+       txtLabel.textContent = 'EmoteWall.html';
+       pctOBS.appendChild(txtLabel);
+       const rectLowRHead = document.createElementNS(nsSVG, 'rect');
+       rectLowRHead.setAttribute('x', 838);
+       rectLowRHead.setAttribute('y', 592);
+       rectLowRHead.setAttribute('width', 186);
+       rectLowRHead.setAttribute('height', 32);
+       rectLowRHead.setAttribute('style', 'fill:#464546');
+       pctOBS.appendChild(rectLowRHead);
+       const rectLowR = document.createElementNS(nsSVG, 'rect');
+       rectLowR.setAttribute('x', 838);
+       rectLowR.setAttribute('y', 624);
+       rectLowR.setAttribute('width', 186);
+       rectLowR.setAttribute('height', 120);
+       rectLowR.setAttribute('style', 'fill:#1f1e1f');
+       pctOBS.appendChild(rectLowR);
+       divOOBE.appendChild(pctOBS);
+       if (local)
+       {
+        rectLowM.setAttribute('id', 'svgSourceRect');
+        rectSel.setAttribute('id', 'svgSelRect');
+        const pctIcon = document.createElementNS(nsSVG, 'svg');
+        pctIcon.setAttribute('id', 'pctIcon');
+        pctIcon.setAttribute('viewBox', '0 0 68 64');
+        const rectIcon = document.createElementNS(nsSVG, 'rect');
+        rectIcon.setAttribute('x', 15);
+        rectIcon.setAttribute('y', 0);
+        rectIcon.setAttribute('width', 38);
+        rectIcon.setAttribute('height', 48);
+        rectIcon.setAttribute('style', 'fill:#FFFFFF;stroke:#000000;stroke-opacity:0.5');
+        pctIcon.appendChild(rectIcon);
+        const onIon = document.createElementNS(nsSVG, 'text');
+        onIon.setAttribute('x', '34');
+        onIon.setAttribute('y', '32');
+        onIon.setAttribute('style', 'text-anchor:middle;font-size: 24px;text-shadow: 1px 1px 4px #000000');
+        onIon.innerHTML = '&#x1f9c5;';
+        pctIcon.appendChild(onIon);
+        const txtIcon = document.createElementNS(nsSVG, 'text');
+        txtIcon.setAttribute('x', 0);
+        txtIcon.setAttribute('y', 62);
+        txtIcon.setAttribute('style', 'fill:#ffffff;font-family:sans-serif;font-size:9px;text-shadow:1px 1px 1px #000000');
+        txtIcon.textContent = 'EmoteWall.html';
+        pctIcon.appendChild(txtIcon);
+        divOOBE.appendChild(pctIcon);
+       }
+       else
+       {
+        rectLowM.setAttribute('height', 94);
+        const rectLowTools = document.createElementNS(nsSVG, 'rect');
+        rectLowTools.setAttribute('x', 257);
+        rectLowTools.setAttribute('y', 719);
+        rectLowTools.setAttribute('width', 574);
+        rectLowTools.setAttribute('height', 24);
+        rectLowTools.setAttribute('style', 'fill:#3a393a;stroke:#000000;stroke-width:1;');
+        pctOBS.appendChild(rectLowTools);
+        const rectLowAdd = document.createElementNS(nsSVG, 'rect');
+        rectLowAdd.setAttribute('id', 'rectLowAdd');
+        rectLowAdd.setAttribute('x', 258);
+        rectLowAdd.setAttribute('y', 720);
+        rectLowAdd.setAttribute('width', 22);
+        rectLowAdd.setAttribute('height', 22);
+        rectLowAdd.setAttribute('style', 'fill:#464546');
+        pctOBS.appendChild(rectLowAdd);
+        const cmdLowAdd = document.createElementNS(nsSVG, 'text');
+        cmdLowAdd.setAttribute('x', 269);
+        cmdLowAdd.setAttribute('y', 738);
+        cmdLowAdd.setAttribute('style', 'text-anchor:middle;fill:#ffffff;font-family:monospace;font-size:24px');
+        cmdLowAdd.textContent = '+';
+        pctOBS.appendChild(cmdLowAdd);
+
+        const rectToolsMenu = document.createElementNS(nsSVG, 'rect');
+        rectToolsMenu.setAttribute('id', 'mnuTools');
+        rectToolsMenu.setAttribute('x', 275);
+        rectToolsMenu.setAttribute('y', 230);
+        rectToolsMenu.setAttribute('width', 256);
+        rectToolsMenu.setAttribute('height', 500);
+        rectToolsMenu.setAttribute('style', 'fill:#3a393a;stroke:#000000;stroke-width:1;');
+        pctOBS.appendChild(rectToolsMenu);
+
+        const rectToolsMenuSel = document.createElementNS(nsSVG, 'rect');
+        rectToolsMenuSel.setAttribute('id', 'mnuToolsSel');
+        rectToolsMenuSel.setAttribute('x', 276);
+        rectToolsMenuSel.setAttribute('y', 302);
+        rectToolsMenuSel.setAttribute('width', 254);
+        rectToolsMenuSel.setAttribute('height', 24);
+        rectToolsMenuSel.setAttribute('style', 'fill:#19344c');
+        pctOBS.appendChild(rectToolsMenuSel);
+
+        const icoToolsMenuItem = document.createElementNS(nsSVG, 'path');
+        icoToolsMenuItem.setAttribute('id', 'mnuToolsIcon');
+        icoToolsMenuItem.setAttribute('d', 'm292,306' + sGlobe);
+        icoToolsMenuItem.setAttribute('style', 'fill:#fefefe');
+        pctOBS.appendChild(icoToolsMenuItem);
+
+        const txtToolsMenuItem = document.createElementNS(nsSVG, 'text');
+        txtToolsMenuItem.setAttribute('id', 'mnuToolsText');
+        txtToolsMenuItem.setAttribute('x', 310);
+        txtToolsMenuItem.setAttribute('y', 320);
+        txtToolsMenuItem.setAttribute('style', 'fill:#ffffff;font-family:sans-serif;font-size:16px');
+        txtToolsMenuItem.textContent = 'Browser';
+        pctOBS.appendChild(txtToolsMenuItem);
+
+        const pctPref = document.createElementNS(nsSVG, 'svg');
+        pctPref.setAttribute('id', 'pctPref');
+        pctPref.setAttribute('viewBox', '0 0 700 800');
+        const clipPrefURLVal = document.createElementNS(nsSVG, 'clipPath');
+        clipPrefURLVal.setAttribute('id', 'urlClip');
+        const rectPrefURLVal = document.createElementNS(nsSVG, 'rect');
+        rectPrefURLVal.setAttribute('x', 128);
+        rectPrefURLVal.setAttribute('y', 470);
+        rectPrefURLVal.setAttribute('width', 553);
+        rectPrefURLVal.setAttribute('height', 32);
+        clipPrefURLVal.appendChild(rectPrefURLVal);
+        pctPref.appendChild(clipPrefURLVal);
+        const rectPrefTitle = document.createElementNS(nsSVG, 'rect');
+        rectPrefTitle.setAttribute('x', 0);
+        rectPrefTitle.setAttribute('y', 0);
+        rectPrefTitle.setAttribute('width', 700);
+        rectPrefTitle.setAttribute('height', 24);
+        rectPrefTitle.setAttribute('style', 'fill:#2b2b2b');
+        pctPref.appendChild(rectPrefTitle);
+        const rectPrefBG = document.createElementNS(nsSVG, 'rect');
+        rectPrefBG.setAttribute('x', 0);
+        rectPrefBG.setAttribute('y', 23);
+        rectPrefBG.setAttribute('width', 700);
+        rectPrefBG.setAttribute('height', 776);
+        rectPrefBG.setAttribute('style', 'fill:#3a393a');
+        pctPref.appendChild(rectPrefBG);
+        const rectPrefPre = document.createElementNS(nsSVG, 'rect');
+        rectPrefPre.setAttribute('x', 6);
+        rectPrefPre.setAttribute('y', 29);
+        rectPrefPre.setAttribute('width', 688);
+        rectPrefPre.setAttribute('height', 400);
+        rectPrefPre.setAttribute('style', 'fill:#4c4c4c');
+        pctPref.appendChild(rectPrefPre);
+        const rectPrefLocal = document.createElementNS(nsSVG, 'rect');
+        rectPrefLocal.setAttribute('x', 128);
+        rectPrefLocal.setAttribute('y', 440);
+        rectPrefLocal.setAttribute('width', 16);
+        rectPrefLocal.setAttribute('height', 16);
+        rectPrefLocal.setAttribute('style', 'fill:#4c4c4c;stroke:#FFFFFF;stroke-width:1');
+        pctPref.appendChild(rectPrefLocal);
+        const txtPrefLocal = document.createElementNS(nsSVG, 'text');
+        txtPrefLocal.setAttribute('x', 152);
+        txtPrefLocal.setAttribute('y', 454);
+        txtPrefLocal.setAttribute('style', 'fill:#ffffff;font-family:sans-serif;font-size:18px');
+        txtPrefLocal.textContent = 'Local file';
+        pctPref.appendChild(txtPrefLocal);
+        const txtPrefURL = document.createElementNS(nsSVG, 'text');
+        txtPrefURL.setAttribute('x', 85);
+        txtPrefURL.setAttribute('y', 491);
+        txtPrefURL.setAttribute('style', 'fill:#ffffff;font-family:sans-serif;font-size:18px');
+        txtPrefURL.textContent = 'URL';
+        pctPref.appendChild(txtPrefURL);
+        const rectPrefURL = document.createElementNS(nsSVG, 'rect');
+        rectPrefURL.setAttribute('x', 128);
+        rectPrefURL.setAttribute('y', 470);
+        rectPrefURL.setAttribute('width', 560);
+        rectPrefURL.setAttribute('height', 32);
+        rectPrefURL.setAttribute('style', 'fill:#1f1e1f');
+        pctPref.appendChild(rectPrefURL);
+        const txtPrefURLVal = document.createElementNS(nsSVG, 'text');
+        txtPrefURLVal.setAttribute('x', 135);
+        txtPrefURLVal.setAttribute('y', 492);
+        txtPrefURLVal.setAttribute('clip-path', 'url(#urlClip)');
+        txtPrefURLVal.setAttribute('style', 'fill:#ffffff;font-family:sans-serif;font-size:16px;user-select:all;cursor:initial');
+        txtPrefURLVal.textContent = window.location;
+        pctPref.appendChild(txtPrefURLVal);
+        const txtPrefWidth = document.createElementNS(nsSVG, 'text');
+        txtPrefWidth.setAttribute('x', 75);
+        txtPrefWidth.setAttribute('y', 531);
+        txtPrefWidth.setAttribute('style', 'fill:#ffffff;font-family:sans-serif;font-size:18px');
+        txtPrefWidth.textContent = 'Width';
+        pctPref.appendChild(txtPrefWidth);
+        const rectPrefWidth = document.createElementNS(nsSVG, 'rect');
+        rectPrefWidth.setAttribute('x', 128);
+        rectPrefWidth.setAttribute('y', 510);
+        rectPrefWidth.setAttribute('width', 560);
+        rectPrefWidth.setAttribute('height', 32);
+        rectPrefWidth.setAttribute('style', 'fill:#1f1e1f');
+        pctPref.appendChild(rectPrefWidth);
+        const txtPrefWidthVal = document.createElementNS(nsSVG, 'text');
+        txtPrefWidthVal.setAttribute('x', 135);
+        txtPrefWidthVal.setAttribute('y', 532);
+        txtPrefWidthVal.setAttribute('style', 'fill:#ffffff;font-family:sans-serif;font-size:16px');
+        txtPrefWidthVal.textContent = Math.min(screen.width, 1920);
+        pctPref.appendChild(txtPrefWidthVal);
+        const txtPrefHeight = document.createElementNS(nsSVG, 'text');
+        txtPrefHeight.setAttribute('x', 70);
+        txtPrefHeight.setAttribute('y', 571);
+        txtPrefHeight.setAttribute('style', 'fill:#ffffff;font-family:sans-serif;font-size:18px');
+        txtPrefHeight.textContent = 'Height';
+        pctPref.appendChild(txtPrefHeight);
+        const rectPrefHeight = document.createElementNS(nsSVG, 'rect');
+        rectPrefHeight.setAttribute('x', 128);
+        rectPrefHeight.setAttribute('y', 550);
+        rectPrefHeight.setAttribute('width', 560);
+        rectPrefHeight.setAttribute('height', 32);
+        rectPrefHeight.setAttribute('style', 'fill:#1f1e1f');
+        pctPref.appendChild(rectPrefHeight);
+        const txtPrefHeightVal = document.createElementNS(nsSVG, 'text');
+        txtPrefHeightVal.setAttribute('x', 135);
+        txtPrefHeightVal.setAttribute('y', 572);
+        txtPrefHeightVal.setAttribute('style', 'fill:#ffffff;font-family:sans-serif;font-size:16px');
+        txtPrefHeightVal.textContent = Math.min(screen.height, 1080);
+        pctPref.appendChild(txtPrefHeightVal);
+        const rectPrefExtra = document.createElementNS(nsSVG, 'rect');
+        rectPrefExtra.setAttribute('x', 128);
+        rectPrefExtra.setAttribute('y', 590);
+        rectPrefExtra.setAttribute('width', 560);
+        rectPrefExtra.setAttribute('height', 150);
+        rectPrefExtra.setAttribute('style', 'fill:#1f1e1f');
+        pctPref.appendChild(rectPrefExtra);
+        const rectPrefOK = document.createElementNS(nsSVG, 'rect');
+        rectPrefOK.setAttribute('x', 525);
+        rectPrefOK.setAttribute('y', 756);
+        rectPrefOK.setAttribute('width', 60);
+        rectPrefOK.setAttribute('height', 32);
+        rectPrefOK.setAttribute('style', 'fill:#4c4c4c');
+        pctPref.appendChild(rectPrefOK);
+        const rectPrefCancel = document.createElementNS(nsSVG, 'rect');
+        rectPrefCancel.setAttribute('x', 595);
+        rectPrefCancel.setAttribute('y', 756);
+        rectPrefCancel.setAttribute('width', 90);
+        rectPrefCancel.setAttribute('height', 32);
+        rectPrefCancel.setAttribute('style', 'fill:#4c4c4c');
+        pctPref.appendChild(rectPrefCancel);
+        divOOBE.appendChild(pctPref);
+       }
+       const divNext = document.createElement('div');
+       divNext.setAttribute('id', 'oobeNext');
+       const lblNext = document.createElement('h3');
+       lblNext.textContent = 'What Next?';
+       divNext.appendChild(lblNext);
+       const lblHelp = document.createElement('div');
+       let sHelp = 'Now that you\'ve got your URL for RealityRipple\'s Home-Made Emote Wall, add a new Browser source to your broadcasting software and paste this page\'s address in the source\'s URL bar.';
+       if (local)
+        sHelp = 'Now that you\'ve downloaded RealityRipple\'s Home-Made Emote Wall, all you have to do is drag this HTML file into your broadcasting software.';
+       lblHelp.innerHTML = sHelp + '<br><br>You can make advanced adjustments to the Emote Wall\'s resolution and frame rate through the source Properties window.';
+       divNext.appendChild(lblHelp);
+       divOOBE.appendChild(divNext);
+       const divButtons = document.createElement('div');
+       divButtons.setAttribute('id', 'oobeButtons');
+       const cmdTest = document.createElement('button');
+       cmdTest.textContent = 'Test Emote Wall';
+       cmdTest.addEventListener('click',
+        function()
+        {
+         divOOBE.remove();
+         resolve(true);
+        }
+       );
+       divButtons.appendChild(cmdTest);
+       divButtons.appendChild(document.createElement('br'));
+       divButtons.append('in your current browser');
+       divButtons.appendChild(document.createElement('br'));
+       divButtons.appendChild(document.createElement('br'));
+       const chkOOBE = document.createElement('input');
+       chkOOBE.setAttribute('type', 'checkbox');
+       chkOOBE.setAttribute('checked', 'checked');
+       chkOOBE.setAttribute('id', 'chkOOBE');
+       chkOOBE.addEventListener('change',
+        function()
+        {
+         if (chkOOBE.checked)
+          shared.storage.removeItem('emotewall.oobe');
+         else
+          shared.storage.setItem('emotewall.oobe', '0');
+        }
+       );
+       divButtons.appendChild(chkOOBE);
+       const lblOOBE = document.createElement('label');
+       lblOOBE.setAttribute('for', 'chkOOBE');
+       lblOOBE.textContent = ' Show this dialog when loaded in browser';
+       divButtons.appendChild(lblOOBE);
+       divOOBE.appendChild(divButtons);
+       document.body.appendChild(divOOBE);
+      }
+     );
     }
 
     function _isOnline()
@@ -20853,6 +21266,203 @@
     left: 1.6em;
     top: 1.3em;
     font-size: 50%;
+   }
+
+   #oobe
+   {
+    position: absolute;
+    top: 15vh;
+    left: 10vw;
+    width: 80vw;
+    height: 70vh;
+    border: 1px solid #000000;
+    box-shadow: 2px 2px 4px #000000;
+    background-color: #000050;
+    color: #FFFFFF;
+    z-index: -2;
+    border-radius: 5px;
+    overflow: hidden;
+   }
+   #oobe h1
+   {
+    margin: 0.25em 0 0.25em 40%;
+    width: 55%;
+    text-align: center;
+    text-shadow: 0 0 4px #000000;
+    font-family: monospace;
+    font-size: 4vmin;
+   }
+   #oobe h2
+   {
+    margin: 0.25em 0 0.25em 40%;
+    width: 55%;
+    text-align: center;
+    text-shadow: 1px 1px 4px #000000;
+    font-family: sans-serif;
+    font-size: 3vmin;
+   }
+   #oobe svg
+   {
+    cursor: default;
+    user-select: none;
+   }
+   #oobe #pctOBS
+   {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    max-height: calc(100% - 6px);
+    max-width: calc(100% - 6px);
+    z-index: -1;
+    box-shadow: 2px 2px 4px #000000;
+   }
+   #oobe #pctOBS #mnuTools
+   {
+    opacity: 0;
+    transition: opacity 0s;
+   }
+   #oobe:hover #pctOBS #mnuTools
+   {
+    transition: opacity 0s 1s;
+    opacity: 1;
+   }
+   #oobe #pctOBS #mnuToolsIcon
+   {
+    opacity: 0;
+    transition: opacity 0s;
+   }
+   #oobe:hover #pctOBS #mnuToolsIcon
+   {
+    transition: opacity 0s 1s;
+    opacity: 1;
+   }
+   #oobe #pctOBS #mnuToolsText
+   {
+    opacity: 0;
+    transition: opacity 0s;
+   }
+   #oobe:hover #pctOBS #mnuToolsText
+   {
+    transition: opacity 0s 1s;
+    opacity: 1;
+   }
+   #oobe #pctOBS #mnuToolsSel
+   {
+    opacity: 0;
+    transition: opacity 0s;
+   }
+   #oobe:hover #pctOBS #mnuToolsSel
+   {
+    transition: opacity 0s 2s;
+    opacity: 1;
+   }
+   #oobe #pctPref
+   {
+    position: absolute;
+    top: 5%;
+    left: 16%;
+    max-width: 70%;
+    max-height: 70%;
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0s;
+    box-shadow: 2px 2px 4px #000000;
+   }
+   #oobe:hover #pctPref
+   {
+    transition: opacity 0.5s 4s linear;
+    opacity: 1;
+   }
+   #oobe #pctIcon
+   {
+    font-size: 3vmin;
+    position: absolute;
+    width: 68px;
+    height: 64px;
+    z-index: 1;
+   }
+   #oobe:hover #pctIcon
+   {
+    transition: all 3s ease-in-out;
+   }
+   #oobe:hover #pctOBS #svgSourceRect
+   {
+    stroke: #808080;
+    stroke-width: 2;
+   }
+   #oobe:hover #pctOBS #svgSelRect
+   {
+    fill: #21476d !important;
+    stroke: #ffffff;
+    stroke-width: 1;
+    stroke-dasharray: 1,3;
+   }
+   #oobe:hover #pctOBS #rectLowAdd
+   {
+    fill: #7a797a !important;
+   }
+   #pctIcon{left: -70px; top: 40vh;}
+   #oobe:hover #pctIcon{left: 23vw; top: 56vh;}
+   @media only screen and (min-aspect-ratio: 47/36)
+   {
+    #pctIcon{left: 95vh; bottom: 17vmin; top: unset;}
+    #oobe:hover #pctIcon{left: 25vh; bottom: 5vmin; top: unset;}
+   }
+   @media only screen and (max-aspect-ratio: 51/49)
+   {
+    #pctIcon{left: 5vh; top: calc(70vh - 64px);}
+    #oobe:hover #pctIcon{left: 25vmin; top: 50vmin;}
+   }
+   #oobeNext
+   {
+    float: right;
+    margin-right: 1em;
+    padding: 0 1em 1em;
+    width: 40%;
+    min-width: 12em;
+    background-color: #000000C0;
+    border-radius: 12px;
+   }
+   #oobeNext h3
+   {
+    margin-left: 1em;
+    margin-right: 1em;
+    border-bottom: 1px solid blue;
+    font-family: sans-serif;
+    font-size: 2.5vmin;
+   }
+   #oobeNext div
+   {
+    font-size: 2vmin;
+    text-align: justify;
+   }
+   #oobeButtons
+   {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 1em;
+    border-top-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    text-align: right;
+    background-color: #00000060;
+    font-size: 2vmin;
+   }
+   #oobeButtons button
+   {
+    background-color: #505050;
+    width: 9em;
+    font-size: 3vmin;
+    padding: 0.3em;
+    position: unset;
+   }
+   #oobeButtons button:focus, #oobeButtons button:hover
+   {
+    background-color: #707070;
+   }
+   #oobeButtons button:active
+   {
+    background-color: #303030;
    }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
