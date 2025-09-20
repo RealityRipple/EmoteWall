@@ -10011,6 +10011,7 @@
 
      const $subscribers = function()
      {
+      const _sHist = new Set();
       let _uLS = false;
       let _tS = false;
       const _rSC = 12000;
@@ -10042,7 +10043,10 @@
        {
         for (let i = 0, l = fRet.length; i < l; i++)
         {
-         display.kappa.show(false, cfg.event.youtube.sub, {[cVARs.evt.user]: fRet[i]});
+         if (_sHist.has(fRet[i].channelId))
+          continue;
+         _sHist.add(fRet[i].channelId);
+         display.kappa.show(false, cfg.event.youtube.sub, {[cVARs.evt.user]: fRet[i].title});
         }
        }
        _tS = window.setTimeout(_detect, _rSC + _bSlower);
@@ -10130,9 +10134,11 @@
          continue;
         if (!j.items[i].subscriberSnippet.hasOwnProperty('channelId'))
          continue;
+        if (!j.items[i].subscriberSnippet.hasOwnProperty('title'))
+         continue;
         if (j.items[i].subscriberSnippet.channelId === findU)
          return s.reverse();
-        s.push(j.items[i].subscriberSnippet.title);
+        s.push(j.items[i].subscriberSnippet);
        }
        return [];
       }
