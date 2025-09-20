@@ -6263,11 +6263,14 @@
 
         function _channel_points_redeem(ev)
         {
-         if (!ev.hasOwnProperty('reward'))
+         let ln = 'anonymous';
+         if (ev.user_login)
+          ln = ev.user_login;
+         if (cfg.ignore.users !== false && cfg.ignore.users.includes(ln))
+          return;
+         if (!ev.reward)
           return;
          if (!ev.reward.hasOwnProperty('title'))
-          return;
-         if (cfg.ignore.users !== false && ev.hasOwnProperty('user_login') && cfg.ignore.users.includes(ev.user_login))
           return;
          const n = ev.reward.title;
          if (!ev.hasOwnProperty('user_input') || ev.user_input === '')
@@ -6291,53 +6294,25 @@
          }
         }
 
-        const _channel_points_auto_redeem = function()
+        function _channel_points_auto_redeem(ev)
         {
-         function $c_channel_points_auto_redeem(ev)
+         if (!ev.hasOwnProperty('reward'))
+          return;
+         if (!ev.reward.hasOwnProperty('type'))
+          return;
+         switch (ev.reward.type)
          {
-          if (!ev.hasOwnProperty('reward'))
-           return;
-          if (!ev.reward.hasOwnProperty('type'))
-           return;
-          if (cfg.ignore.users !== false && ev.hasOwnProperty('user_login') && cfg.ignore.users.includes(ev.user_login))
-           return;
-          switch (ev.reward.type)
-          {
-           case 'random_sub_emote_unlock':
-            _random_emote(ev);
-            break;
-           case 'chosen_sub_emote_unlock':
-            _chosen_emote(ev);
-            break;
-           case 'chosen_modified_sub_emote_unlock':
-            _modified_emote(ev);
-            break;
-          }
+          case 'random_sub_emote_unlock':
+           twitch.parse.event.random_emote(ev);
+           break;
+          case 'chosen_sub_emote_unlock':
+           twitch.parse.event.chosen_emote(ev);
+           break;
+          case 'chosen_modified_sub_emote_unlock':
+           twitch.parse.event.modified_emote(ev);
+           break;
          }
-
-         function _random_emote(ev)
-         {
-          if (!ev.reward.hasOwnProperty('emote'))
-           return;
-          twitch.parse.event.random_emote(ev.reward.emote, ev.id);
-         }
-
-         function _chosen_emote(ev)
-         {
-          if (!ev.reward.hasOwnProperty('emote'))
-           return;
-          twitch.parse.event.chosen_emote(ev.reward.emote, ev.id);
-         }
-
-         function _modified_emote(ev)
-         {
-          if (!ev.reward.hasOwnProperty('emote'))
-           return;
-          twitch.parse.event.modified_emote(ev.reward.emote, ev.id);
-         }
-
-         return $c_channel_points_auto_redeem;
-        }();
+        }
 
         async function _channel_update(ev)
         {
@@ -6354,17 +6329,11 @@
          {
           if (!ev.hasOwnProperty('user_id'))
            return;
-          if (cfg.ignore.users !== false && ev.hasOwnProperty('user_login') && cfg.ignore.users.includes(ev.user_login))
-           return;
-          if (!ev.hasOwnProperty('user_name'))
-           return;
           twitch.net.fList[ev.user_id] = {value: true, t: Date.now()};
-          if (cfg.event.twitch.follow === false)
-           return;
           if (_fHist.has(ev.user_id))
            return;
           _fHist.add(ev.user_id);
-          display.kappa.show(false, cfg.event.twitch.follow, {[cVARs.evt.user]: ev.user_name});
+          twitch.parse.event.follow(ev);
          }
 
          return $c_follow;
@@ -6372,206 +6341,97 @@
 
         async function _shoutout_create(ev)
         {
-         if (!ev.hasOwnProperty('to_broadcaster_user_id'))
-          return;
-         if (!ev.hasOwnProperty('to_broadcaster_user_name'))
-          return;
-         await twitch.parse.event.shoutoutCreate(ev.to_broadcaster_user_id, ev.to_broadcaster_user_name);
+         await twitch.parse.event.shoutout.create(ev);
         }
 
         async function _shoutout_receive(ev)
         {
-         if (!ev.hasOwnProperty('from_broadcaster_user_id'))
-          return;
-         if (cfg.ignore.users !== false && ev.hasOwnProperty('from_broadcaster_user_login') && cfg.ignore.users.includes(ev.from_broadcaster_user_login))
-          return;
-         if (!ev.hasOwnProperty('from_broadcaster_user_name'))
-          return;
-         await twitch.parse.event.shoutoutReceive(ev.from_broadcaster_user_id, ev.from_broadcaster_user_name);
+         await twitch.parse.event.shoutout.receive(ev);
         }
 
         function _train_begin(ev)
         {
-         let cfTrain = cfg.event.twitch.hypetrain;
-         switch (ev.type)
+         if (ev.hasOwnProperty('type'))
          {
-          case 'golden_kappa':
-           cfTrain = cfg.event.twitch.kappatrain;
-           break;
-          case 'treasure':
-           cfTrain = cfg.event.twitch.treasuretrain;
-           break;
+          switch (ev.type)
+          {
+           case 'golden_kappa':
+            twitch.parse.event.train.kappa.begin();
+            return;
+           case 'treasure':
+            twitch.parse.event.train.treasure.begin();
+            return;
+          }
          }
-         if (cfTrain === false)
-          return;
-         if (!cfTrain.hasOwnProperty('begin'))
-          return;
-         if (cfTrain.begin === false)
-          return;
-         display.kappa.show(false, cfTrain.begin);
+         twitch.parse.event.train.hype.begin();
         }
 
         function _train_end(ev)
         {
-         let cfTrain = cfg.event.twitch.hypetrain;
-         switch (ev.type)
-         {
-          case 'golden_kappa':
-           cfTrain = cfg.event.twitch.kappatrain;
-           break;
-          case 'treasure':
-           cfTrain = cfg.event.twitch.treasuretrain;
-           break;
-         }
-         if (cfTrain === false)
-          return;
-         if (!cfTrain.hasOwnProperty('success'))
-          return;
-         if (cfTrain.success === false)
-          return;
          if (!ev.hasOwnProperty('level'))
           return;
          if (ev.level < 2)
           return;
-         const rs = shared.findInMaybeRange(cfTrain.success, ev.level - 1);
-         if (rs === false)
-          return;
-         display.kappa.show(false, rs);
+         if (ev.hasOwnProperty('type'))
+         {
+          switch (ev.type)
+          {
+           case 'golden_kappa':
+            twitch.parse.event.train.kappa.end(ev);
+            return;
+           case 'treasure':
+            twitch.parse.event.train.treasure.end(ev);
+            return;
+          }
+         }
+         twitch.parse.event.train.hype.end(ev);
         }
 
         function _poll_begin(ev)
         {
-         if (cfg.event.twitch.poll === false)
-          return;
-         if (!cfg.event.twitch.poll.hasOwnProperty('begin'))
-          return;
-         if (cfg.event.twitch.poll.begin === false)
-          return;
-         if (!ev.hasOwnProperty('title'))
-          return;
-         display.kappa.show(false, cfg.event.twitch.poll.begin, {[cVARs.evt.title]: ev.title});
+         twitch.parse.event.poll.begin(ev);
         }
 
         function _poll_end(ev)
         {
-         if (cfg.event.twitch.poll === false)
+         if (!ev.hasOwnProperty('status'))
           return;
-         if (!cfg.event.twitch.poll.hasOwnProperty('end'))
+         if (ev.status !== 'completed')
           return;
-         if (cfg.event.twitch.poll.end === false)
-          return;
-         if (!ev.hasOwnProperty('title'))
-          return;
-         if (!ev.hasOwnProperty('status') || ev.status !== 'completed')
-          return;
-         if (!ev.hasOwnProperty('choices'))
-          return;
-         twitch.parse.event.pollEnd(ev);
+         twitch.parse.event.poll.end(ev);
         }
 
         function _prediction_begin(ev)
         {
-         if (cfg.event.twitch.prediction === false)
-          return;
-         if (!cfg.event.twitch.prediction.hasOwnProperty('begin'))
-          return;
-         if (cfg.event.twitch.prediction.begin === false)
-          return;
-         if (!ev.hasOwnProperty('title'))
-          return;
-         display.kappa.show(false, cfg.event.twitch.prediction.begin, {[cVARs.evt.title]: ev.title});
+         twitch.parse.event.prediction.begin(ev);
         }
 
         function _prediction_end(ev)
         {
-         if (cfg.event.twitch.prediction === false)
+         if (!ev.hasOwnProperty('status'))
           return;
-         if (!cfg.event.twitch.prediction.hasOwnProperty('resolved'))
+         if (ev.status !== 'resolved')
           return;
-         if (cfg.event.twitch.prediction.resolved === false)
-          return;
-         if (!ev.hasOwnProperty('title'))
-          return;
-         if (!ev.hasOwnProperty('status') || ev.status !== 'resolved')
-          return;
-         if (!ev.hasOwnProperty('winning_outcome_id'))
-          return;
-         if (!ev.hasOwnProperty('outcomes'))
-          return;
-         twitch.parse.event.predictionEnd(ev);
+         twitch.parse.event.prediction.end(ev);
         }
 
         function _charity(ev)
         {
-         if (cfg.event.twitch.charity === false)
-          return;
-         if (!ev.hasOwnProperty('user_name'))
-          return;
-         const dName = ev.user_name;
-         if (!ev.hasOwnProperty('amount'))
-          return;
-         if (!ev.amount.hasOwnProperty('value'))
-          return;
-         if (!ev.amount.hasOwnProperty('decimal_places'))
-          return;
-         if (!ev.amount.hasOwnProperty('currency'))
-          return;
-         const dAmt = ev.amount.value / Math.pow(10, ev.decimal_places) + ' ' + ev.amount.currency;
-         const rd = shared.findInMaybeRange(cfg.event.twitch.charity, ev.amount.value);
-         if (rd === false)
-          return;
-         display.kappa.show(false, rd, {[cVARs.evt.user]: dName, [cVARs.evt.amount]: dAmt});
-        }
-
-        function _goal_type(t)
-        {
-         switch (t)
-         {
-          case 'follow': return 'Follows';
-          case 'subscription':
-          case 'subscription_count': return 'Subscriptions';
-          case 'new_subscription':
-          case 'new_subscription_count': return 'New Subscriptions';
-          case 'new_bit': return 'Bits';
-          case 'new_cheerer': return 'Cheerers';
-         }
-         return t.replace('_', ' ');
+         twitch.parse.event.charity(ev);
         }
 
         function _goal_begin(ev)
         {
-         if (cfg.event.twitch.goal === false)
-          return;
-         if (!cfg.event.twitch.goal.hasOwnProperty('begin'))
-          return;
-         if (cfg.event.twitch.goal.begin === false)
-          return;
-         if (!ev.hasOwnProperty('type'))
-          return;
-         if (!ev.hasOwnProperty('description'))
-          return;
-         if (!ev.hasOwnProperty('target_amount'))
-          return;
-         display.kappa.show(false, cfg.event.twitch.goal.begin, {[cVARs.evt.title]: ev.description, [cVARs.evt.type]: _goal_type(ev.type), [cVARs.evt.amount]: ev.target_amount});
+         twitch.parse.event.goal.begin(ev);
         }
 
         function _goal_end(ev)
         {
-         if (cfg.event.twitch.goal === false)
+         if (!ev.hasOwnProperty('is_achieved'))
           return;
-         if (!cfg.event.twitch.goal.hasOwnProperty('achieved'))
+         if (ev.is_achieved !== true)
           return;
-         if (cfg.event.twitch.goal.achieved === false)
-          return;
-         if (!ev.hasOwnProperty('type'))
-          return;
-         if (!ev.hasOwnProperty('description'))
-          return;
-         if (!ev.hasOwnProperty('current_amount'))
-          return;
-         if (!ev.hasOwnProperty('is_achieved') || ev.is_achieved !== true)
-          return;
-         display.kappa.show(false, cfg.event.twitch.goal.achieved, {[cVARs.evt.title]: ev.description, [cVARs.evt.type]: _goal_type(ev.type), [cVARs.evt.amount]: ev.current_amount});
+         twitch.parse.event.goal.end(ev);
         }
 
         return $c_notification;
@@ -7124,7 +6984,7 @@
          return;
         await _loadEmote_channel(twitch.net.channelID);
         await _loadCheer_channel(twitch.net.channelID);
-        if (cfg.event.twitch.tag.hasOwnProperty('styles') && cfg.event.twitch.tag.styles !== false)
+        if (!!cfg.event.twitch.tag && !!cfg.event.twitch.tag.styles)
          await _getChannelTitleTags(twitch.net.channelID);
         if (cfg.display.extended.useFFZ)
          thirdparty.ffz.channel('twitch', twitch.net.channelID);
@@ -7203,7 +7063,7 @@
         {
          case 1:
           _msgHistory = {};
-          if (cfg.event.twitch.clear)
+          if (cfg.event.twitch.hasOwnProperty('clear') && cfg.event.twitch.clear)
            display.eraseAll();
           break;
          case 2:
@@ -7218,15 +7078,9 @@
           if (document.visibilityState === 'hidden')
            return;
           if (cmd.tags.hasOwnProperty('ban-duration'))
-          {
-           if (cfg.event.twitch.timeout !== false)
            await twitch.parse.event.timeout(cmd);
-          }
           else
-          {
-           if (cfg.event.twitch.ban !== false)
-            await twitch.parse.event.ban(cmd);
-          }
+           await twitch.parse.event.ban(cmd);
           break;
         }
        }
@@ -8115,7 +7969,9 @@
 
        function _gigantified(cmd)
        {
-        if (cfg.event.twitch.powerup.emote === false)
+        if (!cfg.event.twitch.powerup)
+         return false;
+        if (!cfg.event.twitch.powerup.emote)
          return false;
         const a = _handleDuplicates(_eListFromCmd(cmd, true));
         if (a.length < 1)
@@ -8135,6 +7991,10 @@
 
        function _animated(cmd)
        {
+        if (!cfg.event.twitch.powerup)
+         return false;
+        if (!cfg.event.twitch.powerup.message)
+         return false;
         if (!cmd.hasOwnProperty('tags'))
          return false;
         if (!cmd.tags.hasOwnProperty('animation-id'))
@@ -8148,17 +8008,17 @@
         switch (animID)
         {
          case 'simmer':
-          if (cfg.event.twitch.powerup.message.simmer === false)
+          if (!cfg.event.twitch.powerup.message.simmer)
            return false;
           display.kappa.show(a, cfg.event.twitch.powerup.message.simmer, {[cVARs.evt.user]: dn});
           return true;
          case 'rainbow-eclipse':
-          if (cfg.event.twitch.powerup.message.eclipse === false)
+          if (!cfg.event.twitch.powerup.message.eclipse)
            return false;
           display.kappa.show(a, cfg.event.twitch.powerup.message.eclipse, {[cVARs.evt.user]: dn});
           return true;
          case 'cosmic-abyss':
-          if (cfg.event.twitch.powerup.message.abyss === false)
+          if (!cfg.event.twitch.powerup.message.abyss)
            return false;
           display.kappa.show(a, cfg.event.twitch.powerup.message.abyss, {[cVARs.evt.user]: dn});
           return true;
@@ -8171,19 +8031,17 @@
 
       function _parseHighlight(cmd)
       {
-       if (!cfg.event.twitch.redeem.hasOwnProperty('highlight'))
+       if (!cfg.event.twitch.redeem)
         return false;
-       if (cfg.event.twitch.redeem.highlight === false)
+       if (!cfg.event.twitch.redeem.highlight)
         return false;
        if (!cmd.hasOwnProperty('tags'))
         return false;
-       if (!cmd.tags.hasOwnProperty('msg-id'))
-        return false;
-       if (cmd.tags['msg-id'] !== 'highlighted-message')
+       if (!cmd.tags.hasOwnProperty('msg-id') || cmd.tags['msg-id'] !== 'highlighted-message')
         return false;
        const p = _handleDuplicates(_eListFromCmd(cmd));
        if (p.length === 0)
-        return;
+        return false;
        display.kappa.show(p, cfg.event.twitch.redeem.highlight);
        return true;
       }
@@ -8214,9 +8072,9 @@
       {
        if (Object.keys(_aTagged).length < 1)
         return false;
-       if (!cfg.event.twitch.tag.hasOwnProperty('styles'))
+       if (!cfg.event.twitch.tag)
         return false;
-       if (cfg.event.twitch.tag.styles === false)
+       if (!cfg.event.twitch.tag.styles)
         return false;
        const m = cmd.params[1];
        if (m.slice(0, 1) !== '@')
@@ -8270,15 +8128,13 @@
       {
        if (!service.emotes.hasOwnProperty('cheer'))
         return false;
-       if (cfg.event.twitch.cheer === false)
+       if (!cfg.event.twitch.cheer)
         return false;
-       if (!cfg.event.twitch.cheer.hasOwnProperty('bits'))
-        return false;
-       if (cfg.event.twitch.cheer.bits === false)
+       if (!cfg.event.twitch.cheer.bits)
         return false;
        const u = _parseUser(cmd, true);
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
-        return;
+        return false;
        if (!cmd.hasOwnProperty('tags'))
         return false;
        if (!cmd.tags.hasOwnProperty('bits'))
@@ -8316,11 +8172,9 @@
 
       async function $raid(cmd)
       {
-       if (cfg.event.twitch.raid === false)
+       if (!cfg.event.twitch.raid)
         return;
-       if (!cfg.event.twitch.raid.hasOwnProperty('raiders'))
-        return;
-       if (cfg.event.twitch.raid.raiders === false)
+       if (!cfg.event.twitch.raid.raiders)
         return;
        if (!cmd.hasOwnProperty('tags'))
         return;
@@ -8363,16 +8217,20 @@
 
        async function $c_sub(cmd)
        {
-        if (!cmd.tags.hasOwnProperty('msg-id'))
+        if (!cfg.event.twitch.sub)
          return;
         const subPlan = _parsePlan(cmd);
         if (subPlan === false)
+         return;
+        if (!cfg.event.twitch.sub[subPlan])
+         return;
+        if (!cmd.tags.hasOwnProperty('msg-id'))
          return;
         const mID = cmd.tags['msg-id'];
         let mpoi = false;
         if (cmd.tags.hasOwnProperty('msg-param-origin-id'))
          mpoi = cmd.tags['msg-param-origin-id'];
-        const usesBomb = cfg.event.twitch.sub[subPlan].hasOwnProperty('gift') && cfg.event.twitch.sub[subPlan].gift.hasOwnProperty('bomb') && cfg.event.twitch.sub[subPlan].gift.bomb !== false;
+        const usesBomb = _usesBomb(subPlan);
         if (mpoi !== false && usesBomb)
         {
          if (_bList.bombs.has(mpoi))
@@ -8455,7 +8313,7 @@
 
        function _show(id, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a)
        {
-        const usesBomb = cfg.event.twitch.sub.hasOwnProperty(subPlan) && cfg.event.twitch.sub[subPlan].hasOwnProperty('gift') && cfg.event.twitch.sub[subPlan].gift.hasOwnProperty('bomb') && cfg.event.twitch.sub[subPlan].gift.bomb !== false;
+        const usesBomb = _usesBomb(subPlan);
         if (mpoi !== false && usesBomb)
         {
          if (_bList.bombs.has(mpoi))
@@ -8469,18 +8327,12 @@
         switch (id)
         {
          case 'sub':
-          if (!cfg.event.twitch.sub.hasOwnProperty(subPlan))
-           return;
-          if (!cfg.event.twitch.sub[subPlan].hasOwnProperty('first'))
-           return;
-          if (cfg.event.twitch.sub[subPlan].first === false)
+          if (!cfg.event.twitch.sub[subPlan].first)
            return;
           display.kappa.show(a, cfg.event.twitch.sub[subPlan].first, {[cVARs.evt.user]: dn});
           break;
          case 'resub':
-          if (!cfg.event.twitch.sub.hasOwnProperty(subPlan))
-           return;
-          if (!cfg.event.twitch.sub[subPlan].hasOwnProperty('resub'))
+          if (!cfg.event.twitch.sub[subPlan].resub)
            return;
           const rs = shared.findInMaybeRange(cfg.event.twitch.sub[subPlan].resub, mpcm);
           if (rs === false)
@@ -8488,38 +8340,30 @@
           display.kappa.show(a, rs, {[cVARs.evt.user]: dn, [cVARs.evt.amount]: mpcm});
           break;
          case 'primepaidupgrade':
-          if (!cfg.event.twitch.sub.hasOwnProperty(subPlan))
+          if (!cfg.event.twitch.sub[subPlan].upgrade)
            return;
-          if (!cfg.event.twitch.sub[subPlan].hasOwnProperty('upgrade'))
-           return;
-          if (!cfg.event.twitch.sub[subPlan].upgrade.hasOwnProperty('prime'))
+          if (!cfg.event.twitch.sub[subPlan].upgrade.prime)
            return;
           display.kappa.show(a, cfg.event.twitch.sub[subPlan].upgrade.prime, {[cVARs.evt.user]: dn});
           break;
          case 'giftpaidupgrade':
-          if (!cfg.event.twitch.sub.hasOwnProperty(subPlan))
+          if (!cfg.event.twitch.sub[subPlan].upgrade)
            return;
-          if (!cfg.event.twitch.sub[subPlan].hasOwnProperty('upgrade'))
-           return;
-          if (!cfg.event.twitch.sub[subPlan].upgrade.hasOwnProperty('gift'))
+          if (!cfg.event.twitch.sub[subPlan].upgrade.gift)
            return;
           display.kappa.show(a, cfg.event.twitch.sub[subPlan].upgrade.gift, {[cVARs.evt.user]: dn});
           break;
          case 'subgift':
-          if (!cfg.event.twitch.sub.hasOwnProperty(subPlan))
-           return;
-          if (!cfg.event.twitch.sub[subPlan].hasOwnProperty('gift'))
+          if (!cfg.event.twitch.sub[subPlan].gift)
            return;
           if (mpm === 1)
           {
-           if (!cfg.event.twitch.sub[subPlan].gift.hasOwnProperty('first'))
-            return;
-           if (cfg.event.twitch.sub[subPlan].gift.first === false)
+           if (!cfg.event.twitch.sub[subPlan].gift.first)
             return;
            display.kappa.show(a, cfg.event.twitch.sub[subPlan].gift.first, {[cVARs.evt.sender]: dn, [cVARs.evt.user]: mprdn});
            return;
           }
-          if (!cfg.event.twitch.sub[subPlan].gift.hasOwnProperty('resub'))
+          if (!cfg.event.twitch.sub[subPlan].gift.resub)
            return;
           const gpr = shared.findInMaybeRange(cfg.event.twitch.sub[subPlan].gift.resub, mpm);
           if (gpr === false)
@@ -8561,6 +8405,13 @@
         return false;
        }
 
+       function _usesBomb(tier)
+       {
+        if (!cfg.event.twitch.sub[tier].gift)
+         return false;
+        return !!cfg.event.twitch.sub[tier].gift.bomb;
+       }
+
        function _resetGC()
        {
         if (_tGC !== null)
@@ -8586,12 +8437,14 @@
 
       function $badge(cmd)
       {
-       if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
+       if (!cfg.event.twitch.badge)
         return;
-       const c = cmd.tags['msg-param-threshold'];
        const u = _parseUser(cmd, true);
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
         return;
+       if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
+        return;
+       const c = cmd.tags['msg-param-threshold'];
        let dn = 'Anonymous';
        if (u.hasOwnProperty('display-name'))
         dn = u['display-name'];
@@ -8620,6 +8473,44 @@
        display.kappa.show(false, cfg.event.twitch.badge[closest], {[cVARs.evt.user]: dn, [cVARs.evt.amount]: c});
       }
 
+      async function $ban(cmd)
+      {
+       if (!cfg.event.twitch.ban)
+        return;
+       let ln = cmd.params[1];
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(ln))
+        return;
+       let dn = ln;
+       if (cmd.tags.hasOwnProperty('target-user-id'))
+       {
+        const r = await twitch.net.userInfo(cmd.tags['target-user-id'], true);
+        if (r.hasOwnProperty('display_name'))
+         dn = r.display_name;
+       }
+       display.kappa.show(false, cfg.event.twitch.ban, {[cVARs.evt.user]: dn});
+      }
+
+      async function $timeout(cmd)
+      {
+       if (!cfg.event.twitch.timeout)
+        return;
+       let ln = cmd.params[1];
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(ln))
+        return;
+       let dn = ln;
+       if (cmd.tags.hasOwnProperty('target-user-id'))
+       {
+        const r = await twitch.net.userInfo(cmd.tags['target-user-id'], true);
+        if (r.hasOwnProperty('display_name'))
+         dn = r.display_name;
+       }
+       const dDur = cmd.tags['ban-duration'];
+       const r = shared.findInMaybeRange(cfg.event.twitch.timeout, dDur);
+       if (r === false)
+        return;
+       display.kappa.show(false, r, {[cVARs.evt.user]: dn, [cVARs.evt.amount]: dDur});
+      }
+
       function $redeem(title, cmd)
       {
        for (const k of cfg.commands)
@@ -8640,28 +8531,32 @@
        }
       }
 
-      function $random_emote(cmd, evID)
+      function $random_emote(ev)
       {
-       if (!cfg.event.twitch.redeem.hasOwnProperty('random_emote'))
+       if (!cfg.event.twitch.redeem)
         return;
-       if (cfg.event.twitch.redeem.random_emote === false)
+       if (!cfg.event.twitch.redeem.random_emote)
         return;
-       if (cmd === null)
+       if (!ev.hasOwnProperty('user_login'))
         return;
-       if (!cmd.hasOwnProperty('id'))
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(ev.user_login))
         return;
-       if (!cmd.hasOwnProperty('name'))
+       if (!ev.reward.emote)
         return;
-       const u = cURLs.cdn.twitch.emote.replaceAll(cVARs.url.emoteID, cmd.id);
+       if (!ev.reward.emote.hasOwnProperty('id'))
+        return;
+       if (!ev.reward.emote.hasOwnProperty('name'))
+        return;
+       const u = cURLs.cdn.twitch.emote.replaceAll(cVARs.url.emoteID, ev.reward.emote.id);
        const p = [];
        p.push({
         svc: cSources.service.twitch,
         url: u,
-        str: cmd.name,
+        str: ev.reward.emote.name,
         pos: 0,
         scope: cSources.scope.channel,
         timestamp: Date.now(),
-        origin: 'twitch:' + evID
+        origin: 'twitch:' + ev.id
        });
        const sz = shared.ec.get(u);
        if (sz !== null)
@@ -8672,28 +8567,32 @@
        display.kappa.show(p, cfg.event.twitch.redeem.random_emote);
       }
 
-      function $chosen_emote(cmd, evID)
+      function $chosen_emote(ev)
       {
-       if (!cfg.event.twitch.redeem.hasOwnProperty('chosen_emote'))
+       if (!cfg.event.twitch.redeem)
         return;
-       if (cfg.event.twitch.redeem.chosen_emote === false)
+       if (!cfg.event.twitch.redeem.chosen_emote)
         return;
-       if (cmd === null)
+       if (!ev.hasOwnProperty('user_login'))
         return;
-       if (!cmd.hasOwnProperty('id'))
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(ev.user_login))
         return;
-       if (!cmd.hasOwnProperty('name'))
+       if (!ev.reward.emote)
         return;
-       const u = cURLs.cdn.twitch.emote.replaceAll(cVARs.url.emoteID, cmd.id);
+       if (!ev.reward.emote.hasOwnProperty('id'))
+        return;
+       if (!ev.reward.emote.hasOwnProperty('name'))
+        return;
+       const u = cURLs.cdn.twitch.emote.replaceAll(cVARs.url.emoteID, ev.reward.emote.id);
        const p = [];
        p.push({
         svc: cSources.service.twitch,
         url: u,
-        str: cmd.name,
+        str: ev.reward.emote.name,
         pos: 0,
         scope: cSources.scope.channel,
         timestamp: Date.now(),
-        origin: 'twitch:' + evID
+        origin: 'twitch:' + ev.id
        });
        const sz = shared.ec.get(u);
        if (sz !== null)
@@ -8704,28 +8603,32 @@
        display.kappa.show(p, cfg.event.twitch.redeem.chosen_emote);
       }
 
-      function $modified_emote(cmd, evID)
+      function $modified_emote(ev)
       {
-       if (!cfg.event.twitch.redeem.hasOwnProperty('modified_emote'))
+       if (!cfg.event.twitch.redeem)
         return;
-       if (cfg.event.twitch.redeem.modified_emote === false)
+       if (!cfg.event.twitch.redeem.modified_emote)
         return;
-       if (cmd === null)
+       if (!ev.hasOwnProperty('user_login'))
         return;
-       if (!cmd.hasOwnProperty('id'))
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(ev.user_login))
         return;
-       if (!cmd.hasOwnProperty('name'))
+       if (!ev.reward.emote)
         return;
-       const u = cURLs.cdn.twitch.emote.replaceAll(cVARs.url.emoteID, cmd.id);
+       if (!ev.reward.emote.hasOwnProperty('id'))
+        return;
+       if (!ev.reward.emote.hasOwnProperty('name'))
+        return;
+       const u = cURLs.cdn.twitch.emote.replaceAll(cVARs.url.emoteID, ev.reward.emote.id);
        const p = [];
        p.push({
         svc: cSources.service.twitch,
         url: u,
-        str: cmd.name,
+        str: ev.reward.emote.name,
         pos: 0,
         scope: cSources.scope.channel,
         timestamp: Date.now(),
-        origin: 'twitch:' + evID
+        origin: 'twitch:' + ev.id
        });
        const sz = shared.ec.get(u);
        if (sz !== null)
@@ -8736,151 +8639,385 @@
        display.kappa.show(p, cfg.event.twitch.redeem.modified_emote);
       }
 
-      async function $ban(cmd)
+      function $follow(ev)
       {
-       let dn = cmd.params[1];
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
+       if (!cfg.event.twitch.follow)
         return;
-       if (cmd.tags.hasOwnProperty('target-user-id'))
+       let uName = 'Anonymous';
+       if (ev.user_login)
        {
-        const r = await twitch.net.userInfo(cmd.tags['target-user-id'], true);
-        if (r.hasOwnProperty('display_name'))
-         dn = r.display_name;
+        uName = ev.user_login;
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(uName))
+         return;
        }
-       display.kappa.show(false, cfg.event.twitch.ban, {[cVARs.evt.user]: dn});
+       if (ev.user_name)
+        uName = ev.user_name;
+       display.kappa.show(false, cfg.event.twitch.follow, {[cVARs.evt.user]: uName});
       }
 
-      async function $timeout(cmd)
+      const $shoutout = function()
       {
-       let dn = cmd.params[1];
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
-        return;
-       if (cmd.tags.hasOwnProperty('target-user-id'))
+       async function $create(ev)
        {
-        const r = await twitch.net.userInfo(cmd.tags['target-user-id'], true);
-        if (r.hasOwnProperty('display_name'))
-         dn = r.display_name;
+        if (!cfg.event.twitch.shoutout)
+         return;
+        if (!cfg.event.twitch.shoutout.create)
+         return;
+        if (!cfg.event.twitch.shoutout.create.styles)
+         return;
+        if (!ev.hasOwnProperty('to_broadcaster_user_name'))
+         return;
+        const uName = ev.to_broadcaster_user_name;
+        if (!cfg.event.twitch.shoutout.create.targetEmotes)
+        {
+         display.kappa.show(false, cfg.event.twitch.shoutout.create.styles, {[cVARs.evt.user]: uName});
+         return;
+        }
+        if (!ev.hasOwnProperty('to_broadcaster_user_id'))
+         return;
+        const uID = ev.to_broadcaster_user_id;
+        const e = await _findEmote_channel(uID);
+        if (cfg.event.twitch.shoutout.create.targetExtendedEmotes)
+        {
+         e.push(...await _findFFZ_channel(uID));
+         e.push(...await _findBTTV_channel(uID));
+         e.push(...await _find7TV_channel(uID, cfg.event.twitch.shoutout.create.targetExtendedEmotes));
+        }
+        display.kappa.show(e, cfg.event.twitch.shoutout.create.styles, {[cVARs.evt.user]: uName});
        }
-       const dDur = cmd.tags['ban-duration'];
-       const r = shared.findInMaybeRange(cfg.event.twitch.timeout, dDur);
-       if (r === false)
+
+       async function $receive(ev)
+       {
+        if (!cfg.event.twitch.shoutout)
+         return;
+        if (!cfg.event.twitch.shoutout.receive)
+         return;
+        if (!cfg.event.twitch.shoutout.receive.styles)
+         return;
+        if (!ev.hasOwnProperty('from_broadcaster_user_login'))
+         return;
+        let uName = ev.from_broadcaster_user_login;
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(uName))
+         return;
+        if (ev.hasOwnProperty('from_broadcaster_user_name'))
+         uName = ev.from_broadcaster_user_name;
+        if (!cfg.event.twitch.shoutout.receive.originEmotes)
+        {
+         display.kappa.show(false, cfg.event.twitch.shoutout.receive.styles, {[cVARs.evt.user]: uName});
+         return;
+        }
+        if (!ev.hasOwnProperty('from_broadcaster_user_id'))
+         return;
+        const uID = ev.from_broadcaster_user_id;
+        const e = await _findEmote_channel(uID);
+        if (cfg.event.twitch.shoutout.receive.originExtendedEmotes)
+        {
+         e.push(...await _findFFZ_channel(uID));
+         e.push(...await _findBTTV_channel(uID));
+         e.push(...await _find7TV_channel(uID, cfg.event.twitch.shoutout.receive.originExtendedEmotes));
+        }
+        display.kappa.show(e, cfg.event.twitch.shoutout.receive.styles, {[cVARs.evt.user]: uName});
+       }
+
+       return {
+        create: $create,
+        receive: $receive
+       };
+      }();
+
+      const $train = function()
+      {
+       const $hype = function()
+       {
+        function $begin()
+        {
+         if (!cfg.event.twitch.hypetrain)
+          return;
+         if (!cfg.event.twitch.hypetrain.begin)
+          return;
+         display.kappa.show(false, cfg.event.twitch.hypetrain.begin);
+        }
+
+        function $end(ev)
+        {
+         if (!cfg.event.twitch.hypetrain)
+          return;
+         if (!cfg.event.twitch.hypetrain.success)
+          return;
+         const rs = shared.findInMaybeRange(cfg.event.twitch.hypetrain.success, ev.level - 1);
+         if (rs === false)
+          return;
+         display.kappa.show(false, rs);
+        }
+
+        return {
+         begin: $begin,
+         end: $end
+        };
+       }();
+
+       const $kappa = function()
+       {
+        function $begin()
+        {
+         if (!cfg.event.twitch.kappatrain)
+          return;
+         if (!cfg.event.twitch.kappatrain.begin)
+          return;
+         display.kappa.show(false, cfg.event.twitch.kappatrain.begin);
+        }
+
+        function $end(ev)
+        {
+         if (!cfg.event.twitch.kappatrain)
+          return;
+         if (!cfg.event.twitch.kappatrain.success)
+          return;
+         const rs = shared.findInMaybeRange(cfg.event.twitch.kappatrain.success, ev.level - 1);
+         if (rs === false)
+          return;
+         display.kappa.show(false, rs);
+        }
+
+        return {
+         begin: $begin,
+         end: $end
+        };
+       }();
+
+       const $treasure = function()
+       {
+        function $begin()
+        {
+         if (!cfg.event.twitch.treasuretrain)
+          return;
+         if (!cfg.event.twitch.treasuretrain.begin)
+          return;
+         display.kappa.show(false, cfg.event.twitch.treasuretrain.begin);
+        }
+
+        function $end(ev)
+        {
+         if (!cfg.event.twitch.treasuretrain)
+          return;
+         if (!cfg.event.twitch.treasuretrain.success)
+          return;
+         const rs = shared.findInMaybeRange(cfg.event.twitch.treasuretrain.success, ev.level - 1);
+         if (rs === false)
+          return;
+         display.kappa.show(false, rs);
+        }
+
+        return {
+         begin: $begin,
+         end: $end
+        };
+       }();
+
+       return {
+        hype: $hype,
+        kappa: $kappa,
+        treasure: $treasure
+       };
+      }();
+
+      const $poll = function()
+      {
+       function $begin(ev)
+       {
+        if (!cfg.event.twitch.poll)
+         return;
+        if (!cfg.event.twitch.poll.begin)
+         return;
+        if (!ev.hasOwnProperty('title'))
+         return;
+        display.kappa.show(false, cfg.event.twitch.poll.begin, {[cVARs.evt.title]: ev.title});
+       }
+
+       function $end(ev)
+       {
+        if (!cfg.event.twitch.poll)
+         return;
+        if (!cfg.event.twitch.poll.end)
+         return;
+        if (!ev.hasOwnProperty('title'))
+         return;
+        if (!ev.hasOwnProperty('choices'))
+         return;
+        let vPoll = 0;
+        for (let i = 0, l = ev.choices.length; i < l; i++)
+        {
+         if (!ev.choices[i].hasOwnProperty('title'))
+          continue;
+         if (!ev.choices[i].hasOwnProperty('votes'))
+          continue;
+         vPoll = Math.max(vPoll, ev.choices[i].votes);
+        }
+        const rPoll = [];
+        for (let i = 0, l = ev.choices.length; i < l; i++)
+        {
+         if (!ev.choices[i].hasOwnProperty('title'))
+          continue;
+         if (!ev.choices[i].hasOwnProperty('votes'))
+          continue;
+         if (ev.choices[i].votes === vPoll)
+          rPoll.push(ev.choices[i].title);
+        }
+        let sPoll = 'None';
+        if (rPoll.length > 0)
+         sPoll = rPoll.join(' + ');
+        display.kappa.show(false, cfg.event.twitch.poll.end, {[cVARs.evt.title]: ev.title, [cVARs.evt.result]: sPoll});
+       }
+
+       return {
+        begin: $begin,
+        end: $end
+       };
+      }();
+
+      const $prediction = function()
+      {
+       function $begin(ev)
+       {
+        if (!cfg.event.twitch.prediction)
+         return;
+        if (!cfg.event.twitch.prediction.begin)
+         return;
+        if (!ev.hasOwnProperty('title'))
+         return;
+        display.kappa.show(false, cfg.event.twitch.prediction.begin, {[cVARs.evt.title]: ev.title});
+       }
+
+       function $end(ev)
+       {
+        if (!cfg.event.twitch.prediction)
+         return;
+        if (!cfg.event.twitch.prediction.resolved)
+         return;
+        if (!ev.hasOwnProperty('title'))
+         return;
+        if (!ev.hasOwnProperty('winning_outcome_id'))
+         return;
+        if (!ev.hasOwnProperty('outcomes'))
+         return;
+        let sPrediction = 'None';
+        for (let i = 0, l = ev.outcomes.length; i < l; i++)
+        {
+         if (!ev.outcomes[i].hasOwnProperty('id'))
+          continue;
+         if (ev.outcomes[i].id !== ev.winning_outcome_id)
+          continue;
+         if (!ev.outcomes[i].hasOwnProperty('title'))
+          continue;
+         sPrediction = ev.outcomes[i].title;
+         break;
+        }
+        display.kappa.show(false, cfg.event.twitch.prediction.resolved, {[cVARs.evt.title]: ev.title, [cVARs.evt.result]: sPrediction});
+       }
+
+       return {
+        begin: $begin,
+        end: $end
+       };
+      }();
+
+      function $charity(ev)
+      {
+       if (!cfg.event.twitch.charity)
         return;
-       display.kappa.show(false, r, {[cVARs.evt.user]: dn, [cVARs.evt.amount]: dDur});
+       if (!ev.hasOwnProperty('user_login'))
+        return;
+       let uName = ev.user_login;
+       if (cfg.ignore.users !== false && cfg.ignore.users.includes(uName))
+        return;
+       if (ev.hasOwnProperty('user_name'))
+        uName = ev.user_name;
+       if (!ev.hasOwnProperty('amount'))
+        return;
+       if (!ev.amount.hasOwnProperty('value'))
+        return;
+       if (!ev.amount.hasOwnProperty('decimal_places'))
+        return;
+       if (!ev.amount.hasOwnProperty('currency'))
+        return;
+       const dAmt = ev.amount.value / Math.pow(10, ev.decimal_places) + ' ' + ev.amount.currency;
+       const rd = shared.findInMaybeRange(cfg.event.twitch.charity, ev.amount.value);
+       if (rd === false)
+        return;
+       display.kappa.show(false, rd, {[cVARs.evt.user]: uName, [cVARs.evt.amount]: dAmt});
       }
 
-      async function $shoutoutCreate(uID, uName)
+      const $goal = function()
       {
-       if (cfg.event.twitch.shoutout === false)
-        return false;
-       if (!cfg.event.twitch.shoutout.hasOwnProperty('create'))
-        return false;
-       if (cfg.event.twitch.shoutout.create === false)
-        return false;
-       if (!cfg.event.twitch.shoutout.create.hasOwnProperty('styles'))
-        return false;
-       if (cfg.event.twitch.shoutout.create.styles === false)
-        return false;
-       if (!cfg.event.twitch.shoutout.create.targetEmotes)
+       function $begin(ev)
        {
-        display.kappa.show(false, cfg.event.twitch.shoutout.create.styles, {[cVARs.evt.user]: uName});
-        return;
+        if (!cfg.event.twitch.goal)
+         return;
+        if (!cfg.event.twitch.goal.begin)
+         return;
+        if (!ev.hasOwnProperty('type'))
+         return;
+        if (!ev.hasOwnProperty('description'))
+         return;
+        if (!ev.hasOwnProperty('target_amount'))
+         return;
+        display.kappa.show(false, cfg.event.twitch.goal.begin, {[cVARs.evt.title]: ev.description, [cVARs.evt.type]: _type(ev.type), [cVARs.evt.amount]: ev.target_amount});
        }
-       const e = await _findEmote_channel(uID);
-       if (cfg.event.twitch.shoutout.create.targetExtendedEmotes)
-       {
-        e.push(...await _findFFZ_channel(uID));
-        e.push(...await _findBTTV_channel(uID));
-        e.push(...await _find7TV_channel(uID, cfg.event.twitch.shoutout.create.targetExtendedEmotes));
-       }
-       display.kappa.show(e, cfg.event.twitch.shoutout.create.styles, {[cVARs.evt.user]: uName});
-      }
 
-      async function $shoutoutReceive(uID, uName)
-      {
-       if (cfg.event.twitch.shoutout === false)
-        return false;
-       if (!cfg.event.twitch.shoutout.hasOwnProperty('receive'))
-        return false;
-       if (cfg.event.twitch.shoutout.receive === false)
-        return false;
-       if (!cfg.event.twitch.shoutout.receive.hasOwnProperty('styles'))
-        return false;
-       if (cfg.event.twitch.shoutout.receive.styles === false)
-        return false;
-       if (!cfg.event.twitch.shoutout.receive.originEmotes)
+       function $end(ev)
        {
-        display.kappa.show(false, cfg.event.twitch.shoutout.receive.styles, {[cVARs.evt.user]: uName});
-        return;
+        if (!cfg.event.twitch.goal)
+         return;
+        if (!cfg.event.twitch.goal.achieved)
+         return;
+        if (!ev.hasOwnProperty('type'))
+         return;
+        if (!ev.hasOwnProperty('description'))
+         return;
+        if (!ev.hasOwnProperty('current_amount'))
+         return;
+        display.kappa.show(false, cfg.event.twitch.goal.achieved, {[cVARs.evt.title]: ev.description, [cVARs.evt.type]: _type(ev.type), [cVARs.evt.amount]: ev.current_amount});
        }
-       const e = await _findEmote_channel(uID);
-       if (cfg.event.twitch.shoutout.receive.originExtendedEmotes)
-       {
-        e.push(...await _findFFZ_channel(uID));
-        e.push(...await _findBTTV_channel(uID));
-        e.push(...await _find7TV_channel(uID, cfg.event.twitch.shoutout.receive.originExtendedEmotes));
-       }
-       display.kappa.show(e, cfg.event.twitch.shoutout.receive.styles, {[cVARs.evt.user]: uName});
-      }
 
-      function $pollEnd(e)
-      {
-       let vPoll = 0;
-       for (let i = 0, l = e.choices.length; i < l; i++)
+       function _type(t)
        {
-        if (!e.choices[i].hasOwnProperty('title'))
-         continue;
-        if (!e.choices[i].hasOwnProperty('votes'))
-         continue;
-        vPoll = Math.max(vPoll, e.choices[i].votes);
+        switch (t)
+        {
+         case 'follow': return 'Follows';
+         case 'subscription':
+         case 'subscription_count': return 'Subscriptions';
+         case 'new_subscription':
+         case 'new_subscription_count': return 'New Subscriptions';
+         case 'new_bit': return 'Bits';
+         case 'new_cheerer': return 'Cheerers';
+        }
+        return t.replace('_', ' ');
        }
-       const rPoll = [];
-       for (let i = 0, l = e.choices.length; i < l; i++)
-       {
-        if (!e.choices[i].hasOwnProperty('title'))
-         continue;
-        if (!e.choices[i].hasOwnProperty('votes'))
-         continue;
-        if (e.choices[i].votes === vPoll)
-         rPoll.push(e.choices[i].title);
-       }
-       let sPoll = 'None';
-       if (rPoll.length > 0)
-        sPoll = rPoll.join(' + ');
-       display.kappa.show(false, cfg.event.twitch.poll.end, {[cVARs.evt.title]: e.title, [cVARs.evt.result]: sPoll});
-      }
 
-      function $predictionEnd(e)
-      {
-       let sPrediction = 'None';
-       for (let i = 0, l = e.outcomes.length; i < l; i++)
-       {
-        if (!e.outcomes[i].hasOwnProperty('id'))
-         continue;
-        if (e.outcomes[i].id !== e.winning_outcome_id)
-         continue;
-        if (!e.outcomes[i].hasOwnProperty('title'))
-         continue;
-        sPrediction = e.outcomes[i].title;
-        break;
-       }
-       display.kappa.show(false, cfg.event.twitch.prediction.resolved, {[cVARs.evt.title]: e.title, [cVARs.evt.result]: sPrediction});
-      }
+       return {
+        begin: $begin,
+        end: $end
+       };
+      }();
 
       return {
        cheer: $cheer,
        raid: $raid,
        sub: $sub,
        badge: $badge,
+       ban: $ban,
+       timeout: $timeout,
        redeem: $redeem,
        random_emote: $random_emote,
        chosen_emote: $chosen_emote,
        modified_emote: $modified_emote,
-       ban: $ban,
-       timeout: $timeout,
-       shoutoutCreate: $shoutoutCreate,
-       shoutoutReceive: $shoutoutReceive,
-       pollEnd: $pollEnd,
-       predictionEnd: $predictionEnd
+       follow: $follow,
+       shoutout: $shoutout,
+       train: $train,
+       poll: $poll,
+       prediction: $prediction,
+       charity: $charity,
+       goal: $goal
       };
      }();
 
@@ -10046,7 +10183,7 @@
          if (_sHist.has(fRet[i].channelId))
           continue;
          _sHist.add(fRet[i].channelId);
-         display.kappa.show(false, cfg.event.youtube.sub, {[cVARs.evt.user]: fRet[i].title});
+         youtube.parse.event.subscribe(fRet[i]);
         }
        }
        _tS = window.setTimeout(_detect, _rSC + _bSlower);
@@ -10201,7 +10338,7 @@
        service.emotes.youtube = {};
       const r = await _findEmote_channel(chName, service.emotes.youtube);
       if (r.length === 0)
-       return false;
+       return;
       if (service.cList.length === 0)
        service.cList = r;
       else
@@ -10928,21 +11065,33 @@
 
      const $event = function()
      {
+      function $subscribe(cmd)
+      {
+       if (!cfg.event.youtube.sub)
+        return;
+       let uName = 'Anonymous';
+       if (cmd.title)
+       {
+        uName = cmd.title;
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(uName))
+         return;
+       }
+       display.kappa.show(false, cfg.event.youtube.sub, {[cVARs.evt.user]: uName});
+      }
+
       const $superchat = function()
       {
        const _minUSD = [0, 1, 2, 5, 10, 20, 50, 100, 200, 300, 400, 500];
 
        async function $c_superchat(cmd)
        {
-        if (cfg.event.youtube.superchat === false)
+        if (!cfg.event.youtube.superchat)
          return false;
-        if (!cfg.event.youtube.superchat.hasOwnProperty('level'))
-         return false;
-        if (cfg.event.youtube.superchat.level === false)
+        if (!cfg.event.youtube.superchat.level)
          return false;
         const u = _parseUser(cmd);
         if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
-         return;
+         return false;
         if (!cmd.snippet.superChatDetails.hasOwnProperty('tier') || cmd.snippet.superChatDetails.tier === null)
          return false;
         const lv = cmd.snippet.superChatDetails.tier;
@@ -10991,11 +11140,11 @@
 
        function $c_supersticker(cmd)
        {
-        if (cfg.event.youtube.supersticker === false)
+        if (!cfg.event.youtube.supersticker)
          return false;
         const u = _parseUser(cmd);
         if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
-         return;
+         return false;
         if (!cmd.snippet.superStickerDetails.hasOwnProperty('superStickerMetadata') || cmd.snippet.superStickerDetails.superStickerMetadata === null)
          return false;
         if (!cmd.snippet.superStickerDetails.hasOwnProperty('tier') || cmd.snippet.superStickerDetails.tier === null)
@@ -11034,14 +11183,16 @@
       {
        function $first(cmd)
        {
+        if (!cfg.event.youtube.member)
+         return;
         const u = _parseUser(cmd);
         if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
          return;
         let c = cfg.event.youtube.member;
-        if (cmd.snippet.newSponsorDetails.hasOwnProperty('memberLevelName'))
+        if (cmd.snippet.newSponsorDetails.memberLevelName)
         {
          const l = cmd.snippet.newSponsorDetails.memberLevelName;
-         if (l !== false && l !== null && l !== '' && c.hasOwnProperty(l) && c[l].hasOwnProperty('first'))
+         if (!!c[l] && c[l].hasOwnProperty('first'))
           c = c[l];
         }
         if (!c.hasOwnProperty('first'))
@@ -11056,14 +11207,16 @@
 
        async function $milestone(cmd)
        {
+        if (!cfg.event.youtube.member)
+         return;
         const u = _parseUser(cmd);
         if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
          return;
         let c = cfg.event.youtube.member;
-        if (cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('memberLevelName'))
+        if (cmd.snippet.memberMilestoneChatDetails.memberLevelName)
         {
          const l = cmd.snippet.memberMilestoneChatDetails.memberLevelName;
-         if (l !== false && l !== null && l !== '' && c.hasOwnProperty(l) && c[l].hasOwnProperty('milestone'))
+         if (!!c[l] && c[l].hasOwnProperty('milestone'))
           c = c[l];
         }
         if (!c.hasOwnProperty('milestone'))
@@ -11090,16 +11243,18 @@
 
        function $gift(cmd)
        {
+        if (!cfg.event.youtube.member)
+         return;
         const u = _parseUser(cmd);
         if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
          return;
         if (!cmd.snippet.membershipGiftingDetails.hasOwnProperty('giftMembershipsCount'))
          return;
         let c = cfg.event.youtube.member;
-        if (cmd.snippet.membershipGiftingDetails.hasOwnProperty('giftMembershipsLevelName'))
+        if (cmd.snippet.membershipGiftingDetails.giftMembershipsLevelName)
         {
          const l = cmd.snippet.membershipGiftingDetails.giftMembershipsLevelName;
-         if (l !== false && l !== null && l !== '' && c.hasOwnProperty(l) && c[l].hasOwnProperty('giftbomb'))
+         if (!!c[l] && c[l].hasOwnProperty('giftbomb'))
           c = c[l];
         }
         if (!c.hasOwnProperty('giftbomb'))
@@ -11123,27 +11278,31 @@
 
       function $ban(cmd)
       {
-       if (!cmd.snippet.userBannedDetails.hasOwnProperty('bannedUserDetails'))
+       if (!cfg.event.youtube.ban)
         return;
-       if (!cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('displayName'))
-        return;
-       const dn = cmd.snippet.userBannedDetails.bannedUserDetails.displayName;
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
-        return;
+       let dn = 'Anonymous';
+       if (cmd.snippet.hasOwnProperty('userBannedDetails') && cmd.snippet.userBannedDetails.hasOwnProperty('bannedUserDetails') && cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('displayName'))
+       {
+        dn = cmd.snippet.userBannedDetails.bannedUserDetails.displayName;
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
+         return;
+       }
        display.kappa.show(false, cfg.event.youtube.ban, {[cVARs.evt.user]: dn});
       }
 
       function $timeout(cmd)
       {
+       if (!cfg.event.youtube.timeout)
+        return;
        if (!cmd.snippet.userBannedDetails.hasOwnProperty('banDurationSeconds'))
         return;
-       if (!cmd.snippet.userBannedDetails.hasOwnProperty('bannedUserDetails'))
-        return;
-       if (!cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('displayName'))
-        return;
-       const dn = cmd.snippet.userBannedDetails.bannedUserDetails.displayName;
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
-        return;
+       let dn = 'Anonymous';
+       if (cmd.snippet.hasOwnProperty('userBannedDetails') && cmd.snippet.userBannedDetails.hasOwnProperty('bannedUserDetails') && cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('displayName'))
+       {
+        dn = cmd.snippet.userBannedDetails.bannedUserDetails.displayName;
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
+         return;
+       }
        const dDur = cmd.snippet.userBannedDetails.banDurationSeconds;
        const r = shared.findInMaybeRange(cfg.event.youtube.timeout, dDur);
        if (r === false)
@@ -11152,6 +11311,7 @@
       }
 
       return {
+       subscribe: $subscribe,
        superchat: $superchat,
        supersticker: $supersticker,
        membership: $membership,
@@ -11929,9 +12089,9 @@
 
         function _PollUpdateEvent(jData)
         {
-         if (cfg.event.kick.poll === false)
+         if (!cfg.event.kick.poll)
           return;
-         if ((!cfg.event.kick.poll.hasOwnProperty('begin') || cfg.event.kick.poll.begin === false) && (!cfg.event.kick.poll.hasOwnProperty('end') || cfg.event.kick.poll.end === false))
+         if (!cfg.event.kick.poll.begin && !cfg.event.kick.poll.end)
           return;
          if (!jData.hasOwnProperty('poll') || jData.poll === null)
           return;
@@ -11945,26 +12105,22 @@
          _tPoll = window.setTimeout(
           function()
           {
-           kick.parse.event.pollEnd(jData.poll);
+           if (_tPoll === false)
+            return;
            _tPoll = false;
+           if (document.visibilityState === 'hidden')
+            return;
+           kick.parse.event.poll.end(jData.poll);
           },
           jData.poll.remaining * 1000
          );
          if (!jData.poll.hasOwnProperty('duration') || jData.poll.duration === null)
           return;
-         if (jData.poll.duration === jData.poll.remaining)
-         {
-          if (!cfg.event.kick.poll.hasOwnProperty('begin'))
-           return;
-          if (cfg.event.kick.poll.begin === false)
-           return;
-          if (document.visibilityState === 'hidden')
-           return;
-          if (!jData.poll.hasOwnProperty('title') || jData.poll.title === null)
-           return;
-          display.kappa.show(false, cfg.event.kick.poll.begin, {[cVARs.evt.title]: jData.poll.title});
+         if (jData.poll.duration !== jData.poll.remaining)
           return;
-         }
+         if (document.visibilityState === 'hidden')
+          return;
+         kick.parse.event.poll.begin(jData.poll);
         }
 
         function _PollDeleteEvent()
@@ -11998,7 +12154,7 @@
         function _ChatroomClearEvent()
         {
          _msgHistory = {};
-         if (cfg.event.kick.clear)
+         if (cfg.event.kick.hasOwnProperty('clear') && cfg.event.kick.clear)
           display.eraseAll();
         }
 
@@ -12140,8 +12296,10 @@
       let _tS = false;
       const _rSC = 5000;
 
-      async function $c_followers()
+      function $c_followers()
       {
+       if (!cfg.event.kick.follow)
+        return;
        _tS = window.setTimeout(_detect, _rSC);
       }
 
@@ -12214,7 +12372,7 @@
        service.emotes.kick = {};
       const r = await _findEmote_channel(chName, service.emotes.kick);
       if (r.length === 0)
-       return false;
+       return;
       if (service.cList.length === 0)
        service.cList = r;
       else
@@ -12603,9 +12761,13 @@
      {
       async function $raid(cmd)
       {
-       if (!cmd.hasOwnProperty('host_username') || cmd.host_username === null)
+       if (!cfg.event.kick.raid)
         return;
-       if (!cmd.hasOwnProperty('number_viewers') || cmd.number_viewers === null)
+       if (!cfg.event.kick.raid.raiders)
+        return;
+       if (!cmd.host_username)
+        return;
+       if (!cmd.number_viewers)
         return;
        const c = cmd.number_viewers;
        const r = shared.findInMaybeRange(cfg.event.kick.raid.raiders, c);
@@ -12638,14 +12800,12 @@
         return;
        if (cmd.months === 1)
        {
-        if (!cfg.event.kick.sub.hasOwnProperty('first'))
-         return;
-        if (cfg.event.kick.sub.first === false)
+        if (!cfg.event.kick.sub.first)
          return;
         display.kappa.show(false, cfg.event.kick.sub.first, {[cVARs.evt.user]: cmd.username});
         return;
        }
-       if (!cfg.event.kick.sub.hasOwnProperty('resub'))
+       if (!cfg.event.kick.sub.resub)
         return;
        const rs = shared.findInMaybeRange(cfg.event.kick.sub.resub, cmd.months);
        if (rs === false)
@@ -12662,14 +12822,12 @@
        const mpmgc = cmd.gifted_usernames.length;
        if (mpmgc === 1)
        {
-        if (!cfg.event.kick.sub.hasOwnProperty('gift'))
-         return;
-        if (cfg.event.kick.sub.gift === false)
+        if (!cfg.event.kick.sub.gift)
          return;
         display.kappa.show(false, cfg.event.kick.sub.gift, {[cVARs.evt.sender]: cmd.gifter_username, [cVARs.evt.user]: cmd.gifted_usernames[0]});
         return;
        }
-       if (!cfg.event.kick.sub.hasOwnProperty('giftbomb'))
+       if (!cfg.event.kick.sub.giftbomb)
         return;
        const gpb = shared.findInMaybeRange(cfg.event.kick.sub.giftbomb, mpmgc);
        if (gpb === false)
@@ -12706,33 +12864,53 @@
        display.kappa.show(false, r, {[cVARs.evt.user]: cmd.user.username, [cVARs.evt.amount]: dDur});
       }
 
-      function $pollEnd(e)
+      const $poll = function()
       {
-       let vPoll = 0;
-       for (let i = 0, l = e.options.length; i < l; i++)
+       function $begin(ev)
        {
-        if (!e.options[i].hasOwnProperty('label') || e.options[i].label === null)
-         continue;
-        if (!e.options[i].hasOwnProperty('votes') || e.options[i].votes === null)
-         continue;
-        vPoll = Math.max(vPoll, e.options[i].votes);
+        if (!cfg.event.kick.poll.begin)
+         return;
+        if (!ev.title)
+         return;
+        display.kappa.show(false, cfg.event.kick.poll.begin, {[cVARs.evt.title]: ev.title});
        }
-       const rPoll = [];
-       for (let i = 0, l = e.options.length; i < l; i++)
+
+       function $end(ev)
        {
-        if (!e.options[i].hasOwnProperty('label') || e.options[i].label === null)
-         continue;
-        if (!e.options[i].hasOwnProperty('votes') || e.options[i].votes === null)
-         continue;
-        if (e.options[i].votes === vPoll)
-         rPoll.push(e.options[i].label);
+        if (!cfg.event.kick.poll.end)
+         return;
+        if (!ev.title)
+         return;
+        let vPoll = 0;
+        for (let i = 0, l = ev.options.length; i < l; i++)
+        {
+         if (!ev.options[i].hasOwnProperty('label') || ev.options[i].label === null)
+          continue;
+         if (!ev.options[i].hasOwnProperty('votes') || ev.options[i].votes === null)
+          continue;
+         vPoll = Math.max(vPoll, ev.options[i].votes);
+        }
+        const rPoll = [];
+        for (let i = 0, l = ev.options.length; i < l; i++)
+        {
+         if (!ev.options[i].hasOwnProperty('label') || ev.options[i].label === null)
+          continue;
+         if (!ev.options[i].hasOwnProperty('votes') || ev.options[i].votes === null)
+          continue;
+         if (ev.options[i].votes === vPoll)
+          rPoll.push(ev.options[i].label);
+        }
+        let sPoll = 'None';
+        if (rPoll.length > 0)
+         sPoll = rPoll.join(' + ');
+        display.kappa.show(false, cfg.event.kick.poll.end, {[cVARs.evt.title]: ev.title, [cVARs.evt.result]: sPoll});
        }
-       let sPoll = 'None';
-       if (rPoll.length > 0)
-        sPoll = rPoll.join(' + ');
-       if (cfg.event.kick.poll !== false && cfg.event.kick.poll.hasOwnProperty('end'))
-        display.kappa.show(false, cfg.event.kick.poll.end, {[cVARs.evt.title]: e.title, [cVARs.evt.result]: sPoll});
-      }
+
+       return {
+        begin: $begin,
+        end: $end
+       };
+      }();
 
       return {
        raid: $raid,
@@ -12740,7 +12918,7 @@
        gift: $gift,
        ban: $ban,
        timeout: $timeout,
-       pollEnd: $pollEnd
+       poll: $poll
       };
      }();
 
@@ -19986,8 +20164,7 @@
      if (!kick.net.oAuth.hasLogin)
       return false;
      kick.net.socket();
-     if (cfg.event.kick.follow !== false)
-      kick.net.followers();
+     kick.net.followers();
      return true;
     }
 
