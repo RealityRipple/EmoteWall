@@ -7976,15 +7976,15 @@
         return;
        if (cmd.params.length < 2)
         return;
-       const lv = await _level(cmd);
-       if (await _parseTaggedChannel(cmd, lv))
+       const lvChk = new _level(cmd);
+       if (await _parseTaggedChannel(cmd, lvChk))
         return;
-       if (_parseCommand(cmd, lv))
-        return;
-       if ((lv & cfg.display.access) === 0)
+       if (await _parseCommand(cmd, lvChk))
         return;
        const p = _handleDuplicates(_eListFromCmd(cmd, null, andCheers));
        if (p.length === 0)
+        return;
+       if (!(await lvChk.check(cfg.display.access)))
         return;
        display.emote.addToShowList(p);
        display.emote.showEmotes();
@@ -8102,7 +8102,7 @@
        return true;
       }
 
-      async function _parseTaggedChannel(cmd, lv)
+      async function _parseTaggedChannel(cmd, lvChk)
       {
        if (Object.keys(_aTagged).length === 0)
         return false;
@@ -8125,7 +8125,7 @@
        let rq = cfg.display.kappa.access;
        if (cfg.event.twitch.tag.hasOwnProperty('access') && cfg.event.twitch.tag.access >= 0)
         rq = cfg.event.twitch.tag.access;
-       if ((lv & rq) === 0)
+       if (!(await lvChk.check(rq)))
         return false;
        if (!cfg.event.twitch.tag.targetEmotes)
        {
@@ -8143,14 +8143,14 @@
        return true;
       }
 
-      function _parseCommand(cmd, lv)
+      function _parseCommand(cmd, lvChk)
       {
        const m = cmd.params[1].toLowerCase();
        const a = _handleDuplicates(_eListFromCmd(cmd, true));
        let mID = false;
        if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('id'))
         mID = 'twitch:' + cmd.tags.id;
-       return service.parse.line.parseCommand(m, lv, a, mID);
+       return service.parse.line.parseCommand(m, lvChk, a, mID);
       }
 
       return $c_line;
@@ -9035,23 +9035,27 @@
       };
      }();
 
-     const _level = function()
+     class _level
      {
-      const _rFH = 3600000;
+      constructor(cmd)
+      {
+       this.cmd = cmd;
+       this.rFH = 3600000;
+      }
 
-      async function $c_level(cmd)
+      check(rq)
       {
        let r = twitch.Access.STRANGER;
-       if (cmd.tags.hasOwnProperty('mod') && cmd.tags.mod === '1')
+       if (this.cmd.tags.hasOwnProperty('mod') && this.cmd.tags.mod === '1')
         r |= twitch.Access.MODERATOR;
-       if (cmd.tags.hasOwnProperty('vip') && cmd.tags.vip === '1')
+       if (this.cmd.tags.hasOwnProperty('vip') && this.cmd.tags.vip === '1')
         r |= twitch.Access.VIP;
-       if (cmd.tags.hasOwnProperty('badges'))
+       if (this.cmd.tags.hasOwnProperty('badges'))
        {
-        const badges = cmd.tags.badges.split(',');
+        const badges = this.cmd.tags.badges.split(',');
         for (let i = 0, l = badges.length; i < l; i++)
         {
-         const bData = _jSplit(badges[i], '/', 2);
+         const bData = _level._jSplit(badges[i], '/', 2);
          switch (bData[0])
          {
           case 'broadcaster':
@@ -9084,56 +9088,35 @@
          }
         }
        }
-       /* api-heavy, only check if follower access is allowed and there's a chance it matters */
-       let needF = false;
-       if ((cfg.display.access & twitch.Access.FOLLOWER) === twitch.Access.FOLLOWER && (cfg.display.access & twitch.Access.STRANGER) !== twitch.Access.STRANGER)
-        needF = true;
-       else if ((cfg.display.kappa.access & twitch.Access.FOLLOWER) === twitch.Access.FOLLOWER && (cfg.display.kappa.access & twitch.Access.STRANGER) !== twitch.Access.STRANGER)
-        needF = true;
-       else
-       {
-        for (const k of cfg.commands)
-        {
-         if (!k.hasOwnProperty('styles'))
-          continue;
-         if (!k.hasOwnProperty('access'))
-          continue;
-         if ((k.access & twitch.Access.FOLLOWER) === twitch.Access.FOLLOWER && (k.access & twitch.Access.STRANGER) !== twitch.Access.STRANGER)
-         {
-          needF = true;
-          break;
-         }
-        }
-       }
-       if (needF)
-       {
-        const f = await _checkFollower(cmd);
-        if (f)
-         r |= twitch.Access.FOLLOWER;
-       }
        const accessSub = twitch.Access.SUBSCRIBER_T1 | twitch.Access.SUBSCRIBER_T2 | twitch.Access.SUBSCRIBER_T3;
        if ((r & twitch.Access.BROADCASTER) === twitch.Access.BROADCASTER && (r & accessSub) !== 0)
-        return r & ~accessSub;
-       return r;
+        r &= ~accessSub;
+       if ((r & rq) !== 0)
+        return true;
+       if ((rq & twitch.Access.FOLLOWER) === 0)
+        return false;
+       /* api-heavy, only check if follower access is allowed and there's a chance it matters */
+       const uID = this.cmd.tags['user-id'];
+       const rID = this.cmd.tags['room-id'];
+       return this._checkFollower(uID, rID);
       }
 
-      async function _checkFollower(cmd, retry = true)
+      async _checkFollower(uID, rID, retry = true)
       {
-       const uID = cmd.tags['user-id'];
        if (twitch.net.fList.hasOwnProperty(uID))
        {
         const tDif = Date.now() - twitch.net.fList[uID].t;
-        if (tDif < _rFH)
+        if (tDif < this.rFH)
          return twitch.net.fList[uID].value;
        }
-       const url = cURLs.api.twitch.channels.followers.replaceAll(cVARs.url.userID, uID).replaceAll(cVARs.url.channelID, cmd.tags['room-id']);
+       const url = cURLs.api.twitch.channels.followers.replaceAll(cVARs.url.userID, uID).replaceAll(cVARs.url.channelID, rID);
        const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
        if (!r.success)
        {
         if (r.code === 401)
         {
          if (retry && await twitch.net.oAuth.reinit())
-          return _checkFollower(cmd, false);
+          return this._checkFollower(uID, rID, false);
          notice.error(notice.Type.TWITCH_TOKEN);
          if (!loginT.inUse)
           twitch.net.oAuth.clear();
@@ -9152,7 +9135,7 @@
        return false;
       }
 
-      function _jSplit(s, sep, limit)
+      static _jSplit(s, sep, limit)
       {
        const arr = [];
        let v = '';
@@ -9173,9 +9156,7 @@
         arr.push(v);
        return arr;
       }
-
-      return $c_level;
-     }();
+     }
 
      function _handleDuplicates(a)
      {
@@ -10815,7 +10796,7 @@
 
       const $youtube = function()
       {
-       async function $c_youtube(cmd, dup = null)
+       function $c_youtube(cmd, dup = null)
        {
         let msg = _getMessage(cmd);
         if (msg === false)
@@ -10833,7 +10814,6 @@
          dup = cfg.display.duplicates;
         if (dup === false)
          dup = 1;
-        const lv = await _level(cmd);
         const ret = [];
         for (let i = 0, l = emList.length; i < l; i++)
         {
@@ -10843,7 +10823,7 @@
          let sc = cSources.scope.global;
          if (u.hasOwnProperty('scope'))
           sc = u.scope;
-         if (sc === cSources.scope.channel && (lv & (youtube.Access.MEMBER | youtube.Access.BROADCASTER)) === 0)
+         if (sc === cSources.scope.channel && !_emoteAccess(cmd))
           continue;
          if (dup !== true)
          {
@@ -11074,26 +11054,26 @@
        const u = youtube.parse.user(cmd);
        if (service.parse.ignored(u))
         return;
-       const lv = await _level(cmd);
-       if (await _parseCommand(cmd, lv))
+       const lvChk = new _level(cmd);
+       if (await _parseCommand(cmd, lvChk))
         return;
-       if ((lv & cfg.display.access) === 0)
-        return;
-       const p = _handleDuplicates(await _eListFromCmd(cmd));
+       const p = _handleDuplicates(_eListFromCmd(cmd));
        if (p.length === 0)
+        return;
+       if (!(await lvChk.check(cfg.display.access)))
         return;
        display.emote.addToShowList(p);
        display.emote.showEmotes();
       }
 
-      async function _parseCommand(cmd, lv)
+      function _parseCommand(cmd, lvChk)
       {
        const m = _getMessage(cmd).toLowerCase();
-       const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+       const a = _handleDuplicates(_eListFromCmd(cmd, true));
        let mID = false;
        if (cmd.hasOwnProperty('id'))
         mID = 'youtube:' + cmd.id;
-       return service.parse.line.parseCommand(m, lv, a, mID);
+       return service.parse.line.parseCommand(m, lvChk, a, mID);
       }
 
       return $c_line;
@@ -11138,7 +11118,7 @@
         {
          if (cfg.event.youtube.superchat.useMsg)
          {
-          const a = await _eListFromCmd(cmd);
+          const a = _eListFromCmd(cmd);
           p.push(...a);
          }
          else
@@ -11252,7 +11232,7 @@
         if (cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('userComment') && cmd.snippet.memberMilestoneChatDetails.userComment !== '')
         {
          if (cfg.event.youtube.member.useMsg)
-          a = await _eListFromCmd(cmd, true);
+          a = _eListFromCmd(cmd, true);
          else
           await youtube.parse.line(cmd);
         }
@@ -11343,59 +11323,57 @@
       };
      }();
 
-     async function _level(cmd)
+     function _emoteAccess(cmd)
      {
-      let r = youtube.Access.STRANGER;
       if (!cmd.hasOwnProperty('authorDetails'))
-       return r;
-      const author = cmd.authorDetails;
-      if (author.hasOwnProperty('isChatOwner') && author.isChatOwner !== false)
-       r |= youtube.Access.BROADCASTER;
-      if (author.hasOwnProperty('isChatModerator') && author.isChatModerator !== false)
-       r |= youtube.Access.MODERATOR;
-      if (author.hasOwnProperty('isChatSponsor') && author.isChatSponsor !== false)
-       r |= youtube.Access.MEMBER;
-      if (author.hasOwnProperty('isMember') && author.isMember !== false)
-       r |= youtube.Access.MEMBER;
-      if (author.hasOwnProperty('isVerified') && author.isVerified !== false)
-       r |= youtube.Access.VERIFIED;
-      if (author.hasOwnProperty('isSubscriber') && author.isSubscriber !== false)
-       r |= youtube.Access.SUBSCRIBER;
-      const u = youtube.parse.user(cmd);
-      if (cmd.hasOwnProperty('_channel') && u.id !== 0)
+       return false;
+      if (cmd.authorDetails.hasOwnProperty('isChatOwner') && cmd.authorDetails.isChatOwner !== false)
+       return true;
+      if (cmd.authorDetails.hasOwnProperty('isMember') && cmd.authorDetails.isMember !== false)
+       return true;
+      return false;
+     }
+
+     class _level
+     {
+      constructor(cmd)
       {
-       /* api-heavy, only check if subscriber access is allowed and there's a chance it matters */
-       let needS = false;
-       if ((cfg.display.access & youtube.Access.SUBSCRIBER) === youtube.Access.SUBSCRIBER && (cfg.display.access & youtube.Access.STRANGER) !== youtube.Access.STRANGER)
-        needS = true;
-       else if ((cfg.display.kappa.access & youtube.Access.SUBSCRIBER) === youtube.Access.SUBSCRIBER && (cfg.display.kappa.access & youtube.Access.STRANGER) !== youtube.Access.STRANGER)
-        needS = true;
-       else
-       {
-        for (const k of cfg.commands)
-        {
-         if (!k.hasOwnProperty('styles'))
-          continue;
-         if (!k.hasOwnProperty('access'))
-          continue;
-         if ((k.access & youtube.Access.SUBSCRIBER) === youtube.Access.SUBSCRIBER && (k.access & youtube.Access.STRANGER) !== youtube.Access.STRANGER)
-         {
-          needS = true;
-          break;
-         }
-        }
-       }
-       if (needS)
-       {
-        const chID = cmd._channel;
-        const f = await youtube.net.subscribers.checkUser(chID, u.id);
-        if (f)
-         r |= youtube.Access.SUBSCRIBER;
-       }
+       this.cmd = cmd;
       }
-      if ((r & youtube.Access.BROADCASTER) === youtube.Access.BROADCASTER && (r & youtube.Access.MEMBER) !== 0)
-       return r & ~youtube.Access.MEMBER;
-      return r;
+
+      check(rq)
+      {
+       let r = youtube.Access.STRANGER;
+       if (!this.cmd.hasOwnProperty('authorDetails'))
+        return (r & rq) !== 0;
+       const author = this.cmd.authorDetails;
+       if (author.hasOwnProperty('isChatOwner') && author.isChatOwner !== false)
+        r |= youtube.Access.BROADCASTER;
+       if (author.hasOwnProperty('isChatModerator') && author.isChatModerator !== false)
+        r |= youtube.Access.MODERATOR;
+       if (author.hasOwnProperty('isChatSponsor') && author.isChatSponsor !== false)
+        r |= youtube.Access.MEMBER;
+       if (author.hasOwnProperty('isMember') && author.isMember !== false)
+        r |= youtube.Access.MEMBER;
+       if (author.hasOwnProperty('isVerified') && author.isVerified !== false)
+        r |= youtube.Access.VERIFIED;
+       if (author.hasOwnProperty('isSubscriber') && author.isSubscriber !== false)
+        r |= youtube.Access.SUBSCRIBER;
+       if ((r & youtube.Access.BROADCASTER) === youtube.Access.BROADCASTER && (r & youtube.Access.MEMBER) !== 0)
+        r &= ~youtube.Access.MEMBER;
+       if ((r & rq) !== 0)
+        return true;
+       if ((rq & youtube.Access.SUBSCRIBER) === 0)
+        return false;
+       /* api-heavy, only check if subscriber access is allowed and there's a chance it matters */
+       if (!this.cmd.hasOwnProperty('_channel'))
+        return false;
+       const u = youtube.parse.user(this.cmd);
+       if (u.id === 0)
+        return false;
+       const chID = this.cmd._channel;
+       return youtube.net.subscribers.checkUser(chID, u.id);
+      }
      }
 
      function _handleDuplicates(a)
@@ -11484,13 +11462,13 @@
       return true;
      }
 
-     async function _eListFromCmd(cmd, dup = null)
+     function _eListFromCmd(cmd, dup = null)
      {
       const r = [];
       const u = youtube.parse.user(cmd);
       if (service.parse.ignored(u))
        return r;
-      r.push(...await youtube.parse.content.youtube(cmd, dup));
+      r.push(...youtube.parse.content.youtube(cmd, dup));
       if (cfg.display.useEmoji)
        r.push(...youtube.parse.content.emoji(cmd, dup));
       if (cfg.display.extended.useFFZ)
@@ -12770,26 +12748,26 @@
         return;
        if (!cmd.hasOwnProperty('content') || cmd.content === null)
         return;
-       const lv = await _level(cmd);
-       if (_parseCommand(cmd, lv))
-        return;
-       if ((lv & cfg.display.access) === 0)
+       const lvChk = new _level(cmd);
+       if (await _parseCommand(cmd, lvChk))
         return;
        const p = _handleDuplicates(_eListFromCmd(cmd));
        if (p.length === 0)
+        return;
+       if (!(await lvChk.check(cfg.display.access)))
         return;
        display.emote.addToShowList(p);
        display.emote.showEmotes();
       }
 
-      function _parseCommand(cmd, lv)
+      function _parseCommand(cmd, lvChk)
       {
        const m = cmd.content.toLowerCase();
        const a = _handleDuplicates(_eListFromCmd(cmd, true));
        let mID = false;
        if (cmd.hasOwnProperty('id'))
         mID = 'kick:' + cmd.id;
-       return service.parse.line.parseCommand(m, lv, a, mID);
+       return service.parse.line.parseCommand(m, lvChk, a, mID);
       }
 
       return $c_line;
@@ -12956,28 +12934,32 @@
       };
      }();
 
-     const _level = function()
+     class _level
      {
-      const _rFH = 3600000;
+      constructor(cmd)
+      {
+       this.cmd = cmd;
+       this.rFH = 3600000;
+      }
 
-      async function $c_level(cmd)
+      check(rq)
       {
        let r = kick.Access.STRANGER;
-       if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
-        return r;
-       if (!cmd.sender.hasOwnProperty('identity') || cmd.sender.identity === null)
-        return r;
-       if (!cmd.sender.identity.hasOwnProperty('badges') || cmd.sender.identity.badges === null)
-        return r;
-       if (!Array.isArray(cmd.sender.identity.badges))
-        return r;
-       if (cmd.sender.identity.badges.length > 0)
+       if (!this.cmd.hasOwnProperty('sender') || this.cmd.sender === null)
+        return (r & rq) !== 0;
+       if (!this.cmd.sender.hasOwnProperty('identity') || this.cmd.sender.identity === null)
+        return (r & rq) !== 0;
+       if (!this.cmd.sender.identity.hasOwnProperty('badges') || this.cmd.sender.identity.badges === null)
+        return (r & rq) !== 0;
+       if (!Array.isArray(this.cmd.sender.identity.badges))
+        return (r & rq) !== 0;
+       if (this.cmd.sender.identity.badges.length > 0)
        {
-        for (let i = 0, l = cmd.sender.identity.badges.length; i < l; i++)
+        for (let i = 0, l = this.cmd.sender.identity.badges.length; i < l; i++)
         {
-         if (!cmd.sender.identity.badges[i].hasOwnProperty('type') || cmd.sender.identity.badges[i].type === null)
+         if (!this.cmd.sender.identity.badges[i].hasOwnProperty('type') || this.cmd.sender.identity.badges[i].type === null)
           continue;
-         switch (cmd.sender.identity.badges[i].type)
+         switch (this.cmd.sender.identity.badges[i].type)
          {
           case 'broadcaster':
            r |= kick.Access.BROADCASTER;
@@ -13007,47 +12989,25 @@
          }
         }
        }
-       /* api-heavy, only check if follower access is allowed and there's a chance it matters */
-       let needF = false;
-       if ((cfg.display.access & kick.Access.FOLLOWER) === kick.Access.FOLLOWER && (cfg.display.access & kick.Access.STRANGER) !== kick.Access.STRANGER)
-        needF = true;
-       else if ((cfg.display.kappa.access & kick.Access.FOLLOWER) === kick.Access.FOLLOWER && (cfg.display.kappa.access & kick.Access.STRANGER) !== kick.Access.STRANGER)
-        needF = true;
-       else
-       {
-        for (const k of cfg.commands)
-        {
-         if (!k.hasOwnProperty('styles'))
-          continue;
-         if (!k.hasOwnProperty('access'))
-          continue;
-         if ((k.access & kick.Access.FOLLOWER) === kick.Access.FOLLOWER && (k.access & kick.Access.STRANGER) !== kick.Access.STRANGER)
-         {
-          needF = true;
-          break;
-         }
-        }
-       }
-       if (needF)
-       {
-        const f = await _checkFollower(cmd);
-        if (f)
-         r |= kick.Access.FOLLOWER;
-       }
        if ((r & kick.Access.BROADCASTER) === kick.Access.BROADCASTER && (r & kick.Access.SUBSCRIBER) !== 0)
-        return r & ~kick.Access.SUBSCRIBER;
-       return r;
+        r &= ~kick.Access.SUBSCRIBER;
+       if ((r & rq) !== 0)
+        return true;
+       if ((rq & kick.Access.FOLLOWER) === 0)
+        return false;
+       /* api-heavy, only check if follower access is allowed and there's a chance it matters */
+       const u = _parseUser(this.cmd);
+       return this._checkFollower(u);
       }
 
-      async function _checkFollower(cmd)
+      async _checkFollower(u)
       {
-       const u = _parseUser(cmd);
        if (u.id === 0)
         return false;
        if (kick.net.fList.hasOwnProperty(u.id))
        {
         const tDif = Date.now() - kick.net.fList[u.id].t;
-        if (tDif < _rFH)
+        if (tDif < this.rFH)
          return kick.net.fList[u.id].value;
        }
        if (!u._slug)
@@ -13063,9 +13023,7 @@
        kick.net.fList[u.id] = {value: false, t: Date.now()};
        return false;
       }
-
-      return $c_level;
-     }();
+     }
 
      function _handleDuplicates(a)
      {
@@ -14639,13 +14597,13 @@
      {
       const $parseCommand = function()
       {
-       function $c_parseCommand(msg, lv, eA = false, mID = false)
+       async function $c_parseCommand(msg, lvChk, eA = false, mID = false)
        {
         const kNow = Date.now();
         let foundAdvCmd = false;
         for (const k of cfg.commands)
         {
-         const r = _adv(msg, lv, k, kNow, eA, mID);
+         const r = await _adv(msg, lvChk, k, kNow, eA, mID);
          if (r.done === true)
           return r.ret;
          if (r.found)
@@ -14667,7 +14625,7 @@
         }
         if (foundCmd === false)
          return foundAdvCmd;
-        if ((lv & cfg.display.kappa.access) === 0)
+        if (!(await lvChk.check(cfg.display.kappa.access)))
          return foundAdvCmd;
         const h = Symbol.for(null);
         if (!_aLast.hasOwnProperty(h))
@@ -14684,7 +14642,7 @@
         return true;
        }
 
-       function _adv(msg, lv, k, kNow, eA = false, mID = false)
+       async function _adv(msg, lvChk, k, kNow, eA = false, mID = false)
        {
         const r = {
          done: false,
@@ -14714,7 +14672,7 @@
         let kAccess = cfg.display.kappa.access;
         if (k.hasOwnProperty('access'))
          kAccess = k.access;
-        if ((lv & kAccess) === 0)
+        if (!(await lvChk.check(kAccess)))
          return r;
         r.found = true;
         if (k.hasOwnProperty('cooldown'))
