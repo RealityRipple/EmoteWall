@@ -353,6 +353,10 @@
        gift: true,
        giftbomb: 1
       },
+      cheer: {
+       useMsg: true,
+       kicks: 50
+      },
       poll: {
        begin: false,
        end: false
@@ -1405,7 +1409,8 @@
      }),
      kick: Object.freeze({
       appid: 'https://cdn.jsdelivr.net/gh/realityripple/kick-appid/app.json',
-      emote: 'https://files.kick.com/emotes/' + cVARs.url.emoteID + '/fullsize'
+      emote: 'https://files.kick.com/emotes/' + cVARs.url.emoteID + '/fullsize',
+      cheer: 'https://files.kick.com/kicks/gifts/' + cVARs.url.emoteID + '.webp'
      }),
      emoji: Object.freeze({
       fonts: 'https://cdn.jsdelivr.net/gh/realityripple/emoji/fonts.min.json',
@@ -11868,6 +11873,11 @@
          _PredictionUpdated(j);
          return;
         }
+        if (j.event === 'KicksGifted')
+        {
+         await _KicksGifted(j);
+         return;
+        }
        }
 
        function _pusher_error(j)
@@ -11953,6 +11963,7 @@
          }
          _tPing = window.setInterval(_wsPing, _lPing);
          _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'chatroom_' + kick.net.chatID}}));
+         _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'channel_' + kick.net.channelID}}));
          _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'chatrooms.' + kick.net.chatID + '.v2'}}));
          _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'predictions-channel-' + kick.net.channelID}}));
         }
@@ -12188,7 +12199,7 @@
         if (jData.hasOwnProperty('channel_id'))
          cmd.chatroom_id = jData.channel_id;
         if (jData.hasOwnProperty('user_input'))
-         cmd.content = jData.user_input;
+         cmd.user_input = jData.user_input;
         kick.parse.event.redeem(jData.reward_title, cmd);
        }
 
@@ -12220,6 +12231,18 @@
         if (document.visibilityState === 'hidden')
          return;
         kick.parse.event.prediction.end(jData.prediction);
+       }
+
+       async function _KicksGifted(j)
+       {
+        const jData = JSON.parse(j.data);
+        if (jData.hasOwnProperty('message') && jData.message !== null)
+         jData.message = jData.message.replaceAll(/\s+/g, ' ').replaceAll(/([^ ])\[emote:/g, '$1 [emote:');
+        if (document.visibilityState === 'hidden')
+         return;
+        if (await kick.parse.event.cheer(jData))
+         return;
+        kick.parse.line(jData, 'message');
        }
 
        return $c_wsMessage;
@@ -12561,19 +12584,19 @@
 
      const $content = function()
      {
-      function $emoji(cmd, dup = null)
+      function $emoji(cmd, attrContent, dup = null)
       {
-       if (!cmd.hasOwnProperty('content') || cmd.content === null)
+       if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
         return [];
-       const msg = cmd.content;
+       const msg = cmd[attrContent];
        return service.parse.content.emoji(msg, dup);
       }
 
-      function $kick(cmd, dup = null)
+      function $kick(cmd, attrContent, dup = null)
       {
-       if (!cmd.hasOwnProperty('content') || cmd.content === null)
+       if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
         return [];
-       const m = cmd.content;
+       const m = cmd[attrContent];
        if (dup === null)
         dup = cfg.display.duplicates;
        if (dup === false)
@@ -12620,47 +12643,64 @@
        return ret;
       }
 
+      function $kicks(cmd)
+      {
+       const p = [];
+       if (!cmd.hasOwnProperty('gift'))
+        return p;
+       if (!cmd.gift.hasOwnProperty('name'))
+        return p;
+       if (!cmd.gift.hasOwnProperty('gift_id'))
+        return p;
+       let gID = cmd.gift.gift_id.replaceAll('_', '-');
+       if (gID === 'boooom')
+        gID = 'boom';
+       const url = cURLs.cdn.kick.cheer.replaceAll(cVARs.url.emoteID, gID);
+       p.push({svc: cSources.service.cheer, url: url, str: cmd.gift.name, pos: 0, scope: null});
+       return p;
+      }
+
       const $3rdparty = function()
       {
        const $ffz = function()
        {
-        function $general(cmd, dup = null)
+        function $general(cmd, attrContent, dup = null)
         {
-         if (!cmd.hasOwnProperty('content') || cmd.content === null)
+         if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
           return [];
-         return service.parse.content['3rdparty'].ffz.general(cmd.content, 'kick:' + kick.net.userID, dup);
+         return service.parse.content['3rdparty'].ffz.general(cmd[attrContent], 'kick:' + kick.net.userID, dup);
         }
 
-        function $zwe(l, cmd, pass, dup = null)
+        function $zwe(l, cmd, attrContent, pass, dup = null)
         {
-         if (!cmd.hasOwnProperty('content') || cmd.content === null)
+         if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
           return;
          const u = _parseUser(cmd);
          if (u.id === 0)
           return;
-         service.parse.content['3rdparty'].ffz.zwe(l, 'kick:' + u.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
+         service.parse.content['3rdparty'].ffz.zwe(l, 'kick:' + u.id, 'kick:' + kick.net.userID, cmd[attrContent], pass, dup);
         }
 
         const $user = function()
         {
-         function $userGeneral(cmd, dup = null)
+         function $userGeneral(cmd, attrContent, dup = null)
          {
-          if (!cmd.hasOwnProperty('content') || cmd.content === null)
+          if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
            return [];
           const u = _parseUser(cmd);
           if (u.id === 0)
            return [];
-          return service.parse.content['3rdparty'].ffz.user.general('kick:' + u.id, cmd.content, dup);
+          return service.parse.content['3rdparty'].ffz.user.general('kick:' + u.id, cmd[attrContent], dup);
          }
 
-         function $userZWE(l, cmd, pass, dup = null)
+         function $userZWE(l, cmd, attrContent, pass, dup = null)
          {
-          if (!cmd.hasOwnProperty('content') || cmd.content === null)
+          if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
            return;
           const u = _parseUser(cmd);
           if (u.id === 0)
            return;
-          service.parse.content['3rdparty'].ffz.user.zwe(l, 'kick:' + u.id, cmd.content, pass, dup);
+          service.parse.content['3rdparty'].ffz.user.zwe(l, 'kick:' + u.id, cmd[attrContent], pass, dup);
          }
 
          return {
@@ -12678,43 +12718,43 @@
 
        const $bttv = function()
        {
-        function $general(cmd, dup = null)
+        function $general(cmd, attrContent, dup = null)
         {
-         if (!cmd.hasOwnProperty('content') || cmd.content === null)
+         if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
           return [];
-         return service.parse.content['3rdparty'].bttv.general(cmd.content, 'kick:' + kick.net.userID, dup);
+         return service.parse.content['3rdparty'].bttv.general(cmd[attrContent], 'kick:' + kick.net.userID, dup);
         }
 
-        function $zwe(l, cmd, pass, dup = null)
+        function $zwe(l, cmd, attrContent, pass, dup = null)
         {
-         if (!cmd.hasOwnProperty('content') || cmd.content === null)
+         if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
           return;
          const u = _parseUser(cmd);
          if (u.id === 0)
           return;
-         service.parse.content['3rdparty'].bttv.zwe(l, 'kick:' + u.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
+         service.parse.content['3rdparty'].bttv.zwe(l, 'kick:' + u.id, 'kick:' + kick.net.userID, cmd[attrContent], pass, dup);
         }
 
         const $user = function()
         {
-         function $userGeneral(cmd, dup = null)
+         function $userGeneral(cmd, attrContent, dup = null)
          {
-          if (!cmd.hasOwnProperty('content') || cmd.content === null)
+          if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
            return [];
           const u = _parseUser(cmd);
           if (u.id === 0)
            return [];
-          return service.parse.content['3rdparty'].bttv.user.general('kick:' + u.id, cmd.content, dup);
+          return service.parse.content['3rdparty'].bttv.user.general('kick:' + u.id, cmd[attrContent], dup);
          }
 
-         function $userZWE(l, cmd, pass, dup = null)
+         function $userZWE(l, cmd, attrContent, pass, dup = null)
          {
-          if (!cmd.hasOwnProperty('content') || cmd.content === null)
+          if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
            return;
           const u = _parseUser(cmd);
           if (u.id === 0)
            return;
-          service.parse.content['3rdparty'].bttv.user.zwe(l, 'kick:' + u.id, cmd.content, pass, dup);
+          service.parse.content['3rdparty'].bttv.user.zwe(l, 'kick:' + u.id, cmd[attrContent], pass, dup);
          }
 
          return {
@@ -12732,43 +12772,43 @@
 
        const $7tv = function()
        {
-        function $general(cmd, dup = null)
+        function $general(cmd, attrContent, dup = null)
         {
-         if (!cmd.hasOwnProperty('content') || cmd.content === null)
+         if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
           return [];
-         return service.parse.content['3rdparty']['7tv'].general(cmd.content, 'kick:' + kick.net.userID, dup);
+         return service.parse.content['3rdparty']['7tv'].general(cmd[attrContent], 'kick:' + kick.net.userID, dup);
         }
 
-        function $zwe(l, cmd, pass, dup = null)
+        function $zwe(l, cmd, attrContent, pass, dup = null)
         {
-         if (!cmd.hasOwnProperty('content') || cmd.content === null)
+         if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
           return;
          const u = _parseUser(cmd);
          if (u.id === 0)
           return;
-         service.parse.content['3rdparty']['7tv'].zwe(l, 'kick:' + u.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
+         service.parse.content['3rdparty']['7tv'].zwe(l, 'kick:' + u.id, 'kick:' + kick.net.userID, cmd[attrContent], pass, dup);
         }
 
         const $user = function()
         {
-         function $userGeneral(cmd, dup = null)
+         function $userGeneral(cmd, attrContent, dup = null)
          {
-          if (!cmd.hasOwnProperty('content') || cmd.content === null)
+          if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
            return [];
           const u = _parseUser(cmd);
           if (u.id === 0)
            return [];
-          return service.parse.content['3rdparty']['7tv'].user.general('kick:' + u.id, cmd.content, dup);
+          return service.parse.content['3rdparty']['7tv'].user.general('kick:' + u.id, cmd[attrContent], dup);
          }
 
-         function $userZWE(l, cmd, pass, dup = null)
+         function $userZWE(l, cmd, attrContent, pass, dup = null)
          {
-          if (!cmd.hasOwnProperty('content') || cmd.content === null)
+          if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
            return;
           const u = _parseUser(cmd);
           if (u.id === 0)
            return;
-          service.parse.content['3rdparty']['7tv'].user.zwe(l, 'kick:' + u.id, cmd.content, pass, dup);
+          service.parse.content['3rdparty']['7tv'].user.zwe(l, 'kick:' + u.id, cmd[attrContent], pass, dup);
          }
 
          return {
@@ -12794,23 +12834,24 @@
       return {
        emoji: $emoji,
        kick: $kick,
+       kicks: $kicks,
        '3rdparty': $3rdparty
       };
      }();
 
      const $line = function()
      {
-      async function $c_line(cmd)
+      async function $c_line(cmd, attrContent = 'content', andCheers = true)
       {
        const u = _parseUser(cmd);
        if (service.parse.ignored(u))
         return;
-       if (!cmd.hasOwnProperty('content') || cmd.content === null)
+       if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
         return;
        const lvChk = new _level(cmd);
-       if (await _parseCommand(cmd, lvChk))
+       if (await _parseCommand(cmd, attrContent, lvChk))
         return;
-       const p = _handleDuplicates(_eListFromCmd(cmd));
+       const p = _handleDuplicates(_eListFromCmd(cmd, attrContent, null, andCheers));
        if (p.length === 0)
         return;
        if (!(await lvChk.check(cfg.display.access)))
@@ -12819,10 +12860,10 @@
        display.emote.showEmotes();
       }
 
-      function _parseCommand(cmd, lvChk)
+      function _parseCommand(cmd, attrContent, lvChk)
       {
-       const m = cmd.content.toLowerCase();
-       const a = _handleDuplicates(_eListFromCmd(cmd, true));
+       const m = cmd[attrContent].toLowerCase();
+       const a = _handleDuplicates(_eListFromCmd(cmd, attrContent, true));
        let mID = false;
        if (cmd.hasOwnProperty('id'))
         mID = 'kick:' + cmd.id;
@@ -12834,6 +12875,47 @@
 
      const $event = function()
      {
+      async function $cheer(cmd)
+      {
+       if (!cfg.event.kick.cheer)
+        return false;
+       if (!cfg.event.kick.cheer.kicks)
+        return false;
+       const u = _parseUser(cmd);
+       if (service.parse.ignored(u))
+        return false;
+       if (!cmd.hasOwnProperty('gift'))
+        return false;
+       if (!cmd.gift.hasOwnProperty('amount'))
+        return false;
+       if (cmd.gift.amount < 1)
+        return false;
+       let p = [];
+       if (cfg.event.kick.cheer.useMsg)
+       {
+        const a = _eListFromCmd(cmd, 'message');
+        p.push(...a);
+       }
+       else
+       {
+        const b = kick.parse.content.kicks(cmd);
+        p.push(...b);
+        await kick.parse.line(cmd, 'message', false);
+       }
+       p = _handleDuplicates(p);
+       if (p.length === 0)
+        return false;
+       const r = shared.findInMaybeRange(cfg.event.kick.cheer.kicks, cmd.gift.amount);
+       if (r === false)
+       {
+        display.emote.addToShowList(p);
+        display.emote.showEmotes();
+        return true;
+       }
+       display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.sticker]: cmd.gift.name, [cVARs.evt.amount]: cmd.gift.amount});
+       return true;
+      }
+
       async function $raid(cmd)
       {
        if (!cfg.event.kick.raid)
@@ -12952,7 +13034,7 @@
          display.kappa.show(false, kC);
          return;
         }
-        const a = _handleDuplicates(_eListFromCmd(cmd, true));
+        const a = _handleDuplicates(_eListFromCmd(cmd, 'user_input', true));
         display.kappa.show(a, kC);
         return;
        }
@@ -13053,6 +13135,7 @@
       }();
 
       return {
+       cheer: $cheer,
        raid: $raid,
        sub: $sub,
        gift: $gift,
@@ -13231,59 +13314,61 @@
       return r;
      }
 
-     function _eListFromCmd(cmd, dup = null)
+     function _eListFromCmd(cmd, attrContent = 'content', dup = null, andCheers = true)
      {
       const r = [];
       const u = _parseUser(cmd);
       if (service.parse.ignored(u))
        return r;
-      r.push(...kick.parse.content.kick(cmd, dup));
+      if (andCheers && cmd.hasOwnProperty('gift') && cmd.gift.hasOwnProperty('amount') && cmd.gift.amount > 0)
+       r.push(...kick.parse.content.kicks(cmd));
+      r.push(...kick.parse.content.kick(cmd, attrContent, dup));
       if (cfg.display.useEmoji)
-       r.push(...kick.parse.content.emoji(cmd, dup));
+       r.push(...kick.parse.content.emoji(cmd, attrContent, dup));
       if (cfg.display.extended.useFFZ)
       {
-       r.push(...kick.parse.content['3rdparty'].ffz.general(cmd, dup));
-       r.push(...kick.parse.content['3rdparty'].ffz.user.general(cmd, dup));
+       r.push(...kick.parse.content['3rdparty'].ffz.general(cmd, attrContent, dup));
+       r.push(...kick.parse.content['3rdparty'].ffz.user.general(cmd, attrContent, dup));
       }
       if (cfg.display.extended.useBTTV)
       {
-       r.push(...kick.parse.content['3rdparty'].bttv.general(cmd, dup));
-       r.push(...kick.parse.content['3rdparty'].bttv.user.general(cmd, dup));
+       r.push(...kick.parse.content['3rdparty'].bttv.general(cmd, attrContent, dup));
+       r.push(...kick.parse.content['3rdparty'].bttv.user.general(cmd, attrContent, dup));
       }
       if (cfg.display.extended.use7TV)
       {
-       r.push(...kick.parse.content['3rdparty']['7tv'].general(cmd, dup));
-       r.push(...kick.parse.content['3rdparty']['7tv'].user.general(cmd, dup));
+       r.push(...kick.parse.content['3rdparty']['7tv'].general(cmd, attrContent, dup));
+       r.push(...kick.parse.content['3rdparty']['7tv'].user.general(cmd, attrContent, dup));
       }
       if (cfg.display.extended.useFFZ)
       {
-       kick.parse.content['3rdparty'].ffz.zwe(r, cmd, 1, dup);
-       kick.parse.content['3rdparty'].ffz.user.zwe(r, cmd, 1, dup);
+       kick.parse.content['3rdparty'].ffz.zwe(r, cmd, attrContent, 1, dup);
+       kick.parse.content['3rdparty'].ffz.user.zwe(r, cmd, attrContent, 1, dup);
       }
       if (cfg.display.extended.useBTTV)
       {
-       kick.parse.content['3rdparty'].bttv.zwe(r, cmd, 1, dup);
-       kick.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 1, dup);
+       kick.parse.content['3rdparty'].bttv.zwe(r, cmd, attrContent, 1, dup);
+       kick.parse.content['3rdparty'].bttv.user.zwe(r, cmd, attrContent, 1, dup);
       }
       if (cfg.display.extended.use7TV)
       {
-       kick.parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
-       kick.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 1, dup);
+       kick.parse.content['3rdparty']['7tv'].zwe(r, cmd, attrContent, 1, dup);
+       kick.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, attrContent, 1, dup);
       }
       if (cfg.display.extended.useFFZ)
       {
-       kick.parse.content['3rdparty'].ffz.zwe(r, cmd, 2, dup);
-       kick.parse.content['3rdparty'].ffz.user.zwe(r, cmd, 2, dup);
+       kick.parse.content['3rdparty'].ffz.zwe(r, cmd, attrContent, 2, dup);
+       kick.parse.content['3rdparty'].ffz.user.zwe(r, cmd, attrContent, 2, dup);
       }
       if (cfg.display.extended.useBTTV)
       {
-       kick.parse.content['3rdparty'].bttv.zwe(r, cmd, 2, dup);
-       kick.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 2, dup);
+       kick.parse.content['3rdparty'].bttv.zwe(r, cmd, attrContent, 2, dup);
+       kick.parse.content['3rdparty'].bttv.user.zwe(r, cmd, attrContent, 2, dup);
       }
       if (cfg.display.extended.use7TV)
       {
-       kick.parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
-       kick.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 2, dup);
+       kick.parse.content['3rdparty']['7tv'].zwe(r, cmd, attrContent, 2, dup);
+       kick.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, attrContent, 2, dup);
       }
       if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
       {
