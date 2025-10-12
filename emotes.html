@@ -6294,7 +6294,7 @@
          const n = ev.reward.title;
          if (!ev.hasOwnProperty('user_input') || ev.user_input === '')
          {
-          twitch.parse.event.redeem(n, false);
+          _parse.event.redeem(n, false);
           return;
          }
          if (!ev.reward.hasOwnProperty('id'))
@@ -6309,7 +6309,7 @@
           _rList[lnID].name = n;
          while (_rList[lnID].cmds.length > 0)
          {
-          twitch.parse.event.redeem(n, _rList[lnID].cmds.shift());
+          _parse.event.redeem(n, _rList[lnID].cmds.shift());
          }
         }
 
@@ -6322,13 +6322,13 @@
          switch (ev.reward.type)
          {
           case 'random_sub_emote_unlock':
-           twitch.parse.event.random_emote(ev);
+           _parse.event.random_emote(ev);
            break;
           case 'chosen_sub_emote_unlock':
-           twitch.parse.event.chosen_emote(ev);
+           _parse.event.chosen_emote(ev);
            break;
           case 'chosen_modified_sub_emote_unlock':
-           twitch.parse.event.modified_emote(ev);
+           _parse.event.modified_emote(ev);
            break;
          }
         }
@@ -6352,7 +6352,7 @@
           if (_fHist.has(ev.user_id))
            return;
           _fHist.add(ev.user_id);
-          twitch.parse.event.follow(ev);
+          _parse.event.follow(ev);
          }
 
          return $c_follow;
@@ -6360,12 +6360,12 @@
 
         async function _shoutout_create(ev)
         {
-         await twitch.parse.event.shoutout.create(ev);
+         await _parse.event.shoutout.create(ev);
         }
 
         async function _shoutout_receive(ev)
         {
-         await twitch.parse.event.shoutout.receive(ev);
+         await _parse.event.shoutout.receive(ev);
         }
 
         function _train_begin(ev)
@@ -6375,14 +6375,14 @@
           switch (ev.type)
           {
            case 'golden_kappa':
-            twitch.parse.event.train.kappa.begin();
+            _parse.event.train.kappa.begin();
             return;
            case 'treasure':
-            twitch.parse.event.train.treasure.begin();
+            _parse.event.train.treasure.begin();
             return;
           }
          }
-         twitch.parse.event.train.hype.begin();
+         _parse.event.train.hype.begin();
         }
 
         function _train_end(ev)
@@ -6396,19 +6396,19 @@
           switch (ev.type)
           {
            case 'golden_kappa':
-            twitch.parse.event.train.kappa.end(ev);
+            _parse.event.train.kappa.end(ev);
             return;
            case 'treasure':
-            twitch.parse.event.train.treasure.end(ev);
+            _parse.event.train.treasure.end(ev);
             return;
           }
          }
-         twitch.parse.event.train.hype.end(ev);
+         _parse.event.train.hype.end(ev);
         }
 
         function _poll_begin(ev)
         {
-         twitch.parse.event.poll.begin(ev);
+         _parse.event.poll.begin(ev);
         }
 
         function _poll_end(ev)
@@ -6417,12 +6417,12 @@
           return;
          if (ev.status !== 'completed')
           return;
-         twitch.parse.event.poll.end(ev);
+         _parse.event.poll.end(ev);
         }
 
         function _prediction_begin(ev)
         {
-         twitch.parse.event.prediction.begin(ev);
+         _parse.event.prediction.begin(ev);
         }
 
         function _prediction_end(ev)
@@ -6431,17 +6431,17 @@
           return;
          if (ev.status !== 'resolved')
           return;
-         twitch.parse.event.prediction.end(ev);
+         _parse.event.prediction.end(ev);
         }
 
         function _charity(ev)
         {
-         twitch.parse.event.charity(ev);
+         _parse.event.charity(ev);
         }
 
         function _goal_begin(ev)
         {
-         twitch.parse.event.goal.begin(ev);
+         _parse.event.goal.begin(ev);
         }
 
         function _goal_end(ev)
@@ -6450,7 +6450,7 @@
           return;
          if (ev.is_achieved !== true)
           return;
-         twitch.parse.event.goal.end(ev);
+         _parse.event.goal.end(ev);
         }
 
         return $c_notification;
@@ -6879,7 +6879,7 @@
         {
          if (data[i].length === 0)
           continue;
-         const cmd = twitch.parse.message(data[i]);
+         const cmd = _parse.message(data[i]);
          if (cmd === false || !cmd.hasOwnProperty('command'))
           continue;
          notice.info(notice.Type.TWITCH_IRC);
@@ -6941,9 +6941,9 @@
          return;
         if (cmd.params.length > 1)
          cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
-        if (await twitch.parse.event.cheer(cmd))
+        if (await _parse.event.cheer(cmd))
          return;
-        twitch.parse.line(cmd);
+        _parse.line(cmd);
        }
 
        async function _NOTICE(cmd)
@@ -7039,7 +7039,7 @@
         switch (cmd.tags['msg-id'])
         {
          case 'raid':
-          twitch.parse.event.raid(cmd);
+          _parse.event.raid(cmd);
           break;
          case 'sub':
          case 'resub':
@@ -7047,14 +7047,14 @@
          case 'submysterygift':
          case 'giftpaidupgrade':
          case 'primepaidupgrade':
-          twitch.parse.event.sub(cmd);
+          _parse.event.sub(cmd);
           break;
          case 'bitsbadgetier':
-          twitch.parse.event.badge(cmd);
+          _parse.event.badge(cmd);
           break;
          default:
           if (cmd.params.length > 1)
-           twitch.parse.line(cmd);
+           _parse.line(cmd);
           break;
         }
        }
@@ -7097,9 +7097,9 @@
           if (document.visibilityState === 'hidden')
            return;
           if (cmd.tags.hasOwnProperty('ban-duration'))
-           await twitch.parse.event.timeout(cmd);
+           await _parse.event.timeout(cmd);
           else
-           await twitch.parse.event.ban(cmd);
+           await _parse.event.ban(cmd);
           break;
         }
        }
@@ -7586,7 +7586,7 @@
      };
     }();
 
-    const $parse = function()
+    const _parse = function()
     {
      function _parseUser(cmd)
      {
@@ -8113,7 +8113,7 @@
         return true;
        while (_rList[lnID].cmds.length > 0)
        {
-        twitch.parse.event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift());
+        _parse.event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift());
        }
        return true;
       }
@@ -8199,9 +8199,9 @@
        }
        else
        {
-        const b = twitch.parse.content.bits(cmd);
+        const b = _parse.content.bits(cmd);
         p.push(...b);
-        await twitch.parse.line(cmd, false);
+        await _parse.line(cmd, false);
        }
        p = _handleDuplicates(p);
        if (p.length === 0)
@@ -8297,7 +8297,7 @@
          if (cfg.event.twitch.sub.useMsg)
           a = _eListFromCmd(cmd, true);
          else
-          await twitch.parse.line(cmd);
+          await _parse.line(cmd);
         }
         let mpm = 1;
         if (cmd.tags.hasOwnProperty('msg-param-months'))
@@ -9257,54 +9257,54 @@
       if (service.parse.ignored(u))
        return r;
       if (andCheers && cmd.tags.hasOwnProperty('bits') && cmd.tags.bits > 0)
-       r.push(...twitch.parse.content.bits(cmd));
-      r.push(...twitch.parse.content.twitch(cmd, dup));
+       r.push(..._parse.content.bits(cmd));
+      r.push(..._parse.content.twitch(cmd, dup));
       if (cfg.display.useEmoji)
-       r.push(...twitch.parse.content.emoji(cmd, dup));
+       r.push(..._parse.content.emoji(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
-       r.push(...twitch.parse.content['3rdparty'].ffz.general(cmd, dup));
-       r.push(...twitch.parse.content['3rdparty'].ffz.user.general(cmd, dup));
+       r.push(..._parse.content['3rdparty'].ffz.general(cmd, dup));
+       r.push(..._parse.content['3rdparty'].ffz.user.general(cmd, dup));
       }
       if (cfg.display.extended.useBTTV)
       {
-       r.push(...twitch.parse.content['3rdparty'].bttv.general(cmd, dup));
-       r.push(...twitch.parse.content['3rdparty'].bttv.user.general(cmd, dup));
+       r.push(..._parse.content['3rdparty'].bttv.general(cmd, dup));
+       r.push(..._parse.content['3rdparty'].bttv.user.general(cmd, dup));
       }
       if (cfg.display.extended.use7TV)
       {
-       r.push(...twitch.parse.content['3rdparty']['7tv'].general(cmd, dup));
-       r.push(...twitch.parse.content['3rdparty']['7tv'].user.general(cmd, dup));
+       r.push(..._parse.content['3rdparty']['7tv'].general(cmd, dup));
+       r.push(..._parse.content['3rdparty']['7tv'].user.general(cmd, dup));
       }
       if (cfg.display.extended.useFFZ)
       {
-       twitch.parse.content['3rdparty'].ffz.zwe(r, cmd, 1, dup);
-       twitch.parse.content['3rdparty'].ffz.user.zwe(r, cmd, 1, dup);
+       _parse.content['3rdparty'].ffz.zwe(r, cmd, 1, dup);
+       _parse.content['3rdparty'].ffz.user.zwe(r, cmd, 1, dup);
       }
       if (cfg.display.extended.useBTTV)
       {
-       twitch.parse.content['3rdparty'].bttv.zwe(r, cmd, 1, dup);
-       twitch.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 1, dup);
+       _parse.content['3rdparty'].bttv.zwe(r, cmd, 1, dup);
+       _parse.content['3rdparty'].bttv.user.zwe(r, cmd, 1, dup);
       }
       if (cfg.display.extended.use7TV)
       {
-       twitch.parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
-       twitch.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 1, dup);
+       _parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
+       _parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 1, dup);
       }
       if (cfg.display.extended.useFFZ)
       {
-       twitch.parse.content['3rdparty'].ffz.zwe(r, cmd, 2, dup);
-       twitch.parse.content['3rdparty'].ffz.user.zwe(r, cmd, 2, dup);
+       _parse.content['3rdparty'].ffz.zwe(r, cmd, 2, dup);
+       _parse.content['3rdparty'].ffz.user.zwe(r, cmd, 2, dup);
       }
       if (cfg.display.extended.useBTTV)
       {
-       twitch.parse.content['3rdparty'].bttv.zwe(r, cmd, 2, dup);
-       twitch.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 2, dup);
+       _parse.content['3rdparty'].bttv.zwe(r, cmd, 2, dup);
+       _parse.content['3rdparty'].bttv.user.zwe(r, cmd, 2, dup);
       }
       if (cfg.display.extended.use7TV)
       {
-       twitch.parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
-       twitch.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 2, dup);
+       _parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
+       _parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 2, dup);
       }
       if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
       {
@@ -9499,7 +9499,6 @@
 
     return {
      net: $net,
-     parse: $parse,
      global: $global,
      Access: Object.freeze({
       STRANGER: 0x001,
@@ -10015,14 +10014,14 @@
        {
         if (document.visibilityState === 'hidden')
          return;
-        const u = youtube.parse.user(cmd);
+        const u = _parse.user(cmd);
         if (cmd.hasOwnProperty('id') && u.id !== 0)
         {
          if (!_msgHistory.hasOwnProperty(u.id))
           _msgHistory[u.id] = new Set();
          _msgHistory[u.id].add(cmd.id);
         }
-        await youtube.parse.line(cmd);
+        await _parse.line(cmd);
        }
 
        async function _superChatEvent(cmd)
@@ -10033,14 +10032,14 @@
          return;
         if (!cmd.snippet.hasOwnProperty('superChatDetails'))
          return;
-        const u = youtube.parse.user(cmd);
+        const u = _parse.user(cmd);
         if (cmd.hasOwnProperty('id') && u.id !== 0)
         {
          if (!_msgHistory.hasOwnProperty(u.id))
           _msgHistory[u.id] = new Set();
          _msgHistory[u.id].add(cmd.id);
         }
-        await youtube.parse.event.superchat(cmd);
+        await _parse.event.superchat(cmd);
        }
 
        function _newSponsorEvent(cmd)
@@ -10053,7 +10052,7 @@
          return;
         if (cmd.snippet.newSponsorDetails.hasOwnProperty('isUpgrade') && cmd.snippet.newSponsorDetails.isUpgrade)
          return;
-        youtube.parse.event.membership.first(cmd);
+        _parse.event.membership.first(cmd);
        }
 
        async function _memberMilestoneChatEvent(cmd)
@@ -10064,7 +10063,7 @@
          return;
         if (!cmd.snippet.hasOwnProperty('memberMilestoneChatDetails'))
          return;
-        await youtube.parse.event.membership.milestone(cmd);
+        await _parse.event.membership.milestone(cmd);
        }
 
        function _superStickerEvent(cmd)
@@ -10075,14 +10074,14 @@
          return;
         if (!cmd.snippet.hasOwnProperty('superStickerDetails'))
          return;
-        const u = youtube.parse.user(cmd);
+        const u = _parse.user(cmd);
         if (cmd.hasOwnProperty('id') && u.id !== 0)
         {
          if (!_msgHistory.hasOwnProperty(u.id))
           _msgHistory[u.id] = new Set();
          _msgHistory[u.id].add(cmd.id);
         }
-        youtube.parse.event.supersticker(cmd);
+        _parse.event.supersticker(cmd);
        }
 
        function _membershipGiftingEvent(cmd)
@@ -10093,7 +10092,7 @@
          return;
         if (!cmd.snippet.hasOwnProperty('membershipGiftingDetails'))
          return;
-        youtube.parse.event.membership.gift(cmd);
+        _parse.event.membership.gift(cmd);
        }
 
        function _messageDeletedEvent(cmd)
@@ -10102,7 +10101,7 @@
          return;
         if (!cmd.snippet.messageDeletedDetails.hasOwnProperty('deletedMessageId'))
          return;
-        const u = youtube.parse.user(cmd);
+        const u = _parse.user(cmd);
         if (u.id !== 0 && _msgHistory.hasOwnProperty(u.id) && _msgHistory[u.id].has(cmd.snippet.messageDeletedDetails.deletedMessageId))
          _msgHistory[u.id].delete(cmd.snippet.messageDeletedDetails.deletedMessageId);
         const mID = 'youtube:' + cmd.snippet.messageDeletedDetails.deletedMessageId;
@@ -10115,7 +10114,7 @@
          return;
         if (!cmd.snippet.userBannedDetails.hasOwnProperty('banType'))
          return;
-        const u = youtube.parse.user(cmd.snippet.userBannedDetails);
+        const u = _parse.user(cmd.snippet.userBannedDetails);
         if (u.id !== 0 && _msgHistory.hasOwnProperty(u.id))
         {
          for (const mID of _msgHistory[u.id])
@@ -10127,9 +10126,9 @@
         if (document.visibilityState === 'hidden')
          return;
         if (cmd.snippet.userBannedDetails.banType === 'temporary')
-         youtube.parse.event.timeout(cmd);
+         _parse.event.timeout(cmd);
         else
-         youtube.parse.event.ban(cmd);
+         _parse.event.ban(cmd);
        }
 
        return {
@@ -10181,7 +10180,7 @@
          if (_sHist.has(fRet[i].channelId))
           continue;
          _sHist.add(fRet[i].channelId);
-         youtube.parse.event.subscribe(fRet[i]);
+         _parse.event.subscribe(fRet[i]);
         }
        }
        _tS = window.setTimeout(_detect, _rSC + _bSlower);
@@ -10241,7 +10240,7 @@
          continue;
         if (!j.items[i].snippet.resourceId.hasOwnProperty('channelId'))
          continue;
-        const u = youtube.parse.user(j.items[i]);
+        const u = _parse.user(j.items[i]);
         if (u.id === 0)
          continue;
         const chID = j.items[i].snippet.resourceId.channelId;
@@ -10252,7 +10251,7 @@
        const findU = _uLS;
        for (let i = 0, l = j.items.length; i < l; i++)
        {
-        const u = youtube.parse.user(j.items[i]);
+        const u = _parse.user(j.items[i]);
         if (u.id === 0)
          continue;
         _uLS = u.id;
@@ -10263,7 +10262,7 @@
        const s = [];
        for (let i = 0, l = j.items.length; i < l; i++)
        {
-        const u = youtube.parse.user(j.items[i]);
+        const u = _parse.user(j.items[i]);
         if (u.id === 0)
          continue;
         if (!u._name)
@@ -10734,7 +10733,7 @@
      };
     }();
 
-    const $parse = function()
+    const _parse = function()
     {
      function $parseUser(cmd)
      {
@@ -10872,7 +10871,7 @@
 
         function $zwe(l, cmd, pass, dup = null)
         {
-         const u = youtube.parse.user(cmd);
+         const u = _parse.user(cmd);
          if (u.id === 0)
           return;
          const msg = _getMessage(cmd);
@@ -10885,7 +10884,7 @@
         {
          function $userGeneral(cmd, dup = null)
          {
-          const u = youtube.parse.user(cmd);
+          const u = _parse.user(cmd);
           if (u.id === 0)
            return [];
           const msg = _getMessage(cmd);
@@ -10896,7 +10895,7 @@
 
          function $userZWE(l, cmd, pass, dup = null)
          {
-          const u = youtube.parse.user(cmd);
+          const u = _parse.user(cmd);
           if (u.id === 0)
            return;
           const msg = _getMessage(cmd);
@@ -10930,7 +10929,7 @@
 
         function $zwe(l, cmd, pass, dup = null)
         {
-         const u = youtube.parse.user(cmd);
+         const u = _parse.user(cmd);
          if (u.id === 0)
           return;
          const msg = _getMessage(cmd);
@@ -10946,7 +10945,7 @@
           const msg = _getMessage(cmd);
           if (msg === false)
            return [];
-          const u = youtube.parse.user(cmd);
+          const u = _parse.user(cmd);
           if (u.id === 0)
            return [];
           return service.parse.content['3rdparty'].bttv.user.general('youtube:' + u.id, msg, dup);
@@ -10954,7 +10953,7 @@
 
          function $userZWE(l, cmd, pass, dup = null)
          {
-          const u = youtube.parse.user(cmd);
+          const u = _parse.user(cmd);
           if (u.id === 0)
            return;
           const msg = _getMessage(cmd);
@@ -10988,7 +10987,7 @@
 
         function $zwe(l, cmd, pass, dup = null)
         {
-         const u = youtube.parse.user(cmd);
+         const u = _parse.user(cmd);
          if (u.id === 0)
           return;
          const msg = _getMessage(cmd);
@@ -11001,7 +11000,7 @@
         {
          function $userGeneral(cmd, dup = null)
          {
-          const u = youtube.parse.user(cmd);
+          const u = _parse.user(cmd);
           if (u.id === 0)
            return [];
           const msg = _getMessage(cmd);
@@ -11012,7 +11011,7 @@
 
          function $userZWE(l, cmd, pass, dup = null)
          {
-          const u = youtube.parse.user(cmd);
+          const u = _parse.user(cmd);
           if (u.id === 0)
            return;
           const msg = _getMessage(cmd);
@@ -11052,7 +11051,7 @@
      {
       async function $c_line(cmd)
       {
-       const u = youtube.parse.user(cmd);
+       const u = _parse.user(cmd);
        if (service.parse.ignored(u))
         return;
        const lvChk = new _level(cmd);
@@ -11106,7 +11105,7 @@
          return false;
         if (!cfg.event.youtube.superchat.level)
          return false;
-        const u = youtube.parse.user(cmd);
+        const u = _parse.user(cmd);
         if (service.parse.ignored(u))
          return false;
         if (!cmd.snippet.superChatDetails.hasOwnProperty('tier') || cmd.snippet.superChatDetails.tier === null)
@@ -11123,7 +11122,7 @@
           p.push(...a);
          }
          else
-          await youtube.parse.line(cmd);
+          await _parse.line(cmd);
          p = _handleDuplicates(p);
         }
         if (p.length === 0)
@@ -11156,7 +11155,7 @@
        {
         if (!cfg.event.youtube.supersticker)
          return false;
-        const u = youtube.parse.user(cmd);
+        const u = _parse.user(cmd);
         if (service.parse.ignored(u))
          return false;
         if (!cmd.snippet.superStickerDetails.hasOwnProperty('superStickerMetadata') || cmd.snippet.superStickerDetails.superStickerMetadata === null)
@@ -11196,7 +11195,7 @@
        {
         if (!cfg.event.youtube.member)
          return;
-        const u = youtube.parse.user(cmd);
+        const u = _parse.user(cmd);
         if (service.parse.ignored(u))
          return;
         let c = cfg.event.youtube.member;
@@ -11217,7 +11216,7 @@
        {
         if (!cfg.event.youtube.member)
          return;
-        const u = youtube.parse.user(cmd);
+        const u = _parse.user(cmd);
         if (service.parse.ignored(u))
          return;
         let c = cfg.event.youtube.member;
@@ -11235,7 +11234,7 @@
          if (cfg.event.youtube.member.useMsg)
           a = _eListFromCmd(cmd, true);
          else
-          await youtube.parse.line(cmd);
+          await _parse.line(cmd);
         }
         if (!cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('memberMonth'))
          return;
@@ -11250,7 +11249,7 @@
        {
         if (!cfg.event.youtube.member)
          return;
-        const u = youtube.parse.user(cmd);
+        const u = _parse.user(cmd);
         if (service.parse.ignored(u))
          return;
         if (!cmd.snippet.membershipGiftingDetails.hasOwnProperty('giftMembershipsCount'))
@@ -11285,7 +11284,7 @@
        let dn = anonName;
        if (cmd.snippet.hasOwnProperty('userBannedDetails'))
        {
-        const u = youtube.parse.user(cmd.snippet.userBannedDetails);
+        const u = _parse.user(cmd.snippet.userBannedDetails);
         if (service.parse.ignored(u))
          return;
         dn = u.ascii;
@@ -11302,7 +11301,7 @@
        let dn = anonName;
        if (cmd.snippet.hasOwnProperty('userBannedDetails'))
        {
-        const u = youtube.parse.user(cmd.snippet.userBannedDetails);
+        const u = _parse.user(cmd.snippet.userBannedDetails);
         if (service.parse.ignored(u))
          return;
         dn = u.ascii;
@@ -11369,7 +11368,7 @@
        /* api-heavy, only check if subscriber access is allowed and there's a chance it matters */
        if (!this.cmd.hasOwnProperty('_channel'))
         return false;
-       const u = youtube.parse.user(this.cmd);
+       const u = _parse.user(this.cmd);
        if (u.id === 0)
         return false;
        const chID = this.cmd._channel;
@@ -11456,56 +11455,56 @@
      function _eListFromCmd(cmd, dup = null)
      {
       const r = [];
-      const u = youtube.parse.user(cmd);
+      const u = _parse.user(cmd);
       if (service.parse.ignored(u))
        return r;
-      r.push(...youtube.parse.content.youtube(cmd, dup));
+      r.push(..._parse.content.youtube(cmd, dup));
       if (cfg.display.useEmoji)
-       r.push(...youtube.parse.content.emoji(cmd, dup));
+       r.push(..._parse.content.emoji(cmd, dup));
       if (cfg.display.extended.useFFZ)
       {
-       r.push(...youtube.parse.content['3rdparty'].ffz.general(cmd, dup));
-       r.push(...youtube.parse.content['3rdparty'].ffz.user.general(cmd, dup));
+       r.push(..._parse.content['3rdparty'].ffz.general(cmd, dup));
+       r.push(..._parse.content['3rdparty'].ffz.user.general(cmd, dup));
       }
       if (cfg.display.extended.useBTTV)
       {
-       r.push(...youtube.parse.content['3rdparty'].bttv.general(cmd, dup));
-       r.push(...youtube.parse.content['3rdparty'].bttv.user.general(cmd, dup));
+       r.push(..._parse.content['3rdparty'].bttv.general(cmd, dup));
+       r.push(..._parse.content['3rdparty'].bttv.user.general(cmd, dup));
       }
       if (cfg.display.extended.use7TV)
       {
-       r.push(...youtube.parse.content['3rdparty']['7tv'].general(cmd, dup));
-       r.push(...youtube.parse.content['3rdparty']['7tv'].user.general(cmd, dup));
+       r.push(..._parse.content['3rdparty']['7tv'].general(cmd, dup));
+       r.push(..._parse.content['3rdparty']['7tv'].user.general(cmd, dup));
       }
       if (cfg.display.extended.useFFZ)
       {
-       youtube.parse.content['3rdparty'].ffz.zwe(r, cmd, 1, dup);
-       youtube.parse.content['3rdparty'].ffz.user.zwe(r, cmd, 1, dup);
+       _parse.content['3rdparty'].ffz.zwe(r, cmd, 1, dup);
+       _parse.content['3rdparty'].ffz.user.zwe(r, cmd, 1, dup);
       }
       if (cfg.display.extended.useBTTV)
       {
-       youtube.parse.content['3rdparty'].bttv.zwe(r, cmd, 1, dup);
-       youtube.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 1, dup);
+       _parse.content['3rdparty'].bttv.zwe(r, cmd, 1, dup);
+       _parse.content['3rdparty'].bttv.user.zwe(r, cmd, 1, dup);
       }
       if (cfg.display.extended.use7TV)
       {
-       youtube.parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
-       youtube.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 1, dup);
+       _parse.content['3rdparty']['7tv'].zwe(r, cmd, 1, dup);
+       _parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 1, dup);
       }
       if (cfg.display.extended.useFFZ)
       {
-       youtube.parse.content['3rdparty'].ffz.zwe(r, cmd, 2, dup);
-       youtube.parse.content['3rdparty'].ffz.user.zwe(r, cmd, 2, dup);
+       _parse.content['3rdparty'].ffz.zwe(r, cmd, 2, dup);
+       _parse.content['3rdparty'].ffz.user.zwe(r, cmd, 2, dup);
       }
       if (cfg.display.extended.useBTTV)
       {
-       youtube.parse.content['3rdparty'].bttv.zwe(r, cmd, 2, dup);
-       youtube.parse.content['3rdparty'].bttv.user.zwe(r, cmd, 2, dup);
+       _parse.content['3rdparty'].bttv.zwe(r, cmd, 2, dup);
+       _parse.content['3rdparty'].bttv.user.zwe(r, cmd, 2, dup);
       }
       if (cfg.display.extended.use7TV)
       {
-       youtube.parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
-       youtube.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 2, dup);
+       _parse.content['3rdparty']['7tv'].zwe(r, cmd, 2, dup);
+       _parse.content['3rdparty']['7tv'].user.zwe(r, cmd, 2, dup);
       }
       if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
       {
@@ -11699,7 +11698,6 @@
 
     return {
      net: $net,
-     parse: $parse,
      global: $global,
      stickers: $stickers,
      Access: Object.freeze({
@@ -12050,7 +12048,7 @@
          }
          if (document.visibilityState === 'hidden')
           return;
-         kick.parse.line(jData);
+         _parse.line(jData);
         }
 
         function _UserBannedEvent(jData)
@@ -12068,12 +12066,12 @@
          if (jData.hasOwnProperty('expires_at') && jData.expires_at !== null)
          {
           if (cfg.event.kick.timeout !== false)
-           kick.parse.event.timeout(jData);
+           _parse.event.timeout(jData);
          }
          else
          {
           if (cfg.event.kick.ban !== false)
-           kick.parse.event.ban(jData);
+           _parse.event.ban(jData);
          }
         }
 
@@ -12081,14 +12079,14 @@
         {
          if (document.visibilityState === 'hidden')
           return;
-         await kick.parse.event.raid(jData);
+         await _parse.event.raid(jData);
         }
 
         function _SubscriptionEvent(jData)
         {
          if (document.visibilityState === 'hidden')
           return;
-         kick.parse.event.sub(jData);
+         _parse.event.sub(jData);
         }
 
         function _PollUpdateEvent(jData)
@@ -12113,7 +12111,7 @@
           return;
          if (document.visibilityState === 'hidden')
           return;
-         kick.parse.event.poll.begin(jData.poll);
+         _parse.event.poll.begin(jData.poll);
         }
 
         function _PollDeleteEvent()
@@ -12132,7 +12130,7 @@
          _tPoll = false;
          if (document.visibilityState === 'hidden')
           return;
-         kick.parse.event.poll.end(ev);
+         _parse.event.poll.end(ev);
         }
 
         function _MessageDeletedEvent(jData)
@@ -12188,7 +12186,7 @@
          cmd.chatroom_id = jData.channel_id;
         if (jData.hasOwnProperty('user_input'))
          cmd.user_input = jData.user_input;
-        kick.parse.event.redeem(jData.reward_title, cmd);
+        _parse.event.redeem(jData.reward_title, cmd);
        }
 
        function _PredictionCreated(j)
@@ -12202,7 +12200,7 @@
          return;
         if (document.visibilityState === 'hidden')
          return;
-        kick.parse.event.prediction.begin(jData.prediction);
+        _parse.event.prediction.begin(jData.prediction);
        }
 
        function _PredictionUpdated(j)
@@ -12218,7 +12216,7 @@
          return;
         if (document.visibilityState === 'hidden')
          return;
-        kick.parse.event.prediction.end(jData.prediction);
+        _parse.event.prediction.end(jData.prediction);
        }
 
        function _GiftedSubscriptionsEvent(j)
@@ -12226,7 +12224,7 @@
         const jData = JSON.parse(j.data);
         if (document.visibilityState === 'hidden')
          return;
-        kick.parse.event.gift(jData);
+        _parse.event.gift(jData);
        }
 
        async function _KicksGifted(j)
@@ -12236,9 +12234,9 @@
          jData.message = jData.message.replaceAll(/\s+/g, ' ').replaceAll(/([^ ])\[emote:/g, '$1 [emote:');
         if (document.visibilityState === 'hidden')
          return;
-        if (await kick.parse.event.cheer(jData))
+        if (await _parse.event.cheer(jData))
          return;
-        kick.parse.line(jData, 'message');
+        _parse.line(jData, 'message');
        }
 
        return $c_wsMessage;
@@ -12548,7 +12546,7 @@
      };
     }();
 
-    const $parse = function()
+    const _parse = function()
     {
      function _parseUser(cmd, prop = 'sender')
      {
@@ -12894,9 +12892,9 @@
        }
        else
        {
-        const b = kick.parse.content.kicks(cmd);
+        const b = _parse.content.kicks(cmd);
         p.push(...b);
-        await kick.parse.line(cmd, 'message', false);
+        await _parse.line(cmd, 'message', false);
        }
        p = _handleDuplicates(p);
        if (p.length === 0)
@@ -13325,54 +13323,54 @@
       if (service.parse.ignored(u))
        return r;
       if (andCheers && cmd.hasOwnProperty('gift') && cmd.gift.hasOwnProperty('amount') && cmd.gift.amount > 0)
-       r.push(...kick.parse.content.kicks(cmd));
-      r.push(...kick.parse.content.kick(cmd, attrContent, dup));
+       r.push(..._parse.content.kicks(cmd));
+      r.push(..._parse.content.kick(cmd, attrContent, dup));
       if (cfg.display.useEmoji)
-       r.push(...kick.parse.content.emoji(cmd, attrContent, dup));
+       r.push(..._parse.content.emoji(cmd, attrContent, dup));
       if (cfg.display.extended.useFFZ)
       {
-       r.push(...kick.parse.content['3rdparty'].ffz.general(cmd, attrContent, dup));
-       r.push(...kick.parse.content['3rdparty'].ffz.user.general(cmd, attrContent, dup));
+       r.push(..._parse.content['3rdparty'].ffz.general(cmd, attrContent, dup));
+       r.push(..._parse.content['3rdparty'].ffz.user.general(cmd, attrContent, dup));
       }
       if (cfg.display.extended.useBTTV)
       {
-       r.push(...kick.parse.content['3rdparty'].bttv.general(cmd, attrContent, dup));
-       r.push(...kick.parse.content['3rdparty'].bttv.user.general(cmd, attrContent, dup));
+       r.push(..._parse.content['3rdparty'].bttv.general(cmd, attrContent, dup));
+       r.push(..._parse.content['3rdparty'].bttv.user.general(cmd, attrContent, dup));
       }
       if (cfg.display.extended.use7TV)
       {
-       r.push(...kick.parse.content['3rdparty']['7tv'].general(cmd, attrContent, dup));
-       r.push(...kick.parse.content['3rdparty']['7tv'].user.general(cmd, attrContent, dup));
+       r.push(..._parse.content['3rdparty']['7tv'].general(cmd, attrContent, dup));
+       r.push(..._parse.content['3rdparty']['7tv'].user.general(cmd, attrContent, dup));
       }
       if (cfg.display.extended.useFFZ)
       {
-       kick.parse.content['3rdparty'].ffz.zwe(r, cmd, attrContent, 1, dup);
-       kick.parse.content['3rdparty'].ffz.user.zwe(r, cmd, attrContent, 1, dup);
+       _parse.content['3rdparty'].ffz.zwe(r, cmd, attrContent, 1, dup);
+       _parse.content['3rdparty'].ffz.user.zwe(r, cmd, attrContent, 1, dup);
       }
       if (cfg.display.extended.useBTTV)
       {
-       kick.parse.content['3rdparty'].bttv.zwe(r, cmd, attrContent, 1, dup);
-       kick.parse.content['3rdparty'].bttv.user.zwe(r, cmd, attrContent, 1, dup);
+       _parse.content['3rdparty'].bttv.zwe(r, cmd, attrContent, 1, dup);
+       _parse.content['3rdparty'].bttv.user.zwe(r, cmd, attrContent, 1, dup);
       }
       if (cfg.display.extended.use7TV)
       {
-       kick.parse.content['3rdparty']['7tv'].zwe(r, cmd, attrContent, 1, dup);
-       kick.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, attrContent, 1, dup);
+       _parse.content['3rdparty']['7tv'].zwe(r, cmd, attrContent, 1, dup);
+       _parse.content['3rdparty']['7tv'].user.zwe(r, cmd, attrContent, 1, dup);
       }
       if (cfg.display.extended.useFFZ)
       {
-       kick.parse.content['3rdparty'].ffz.zwe(r, cmd, attrContent, 2, dup);
-       kick.parse.content['3rdparty'].ffz.user.zwe(r, cmd, attrContent, 2, dup);
+       _parse.content['3rdparty'].ffz.zwe(r, cmd, attrContent, 2, dup);
+       _parse.content['3rdparty'].ffz.user.zwe(r, cmd, attrContent, 2, dup);
       }
       if (cfg.display.extended.useBTTV)
       {
-       kick.parse.content['3rdparty'].bttv.zwe(r, cmd, attrContent, 2, dup);
-       kick.parse.content['3rdparty'].bttv.user.zwe(r, cmd, attrContent, 2, dup);
+       _parse.content['3rdparty'].bttv.zwe(r, cmd, attrContent, 2, dup);
+       _parse.content['3rdparty'].bttv.user.zwe(r, cmd, attrContent, 2, dup);
       }
       if (cfg.display.extended.use7TV)
       {
-       kick.parse.content['3rdparty']['7tv'].zwe(r, cmd, attrContent, 2, dup);
-       kick.parse.content['3rdparty']['7tv'].user.zwe(r, cmd, attrContent, 2, dup);
+       _parse.content['3rdparty']['7tv'].zwe(r, cmd, attrContent, 2, dup);
+       _parse.content['3rdparty']['7tv'].user.zwe(r, cmd, attrContent, 2, dup);
       }
       if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
       {
@@ -13568,7 +13566,6 @@
 
     return {
      net: $net,
-     parse: $parse,
      Access: Object.freeze({
       STRANGER: 0x001,
       FOLLOWER: 0x002,
