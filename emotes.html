@@ -1227,6 +1227,9 @@
     ]
    };
 
+   // name used in text kappagens when the user isn't known
+   const anonName = 'Anonymous';
+
    //////////////////////////////////////////////////////////////////////////////
    // don't mess with things below this line without knowing what you're doing //
    //////////////////////////////////////////////////////////////////////////////
@@ -6263,10 +6266,10 @@
 
         function _channel_points_redeem(ev)
         {
-         let ln = 'anonymous';
+         let ln = false;
          if (ev.user_login)
           ln = ev.user_login;
-         if (cfg.ignore.users !== false && cfg.ignore.users.includes(ln))
+         if (!!ln && cfg.ignore.users !== false && cfg.ignore.users.includes(ln))
           return;
          if (!ev.reward)
           return;
@@ -7569,30 +7572,49 @@
 
     const $parse = function()
     {
-     function _parseUser(cmd, latinOnly = false)
+     function _parseUser(cmd)
      {
-      let data = cmd.prefix;
-      const ret = {};
+      const ret = {
+       id: 0,
+       _slug: false,
+       _name: false,
+       ascii: false
+      };
       if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('user-id'))
        ret.id = cmd.tags['user-id'];
       if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('display-name'))
-       ret['display-name'] = cmd.tags['display-name'];
-      const gReg = new RegExp(twitch.parse.uReg, 'g');
-      if (data.includes('!'))
+       ret._name = cmd.tags['display-name'];
+      if (cmd.hasOwnProperty('prefix'))
       {
-       ret.nick = data.slice(0, data.indexOf('!'));
-       data = data.slice(data.indexOf('!') + 1);
-       if (!ret.hasOwnProperty('display-name') || (latinOnly && ret['display-name'] !== ret['display-name'].replaceAll(gReg, '')))
-        ret['display-name'] = ret.nick;
+       let data = cmd.prefix;
+       if (data.includes('!'))
+       {
+        const nick = data.slice(0, data.indexOf('!'));
+        if (!ret._slug)
+         ret._slug = nick;
+        data = data.slice(data.indexOf('!') + 1);
+       }
+       if (data.includes('@'))
+       {
+        const host = data.slice(0, data.indexOf('@'));
+        if (!ret._slug)
+         ret._slug = host;
+        data = data.slice(data.indexOf('@') + 1);
+       }
+       if (data.slice(-14) === '.tmi.twitch.tv')
+       {
+        const user = data.slice(0, -14);
+        if (!ret._slug)
+         ret._slug = user;
+       }
       }
-      if (data.includes('@'))
-      {
-       ret.host = data.slice(0, data.indexOf('@'));
-       data = data.slice(data.indexOf('@') + 1);
-       if (!ret.hasOwnProperty('display-name') || (latinOnly && ret['display-name'] !== ret['display-name'].replaceAll(gReg, '')))
-        ret['display-name'] = ret.host;
-      }
-      ret.user = data;
+      const gReg = new RegExp(service.parse.uReg, 'g');
+      if (!!ret._name && ret._name === ret._name.replaceAll(gReg, ''))
+       ret.ascii = ret._name;
+      if (!ret.ascii && !!ret._slug)
+       ret.ascii = ret._slug;
+      if (!ret.ascii)
+       ret.ascii = anonName;
       return ret;
      }
 
@@ -7764,6 +7786,8 @@
          if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
           chID = cmd.tags['room-id'];
          const u = _parseUser(cmd);
+         if (u.id === 0)
+          return;
          service.parse.content['3rdparty'].ffz.zwe(l, 'twitch:' + u.id, 'twitch:' + chID, cmd.params[1], pass, dup);
         }
 
@@ -7774,6 +7798,8 @@
           if (cmd.params.length < 2)
            return [];
           const u = _parseUser(cmd);
+          if (u.id === 0)
+           return [];
           return service.parse.content['3rdparty'].ffz.user.general('twitch:' + u.id, cmd.params[1], dup);
          }
 
@@ -7782,6 +7808,8 @@
           if (cmd.params.length < 2)
            return;
           const u = _parseUser(cmd);
+          if (u.id === 0)
+           return;
           service.parse.content['3rdparty'].ffz.user.zwe(l, 'twitch:' + u.id, cmd.params[1], pass, dup);
          }
 
@@ -7818,6 +7846,8 @@
          if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
           chID = cmd.tags['room-id'];
          const u = _parseUser(cmd);
+         if (u.id === 0)
+          return;
          service.parse.content['3rdparty'].bttv.zwe(l, 'twitch:' + u.id, 'twitch:' + chID, cmd.params[1], pass, dup);
         }
 
@@ -7828,6 +7858,8 @@
           if (cmd.params.length < 2)
            return [];
           const u = _parseUser(cmd);
+          if (u.id === 0)
+           return [];
           return service.parse.content['3rdparty'].bttv.user.general('twitch:' + u.id, cmd.params[1], dup);
          }
 
@@ -7836,6 +7868,8 @@
           if (cmd.params.length < 2)
            return;
           const u = _parseUser(cmd);
+          if (u.id === 0)
+           return;
           service.parse.content['3rdparty'].bttv.user.zwe(l, 'twitch:' + u.id, cmd.params[1], pass, dup);
          }
 
@@ -7872,6 +7906,8 @@
          if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('room-id'))
           chID = cmd.tags['room-id'];
          const u = _parseUser(cmd);
+         if (u.id === 0)
+          return;
          service.parse.content['3rdparty']['7tv'].zwe(l, 'twitch:' + u.id, 'twitch:' + chID, cmd.params[1], pass, dup);
         }
 
@@ -7882,6 +7918,8 @@
           if (cmd.params.length < 2)
            return [];
           const u = _parseUser(cmd);
+          if (u.id === 0)
+           return [];
           return service.parse.content['3rdparty']['7tv'].user.general('twitch:' + u.id, cmd.params[1], dup);
          }
 
@@ -7890,6 +7928,8 @@
           if (cmd.params.length < 2)
            return;
           const u = _parseUser(cmd);
+          if (u.id === 0)
+           return;
           service.parse.content['3rdparty']['7tv'].user.zwe(l, 'twitch:' + u.id, cmd.params[1], pass, dup);
          }
 
@@ -7925,8 +7965,8 @@
      {
       async function $c_line(cmd, andCheers = true)
       {
-       const u = _parseUser(cmd, true);
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+       const u = _parseUser(cmd);
+       if (service.parse.ignored(u))
         return;
        if (_parsePowerUp(cmd))
         return;
@@ -7976,12 +8016,9 @@
         const a = _handleDuplicates(_eListFromCmd(cmd, true));
         if (a.length < 1)
          return false;
-        const u = _parseUser(cmd, true);
-        let dn = 'Anonymous';
-        if (u.hasOwnProperty('display-name'))
-         dn = u['display-name'];
+        const u = _parseUser(cmd);
         const g = a.pop();
-        display.kappa.show([g], cfg.event.twitch.powerup.emote, {[cVARs.evt.user]: dn});
+        display.kappa.show([g], cfg.event.twitch.powerup.emote, {[cVARs.evt.user]: u.ascii});
         if (a.length < 1)
          return true;
         display.emote.addToShowList(a);
@@ -7999,10 +8036,7 @@
          return false;
         if (!cmd.tags.hasOwnProperty('animation-id'))
          return false;
-        const u = _parseUser(cmd, true);
-        let dn = 'Anonymous';
-        if (u.hasOwnProperty('display-name'))
-         dn = u['display-name'];
+        const u = _parseUser(cmd);
         const a = _handleDuplicates(_eListFromCmd(cmd, true));
         const animID = cmd.tags['animation-id'];
         switch (animID)
@@ -8010,17 +8044,17 @@
          case 'simmer':
           if (!cfg.event.twitch.powerup.message.simmer)
            return false;
-          display.kappa.show(a, cfg.event.twitch.powerup.message.simmer, {[cVARs.evt.user]: dn});
+          display.kappa.show(a, cfg.event.twitch.powerup.message.simmer, {[cVARs.evt.user]: u.ascii});
           return true;
          case 'rainbow-eclipse':
           if (!cfg.event.twitch.powerup.message.eclipse)
            return false;
-          display.kappa.show(a, cfg.event.twitch.powerup.message.eclipse, {[cVARs.evt.user]: dn});
+          display.kappa.show(a, cfg.event.twitch.powerup.message.eclipse, {[cVARs.evt.user]: u.ascii});
           return true;
          case 'cosmic-abyss':
           if (!cfg.event.twitch.powerup.message.abyss)
            return false;
-          display.kappa.show(a, cfg.event.twitch.powerup.message.abyss, {[cVARs.evt.user]: dn});
+          display.kappa.show(a, cfg.event.twitch.powerup.message.abyss, {[cVARs.evt.user]: u.ascii});
           return true;
         }
         return false;
@@ -8132,8 +8166,8 @@
         return false;
        if (!cfg.event.twitch.cheer.bits)
         return false;
-       const u = _parseUser(cmd, true);
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+       const u = _parseUser(cmd);
+       if (service.parse.ignored(u))
         return false;
        if (!cmd.hasOwnProperty('tags'))
         return false;
@@ -8163,10 +8197,7 @@
         display.emote.showEmotes();
         return true;
        }
-       let dn = 'Anonymous';
-       if (u.hasOwnProperty('display-name'))
-        dn = u['display-name'];
-       display.kappa.show(p, r, {[cVARs.evt.user]: dn, [cVARs.evt.amount]: cmd.tags.bits});
+       display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: cmd.tags.bits});
        return true;
       }
 
@@ -8184,26 +8215,22 @@
        const r = shared.findInMaybeRange(cfg.event.twitch.raid.raiders, c);
        if (r === false)
         return;
-       const u = _parseUser(cmd, true);
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+       const u = _parseUser(cmd);
+       if (service.parse.ignored(u))
         return;
-       let dn = 'Anonymous';
-       if (u.hasOwnProperty('display-name'))
-        dn = u['display-name'];
-       if (!cfg.event.twitch.raid.originEmotes)
+       if (!cfg.event.twitch.raid.originEmotes || u.id === 0)
        {
-        display.kappa.show(false, r, {[cVARs.evt.user]: dn, [cVARs.evt.amount]: c});
+        display.kappa.show(false, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: c});
         return;
        }
-       const d = cmd.tags['user-id'];
-       const e = await _findEmote_channel(d);
+       const e = await _findEmote_channel(u.id);
        if (cfg.event.twitch.raid.originExtendedEmotes)
        {
-        e.push(...await _findFFZ_channel(d));
-        e.push(...await _findBTTV_channel(d));
-        e.push(...await _find7TV_channel(d, cfg.event.twitch.raid.originExtendedEmotes));
+        e.push(...await _findFFZ_channel(u.id));
+        e.push(...await _findBTTV_channel(u.id));
+        e.push(...await _find7TV_channel(u.id, cfg.event.twitch.raid.originExtendedEmotes));
        }
-       display.kappa.show(e, r, {[cVARs.evt.user]: dn, [cVARs.evt.amount]: c});
+       display.kappa.show(e, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: c});
       }
 
       const $sub = function()
@@ -8265,23 +8292,12 @@
         let mpmgc = 1;
         if (cmd.tags.hasOwnProperty('msg-param-mass-gift-count'))
          mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
-        let dn = 'Anonymous';
-        let ln = 'anonymous';
-        if (cmd.tags.hasOwnProperty('login'))
-         ln = cmd.tags.login;
-        if (cmd.tags.hasOwnProperty('display-name'))
-         dn = cmd.tags['display-name'];
-        if (ln === 'anonymous' || dn === 'Anonymous')
-        {
-         const u = _parseUser(cmd, true);
-         if (ln === 'anonymous' && u.hasOwnProperty('host'))
-          ln = u.host;
-         if (dn === 'Anonymous' && u.hasOwnProperty('display-name'))
-          dn = u['display-name'];
-        }
-        if (cfg.ignore.users !== false && cfg.ignore.users.includes(ln))
+        const u = _parseUser(cmd);
+        if (service.parse.ignored(u))
          return;
-        let mprdn = 'Anonymous';
+        if (cmd.tags.hasOwnProperty('login') && cfg.ignore.users !== false && cfg.ignore.users.includes(cmd.tags.login))
+         return;
+        let mprdn = anonName;
         if (cmd.tags.hasOwnProperty('msg-param-recipient-display-name'))
          mprdn = cmd.tags['msg-param-recipient-display-name'];
         if (mpoi !== false && usesBomb)
@@ -8302,13 +8318,13 @@
           if (!cmd.tags.hasOwnProperty('msg-param-sender-count') || cmd.tags['msg-param-sender-count'] === '0')
           {
            _bList.check.add(mpoi);
-           window.setTimeout(_show, 2000, mID, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a);
+           window.setTimeout(_show, 2000, mID, subPlan, mpoi, mpm, mpcm, mpmgc, u.ascii, mprdn, a);
            _resetGC();
            return;
           }
          }
         }
-        _show(mID, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a);
+        _show(mID, subPlan, mpoi, mpm, mpcm, mpmgc, u.ascii, mprdn, a);
        }
 
        function _show(id, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a)
@@ -8439,18 +8455,15 @@
       {
        if (!cfg.event.twitch.badge)
         return;
-       const u = _parseUser(cmd, true);
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+       const u = _parseUser(cmd);
+       if (service.parse.ignored(u))
         return;
        if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
         return;
        const c = cmd.tags['msg-param-threshold'];
-       let dn = 'Anonymous';
-       if (u.hasOwnProperty('display-name'))
-        dn = u['display-name'];
        if (cfg.event.twitch.badge.hasOwnProperty(c) && cfg.event.twitch.badge[c] !== false)
        {
-        display.kappa.show(false, cfg.event.twitch.badge[c], {[cVARs.evt.user]: dn, [cVARs.evt.amount]: c});
+        display.kappa.show(false, cfg.event.twitch.badge[c], {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: c});
         return;
        }
        let closest = null;
@@ -8470,7 +8483,7 @@
         return;
        if (cfg.event.twitch.badge[closest] === false)
         return;
-       display.kappa.show(false, cfg.event.twitch.badge[closest], {[cVARs.evt.user]: dn, [cVARs.evt.amount]: c});
+       display.kappa.show(false, cfg.event.twitch.badge[closest], {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: c});
       }
 
       async function $ban(cmd)
@@ -8643,16 +8656,17 @@
       {
        if (!cfg.event.twitch.follow)
         return;
-       let uName = 'Anonymous';
+       let uName = anonName;
        if (ev.user_login)
        {
         uName = ev.user_login;
         if (cfg.ignore.users !== false && cfg.ignore.users.includes(uName))
          return;
        }
+       let dName = uName;
        if (ev.user_name)
-        uName = ev.user_name;
-       display.kappa.show(false, cfg.event.twitch.follow, {[cVARs.evt.user]: uName});
+        dName = ev.user_name;
+       display.kappa.show(false, cfg.event.twitch.follow, {[cVARs.evt.user]: dName});
       }
 
       const $shoutout = function()
@@ -9252,8 +9266,8 @@
      function _eListFromCmd(cmd, dup = null, andCheers = true)
      {
       const r = [];
-      const u = _parseUser(cmd, true);
-      if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+      const u = _parseUser(cmd);
+      if (service.parse.ignored(u))
        return r;
       if (andCheers && cmd.tags.hasOwnProperty('bits') && cmd.tags.bits > 0)
        r.push(...twitch.parse.content.bits(cmd));
@@ -9342,8 +9356,7 @@
       message: $message,
       content: $content,
       line: $line,
-      event: $event,
-      uReg: /[^A-Za-z0-9_]/
+      event: $event
      };
     }();
 
@@ -10020,13 +10033,12 @@
        {
         if (document.visibilityState === 'hidden')
          return;
-        if (!cmd.hasOwnProperty('authorDetails'))
-         return;
-        if (cmd.hasOwnProperty('id') && cmd.authorDetails.hasOwnProperty('channelId'))
+        const u = youtube.parse.user(cmd);
+        if (cmd.hasOwnProperty('id') && u.id !== 0)
         {
-         if (!_msgHistory.hasOwnProperty(cmd.authorDetails.channelId))
-          _msgHistory[cmd.authorDetails.channelId] = new Set();
-         _msgHistory[cmd.authorDetails.channelId].add(cmd.id);
+         if (!_msgHistory.hasOwnProperty(u.id))
+          _msgHistory[u.id] = new Set();
+         _msgHistory[u.id].add(cmd.id);
         }
         await youtube.parse.line(cmd);
        }
@@ -10039,11 +10051,12 @@
          return;
         if (!cmd.snippet.hasOwnProperty('superChatDetails'))
          return;
-        if (cmd.hasOwnProperty('id') && cmd.authorDetails.hasOwnProperty('channelId'))
+        const u = youtube.parse.user(cmd);
+        if (cmd.hasOwnProperty('id') && u.id !== 0)
         {
-         if (!_msgHistory.hasOwnProperty(cmd.authorDetails.channelId))
-          _msgHistory[cmd.authorDetails.channelId] = new Set();
-         _msgHistory[cmd.authorDetails.channelId].add(cmd.id);
+         if (!_msgHistory.hasOwnProperty(u.id))
+          _msgHistory[u.id] = new Set();
+         _msgHistory[u.id].add(cmd.id);
         }
         await youtube.parse.event.superchat(cmd);
        }
@@ -10080,11 +10093,12 @@
          return;
         if (!cmd.snippet.hasOwnProperty('superStickerDetails'))
          return;
-        if (cmd.hasOwnProperty('id') && cmd.authorDetails.hasOwnProperty('channelId'))
+        const u = youtube.parse.user(cmd);
+        if (cmd.hasOwnProperty('id') && u.id !== 0)
         {
-         if (!_msgHistory.hasOwnProperty(cmd.authorDetails.channelId))
-          _msgHistory[cmd.authorDetails.channelId] = new Set();
-         _msgHistory[cmd.authorDetails.channelId].add(cmd.id);
+         if (!_msgHistory.hasOwnProperty(u.id))
+          _msgHistory[u.id] = new Set();
+         _msgHistory[u.id].add(cmd.id);
         }
         youtube.parse.event.supersticker(cmd);
        }
@@ -10106,8 +10120,9 @@
          return;
         if (!cmd.snippet.messageDeletedDetails.hasOwnProperty('deletedMessageId'))
          return;
-        if (cmd.hasOwnProperty('authorDetails') && cmd.authorDetails.hasOwnProperty('channelId') && _msgHistory.hasOwnProperty(cmd.authorDetails.channelId) && _msgHistory[cmd.authorDetails.channelId].has(cmd.snippet.messageDeletedDetails.deletedMessageId))
-         _msgHistory[cmd.authorDetails.channelId].delete(cmd.snippet.messageDeletedDetails.deletedMessageId);
+        const u = youtube.parse.user(cmd);
+        if (u.id !== 0 && _msgHistory.hasOwnProperty(u.id) && _msgHistory[u.id].has(cmd.snippet.messageDeletedDetails.deletedMessageId))
+         _msgHistory[u.id].delete(cmd.snippet.messageDeletedDetails.deletedMessageId);
         const mID = 'youtube:' + cmd.snippet.messageDeletedDetails.deletedMessageId;
         display.eraseMsg(mID);
        }
@@ -10118,13 +10133,14 @@
          return;
         if (!cmd.snippet.userBannedDetails.hasOwnProperty('banType'))
          return;
-        if (cmd.snippet.userBannedDetails.hasOwnProperty('bannedUserDetails') && cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('channelId') && _msgHistory.hasOwnProperty(cmd.snippet.userBannedDetails.bannedUserDetails.channelId))
+        const u = youtube.parse.user(cmd.snippet.userBannedDetails);
+        if (u.id !== 0 && _msgHistory.hasOwnProperty(u.id))
         {
-         for (const mID of _msgHistory[cmd.snippet.userBannedDetails.bannedUserDetails.channelId])
+         for (const mID of _msgHistory[u.id])
          {
           display.eraseMsg('youtube:' + mID);
          }
-         delete _msgHistory[cmd.snippet.userBannedDetails.bannedUserDetails.channelId];
+         delete _msgHistory[u.id];
         }
         if (document.visibilityState === 'hidden')
          return;
@@ -10243,23 +10259,21 @@
          continue;
         if (!j.items[i].snippet.resourceId.hasOwnProperty('channelId'))
          continue;
-        if (!j.items[i].hasOwnProperty('subscriberSnippet'))
-         continue;
-        if (!j.items[i].subscriberSnippet.hasOwnProperty('channelId'))
+        const u = youtube.parse.user(j.items[i]);
+        if (u.id === 0)
          continue;
         const chID = j.items[i].snippet.resourceId.channelId;
         if (!youtube.net.sList.hasOwnProperty(chID))
          youtube.net.sList[chID] = {};
-        youtube.net.sList[chID][j.items[i].subscriberSnippet.channelId] = {value: true, t: Date.now()};
+        youtube.net.sList[chID][u.id] = {value: true, t: Date.now()};
        }
        const findU = _uLS;
        for (let i = 0, l = j.items.length; i < l; i++)
        {
-        if (!j.items[i].hasOwnProperty('subscriberSnippet'))
+        const u = youtube.parse.user(j.items[i]);
+        if (u.id === 0)
          continue;
-        if (!j.items[i].subscriberSnippet.hasOwnProperty('channelId'))
-         continue;
-        _uLS = j.items[i].subscriberSnippet.channelId;
+        _uLS = u.id;
         break;
        }
        if (findU === false)
@@ -10267,13 +10281,12 @@
        const s = [];
        for (let i = 0, l = j.items.length; i < l; i++)
        {
-        if (!j.items[i].hasOwnProperty('subscriberSnippet'))
+        const u = youtube.parse.user(j.items[i]);
+        if (u.id === 0)
          continue;
-        if (!j.items[i].subscriberSnippet.hasOwnProperty('channelId'))
+        if (!u._name)
          continue;
-        if (!j.items[i].subscriberSnippet.hasOwnProperty('title'))
-         continue;
-        if (j.items[i].subscriberSnippet.channelId === findU)
+        if (u.id === findU)
          return s.reverse();
         s.push(j.items[i].subscriberSnippet);
        }
@@ -10741,16 +10754,39 @@
 
     const $parse = function()
     {
-     function _parseUser(cmd)
+     function $parseUser(cmd)
      {
-      if (!cmd.hasOwnProperty('authorDetails'))
-       return false;
-      if (!cmd.authorDetails.hasOwnProperty('displayName'))
-       return false;
-      const ret = {};
-      ret['display-name'] = cmd.authorDetails.displayName;
-      if (cmd.authorDetails.hasOwnProperty('channelId'))
-       ret.id = cmd.authorDetails.channelId;
+      const ret = {
+       id: 0,
+       _name: false,
+       ascii: false
+      };
+      if (cmd.hasOwnProperty('authorDetails'))
+      {
+       if (cmd.authorDetails.hasOwnProperty('channelId'))
+        ret.id = cmd.authorDetails.channelId;
+       if (cmd.authorDetails.hasOwnProperty('displayName'))
+        ret._name = cmd.authorDetails.displayName;
+      }
+      if (cmd.hasOwnProperty('bannedUserDetails'))
+      {
+       if (cmd.bannedUserDetails.hasOwnProperty('channelId'))
+        ret.id = cmd.bannedUserDetails.channelId;
+       if (cmd.bannedUserDetails.hasOwnProperty('displayName'))
+        ret._name = cmd.bannedUserDetails.displayName;
+      }
+      if (cmd.hasOwnProperty('subscriberSnippet'))
+      {
+       if (cmd.subscriberSnippet.hasOwnProperty('channelId'))
+        ret.id = cmd.subscriberSnippet.channelId;
+       if (cmd.subscriberSnippet.hasOwnProperty('title'))
+        ret._name = cmd.subscriberSnippet.title;
+      }
+      const gReg = new RegExp(service.parse.uReg, 'g');
+      if (!!ret._name && ret._name === ret._name.replaceAll(gReg, ''))
+       ret.ascii = ret._name;
+      if (!ret.ascii)
+       ret.ascii = anonName;
       return ret;
      }
 
@@ -10855,8 +10891,8 @@
 
         function $zwe(l, cmd, pass, dup = null)
         {
-         const u = _parseUser(cmd);
-         if (u === false)
+         const u = youtube.parse.user(cmd);
+         if (u.id === 0)
           return;
          const msg = _getMessage(cmd);
          if (msg === false)
@@ -10868,8 +10904,8 @@
         {
          function $userGeneral(cmd, dup = null)
          {
-          const u = _parseUser(cmd);
-          if (u === false)
+          const u = youtube.parse.user(cmd);
+          if (u.id === 0)
            return [];
           const msg = _getMessage(cmd);
           if (msg === false)
@@ -10879,8 +10915,8 @@
 
          function $userZWE(l, cmd, pass, dup = null)
          {
-          const u = _parseUser(cmd);
-          if (u === false)
+          const u = youtube.parse.user(cmd);
+          if (u.id === 0)
            return;
           const msg = _getMessage(cmd);
           if (msg === false)
@@ -10913,8 +10949,8 @@
 
         function $zwe(l, cmd, pass, dup = null)
         {
-         const u = _parseUser(cmd);
-         if (u === false)
+         const u = youtube.parse.user(cmd);
+         if (u.id === 0)
           return;
          const msg = _getMessage(cmd);
          if (msg === false)
@@ -10929,19 +10965,19 @@
           const msg = _getMessage(cmd);
           if (msg === false)
            return [];
-          const u = _parseUser(cmd);
-          if (u === false)
+          const u = youtube.parse.user(cmd);
+          if (u.id === 0)
            return [];
           return service.parse.content['3rdparty'].bttv.user.general('youtube:' + u.id, msg, dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
          {
+          const u = youtube.parse.user(cmd);
+          if (u.id === 0)
+           return;
           const msg = _getMessage(cmd);
           if (msg === false)
-           return;
-          const u = _parseUser(cmd);
-          if (u === false)
            return;
           service.parse.content['3rdparty'].bttv.user.zwe(l, 'youtube:' + u.id, msg, pass, dup);
          }
@@ -10971,8 +11007,8 @@
 
         function $zwe(l, cmd, pass, dup = null)
         {
-         const u = _parseUser(cmd);
-         if (u === false)
+         const u = youtube.parse.user(cmd);
+         if (u.id === 0)
           return;
          const msg = _getMessage(cmd);
          if (msg === false)
@@ -10984,22 +11020,22 @@
         {
          function $userGeneral(cmd, dup = null)
          {
+          const u = youtube.parse.user(cmd);
+          if (u.id === 0)
+           return [];
           const msg = _getMessage(cmd);
           if (msg === false)
-           return [];
-          const u = _parseUser(cmd);
-          if (u === false)
            return [];
           return service.parse.content['3rdparty']['7tv'].user.general('youtube:' + u.id, msg, dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
          {
+          const u = youtube.parse.user(cmd);
+          if (u.id === 0)
+           return;
           const msg = _getMessage(cmd);
           if (msg === false)
-           return;
-          const u = _parseUser(cmd);
-          if (u === false)
            return;
           service.parse.content['3rdparty']['7tv'].user.zwe(l, 'youtube:' + u.id, msg, pass, dup);
          }
@@ -11035,8 +11071,8 @@
      {
       async function $c_line(cmd)
       {
-       const u = _parseUser(cmd);
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+       const u = youtube.parse.user(cmd);
+       if (service.parse.ignored(u))
         return;
        const lv = await _level(cmd);
        if (await _parseCommand(cmd, lv))
@@ -11069,7 +11105,7 @@
       {
        if (!cfg.event.youtube.sub)
         return;
-       let uName = 'Anonymous';
+       let uName = anonName;
        if (cmd.title)
        {
         uName = cmd.title;
@@ -11089,8 +11125,8 @@
          return false;
         if (!cfg.event.youtube.superchat.level)
          return false;
-        const u = _parseUser(cmd);
-        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        const u = youtube.parse.user(cmd);
+        if (service.parse.ignored(u))
          return false;
         if (!cmd.snippet.superChatDetails.hasOwnProperty('tier') || cmd.snippet.superChatDetails.tier === null)
          return false;
@@ -11121,13 +11157,10 @@
          }
          return true;
         }
-        let dn = 'Anonymous';
-        if (u.hasOwnProperty('display-name'))
-         dn = u['display-name'];
         let amt = _minUSD[lv] + ' USD';
         if (cmd.snippet.superChatDetails.hasOwnProperty('amountDisplayString') && cmd.snippet.superChatDetails.amountDisplayString !== '')
          amt = cmd.snippet.superChatDetails.amountDisplayString;
-        display.kappa.show(p, r, {[cVARs.evt.user]: dn, [cVARs.evt.amount]: amt});
+        display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: amt});
         return true;
        }
 
@@ -11142,8 +11175,8 @@
        {
         if (!cfg.event.youtube.supersticker)
          return false;
-        const u = _parseUser(cmd);
-        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        const u = youtube.parse.user(cmd);
+        if (service.parse.ignored(u))
          return false;
         if (!cmd.snippet.superStickerDetails.hasOwnProperty('superStickerMetadata') || cmd.snippet.superStickerDetails.superStickerMetadata === null)
          return false;
@@ -11163,16 +11196,13 @@
         const r = shared.findInMaybeRange(cfg.event.youtube.supersticker, lv);
         if (r === false)
          return true;
-        let dn = 'Anonymous';
-        if (u.hasOwnProperty('display-name'))
-         dn = u['display-name'];
         let amt = _minUSD[lv] + ' USD';
         if (cmd.snippet.superStickerDetails.hasOwnProperty('amountDisplayString') && cmd.snippet.superStickerDetails.amountDisplayString !== '')
          amt = cmd.snippet.superStickerDetails.amountDisplayString;
         let alt = 'Unknown';
         if (cmd.snippet.superStickerDetails.superStickerMetadata.hasOwnProperty('altText') && cmd.snippet.superStickerDetails.superStickerMetadata.altText !== '')
          alt = cmd.snippet.superStickerDetails.superStickerMetadata.altText;
-        display.kappa.show(p, r, {[cVARs.evt.user]: dn, [cVARs.evt.sticker]: alt, [cVARs.evt.amount]: amt});
+        display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.sticker]: alt, [cVARs.evt.amount]: amt});
         return true;
        }
 
@@ -11185,8 +11215,8 @@
        {
         if (!cfg.event.youtube.member)
          return;
-        const u = _parseUser(cmd);
-        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        const u = youtube.parse.user(cmd);
+        if (service.parse.ignored(u))
          return;
         let c = cfg.event.youtube.member;
         if (cmd.snippet.newSponsorDetails.memberLevelName)
@@ -11199,18 +11229,15 @@
          return;
         if (c.first === false)
          return;
-        let dn = 'Anonymous';
-        if (u.hasOwnProperty('display-name'))
-         dn = u['display-name'];
-        display.kappa.show(false, c.first, {[cVARs.evt.user]: dn});
+        display.kappa.show(false, c.first, {[cVARs.evt.user]: u.ascii});
        }
 
        async function $milestone(cmd)
        {
         if (!cfg.event.youtube.member)
          return;
-        const u = _parseUser(cmd);
-        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        const u = youtube.parse.user(cmd);
+        if (service.parse.ignored(u))
          return;
         let c = cfg.event.youtube.member;
         if (cmd.snippet.memberMilestoneChatDetails.memberLevelName)
@@ -11235,18 +11262,15 @@
         const rs = shared.findInMaybeRange(c.milestone, mpcm);
         if (rs === false)
          return;
-        let dn = 'Anonymous';
-        if (u.hasOwnProperty('display-name'))
-         dn = u['display-name'];
-        display.kappa.show(a, rs, {[cVARs.evt.user]: dn, [cVARs.evt.amount]: mpcm});
+        display.kappa.show(a, rs, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: mpcm});
        }
 
        function $gift(cmd)
        {
         if (!cfg.event.youtube.member)
          return;
-        const u = _parseUser(cmd);
-        if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.host))
+        const u = youtube.parse.user(cmd);
+        if (service.parse.ignored(u))
          return;
         if (!cmd.snippet.membershipGiftingDetails.hasOwnProperty('giftMembershipsCount'))
          return;
@@ -11263,10 +11287,7 @@
         const gpb = shared.findInMaybeRange(c.giftbomb, mpmgc);
         if (gpb === false)
          return;
-        let dn = 'Anonymous';
-        if (u.hasOwnProperty('display-name'))
-         dn = u['display-name'];
-        display.kappa.show(false, gpb, {[cVARs.evt.sender]: dn, [cVARs.evt.amount]: mpmgc});
+        display.kappa.show(false, gpb, {[cVARs.evt.sender]: u.ascii, [cVARs.evt.amount]: mpmgc});
        }
 
        return {
@@ -11280,12 +11301,13 @@
       {
        if (!cfg.event.youtube.ban)
         return;
-       let dn = 'Anonymous';
-       if (cmd.snippet.hasOwnProperty('userBannedDetails') && cmd.snippet.userBannedDetails.hasOwnProperty('bannedUserDetails') && cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('displayName'))
+       let dn = anonName;
+       if (cmd.snippet.hasOwnProperty('userBannedDetails'))
        {
-        dn = cmd.snippet.userBannedDetails.bannedUserDetails.displayName;
-        if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
+        const u = youtube.parse.user(cmd.snippet.userBannedDetails);
+        if (service.parse.ignored(u))
          return;
+        dn = u.ascii;
        }
        display.kappa.show(false, cfg.event.youtube.ban, {[cVARs.evt.user]: dn});
       }
@@ -11296,12 +11318,13 @@
         return;
        if (!cmd.snippet.userBannedDetails.hasOwnProperty('banDurationSeconds'))
         return;
-       let dn = 'Anonymous';
-       if (cmd.snippet.hasOwnProperty('userBannedDetails') && cmd.snippet.userBannedDetails.hasOwnProperty('bannedUserDetails') && cmd.snippet.userBannedDetails.bannedUserDetails.hasOwnProperty('displayName'))
+       let dn = anonName;
+       if (cmd.snippet.hasOwnProperty('userBannedDetails'))
        {
-        dn = cmd.snippet.userBannedDetails.bannedUserDetails.displayName;
-        if (cfg.ignore.users !== false && cfg.ignore.users.includes(dn))
+        const u = youtube.parse.user(cmd.snippet.userBannedDetails);
+        if (service.parse.ignored(u))
          return;
+        dn = u.ascii;
        }
        const dDur = cmd.snippet.userBannedDetails.banDurationSeconds;
        const r = shared.findInMaybeRange(cfg.event.youtube.timeout, dDur);
@@ -11338,7 +11361,8 @@
        r |= youtube.Access.VERIFIED;
       if (author.hasOwnProperty('isSubscriber') && author.isSubscriber !== false)
        r |= youtube.Access.SUBSCRIBER;
-      if (cmd.hasOwnProperty('_channel') && cmd.authorDetails.hasOwnProperty('channelId'))
+      const u = youtube.parse.user(cmd);
+      if (cmd.hasOwnProperty('_channel') && u.id !== 0)
       {
        /* api-heavy, only check if subscriber access is allowed and there's a chance it matters */
        let needS = false;
@@ -11363,9 +11387,8 @@
        }
        if (needS)
        {
-        const uID = cmd.authorDetails.channelId;
         const chID = cmd._channel;
-        const f = await youtube.net.subscribers.checkUser(chID, uID);
+        const f = await youtube.net.subscribers.checkUser(chID, u.id);
         if (f)
          r |= youtube.Access.SUBSCRIBER;
        }
@@ -11464,8 +11487,8 @@
      async function _eListFromCmd(cmd, dup = null)
      {
       const r = [];
-      const u = _parseUser(cmd);
-      if (u !== false && cfg.ignore.users !== false && cfg.ignore.users.includes(u['display-name']))
+      const u = youtube.parse.user(cmd);
+      if (service.parse.ignored(u))
        return r;
       r.push(...await youtube.parse.content.youtube(cmd, dup));
       if (cfg.display.useEmoji)
@@ -11549,6 +11572,7 @@
      }
 
      return {
+      user: $parseUser,
       content: $content,
       line: $line,
       event: $event
@@ -12470,6 +12494,34 @@
 
     const $parse = function()
     {
+     function _parseUser(cmd, prop = 'sender')
+     {
+      const ret = {
+       id: 0,
+       _slug: false,
+       _name: false,
+       ascii: false
+      };
+      if (cmd.hasOwnProperty(prop))
+      {
+       let data = cmd[prop];
+       if (data.hasOwnProperty('id') && data.id !== null)
+        ret.id = data.id;
+       if (data.hasOwnProperty('slug') && data.slug !== null)
+        ret._slug = data.slug;
+       if (data.hasOwnProperty('username') && data.username !== null)
+        ret._name = data.username;
+      }
+      const gReg = new RegExp(service.parse.uReg, 'g');
+      if (!!ret._name && ret._name === ret._name.replaceAll(gReg, ''))
+       ret.ascii = ret._name;
+      if (!ret.ascii && !!ret._slug)
+       ret.ascii = ret._slug;
+      if (!ret.ascii)
+       ret.ascii = anonName;
+      return ret;
+     }
+
      const $content = function()
      {
       function $emoji(cmd, dup = null)
@@ -12546,11 +12598,10 @@
         {
          if (!cmd.hasOwnProperty('content') || cmd.content === null)
           return;
-         if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+         const u = _parseUser(cmd);
+         if (u.id === 0)
           return;
-         if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
-          return;
-         service.parse.content['3rdparty'].ffz.zwe(l, 'kick:' + cmd.sender.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
+         service.parse.content['3rdparty'].ffz.zwe(l, 'kick:' + u.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
         }
 
         const $user = function()
@@ -12559,22 +12610,20 @@
          {
           if (!cmd.hasOwnProperty('content') || cmd.content === null)
            return [];
-          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+          const u = _parseUser(cmd);
+          if (u.id === 0)
            return [];
-          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
-           return [];
-          return service.parse.content['3rdparty'].ffz.user.general('kick:' + cmd.sender.id, cmd.content, dup);
+          return service.parse.content['3rdparty'].ffz.user.general('kick:' + u.id, cmd.content, dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
          {
           if (!cmd.hasOwnProperty('content') || cmd.content === null)
            return;
-          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+          const u = _parseUser(cmd);
+          if (u.id === 0)
            return;
-          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
-           return;
-          service.parse.content['3rdparty'].ffz.user.zwe(l, 'kick:' + cmd.sender.id, cmd.content, pass, dup);
+          service.parse.content['3rdparty'].ffz.user.zwe(l, 'kick:' + u.id, cmd.content, pass, dup);
          }
 
          return {
@@ -12603,11 +12652,10 @@
         {
          if (!cmd.hasOwnProperty('content') || cmd.content === null)
           return;
-         if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+         const u = _parseUser(cmd);
+         if (u.id === 0)
           return;
-         if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
-          return;
-         service.parse.content['3rdparty'].bttv.zwe(l, 'kick:' + cmd.sender.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
+         service.parse.content['3rdparty'].bttv.zwe(l, 'kick:' + u.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
         }
 
         const $user = function()
@@ -12616,22 +12664,20 @@
          {
           if (!cmd.hasOwnProperty('content') || cmd.content === null)
            return [];
-          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+          const u = _parseUser(cmd);
+          if (u.id === 0)
            return [];
-          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
-           return [];
-          return service.parse.content['3rdparty'].bttv.user.general('kick:' + cmd.sender.id, cmd.content, dup);
+          return service.parse.content['3rdparty'].bttv.user.general('kick:' + u.id, cmd.content, dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
          {
           if (!cmd.hasOwnProperty('content') || cmd.content === null)
            return;
-          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+          const u = _parseUser(cmd);
+          if (u.id === 0)
            return;
-          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
-           return;
-          service.parse.content['3rdparty'].bttv.user.zwe(l, 'kick:' + cmd.sender.id, cmd.content, pass, dup);
+          service.parse.content['3rdparty'].bttv.user.zwe(l, 'kick:' + u.id, cmd.content, pass, dup);
          }
 
          return {
@@ -12660,11 +12706,10 @@
         {
          if (!cmd.hasOwnProperty('content') || cmd.content === null)
           return;
-         if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+         const u = _parseUser(cmd);
+         if (u.id === 0)
           return;
-         if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
-          return;
-         service.parse.content['3rdparty']['7tv'].zwe(l, 'kick:' + cmd.sender.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
+         service.parse.content['3rdparty']['7tv'].zwe(l, 'kick:' + u.id, 'kick:' + kick.net.userID, cmd.content, pass, dup);
         }
 
         const $user = function()
@@ -12673,22 +12718,20 @@
          {
           if (!cmd.hasOwnProperty('content') || cmd.content === null)
            return [];
-          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+          const u = _parseUser(cmd);
+          if (u.id === 0)
            return [];
-          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
-           return [];
-          return service.parse.content['3rdparty']['7tv'].user.general('kick:' + cmd.sender.id, cmd.content, dup);
+          return service.parse.content['3rdparty']['7tv'].user.general('kick:' + u.id, cmd.content, dup);
          }
 
          function $userZWE(l, cmd, pass, dup = null)
          {
           if (!cmd.hasOwnProperty('content') || cmd.content === null)
            return;
-          if (!cmd.hasOwnProperty('sender') || cmd.sender === null)
+          const u = _parseUser(cmd);
+          if (u.id === 0)
            return;
-          if (!cmd.sender.hasOwnProperty('id') || cmd.sender.id === null)
-           return;
-          service.parse.content['3rdparty']['7tv'].user.zwe(l, 'kick:' + cmd.sender.id, cmd.content, pass, dup);
+          service.parse.content['3rdparty']['7tv'].user.zwe(l, 'kick:' + u.id, cmd.content, pass, dup);
          }
 
          return {
@@ -12722,13 +12765,8 @@
      {
       async function $c_line(cmd)
       {
-       let u = null;
-       if (cmd.hasOwnProperty('sender') && cmd.sender !== null)
-       {
-        if (cmd.sender.hasOwnProperty('slug') && cmd.sender.slug !== null)
-         u = cmd.sender.slug;
-       }
-       if (cfg.ignore.users !== false && u !== null && cfg.ignore.users.includes(u))
+       const u = _parseUser(cmd);
+       if (service.parse.ignored(u))
         return;
        if (!cmd.hasOwnProperty('content') || cmd.content === null)
         return;
@@ -12777,19 +12815,21 @@
        const u = await _getUserProfile(dn);
        if (u === false)
         return;
-       if (cfg.ignore.users !== false && cfg.ignore.users.includes(u.name))
+       if (service.parse.ignored(u))
         return;
        if (!cfg.event.kick.raid.originEmotes)
        {
-        display.kappa.show(false, r, {[cVARs.evt.user]: u.display, [cVARs.evt.amount]: c});
+        display.kappa.show(false, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: c});
         return;
        }
-       const e = await _findEmote_channel(u.display);
+       if (!u._slug)
+        return;
+       const e = await _findEmote_channel(u._slug);
        if (cfg.event.kick.raid.originExtendedEmotes)
        {
         e.push(...await _find7TV_channel(u.id, cfg.event.kick.raid.originExtendedEmotes));
        }
-       display.kappa.show(e, r, {[cVARs.evt.user]: u.display, [cVARs.evt.amount]: c});
+       display.kappa.show(e, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: c});
       }
 
       function $sub(cmd)
@@ -12837,22 +12877,16 @@
 
       function $ban(cmd)
       {
-       if (!cmd.hasOwnProperty('user') || cmd.user === null)
+       const u = _parseUser(cmd, 'user');
+       if (service.parse.ignored(u))
         return;
-       if (cfg.ignore.users !== false && cmd.user.hasOwnProperty('slug') && cmd.user.slug !== null && cfg.ignore.users.includes(cmd.user.slug))
-        return;
-       if (!cmd.user.hasOwnProperty('username') || cmd.user.username === null)
-        return;
-       display.kappa.show(false, cfg.event.kick.ban, {[cVARs.evt.user]: cmd.user.username});
+       display.kappa.show(false, cfg.event.kick.ban, {[cVARs.evt.user]: u.ascii});
       }
 
       function $timeout(cmd)
       {
-       if (!cmd.hasOwnProperty('user') || cmd.user === null)
-        return;
-       if (cfg.ignore.users !== false && cmd.user.hasOwnProperty('slug') && cmd.user.slug !== null && cfg.ignore.users.includes(cmd.user.slug))
-        return;
-       if (!cmd.user.hasOwnProperty('username') || cmd.user.username === null)
+       const u = _parseUser(cmd, 'user');
+       if (service.parse.ignored(u))
         return;
        if (!cmd.hasOwnProperty('expires_at') || cmd.expires_at === null)
         return;
@@ -12861,7 +12895,7 @@
        const r = shared.findInMaybeRange(cfg.event.kick.timeout, dDur);
        if (r === false)
         return;
-       display.kappa.show(false, r, {[cVARs.evt.user]: cmd.user.username, [cVARs.evt.amount]: dDur});
+       display.kappa.show(false, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: dDur});
       }
 
       const $poll = function()
@@ -13007,22 +13041,26 @@
 
       async function _checkFollower(cmd)
       {
-       const uID = cmd.sender.id;
-       if (kick.net.fList.hasOwnProperty(uID))
-       {
-        const tDif = Date.now() - kick.net.fList[uID].t;
-        if (tDif < _rFH)
-         return kick.net.fList[uID].value;
-       }
-       const u = await _getUserProfile(cmd.sender.username);
-       if (u === false)
+       const u = _parseUser(cmd);
+       if (u.id === 0)
         return false;
-       if (u.follower !== false)
+       if (kick.net.fList.hasOwnProperty(u.id))
        {
-        kick.net.fList[uID] = {value: true, t: Date.now()};
+        const tDif = Date.now() - kick.net.fList[u.id].t;
+        if (tDif < _rFH)
+         return kick.net.fList[u.id].value;
+       }
+       if (!u._slug)
+        return false;
+       const p = await _getUserProfile(u._slug);
+       if (p === false)
+        return false;
+       if (p.follower !== false)
+       {
+        kick.net.fList[u.id] = {value: true, t: Date.now()};
         return true;
        }
-       kick.net.fList[uID] = {value: false, t: Date.now()};
+       kick.net.fList[u.id] = {value: false, t: Date.now()};
        return false;
       }
 
@@ -13118,13 +13156,8 @@
      function _eListFromCmd(cmd, dup = null)
      {
       const r = [];
-      let u = null;
-      if (cmd.hasOwnProperty('sender') && cmd.sender !== null)
-      {
-       if (cmd.sender.hasOwnProperty('slug') && cmd.sender.slug !== null)
-        u = cmd.sender.slug;
-      }
-      if (cfg.ignore.users !== false && u !== false && cfg.ignore.users.includes(u))
+      const u = _parseUser(cmd);
+      if (service.parse.ignored(u))
        return r;
       r.push(...kick.parse.content.kick(cmd, dup));
       if (cfg.display.useEmoji)
@@ -13210,8 +13243,7 @@
      return {
       content: $content,
       line: $line,
-      event: $event,
-      uReg: /[^A-Za-z0-9_]/
+      event: $event
      };
     }();
 
@@ -13342,24 +13374,29 @@
       return false;
      if (_usesHyphen === 0)
       _usesHyphen = false;
-     const u = {};
-     if (j.hasOwnProperty('slug') && j.slug !== null)
-      u.name = j.slug;
-     else
-      u.name = dn.toLowerCase();
-     if (j.hasOwnProperty('username') && j.username !== null)
-      u.display = j.username;
-     else
-      u.display = dn;
+     const ret = {
+      id: 0,
+      _slug: false,
+      _name: false,
+      ascii: false,
+      follower: false
+     };
      if (j.hasOwnProperty('id') && j.id !== null)
-      u.id = j.id;
-     else
-      u.id = 0;
+      ret.id = j.id;
+     if (j.hasOwnProperty('slug') && j.slug !== null)
+      ret.slug = j.slug;
+     if (j.hasOwnProperty('username') && j.username !== null)
+      ret.name = j.username;
      if (j.hasOwnProperty('following_since') && j.following_since !== null)
-      u.follower = j.following_since;
-     else
-      u.follower = false;
-     return u;
+      ret.follower = j.following_since;
+     const gReg = new RegExp(service.parse.uReg, 'g');
+     if (!!ret._name && ret._name === ret._name.replaceAll(gReg, ''))
+      ret.ascii = ret._name;
+     if (!ret.ascii && !!ret._slug)
+      ret.ascii = ret._slug;
+     if (!ret.ascii)
+      ret.ascii = anonName;
+     return ret;
     }
 
     return {
@@ -14765,6 +14802,19 @@
       };
      }();
 
+     function $ignored(u)
+     {
+      if (!cfg.ignore.users)
+       return false;
+      if (!!u._slug && cfg.ignore.users.includes(u._slug))
+       return true;
+      if (!!u._name && cfg.ignore.users.includes(u._name))
+       return true;
+      if (!!u.ascii && cfg.ignore.users.includes(u.ascii))
+       return true;
+      return false;
+     }
+
      function _parseTwitch(msg, dup = null)
      {
       if (!service.emotes.hasOwnProperty('twitch'))
@@ -14985,9 +15035,11 @@
      return {
       content: $content,
       line: $line,
+      ignored: $ignored,
       eListFromMsg: $eListFromMsg,
       handleDuplicates: $handleDuplicates,
-      clearCooldowns: $clearCooldowns
+      clearCooldowns: $clearCooldowns,
+      uReg: /[^A-Za-z0-9_]/
      };
     }();
 
@@ -15027,7 +15079,7 @@
       if (p === false && cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
-       if (!twitch.parse.uReg.test(n))
+       if (!service.parse.uReg.test(n))
         u = await twitch.net.userInfo(n);
        if (u !== false)
        {
@@ -15064,7 +15116,7 @@
       if (cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
-       if (!twitch.parse.uReg.test(n))
+       if (!service.parse.uReg.test(n))
         u = await twitch.net.userInfo(n);
        if (u !== false)
        {
@@ -15348,7 +15400,7 @@
      if (p === false && cfg.event.tip.useProfileImage && dName !== false)
      {
       let u = false;
-      if (!twitch.parse.uReg.test(dName))
+      if (!service.parse.uReg.test(dName))
        u = await twitch.net.userInfo(dName);
       if (u !== false)
       {
