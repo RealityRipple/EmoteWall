@@ -18004,65 +18004,171 @@
      return hashParams;
     }
 
-    function $httpRequest(type, url, hdrs = {}, body = null, nocache = true, ret = true)
+    const $httpRequest = function()
     {
-     const p = new Promise(
-      function(resolve)
-      {
-       const x = new XMLHttpRequest();
-       if (nocache)
+     const _stack = {};
+     const _lQueue = 250;
+     let _tQueue = false;
+
+     function $c_httpRequest(type, url, hdrs = {}, body = null, nocache = true, ret = true)
+     {
+      const p = new Promise(
+       function(resolve)
        {
-        if (url.includes('?'))
-         url += '&';
-        else
-         url += '?';
-        url += '_=' + (0xFFFFFFFF + shared.rnd(0xFFFFFFFF));
-       }
-       if (type === 'POST' && !hdrs.hasOwnProperty('Content-Type'))
-        hdrs['Content-Type'] = 'application/x-www-form-urlencoded';
-       x.open(type, url);
-       x.timeout = 10000;
-       for (const hK in hdrs)
-       {
-        if (!hdrs.hasOwnProperty(hK))
-         continue;
-        x.setRequestHeader(hK, hdrs[hK]);
-       }
-       x.onreadystatechange = function()
-       {
-        if (ret === false)
+        const h = _host(url);
+        if (!_stack.hasOwnProperty(h))
+         _stack[h] = {queries: [], time: 0};
+        const r = {
+         req: [type, url, hdrs, body, nocache, ret],
+         ret: resolve
+        };
+        _stack[h].queries.push(r);
+        if (_tQueue !== false)
+         return;
+        const dif = Date.now() - _stack[h].time;
+        if (dif < _lQueue)
         {
-         if (x.readyState < 2)
+         _tQueue = window.setTimeout(_tick, _lQueue - dif);
+        }
+        else
+        {
+         _tQueue = true;
+         shared.doNextFrame(_tick);
+        }
+       }
+      );
+      return p;
+     }
+
+     function _host(u)
+     {
+      try
+      {
+       const h = new URL(u);
+       if (!h.hostname)
+        return 'null';
+       return h.hostname;
+      }
+      catch
+      {
+       return 'null';
+      }
+     }
+
+     function _req(type, url, hdrs = {}, body = null, nocache = true, ret = true)
+     {
+      const p = new Promise(
+       function(resolve)
+       {
+        const x = new XMLHttpRequest();
+        if (nocache)
+        {
+         if (url.includes('?'))
+          url += '&';
+         else
+          url += '?';
+         url += '_=' + (0xFFFFFFFF + shared.rnd(0xFFFFFFFF));
+        }
+        if (type === 'POST' && !hdrs.hasOwnProperty('Content-Type'))
+         hdrs['Content-Type'] = 'application/x-www-form-urlencoded';
+        x.open(type, url);
+        x.timeout = 10000;
+        for (const hK in hdrs)
+        {
+         if (!hdrs.hasOwnProperty(hK))
+          continue;
+         x.setRequestHeader(hK, hdrs[hK]);
+        }
+        x.onreadystatechange = function()
+        {
+         if (ret === false)
+         {
+          if (x.readyState < 2)
+           return;
+          x.ontimeout = null;
+          x.onreadystatechange = null;
+          resolve(Math.floor(x.status / 100) === 2);
+          return;
+         }
+         if (x.readyState !== 4)
           return;
          x.ontimeout = null;
          x.onreadystatechange = null;
-         resolve(Math.floor(x.status / 100) === 2);
-         return;
-        }
-        if (x.readyState !== 4)
-         return;
-        x.ontimeout = null;
-        x.onreadystatechange = null;
-        const h = _parseHeaders(x.getAllResponseHeaders());
-        resolve({code: x.status, data: x.responseText, headers: h, get success(){return Math.floor(this.code / 100) === 2;}, get json(){try {return JSON.parse(this.data);} catch {return null;}}});
-       };
-       x.ontimeout = function()
-       {
-        x.ontimeout = null;
-        x.onreadystatechange = null;
-        if (ret === false)
-         resolve(false);
+         const h = _parseHeaders(x.getAllResponseHeaders());
+         resolve({code: x.status, data: x.responseText, headers: h, get success(){return Math.floor(this.code / 100) === 2;}, get json(){try {return JSON.parse(this.data);} catch {return null;}}});
+        };
+        x.ontimeout = function()
+        {
+         x.ontimeout = null;
+         x.onreadystatechange = null;
+         if (ret === false)
+          resolve(false);
+         else
+          resolve({code: 408, data: shared.errTimeout, get success(){return false;}, get json(){return null;}});
+        };
+        if (body === null)
+         x.send();
         else
-         resolve({code: 408, data: shared.errTimeout, get success(){return false;}, get json(){return null;}});
-       };
-       if (body === null)
-        x.send();
-       else
-        x.send(body);
+         x.send(body);
+       }
+      );
+      return p;
+     }
+
+     async function _tick()
+     {
+      _tQueue = true;
+      _cleanup();
+      const hList = Object.keys(_stack);
+      const reqs = [];
+      const rets = [];
+      for (let i = 0; i < hList.length; i++)
+      {
+       const h = hList[i];
+       if (_stack[h].queries.length === 0)
+        continue;
+       const dif = Date.now() - _stack[h].time;
+       if (dif < _lQueue)
+        continue;
+       _stack[h].time = Date.now();
+       const r = _stack[h].queries.shift();
+       reqs.push(_req(...r.req));
+       rets.push(r.ret);
       }
-     );
-     return p;
-    }
+      if (reqs.length > 0)
+      {
+       const ret = await Promise.allSettled(reqs);
+       for (let i = 0; i < ret.length; i++)
+       {
+        _stack[hList[i]].time = Date.now();
+        if (ret[i].status !== 'fulfilled')
+        {
+         rets[i]({code: 0, data: '', get success(){return false;}, get json(){return null;}});
+         continue;
+        }
+        rets[i](ret[i].value);
+       }
+      }
+      _cleanup();
+      if (Object.keys(_stack).length === 0)
+       _tQueue = false;
+      else
+       _tQueue = window.setTimeout(_tick, _lQueue);
+     }
+
+     function _cleanup()
+     {
+      const hList = Object.keys(_stack);
+      for (let i = 0; i < hList.length; i++)
+      {
+       const h = hList[i];
+       if (_stack[h].queries.length === 0)
+        delete _stack[h];
+      }
+     }
+
+     return $c_httpRequest;
+    }();
 
     function _parseHeaders(s)
     {
