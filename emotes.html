@@ -11853,6 +11853,11 @@
          await _App_Events(j);
          return;
         }
+        if (j.event === 'RewardRedeemedEvent')
+        {
+         _RewardRedeemedEvent(j);
+         return;
+        }
         if (j.event === 'PredictionCreated')
         {
          _PredictionCreated(j);
@@ -11947,6 +11952,7 @@
           _tPing = 0;
          }
          _tPing = window.setInterval(_wsPing, _lPing);
+         _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'chatroom_' + kick.net.chatID}}));
          _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'chatrooms.' + kick.net.chatID + '.v2'}}));
          _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'predictions-channel-' + kick.net.channelID}}));
         }
@@ -12158,6 +12164,33 @@
 
         return $c_App_Events;
        }();
+
+       function _RewardRedeemedEvent(j)
+       {
+        const jData = JSON.parse(j.data);
+        if (!jData.hasOwnProperty('reward_title'))
+         return;
+        if (!jData.hasOwnProperty('user_id'))
+         return;
+        if (!jData.hasOwnProperty('username'))
+         return;
+        if (jData.hasOwnProperty('user_input') && jData.user_input !== '')
+         jData.user_input = jData.user_input.replaceAll(/\s+/g, ' ').replaceAll(/([^ ])\[emote:/g, '$1 [emote:');
+        if (document.visibilityState === 'hidden')
+         return;
+        const cmd = {
+         type: 'redeem',
+         sender: {
+          id: jData.user_id,
+          username: jData.username
+         }
+        };
+        if (jData.hasOwnProperty('channel_id'))
+         cmd.chatroom_id = jData.channel_id;
+        if (jData.hasOwnProperty('user_input'))
+         cmd.content = jData.user_input;
+        kick.parse.event.redeem(jData.reward_title, cmd);
+       }
 
        function _PredictionCreated(j)
        {
@@ -12902,6 +12935,29 @@
        display.kappa.show(false, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: dDur});
       }
 
+      function $redeem(title, cmd)
+      {
+       const u = _parseUser(cmd);
+       if (service.parse.ignored(u))
+        return;
+       for (const k of cfg.commands)
+       {
+        if (!k.hasOwnProperty('redeem'))
+         continue;
+        if (!k.redeem.includes(title))
+         continue;
+        const kC = k.styles;
+        if (cmd === false)
+        {
+         display.kappa.show(false, kC);
+         return;
+        }
+        const a = _handleDuplicates(_eListFromCmd(cmd, true));
+        display.kappa.show(a, kC);
+        return;
+       }
+      }
+
       const $poll = function()
       {
        function $begin(ev)
@@ -13002,6 +13058,7 @@
        gift: $gift,
        ban: $ban,
        timeout: $timeout,
+       redeem: $redeem,
        poll: $poll,
        prediction: $prediction
       };
