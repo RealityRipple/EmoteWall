@@ -11873,6 +11873,11 @@
          _PredictionUpdated(j);
          return;
         }
+        if (j.event === 'GiftedSubscriptionsEvent')
+        {
+         _GiftedSubscriptionsEvent(j);
+         return;
+        }
         if (j.event === 'KicksGifted')
         {
          await _KicksGifted(j);
@@ -12027,9 +12032,6 @@
           case 'SubscriptionEvent':
            _SubscriptionEvent(jData);
            return;
-          case 'GiftedSubscriptionsEvent':
-           _GiftedSubscriptionsEvent(jData);
-           return;
           case 'PollUpdateEvent':
            _PollUpdateEvent(jData);
            return;
@@ -12094,13 +12096,6 @@
          if (document.visibilityState === 'hidden')
           return;
          kick.parse.event.sub(jData);
-        }
-
-        function _GiftedSubscriptionsEvent(jData)
-        {
-         if (document.visibilityState === 'hidden')
-          return;
-         kick.parse.event.gift(jData);
         }
 
         function _PollUpdateEvent(jData)
@@ -12231,6 +12226,14 @@
         if (document.visibilityState === 'hidden')
          return;
         kick.parse.event.prediction.end(jData.prediction);
+       }
+
+       function _GiftedSubscriptionsEvent(j)
+       {
+        const jData = JSON.parse(j.data);
+        if (document.visibilityState === 'hidden')
+         return;
+        kick.parse.event.gift(jData);
        }
 
        async function _KicksGifted(j)
