@@ -9104,6 +9104,8 @@
          }
         }
        }
+       if (this.cmd.tags.hasOwnProperty('bits') && this.cmd.tags.bits > 0)
+        r |= twitch.Access.CHEERER;
        const accessSub = twitch.Access.SUBSCRIBER_T1 | twitch.Access.SUBSCRIBER_T2 | twitch.Access.SUBSCRIBER_T3;
        if ((r & twitch.Access.BROADCASTER) === twitch.Access.BROADCASTER && (r & accessSub) !== 0)
         r &= ~accessSub;
@@ -13160,15 +13162,11 @@
       check(rq)
       {
        let r = kick.Access.STRANGER;
+       if (this.cmd.hasOwnProperty('gift') && this.cmd.gift.hasOwnProperty('amount') && this.cmd.gift.amount > 0)
+        r |= kick.Access.CHEERER;
        if (!this.cmd.hasOwnProperty('sender') || this.cmd.sender === null)
         return (r & rq) !== 0;
-       if (!this.cmd.sender.hasOwnProperty('identity') || this.cmd.sender.identity === null)
-        return (r & rq) !== 0;
-       if (!this.cmd.sender.identity.hasOwnProperty('badges') || this.cmd.sender.identity.badges === null)
-        return (r & rq) !== 0;
-       if (!Array.isArray(this.cmd.sender.identity.badges))
-        return (r & rq) !== 0;
-       if (this.cmd.sender.identity.badges.length > 0)
+       if (this.cmd.sender.hasOwnProperty('identity') && this.cmd.sender.identity !== null && this.cmd.sender.identity.hasOwnProperty('badges') && this.cmd.sender.identity.badges !== null && Array.isArray(this.cmd.sender.identity.badges) && this.cmd.sender.identity.badges.length > 0)
        {
         for (let i = 0, l = this.cmd.sender.identity.badges.length; i < l; i++)
         {
@@ -13212,6 +13210,8 @@
         return false;
        /* api-heavy, only check if follower access is allowed and there's a chance it matters */
        const u = _parseUser(this.cmd);
+       if (u.id === 0 || !u._name)
+        return (r & rq) !== 0;
        return this._checkFollower(u);
       }
 
@@ -13569,6 +13569,7 @@
      Access: Object.freeze({
       STRANGER: 0x001,
       FOLLOWER: 0x002,
+      CHEERER: 0x004,
       VERIFIED: 0x008,
       SUBSCRIBER: 0x010,
       OG: 0x040,
