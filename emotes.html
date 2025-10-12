@@ -357,6 +357,10 @@
        begin: false,
        end: false
       },
+      prediction: {
+       begin: false,
+       resolved: false
+      },
       timeout: false,
       ban: false
      },
@@ -11849,6 +11853,16 @@
          await _App_Events(j);
          return;
         }
+        if (j.event === 'PredictionCreated')
+        {
+         _PredictionCreated(j);
+         return;
+        }
+        if (j.event === 'PredictionUpdated')
+        {
+         _PredictionUpdated(j);
+         return;
+        }
        }
 
        function _pusher_error(j)
@@ -11934,6 +11948,7 @@
          }
          _tPing = window.setInterval(_wsPing, _lPing);
          _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'chatrooms.' + kick.net.chatID + '.v2'}}));
+         _ws.send(JSON.stringify({event: 'pusher:subscribe', data: {auth: '', channel: 'predictions-channel-' + kick.net.channelID}}));
         }
 
         return $c_pusher;
@@ -12143,6 +12158,36 @@
 
         return $c_App_Events;
        }();
+
+       function _PredictionCreated(j)
+       {
+        const jData = JSON.parse(j.data);
+        if (!jData.hasOwnProperty('prediction'))
+         return;
+        if (!jData.prediction.hasOwnProperty('state'))
+         return;
+        if (jData.prediction.state !== 'ACTIVE')
+         return;
+        if (document.visibilityState === 'hidden')
+         return;
+        kick.parse.event.prediction.begin(jData.prediction);
+       }
+
+       function _PredictionUpdated(j)
+       {
+        const jData = JSON.parse(j.data);
+        if (!jData.hasOwnProperty('prediction'))
+         return;
+        if (!jData.prediction.hasOwnProperty('state'))
+         return;
+        if (jData.prediction.state !== 'RESOLVED')
+         return;
+        if (!jData.prediction.hasOwnProperty('winning_outcome_id'))
+         return;
+        if (document.visibilityState === 'hidden')
+         return;
+        kick.parse.event.prediction.end(jData.prediction);
+       }
 
        return $c_wsMessage;
       }();
@@ -12905,13 +12950,60 @@
        };
       }();
 
+      const $prediction = function()
+      {
+       function $begin(ev)
+       {
+        if (!cfg.event.kick.prediction)
+         return;
+        if (!cfg.event.kick.prediction.begin)
+         return;
+        if (!ev.hasOwnProperty('title'))
+         return;
+        display.kappa.show(false, cfg.event.kick.prediction.begin, {[cVARs.evt.title]: ev.title});
+       }
+
+       function $end(ev)
+       {
+        if (!cfg.event.kick.prediction)
+         return;
+        if (!cfg.event.kick.prediction.resolved)
+         return;
+        if (!ev.hasOwnProperty('title'))
+         return;
+        if (!ev.hasOwnProperty('winning_outcome_id'))
+         return;
+        if (!ev.hasOwnProperty('outcomes'))
+         return;
+        let sPrediction = 'None';
+        for (let i = 0, l = ev.outcomes.length; i < l; i++)
+        {
+         if (!ev.outcomes[i].hasOwnProperty('id'))
+          continue;
+         if (ev.outcomes[i].id !== ev.winning_outcome_id)
+          continue;
+         if (!ev.outcomes[i].hasOwnProperty('title'))
+          continue;
+         sPrediction = ev.outcomes[i].title;
+         break;
+        }
+        display.kappa.show(false, cfg.event.kick.prediction.resolved, {[cVARs.evt.title]: ev.title, [cVARs.evt.result]: sPrediction});
+       }
+
+       return {
+        begin: $begin,
+        end: $end
+       };
+      }();
+
       return {
        raid: $raid,
        sub: $sub,
        gift: $gift,
        ban: $ban,
        timeout: $timeout,
-       poll: $poll
+       poll: $poll,
+       prediction: $prediction
       };
      }();
 
