@@ -3863,6 +3863,8 @@
          {
           const oK = kClean[shared.rnd(kClean.length)];
           const r = _block(tInit, oK, x * (eH + colSpc), y * (eH + rowSpc), eH, tMS);
+          if (r === false)
+           return;
           c.push(r);
          }
          arr.push(c);
@@ -3895,7 +3897,7 @@
        function _block(tInit, oK, x, y, eH, tMS)
        {
         if (_iTitanic > tInit)
-         return;
+         return false;
         const s = 'left: ' + x + 'px;' +
          ' top: ' + y + 'px;' +
          ' --emote-height: ' + eH + 'px;' +
@@ -4204,12 +4206,18 @@
         {
          _eActive--;
          const btzwCE = _btzwClassForEmote(zurls[i]);
-         imgs.push(_dance(tInit, urls[i].url, urls[i].origin, i, sW, v, eH, bS, ct, d, xtra, btzwCE));
+         const dBox = _dance(tInit, urls[i].url, urls[i].origin, i, sW, v, eH, bS, ct, d, xtra, btzwCE);
+         if (dBox === false)
+          return;
+         imgs.push(dBox);
          const oZ = [];
          for (let j = 0, l = zurls[i].length; j < l; j++)
          {
           const btzwCZ = _btzwClassForZWE(btzwCE, zurls[i][j].url);
-          oZ.push(_dance(tInit, zurls[i][j].url, zurls[i][j].origin, i, sW, v, eH, bS, ct, d, xtra, btzwCZ));
+          const zBox = _dance(tInit, zurls[i][j].url, zurls[i][j].origin, i, sW, v, eH, bS, ct, d, xtra, btzwCZ);
+          if (zBox === false)
+           return;
+          oZ.push(zBox);
          }
          zimgs.push(oZ);
         }
@@ -4244,9 +4252,9 @@
        function _dance(tInit, url, oID, col, sW, v, eH, bS, ct, d, xtra, cAppend = [])
        {
         if (_iTitanic > tInit)
-         return;
+         return false;
         if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
-         return;
+         return false;
         const box = document.createElement('div');
         box.setAttribute('class', 'scene ' + display.kappa.clsID.Conga.In);
         const img = document.createElement('img');
@@ -4391,7 +4399,7 @@
        function _straight(tInit, r, oID, d, vel, xForm, yBase, yCrest, xAt)
        {
         if (_iTitanic > tInit)
-         return 0;
+         return;
         if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         xForm.a = d ? -1 * xAt : xAt;
@@ -4407,7 +4415,7 @@
        function _loop(tInit, r, oID, d, vel, xForm, yBase, yCrest)
        {
         if (_iTitanic > tInit)
-         return 0;
+         return;
         if (typeof oID !== 'undefined' && display.erasedMsgs.includes(oID))
          return;
         const xLoop = (yBase - yCrest) * Math.PI;
@@ -18077,7 +18085,6 @@
          resolve(false);
         else
          resolve({code: 408, data: shared.errTimeout, get success(){return false;}, get json(){return null;}});
-        return;
        };
        if (body === null)
         x.send();
