@@ -223,7 +223,7 @@ Configuration Information
     | `0x020` | tier 2 subscriber badge  |   T    |         |      |                |
     | `0x010` | tier 1 subscriber badge  |   T    |   YT    |  K   | YT: Member     |
     | `0x008` | verified user            |        |   YT    |  K   |                |
-    | `0x004` | cheer badge              |   T    |         |      |                |
+    | `0x004` | cheer badge              |   T    |         |  K   | Cheer Messages |
     | `0x002` | follower                 |   T    |   YT    |  K   | YT: Subscriber |
     | `0x001` | stranger                 |   T    |   YT    |  K   |                |
 
@@ -1257,6 +1257,26 @@ Configuration Information
           - [ ] If `false`, no kappagen will occur.
           - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
 
+    * `cheer`
+      *Settings related to kappagens on a Kicks gift event.*
+
+      * `useMsg`
+        - [ ] If `true`, any emotes in gift messages will also be included in the kappagen.
+        - [ ] If `false`, any emotes in gift messages will show up like normal emotes.
+
+      * `kicks`
+        *Minimum number of Kicks for a kappagen.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on all gifted Kicks.
+        - [ ] If `false`, no kappagen will occur on gifted Kicks.
+        - [ ]  If Integer, the value is the minimum Kicks required for a gift to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur on gifted Kicks.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'10-500'` or `'2500-5000'`, or an open-maximum range such as `'100+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
     * `poll`  
       *Settings related to polls.*
 
@@ -1269,6 +1289,23 @@ Configuration Information
 
       * `end`  
         *A poll ends in your channel.*  
+        This value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `prediction`  
+      *Settings related to predictions.*  
+
+      * `begin`  
+        *A prediction begins in your channel.*  
+        This value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `resolved`  
+        *A prediction ends in your channel.*  
         This value can be a boolean or array:
         - [ ] If `true`, a kappagen will occur.
         - [ ] If `false`, no kappagen will occur.
