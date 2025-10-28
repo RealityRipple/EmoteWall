@@ -125,6 +125,17 @@ Configuration Information
      - [ ] If `false` (or missing), the Kick interactive login process will be enabled.
      - [ ] If `null`, Kick support will be effectively disabled.
 
+* `lfg`  
+  *Settings related to the LFG login process.*
+
+  * `channel`  
+    *The name of the channel to join.*
+     - [ ] If `false` (or missing), the LFG interactive login process will be enabled.
+     - [ ] If `null`, LFG support will be effectively disabled.
+
+  * `sharedChat`  
+    *Show emotes and events from other channels during Shared Chat sessions.*
+
 * `streamlabs`
   *Settings related to Streamlabs tips.*
 
@@ -212,20 +223,20 @@ Configuration Information
   * `access`  
     *A bitwise flag representing which users' messages show up on the emote wall.*  
     Account types are represented by the following values:
-    |   Flag  | Meaning                  | Twitch | YouTube | Kick | Variations     |
-    | ------: | :----------------------- | :----: | :-----: | :--: | :------------- |
-    | `0x800` | broadcaster              |   T    |   YT    |  K   |                |
-    | `0x400` | moderator badge          |   T    |   YT    |  K   |                |
-    | `0x200` | founder badge            |   T    |         |  K   |                |
-    | `0x100` | vip badge                |   T    |         |  K   |                |
-    | `0x080` | artist badge             |   T    |         |      |                |
-    | `0x040` | tier 3 subscriber badge  |   T    |         |  K   | K: OG          |
-    | `0x020` | tier 2 subscriber badge  |   T    |         |      |                |
-    | `0x010` | tier 1 subscriber badge  |   T    |   YT    |  K   | YT: Member     |
-    | `0x008` | verified user            |        |   YT    |  K   |                |
-    | `0x004` | cheer badge              |   T    |         |  K   | Cheer Messages |
-    | `0x002` | follower                 |   T    |   YT    |  K   | YT: Subscriber |
-    | `0x001` | stranger                 |   T    |   YT    |  K   |                |
+    |   Flag  | Meaning                  | Twitch | YouTube | Kick | LFG | Variations     |
+    | ------: | :----------------------- | :----: | :-----: | :--: | :-: | :------------- |
+    | `0x800` | broadcaster              |   T    |   YT    |  K   |  L  |                |
+    | `0x400` | moderator badge          |   T    |   YT    |  K   |  L  |                |
+    | `0x200` | founder badge            |   T    |         |  K   |     |                |
+    | `0x100` | vip badge                |   T    |         |  K   |  L  |                |
+    | `0x080` | artist badge             |   T    |         |      |     |                |
+    | `0x040` | tier 3 subscriber badge  |   T    |         |  K   |     | K: OG          |
+    | `0x020` | tier 2 subscriber badge  |   T    |         |      |     |                |
+    | `0x010` | tier 1 subscriber badge  |   T    |   YT    |  K   |  L  | YT: Member     |
+    | `0x008` | verified user            |        |   YT    |  K   |     |                |
+    | `0x004` | cheer badge              |   T    |         |  K   |  L  | Cheer Messages |
+    | `0x002` | follower                 |   T    |   YT    |  K   |  L  | YT: Subscriber |
+    | `0x001` | stranger                 |   T    |   YT    |  K   |  L  |                |
 
     Just put a vertical pipe (`|`) in between each of the values representing levels of access:
     | Access                                      | Meaning                                                |
@@ -1319,6 +1330,153 @@ Configuration Information
       - [ ] If Integer, the value is the minimum seconds required for a timeout to trigger a kappagen.
         - [ ] If `0`, no kappagen will occur on timeouts.
       - [ ]  If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'5-30'` or `'60-180'`, or an open-maximum range such as `'300+'`.  
+      Each value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `ban`  
+      *A user is banned in the channel.*  
+      This value can be a boolean or array:
+      - [ ] If `true`, a kappagen will occur.
+      - [ ] If `false`, no kappagen will occur.
+      - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+  * `lfg`  
+    *Settings related to LFG channel events.*
+
+    * `raid`  
+      *Settings related to kappagens when being raided (hosted).*
+
+      * `raiders`  
+        *A streamer raids the channel with viewers.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on all raids.
+        - [ ] If `false`, no kappagen will occur on raids.
+        - [ ] If Integer, the value is the minimum raiders required for a raid to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur on raid.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-4'` or `'5-9'`, or an open-maximum range such as `'10+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `originEmotes`  
+        *A boolean to toggle the use of the raiding streamer's channel emotes for raid kappagens.*
+        - [ ] If `true`, raid kappagens will use channel emotes from the raider's channel.
+        - [ ] If `false`, raid kappagens will use your channel's emotes.
+
+    * `follow`  
+      *A user follows the channel.*  
+      This value can be a boolean or array:
+      - [ ] If `true`, a kappagen will occur.
+      - [ ] If `false`, no kappagen will occur.
+      - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `shoutout`  
+       *Settings related to kappagens on a shoutout event.*  
+       Requires `moderator:read:shoutouts` scope.
+
+      * `create`  
+        *Settings related to kappagens when you shout another channel out.*
+
+        * `styles`  
+          *You shout another channel out.*  
+          This value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+        * `targetEmotes`  
+          *A boolean to toggle the use of the target channel's emotes for shoutout kappagens.*
+          - [ ] If `true`, shoutout kappagens will use channel emotes from the target's channel.
+          - [ ] If `false`, shoutout kappagens will use your channel's emotes.
+
+    * `sub`  
+      *Settings related to kappagens on a subscribe event.*
+
+      * `first`  
+        *A user subscribes for the first time.*  
+        This value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `gift`  
+        *A user gifts another user a subscription.*  
+        This value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `giftpack`  
+        *A user gifts multiple subscriptions.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on any random gift.
+        - [ ] If `false`, no kappagen will occur on giftbombs.
+        - [ ]  If Integer, the value is the minimum gifts required for a gift bomb to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur.
+          - [ ] If `1`, a kappagen will occur on any random gift.
+          - [ ] If `greater than 1`, the number of gifted users in a giftbomb must be greater than or equal to this number to trigger a kappagen.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-4'` or `'5-9'`, or an open-maximum range such as `'10+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `cheer`
+      *Settings related to kappagens on a Coin tip event.*
+
+      * `useMsg`
+        - [ ] If `true`, any emotes in cheer messages will also be included in the kappagen.
+        - [ ] If `false`, any emotes in cheer messages will show up like normal emotes.
+
+      * `coins`
+        *Minimum number of Coins for a kappagen.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on all gifted Coins.
+        - [ ] If `false`, no kappagen will occur on gifted Coins.
+        - [ ]  If Integer, the value is the minimum Coins required for a cheer to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur on gifted Coins.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'10-500'` or `'2500-5000'`, or an open-maximum range such as `'100+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `hypetrain`  
+      *Settings related to hype trains.*  
+      Requires `channel:read:hype_train` scope.
+
+      * `begin`  
+        *A hype train begins in your channel.*  
+        This value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `success`  
+        *Minimum level for a kappagen on hype train completion.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on all hype train completions.
+        - [ ] If `false`, no kappagen will occur on hype train completions.
+        - [ ] If Integer, the value is the minimum level required for a hype train to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur on hype train success.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'` or `'2-4'`, or an open-maximum range such as `'5+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `timeout`  
+      *Minimum time for a kappagen when a user is timed out.*  
+      > **NOTE**: At present, LFG has a hard-set timeout of `3` seconds, however the full functionality of this feature is expected to become available as the platform evolves.
+      This value can be a boolean, integer, or array:
+      - [ ] If `true`, a kappagen will occur on all timeouts.
+      - [ ] If `false`, no kappagen will occur on timeouts.
+      - [ ] If Integer, the value is the minimum seconds required for a timeout to trigger a kappagen.
+        - [ ] If `0`, no kappagen will occur on timeouts.
+      - [ ]  If Array, each key of the array should be a string containing a range of integers, such as `'3'`, `'5-30'` or `'60-180'`, or an open-maximum range such as `'300+'`.  
       Each value can be a boolean or array:
         - [ ] If `true`, a kappagen will occur.
         - [ ] If `false`, no kappagen will occur.

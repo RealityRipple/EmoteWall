@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v1.4
+    * v1.5
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -81,6 +81,10 @@
     },
     kick: {
      channel: 'CHANNEL_NAME'
+    },
+    lfg: {
+     channel: 'CHANNEL_NAME',
+     sharedChat: false
     },
     streamlabs: {
      token: 'JWT_TOKEN', //Requires socket.token
@@ -364,6 +368,34 @@
       prediction: {
        begin: false,
        resolved: false
+      },
+      timeout: false,
+      ban: false
+     },
+     lfg: {
+      raid: {
+       raiders: 2,
+       originEmotes: true
+      },
+      follow: true,
+      shoutout: {
+       create: {
+        styles: false,
+        targetEmotes: true
+       }
+      },
+      sub: {
+       pass: true,
+       gift: true,
+       giftpack: 1
+      },
+      cheer: {
+       useMsg: true,
+       coins: 50
+      },
+      hypetrain: {
+       begin: false,
+       success: false
       },
       timeout: false,
       ban: false
@@ -1272,6 +1304,7 @@
      channelID: '%CHANNEL_ID%',
      channelName: '%CHANNEL_NAME%',
      chatID: '%CHAT_ID%',
+     streamID: '%STREAM_ID%',
      clientID: '%CLIENT_ID%',
      emojiID: '%EMOJI_ID%',
      emoteID: '%EMOTE_ID%',
@@ -1295,6 +1328,7 @@
       eventSub: 'wss://eventsub.wss.twitch.tv/ws'
      }),
      kick: 'wss://ws-us2.pusher.com/app/' + cVARs.url.chatID + '?protocol=7&client=js&version=7.6.0&flash=false',
+     lfg: 'wss://chat.lfg.tv/socket.io/?EIO=4&transport=websocket',
      streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket&token=' + cVARs.url.token,
      streamelements: 'wss://realtime.streamelements.com/socket.io/?transport=websocket',
      bttv: 'wss://sockets.betterttv.net/ws',
@@ -1350,6 +1384,13 @@
       followers: 'https://kick.com/api/internal/v1/channels/' + cVARs.url.channelName + '/followers-count',
       emotes: 'https://kick.com/emotes/' + cVARs.url.channelName
      }),
+     lfg: Object.freeze({
+      users: 'https://api.lfg.tv/v1/users/' + cVARs.url.user,
+      emotes: 'https://ew.realityripple.com/lfg/emotes',
+      followers: 'https://api.lfg.tv/v1/users/' + cVARs.url.channelName + '/followers?start=' + cVARs.url.page,
+      subscribed: 'https://api.lfg.tv/v1/users/' + cVARs.url.user + '/subscribed/' + cVARs.url.channelName,
+      hypetrains: 'https://api.lfg.tv/v1/streams/' + cVARs.url.streamID + '/hype-train'
+     }),
      ffz: Object.freeze({
       set: Object.freeze({
        global: 'https://api.frankerfacez.com/v1/set/global'
@@ -1384,9 +1425,9 @@
      }),
      rr: Object.freeze({
       refresh: Object.freeze({
-       t: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2t.php',
-       yt: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2yt.php',
-       se: 'https://realityripple.com/Tools/Twitch/EmoteWall/oauth2se.php'
+       t: 'https://ew.realityripple.com/t/auth',
+       yt: 'https://ew.realityripple.com/yt/auth',
+       se: 'https://ew.realityripple.com/se/auth'
       })
      })
     }),
@@ -1412,6 +1453,13 @@
       emote: 'https://files.kick.com/emotes/' + cVARs.url.emoteID + '/fullsize',
       cheer: 'https://files.kick.com/kicks/gifts/' + cVARs.url.emoteID + '.webp'
      }),
+     lfg: Object.freeze({
+      coin: 'https://lfg.tv/coins/Coin-' + cVARs.url.emoteID + '.png',
+      emote: Object.freeze({
+       png: 'https://lfgtv-storage.nyc3.cdn.digitaloceanspaces.com/users/' + cVARs.url.userID + '/emotes/' + cVARs.url.emoteID + '-static.png',
+       gif: 'https://lfgtv-storage.nyc3.cdn.digitaloceanspaces.com/users/' + cVARs.url.userID + '/emotes/' + cVARs.url.emoteID + '-animated.gif'
+      })
+     }),
      emoji: Object.freeze({
       fonts: 'https://cdn.jsdelivr.net/gh/realityripple/emoji/fonts.min.json',
       list: 'https://cdn.jsdelivr.net/gh/realityripple/emoji/list.min.json',
@@ -1424,8 +1472,8 @@
     html: Object.freeze({
      rr: Object.freeze({
       auth: Object.freeze({
-       t: 'https://realityripple.com/Tools/Twitch/EmoteWall/twitch.php',
-       yt: 'https://realityripple.com/Tools/Twitch/EmoteWall/youtube.php'
+       t: 'https://ew.realityripple.com/t/login',
+       yt: 'https://ew.realityripple.com/yt/login'
       }),
       redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php'
      }),
@@ -1457,6 +1505,7 @@
      twitch: Symbol(),
      youtube: Symbol(),
      kick: Symbol(),
+     lfg: Symbol(),
      ffz: Symbol(),
      bttv: Symbol(),
      '7tv': Symbol(),
@@ -1513,6 +1562,7 @@
       t: 'sTwitch',
       y: 'sYouTube',
       k: 'sKick',
+      l: 'sLFG',
       se: 'tStreamElements',
       sl: 'tStreamlabs',
       b: 'eBTTV',
@@ -1554,6 +1604,9 @@
        break;
       case notice.Type.KICK_NETWORK:
        _setNotice(i, [_nC.t.i, _nC.s.k], 'Connected', tInfo);
+       break;
+      case notice.Type.LFG_NETWORK:
+       _setNotice(i, [_nC.t.i, _nC.s.l], 'Connected', tInfo);
        break;
       case notice.Type.STREAMELEMENTS_NETWORK:
        _setNotice(i, [_nC.t.i, _nC.s.se], 'Connected', tInfo);
@@ -1704,6 +1757,23 @@
        break;
       case notice.Type.KICK_UNKNOWN:
        _setNotice(e, [_nC.t.e, _nC.s.k], 'Kick Connection Error<br>' + sMsg);
+       break;
+      case notice.Type.LFG_NAME:
+       _setNotice(e, [_nC.t.e, _nC.s.l], 'Connection Rejected<br>Please check your LFG channel name.');
+       break;
+      case notice.Type.LFG_ACCOUNT:
+       if (typeof loginL !== 'undefined' && loginL.inUse)
+       {
+        loginL.showOut(true);
+        window.setTimeout(function(){loginL.showIn();}, tRetry);
+       }
+       _setNotice(e, [_nC.t.e, _nC.s.l], 'Streaming Not Available<br>Your LFG account does not have streaming enabled.');
+       break;
+      case notice.Type.LFG_NETWORK:
+       _setNotice(e, [_nC.t.e, _nC.s.l], 'Disconnected');
+       break;
+      case notice.Type.LFG_UNKNOWN:
+       _setNotice(e, [_nC.t.e, _nC.s.l], 'LFG Connection Error<br>' + sMsg);
        break;
       case notice.Type.STREAMELEMENTS_TOKEN:
        _setNotice(e, [_nC.t.e, _nC.s.se], 'OAuth Token Rejected<br>Please update your StreamElements OAuth Token.');
@@ -2070,6 +2140,10 @@
       KICK_NETWORK: Symbol(0x0041),
       KICK_NAME: Symbol(0x0044),
       KICK_UNKNOWN: Symbol(0x0049),
+      LFG_NETWORK: Symbol(0x0201),
+      LFG_NAME: Symbol(0x0202),
+      LFG_ACCOUNT: Symbol(0x0204),
+      LFG_UNKNOWN: Symbol(0x0209),
       STREAMELEMENTS_NETWORK: Symbol(0x1001),
       STREAMELEMENTS_TOKEN: Symbol(0x1003),
       STREAMELEMENTS_DECRYPT_OAUTH: Symbol(0x100D),
@@ -2092,6 +2166,7 @@
       TWITCH_EVENTSUB: 0x002,
       KICK: 0x004,
       YOUTUBE: 0x010,
+      LFG: 0x020,
       STREAMELEMENTS: 0x100,
       STREAMLABS: 0x200,
       BTTV: 0x400,
@@ -4992,6 +5067,14 @@
         v.svc = cSources.service.kick;
         v.url = service.emotes.kick[s[i]].url;
         v.scope = service.emotes.kick[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (service.emotes.hasOwnProperty('lfg') && service.emotes.lfg.hasOwnProperty(s[i]) && service.emotes.lfg[s[i]].scope === cSources.scope.channel)
+       {
+        v.svc = cSources.service.lfg;
+        v.url = service.emotes.lfg[s[i]].url;
+        v.scope = service.emotes.lfg[s[i]].scope;
         r.push(v);
         continue;
        }
@@ -13581,6 +13664,1655 @@
     };
    }();
 
+   const lfg = function()
+   {
+    const $net = function()
+    {
+     let _lastIDCheck = 0;
+
+     const $socket = function()
+     {
+      let _wsRetry = 0;
+      let _ws = null;
+      const _msgHistory = {};
+      let _lTimeout = 5000;
+      let _tTimeout = false;
+
+      async function $c_socket()
+      {
+       notice.expect |= notice.Connection.LFG;
+       if (lfg.net.channelID === 0)
+       {
+        const chR = await _getChIDs();
+        if (chR === null)
+        {
+         notice.error(notice.Type.LFG_NETWORK);
+         notice.active &= ~notice.Connection.LFG;
+         notice.resetHide();
+         return;
+        }
+        if (lfg.net.channelID === 0)
+        {
+         notice.error(notice.Type.LFG_NAME);
+         lfg.net.dead = true;
+         return;
+        }
+       }
+       _ws = new WebSocket(cURLs.ws.lfg);
+       _ws.onopen = _wsOpen;
+       _ws.onclose = _wsClose;
+       _ws.onmessage = _wsMessage;
+      }
+
+      function _wsOpen()
+      {
+       if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
+        return;
+       _ws.onopen = null;
+      }
+
+      function _wsClose()
+      {
+       notice.error(notice.Type.LFG_NETWORK);
+       notice.active &= ~notice.Connection.LFG;
+       notice.resetHide();
+       if (_tTimeout !== false)
+       {
+        window.clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       if (_ws === null)
+        return;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
+       _ws = null;
+       if (lfg.net.dead)
+        return;
+       const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
+       if (_wsRetry < 2)
+        _wsRetry += 0.2;
+       window.setTimeout(lfg.net.socket, wsWait);
+      }
+
+      const _wsMessage = function()
+      {
+       async function $c_wsMessage(ev)
+       {
+        if (_tTimeout !== false)
+        {
+         window.clearTimeout(_tTimeout);
+         _tTimeout = false;
+        }
+        if (_ws === null)
+         return;
+        if (lfg.net.dead)
+        {
+         _ws.onopen = null;
+         _ws.onmessage = null;
+         _ws.onclose = null;
+         _ws.close();
+         _ws = null;
+         return;
+        }
+        _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+        _wsRetry = 0;
+        let d = ev.data;
+        if (d.length === 0)
+         return;
+        notice.info(notice.Type.LFG_NETWORK);
+        notice.active |= notice.Connection.LFG;
+        notice.resetHide();
+        const dA = d.slice(0, 1);
+        d = d.slice(1);
+        switch (dA)
+        {
+         case '0':
+          let t = 25000;
+          let u = 5000;
+          if (d.length > 0)
+          {
+           const c = JSON.parse(d);
+           if (c.hasOwnProperty('pingInterval'))
+            t = c.pingInterval;
+           if (c.hasOwnProperty('pingTimeout'))
+            u = c.pingTimeout;
+          }
+          _lTimeout = t + u;
+          if (_tTimeout !== false)
+          {
+           window.clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+          _ws.send('40');
+          break;
+         case '2':
+          if (_tTimeout !== false)
+          {
+           window.clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+          _ws.send('3');
+          break;
+         case '4':
+          if (d.length === 0)
+           return;
+          const dB = d.slice(0, 1);
+          d = d.slice(1);
+          if (dB === '0')
+          {
+           await _loadEmote_channel(lfg.net.channelID);
+           const cmd = [
+            'join_room',
+            {
+             roomId: lfg.net.channelID,
+             roomUsername: lfg.net.oAuth.auth.channel,
+             joinerId: 'guest',
+             joinerUsername: 'guest'
+            }
+           ];
+           _ws.send('42' + JSON.stringify(cmd));
+           return;
+          }
+          if (dB !== '2')
+           return;
+          const o = JSON.parse(d);
+          if (!Array.isArray(o))
+           return;
+          if (o.length < 2)
+           return;
+          if (!cfg.lfg.sharedChat && o[1].hasOwnProperty('sharingWith'))
+           return;
+          switch (o[0])
+          {
+           case 'message':
+            _ChatMessageEvent(o[1]);
+            break;
+           case 'event':
+            await _Chat_Events(o[1]);
+            break;
+           case 'special_message':
+            await _Chat_Special(o[1]);
+            break;
+           case 'raided_now':
+            await _Chat_Raid.begin(o[1]);
+            break;
+           case 'user_joined_room':
+            _Chat_Raid.join(o[1]);
+            break;
+           case 'message_deleted':
+            _ChatMessageDeleted(o[1]);
+            break;
+          }
+          break;
+        }
+       }
+
+       function _ChatMessageEvent(jData)
+       {
+        const u = _parse.user(jData);
+        if (jData.hasOwnProperty('id') && jData.id !== null && !!u._slug)
+        {
+         if (!_msgHistory.hasOwnProperty(u._slug))
+          _msgHistory[u._slug] = new Set();
+         _msgHistory[u._slug].add(jData.id);
+        }
+        if (document.visibilityState === 'hidden')
+         return;
+        _parse.line(jData);
+       }
+
+       const _Chat_Events = function()
+       {
+        const _fHist = new Set();
+
+        async function $c_Chat_Events(jData)
+        {
+         if (!jData.hasOwnProperty('type') || jData.type === null)
+          return;
+         if (!jData.hasOwnProperty('payload') || jData.payload === null)
+          return;
+         const usesBomb = cfg.event.lfg.sub.hasOwnProperty('giftpack') && cfg.event.twitch.sub.giftpack !== false;
+         switch (jData.type)
+         {
+          case 'following_event':
+           _ChatFollowEvent(jData.payload);
+           return;
+          case 'tip_event':
+           await _ChatTipEvent(jData.payload);
+           break;
+          case 'personal_subscription_event':
+           _ChatSubEvent(jData.payload);
+           await lfg.net.subscribers.addSub(jData.payload);
+           break;
+          case 'gift_subscription_event':
+           _ChatGiftSubEvent(jData.payload);
+           await lfg.net.subscribers.addSub(jData.payload);
+           break;
+          case 'pack_gift_subscription_event':
+           if (usesBomb)
+            _ChatPackGiftSubEvent(jData.payload);
+           break;
+          case 'pack_subscription_event':
+           if (!usesBomb)
+            _ChatGiftSubEvent(jData.payload);
+           await lfg.net.subscribers.addSub(jData.payload);
+           break;
+         }
+         if (cfg.event.lfg.hypetrain.begin === false && cfg.event.lfg.hypetrain.end === false)
+          return;
+         lfg.net.hypetrains();
+        }
+
+        function _ChatFollowEvent(jData)
+        {
+         const kList = Object.keys(jData);
+         for (let i = 0; i < kList.length; i++)
+         {
+          switch (kList[i])
+          {
+           case 'broadcasterDisplayName':
+           case 'broadcasterProfileImage':
+           case 'broadcasterUsername':
+           case 'content':
+           case 'followerDisplayName':
+           case 'followerProfileImage':
+           case 'followerUsername':
+            break;
+           default:
+            return;
+          }
+         }
+         if (jData.broadcasterUsername !== lfg.net.oAuth.auth.channel)
+          return;
+         const u = _parse.user(jData);
+         if (!u._slug)
+          return;
+         lfg.net.fList[u._slug] = true;
+         if (_fHist.has(u._slug))
+          return;
+         _fHist.add(u._slug);
+         if (document.visibilityState === 'hidden')
+          return;
+         _parse.event.follow(jData);
+        }
+
+        async function _ChatTipEvent(jData)
+        {
+         if (document.visibilityState === 'hidden')
+          return;
+         if (await _parse.event.cheer(jData))
+          return;
+         _parse.line(jData, 'message');
+        }
+
+        function _ChatSubEvent(jData)
+        {
+         if (document.visibilityState === 'hidden')
+          return;
+         _parse.event.sub(jData);
+        }
+
+        function _ChatGiftSubEvent(jData)
+        {
+         if (document.visibilityState === 'hidden')
+          return;
+         _parse.event.gift(jData);
+        }
+
+        function _ChatPackGiftSubEvent(jData)
+        {
+         if (document.visibilityState === 'hidden')
+          return;
+         _parse.event.giftpack(jData);
+        }
+
+        return $c_Chat_Events;
+       }();
+
+       const _Chat_Special = function()
+       {
+        async function $c_Chat_Special(jData)
+        {
+         if (!jData.hasOwnProperty('message') || jData.message === null)
+          return;
+         if (jData.hasOwnProperty('action') && jData.action !== null)
+         {
+          switch (jData.action)
+          {
+           case 'create':
+            await _ChatCreateSpecialEvent(jData.message);
+            return;
+           case 'timeout':
+            _ChatTimeoutSpecialEvent(jData.message);
+            return;
+           case 'ban':
+            _ChatBanSpecialEvent(jData.message);
+            return;
+          }
+         }
+        }
+
+        async function _ChatCreateSpecialEvent(jData)
+        {
+         if (document.visibilityState === 'hidden')
+          return;
+         if (!jData.hasOwnProperty('type') || jData.type === null)
+          return;
+         switch (jData.type)
+         {
+          case 'SHOUTOUT':
+           await _parse.event.shoutoutCreate(jData);
+           return;
+         }
+        }
+
+        function _ChatTimeoutSpecialEvent(jData)
+        {
+         const u = _parse.user(jData, true);
+         if (!!u._slug && _msgHistory.hasOwnProperty(u._slug))
+         {
+          for (const mID of _msgHistory[u._slug])
+          {
+           display.eraseMsg('lfg:' + mID);
+          }
+          delete _msgHistory[u._slug];
+         }
+         if (document.visibilityState === 'hidden')
+          return;
+         _parse.event.timeout(jData);
+        }
+
+        function _ChatBanSpecialEvent(jData)
+        {
+         const u = _parse.user(jData, true);
+         if (!!u._slug && _msgHistory.hasOwnProperty(u._slug))
+         {
+          for (const mID of _msgHistory[u._slug])
+          {
+           display.eraseMsg('lfg:' + mID);
+          }
+          delete _msgHistory[u._slug];
+         }
+         if (document.visibilityState === 'hidden')
+          return;
+         _parse.event.ban(jData);
+        }
+
+        return $c_Chat_Special;
+       }();
+
+       const _Chat_Raid = function()
+       {
+        const _evSpan = 2000;
+        let _evList = [];
+        let _evU = false;
+        let _evT = false;
+
+        async function $begin(jData)
+        {
+         if (!jData.hasOwnProperty('raiderUser'))
+          return;
+         const u = _parse.user(jData.raiderUser);
+         if (u.id === 0)
+          return;
+         if (_evU !== false)
+         {
+          if (_evU.id === u.id)
+           return;
+          if (_evT !== false)
+          {
+           window.clearTimeout(_evT);
+           _evT = false;
+          }
+          if (_evList.length > 0)
+          {
+           if (document.visibilityState !== 'hidden')
+            await _parse.event.raid(_evU, _evList.length);
+          }
+         }
+         _evList = [];
+         _evU = u;
+         _evT = window.setTimeout(_done, _evSpan);
+        }
+
+        function $join(jData)
+        {
+         if (_evT === false)
+          return;
+         const u = _parse.user(jData);
+         if (u.id === 0)
+          return;
+         if (!_evList.includes(u.id))
+          _evList.push(u.id);
+         window.clearTimeout(_evT);
+         _evT = window.setTimeout(_done, _evSpan);
+        }
+
+        async function _done()
+        {
+         if (_evT === false)
+          return;
+         _evT = false;
+         const u = _evU;
+         _evU = false;
+         const l = _evList.length;
+         _evList = [];
+         if (document.visibilityState === 'hidden')
+          return;
+         await _parse.event.raid(u, l);
+        }
+
+        return {
+         begin: $begin,
+         join: $join
+        };
+       }();
+
+       function _ChatMessageDeleted(jData)
+       {
+        if (!jData.hasOwnProperty('messageId'))
+         return;
+        for (const uSlug in _msgHistory)
+        {
+         if (!_msgHistory.hasOwnProperty(uSlug))
+          continue;
+         if (!_msgHistory[uSlug].has(jData.messageId))
+          continue;
+         _msgHistory[uSlug].delete(jData.messageId);
+         break;
+        }
+        const mID = 'lfg:' + jData.messageId;
+        display.eraseMsg(mID);
+       }
+
+       return $c_wsMessage;
+      }();
+
+      function _wsTimeout()
+      {
+       if (_lTimeout === 120000)
+       {
+        notice.error(notice.Type.LFG_NETWORK);
+        notice.active &= ~notice.Connection.LFG;
+        notice.resetHide();
+       }
+       else
+        _lTimeout = 120000;
+       if (_tTimeout !== false)
+       {
+        window.clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       if (_ws === null)
+        return;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
+       _ws.close();
+       _ws = null;
+       if (lfg.net.dead === true)
+        return;
+       lfg.net.socket();
+      }
+
+      return $c_socket;
+     }();
+
+     async function $addEmotes(addList)
+     {
+      const addURLs = Object.keys(addList);
+      let doUpdate = false;
+      for (let i = 0; i < addURLs.length; i++)
+      {
+       const addU = addURLs[i];
+       const addN = addList[addU];
+       const r = await _submitEmote(addU, addN);
+       if (!r)
+        continue;
+       if (r === lfg.net.channelID)
+        doUpdate = true;
+      }
+      if (doUpdate)
+       await _loadEmote_channel(lfg.net.channelID);
+     }
+
+     async function _loadEmote_channel(chID)
+     {
+      if (!service.emotes.hasOwnProperty('lfg'))
+       service.emotes.lfg = {};
+      const r = await _findEmote_channel({id: chID}, service.emotes.lfg);
+      if (r.length === 0)
+       return false;
+      if (service.cList.length === 0)
+       service.cList = r;
+      else
+      {
+       for (const n in service.emotes.lfg)
+       {
+        if (!service.emotes.lfg[n].hasOwnProperty('scope'))
+         continue;
+        if (service.emotes.lfg[n].scope !== cSources.scope.channel)
+         continue;
+        for (let c = service.cList.length - 1; c >= 0; c--)
+        {
+         if (service.cList[c].url !== service.emotes.lfg[n].url)
+          continue;
+         service.cList.splice(c, 1);
+         break;
+        }
+       }
+       for (let i = 0, l = r.length; i < l; i++)
+       {
+        if (!service.cList.includes(r[i]))
+         service.cList.push(r[i]);
+       }
+      }
+      service.syncList();
+      return true;
+     }
+
+     const $userInfo = function()
+     {
+      const _hist = {};
+
+      async function $c_userInfo(slug, cache = true)
+      {
+       if (!!cache && _hist.hasOwnProperty(slug))
+       {
+        if (Number.isInteger(cache) && Math.floor((Date.now() - _hist[slug].time) / 1000) < cache)
+         return _hist[slug];
+       }
+       const url = cURLs.api.lfg.users.replaceAll(cVARs.url.user, encodeURIComponent(slug));
+       const r = await shared.httpRequest('GET', url);
+       if (!r.success)
+        return false;
+       const j = r.json;
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('id') || j.id === null)
+        return false;
+       _hist[slug] = {data: j, time: Date.now()};
+       return j;
+      }
+
+      return $c_userInfo;
+     }();
+
+     async function _getChIDs()
+     {
+      const jUser = await lfg.net.userInfo(lfg.net.oAuth.auth.channel);
+      if (!jUser)
+       return false;
+      if (!jUser.hasOwnProperty('stream_url'))
+       return false;
+      if (!jUser.hasOwnProperty('stream_id'))
+       return false;
+      if (!jUser.hasOwnProperty('id') || jUser.id === null)
+       return false;
+      if (jUser.stream_url === null && jUser.stream_id === null)
+      {
+       notice.error(notice.Type.LFG_NETWORK);
+       notice.error(notice.Type.LFG_ACCOUNT);
+       lfg.net.oAuth.clear(true);
+       lfg.net.dead = true;
+       return null;
+      }
+      lfg.net.channelID = jUser.id;
+      if (jUser.stream_id === null)
+       lfg.net.streamID = 0;
+      else
+       lfg.net.streamID = jUser.stream_id;
+      _lastIDCheck = Date.now();
+      return true;
+     }
+
+     const $followers = function()
+     {
+      let _uLast = 0;
+      const _uCache = 30000;
+
+      async function $c_followers()
+      {
+       if (lfg.net.dead === true)
+        return;
+       if (Date.now() - _uLast < _uCache)
+        return;
+       const fRet = await _getChange();
+       if (fRet === false)
+        return;
+       _uLast = Date.now();
+       const aList = [];
+       for (let i = 0; i < fRet.length; i++)
+       {
+        const u = _parse.user(fRet[i]);
+        if (!u._slug)
+         continue;
+        aList.push(u._slug);
+        if (!lfg.net.fList.hasOwnProperty(u._slug) || lfg.net.fList[u._slug] === false || typeof lfg.net.fList[u._slug] !== 'boolean')
+         lfg.net.fList[u._slug] = true;
+       }
+       for (const slug in lfg.net.fList)
+       {
+        if (aList.includes(slug))
+         continue;
+        lfg.net.fList[slug] = false;
+       }
+      }
+
+      async function _getChange(pg = 0)
+      {
+       const url = cURLs.api.lfg.followers.replaceAll(cVARs.url.channelName, encodeURIComponent(lfg.net.oAuth.auth.channel)).replaceAll(cVARs.url.page, encodeURIComponent(pg));
+       const r = await shared.httpRequest('GET', url);
+       if (!r.success)
+        return false;
+       const j = r.json;
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('data') || j.data === null)
+        return false;
+       if (!j.hasOwnProperty('total_rows') || j.total_rows === null)
+        return false;
+       if (!j.hasOwnProperty('returned_rows') || j.returned_rows === null)
+        return false;
+       if (pg > 0)
+        return j.data;
+       if (j.total_rows <= j.returned_rows)
+        return j.data;
+       const ret = [];
+       ret.push(...j.data);
+       for (let i = j.returned_rows; i < j.total_rows; i += j.returned_rows)
+       {
+        const rPg = await _getChange(i);
+        if (rPg === false)
+         return ret;
+        ret.push(...rPg);
+       }
+       return ret;
+      }
+
+      return $c_followers;
+     }();
+
+     const $subscribers = function()
+     {
+      const _sCache = {};
+      const _uCache = 3600000;
+
+      async function $checkSub(u)
+      {
+       if (_sCache.hasOwnProperty(u._slug))
+       {
+        if (Date.now() < _sCache[u._slug].expires)
+         return _sCache[u._slug].level;
+       }
+       const url = cURLs.api.lfg.subscribed.replaceAll(cVARs.url.channelName, encodeURIComponent(lfg.net.oAuth.auth.channel)).replaceAll(cVARs.url.user, encodeURIComponent(u._slug));
+       const r = await shared.httpRequest('GET', url);
+       if (!r.success)
+       {
+        _sCache[u._slug] = {created: 0, expires: 0, level: 0};
+        return 0;
+       }
+       const j = r.json;
+       if (j === null)
+       {
+        _sCache[u._slug] = {created: 0, expires: 0, level: 0};
+        return 0;
+       }
+       if (!j.hasOwnProperty('is_subscribed'))
+       {
+        _sCache[u._slug] = {created: 0, expires: 0, level: 0};
+        return 0;
+       }
+       let bgn = Date.now();
+       let exp = Date.now() + _uCache;
+       if (j.is_subscribed !== true)
+       {
+        _sCache[u._slug] = {created: bgn, expires: exp, level: 0};
+        return 0;
+       }
+       if (j.hasOwnProperty('expires_datetime'))
+        exp = new Date(j.expires_datetime).getTime();
+       if (j.hasOwnProperty('created_datetime'))
+        bgn = new Date(j.created_datetime).getTime();
+       if (!j.hasOwnProperty('subscription_level') || j.subscription_level === null)
+       {
+        _sCache[u._slug] = {created: bgn, expires: exp, level: 0};
+        return 0;
+       }
+       _sCache[u._slug] = {created: bgn, expires: exp, level: j.subscription_level};
+       return j.subscription_level;
+      }
+
+      async function $addSub(cmd)
+      {
+       const u = _parse.user(cmd, true);
+       if (!u._slug)
+        return;
+       await lfg.net.subscribers.checkSub(u);
+      }
+
+      return {
+       checkSub: $checkSub,
+       addSub: $addSub
+      };
+     }();
+
+     const $hypetrains = function()
+     {
+      let _tPrev = null;
+      let  _tS = false;
+      const _rSC = 15000;
+
+      function $c_hypetrains()
+      {
+       if (_tS !== false)
+        window.clearTimeout(_tS);
+       _tS = window.setTimeout(_detect, Math.floor(_rSC / 3));
+      }
+
+      async function _detect()
+      {
+       if (_tS === false)
+        return;
+       window.clearTimeout(_tS);
+       _tS = false;
+       if (lfg.net.dead === true)
+        return;
+       if (lfg.net.streamID === 0 || Date.now() - _lastIDCheck > 300000)
+       {
+        const chR = await _getChIDs();
+        if (chR === null)
+        {
+         notice.error(notice.Type.LFG_NETWORK);
+         notice.active &= ~notice.Connection.LFG;
+         notice.resetHide();
+         return;
+        }
+        if (lfg.net.streamID === 0)
+        {
+         _tS = window.setTimeout(_detect, _rSC);
+         return;
+        }
+       }
+       const tRet = await _getTrain();
+       let tTick = false;
+       if (tRet.ends !== false)
+       {
+        if (tRet.ends > 10)
+         tTick = tRet.ends - 5;
+        else if (tRet.ends > 5)
+         tTick = tRet.ends - 2;
+        else if (tRet.ends > 1)
+         tTick = tRet.ends;
+        else
+         tTick = tRet.ends + 2;
+       }
+       if (_tPrev === null)
+       {
+        _tPrev = tRet.level;
+        if (tTick !== false)
+         _tS = window.setTimeout(_detect, Math.floor(tTick * 1000));
+        return;
+       }
+       if (_tPrev !== false)
+       {
+        if (tRet.level === false)
+        {
+         _end(_tPrev);
+         _tPrev = false;
+        }
+        else
+         _tPrev = tRet.level;
+        if (tTick !== false)
+         _tS = window.setTimeout(_detect, tTick * 1000);
+        return;
+       }
+       if (tRet.level !== false)
+       {
+        _begin();
+        _tPrev = tRet.level;
+       }
+       if (tTick !== false)
+        _tS = window.setTimeout(_detect, tTick * 1000);
+      }
+
+      async function _getTrain()
+      {
+       const url = cURLs.api.lfg.hypetrains.replaceAll(cVARs.url.streamID, encodeURIComponent(lfg.net.streamID));
+       const r = await shared.httpRequest('GET', url);
+       if (!r.success)
+        return {level: false, ends: false};
+       const j = r.json;
+       if (j === null)
+        return {level: false, ends: false};
+       if (!j.hasOwnProperty('active') || j.active !== true)
+        return {level: false, ends: false};
+       if (!j.hasOwnProperty('hype_train') || j.hype_train === null)
+        return {level: false, ends: false};
+       if (!j.hype_train.hasOwnProperty('status') || j.hype_train.status !== 'active')
+        return {level: false, ends: false};
+       let retry = false;
+       if (j.hasOwnProperty('time_remaining_seconds') && j.time_remaining_seconds !== null)
+        retry = j.time_remaining_seconds;
+       if (!j.hype_train.hasOwnProperty('current_level') || j.hype_train.current_level === null)
+        return {level: false, ends: retry};
+       if (j.hype_train.current_level === 0)
+        return {level: false, ends: retry};
+       if (j.hype_train.hasOwnProperty('current_progress') && j.hype_train.current_progress === 10000)
+        return {level: j.hype_train.current_level, ends: retry};
+       return {level: j.hype_train.current_level - 1, ends: retry};
+      }
+
+      function _begin()
+      {
+       if (!cfg.event.lfg.hypetrain)
+        return;
+       if (!cfg.event.lfg.hypetrain.begin)
+        return;
+       if (document.visibilityState === 'hidden')
+        return;
+       display.kappa.show(false, cfg.event.lfg.hypetrain.begin);
+      }
+
+      function _end(lv)
+      {
+       if (!cfg.event.lfg.hypetrain)
+        return;
+       if (!cfg.event.lfg.hypetrain.success)
+        return;
+       if (document.visibilityState === 'hidden')
+        return;
+       if (lv < 1)
+        return;
+       const rs = shared.findInMaybeRange(cfg.event.lfg.hypetrain.success, lv);
+       if (rs === false)
+        return;
+       display.kappa.show(false, rs);
+      }
+
+      return $c_hypetrains;
+     }();
+
+     const $oAuth = function()
+     {
+      function $init()
+      {
+       if (cfg.lfg.hasOwnProperty('channel') && cfg.lfg.channel === null)
+       {
+        loginL.inUse = false;
+        _populateAuth();
+        return;
+       }
+       if (cfg.lfg.hasOwnProperty('channel') && cfg.lfg.channel !== null && cfg.lfg.channel !== false && cfg.lfg.channel !== 'CHANNEL_NAME')
+       {
+        loginL.inUse = false;
+        _populateAuth(cfg.lfg.channel);
+        return;
+       }
+       loginL.inUse = true;
+       const lsChannel = shared.storage.getItem(loginL.path() + '.channel');
+       if (lsChannel === null)
+       {
+        _populateAuth();
+        return;
+       }
+       _populateAuth(lsChannel);
+      }
+
+      function $clear()
+      {
+       _populateAuth();
+       shared.storage.removeItem(loginL.path() + '.channel');
+      }
+
+      function _populateAuth(c = null)
+      {
+       lfg.net.oAuth.auth.time = Date.now();
+       if (c === null)
+       {
+        lfg.net.oAuth.auth.channel = false;
+        return;
+       }
+       lfg.net.oAuth.auth.channel = c;
+      }
+
+      function _cfgVals()
+      {
+       let r = 0;
+       if (lfg.net.oAuth.auth.channel !== false)
+        r |= shared.cfgVal.CHANNEL;
+       return r;
+      }
+
+      return {
+       init: $init,
+       clear: $clear,
+       get hasLogin() {return (_cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL;},
+       auth: {
+        channel: false,
+        time: 0
+       }
+      };
+     }();
+
+     return {
+      channelID: 0,
+      streamID: 0,
+      sckID: false,
+      fList: {},
+      dead: false,
+      socket: $socket,
+      addEmotes: $addEmotes,
+      userInfo: $userInfo,
+      followers: $followers,
+      subscribers: $subscribers,
+      hypetrains: $hypetrains,
+      oAuth: $oAuth
+     };
+    }();
+
+    const _parse = function()
+    {
+     const $parseUser = function()
+     {
+      const _uuu = 'https://lfgtv-storage.nyc3.cdn.digitaloceanspaces.com/users/';
+      const _uul = 36;
+
+      function $c_parseUser(cmd, recipient = false)
+      {
+       const ret = {
+        id: 0,
+        _slug: false,
+        _name: false,
+        ascii: false
+       };
+       if (recipient)
+       {
+        if (!!cmd.metadata && !!cmd.metadata.targetUsername)
+         _getUserFrom(ret, cmd.metadata, 'targetUsername');
+       }
+       else
+       {
+        if (!!cmd.gifterUsername)
+         _getUserFrom(ret, cmd, 'gifterUsername', 'gifterDisplayName', false, 'gifterProfileImage');
+       }
+       if (!ret._slug && !!cmd.followerUsername)
+        _getUserFrom(ret, cmd, 'followerUsername', 'followerDisplayName', false, 'followerProfileImage');
+       if (!ret._slug && !!cmd.subscriberUsername)
+        _getUserFrom(ret, cmd, 'subscriberUsername', 'subscriberDisplayName', false, 'subscriberProfileImage');
+       if (!ret._slug && !!cmd.user && !!cmd.user.username)
+        _getUserFrom(ret, cmd.user, 'username', 'display_name', 'id', 'profile_image_url');
+       if (!ret._slug && !!cmd.username)
+        _getUserFrom(ret, cmd, 'username', 'display_name', 'id', 'profile_image_url');
+       if (!ret._slug && !!cmd.sender && typeof cmd.sender === 'string')
+        _getUserFrom(ret, cmd, 'sender', 'senderDisplayName', 'senderId', 'senderImageUrl');
+       if (!ret._slug && !!cmd.senderUsername)
+        _getUserFrom(ret, cmd, 'senderUsername', 'senderDisplayName', false, 'senderProfileImage');
+       const gReg = new RegExp(service.parse.uReg, 'g');
+       if (!!ret._name && ret._name === ret._name.replaceAll(gReg, ''))
+        ret.ascii = ret._name;
+       if (!ret.ascii && !!ret._slug)
+        ret.ascii = ret._slug;
+       if (!ret.ascii)
+        ret.ascii = anonName;
+       return ret;
+      }
+
+      function _getUserFrom(ret, obj, slugOrName, name = false, id = false, img = false)
+      {
+       ret._slug = obj[slugOrName].trim().toLowerCase();
+       if (!!name && !!obj[name])
+        ret._name = obj[name];
+       if (!ret._name)
+        ret._name = obj[slugOrName].trim();
+       if (!!id && !!obj[id])
+        ret.id = obj[id];
+       if (ret.id === 0 && !!img && !!obj[img] && obj[img].slice(0, _uuu.length) === _uuu)
+        ret.id = obj[img].slice(_uuu.length, _uuu.length + _uul);
+      }
+
+      return $c_parseUser;
+     }();
+
+     const $content = function()
+     {
+      function $emoji(cmd, attrContent, dup = null)
+      {
+       if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
+        return [];
+       const msg = cmd[attrContent];
+       return service.parse.content.emoji(msg, dup);
+      }
+
+      function $lfg(cmd, dup = null)
+      {
+       if (!cmd.hasOwnProperty('parsedContent') || cmd.parsedContent === null)
+        return [];
+       if (!cmd.parsedContent.hasOwnProperty('segments') || cmd.parsedContent.segments === null)
+        return [];
+       const m = cmd.parsedContent.segments;
+       if (dup === null)
+        dup = cfg.display.duplicates;
+       if (dup === false)
+        dup = 1;
+       const ret = [];
+       if (m.length === 0)
+        return [];
+       const ids = [];
+       let idx = 0;
+       const addList = {};
+       for (let i = 0, n = m.length; i < n; i++)
+       {
+        if (m[i].type !== 'emote')
+        {
+         if (!m[i].hasOwnProperty('content'))
+          continue;
+         idx += m[i].content.length;
+         continue;
+        }
+        const sName = m[i].content;
+        idx += sName.length;
+        if (dup !== true)
+        {
+         let ct = 0;
+         for (let j = 0, l = ids.length; j < l; j++)
+         {
+          if (ids[j] === sName)
+           ct++;
+         }
+         if (ct >= dup)
+          continue;
+        }
+        const sURL = m[i].emoteUrl;
+        addList[sURL] = sName;
+        ret.push({svc: cSources.service.lfg, url: sURL, str: sName, pos: idx, scope: cSources.scope.user});
+       }
+       window.setTimeout(lfg.net.addEmotes, 1000, addList);
+       return ret;
+      }
+
+      function $coins(cmd)
+      {
+       const p = [];
+       if (!cmd.hasOwnProperty('tip'))
+        return p;
+       if (cmd.tip < 1)
+        return p;
+       if (!cmd.hasOwnProperty('coins'))
+        return p;
+       let idx = 0;
+       if (cmd.hasOwnProperty('message') && cmd.message !== '')
+        idx = cmd.message.length;
+       for (let i = 0; i < cmd.coins.length; i++)
+       {
+        if (!cmd.coins[i].hasOwnProperty('denomination') || cmd.coins[i].denomination === null)
+         continue;
+        if (!cmd.coins[i].hasOwnProperty('quantity') || cmd.coins[i].quantity === null || cmd.coins[i].quantity < 1)
+         continue;
+        const cK = _k(cmd.coins[i].denomination);
+        const imgPath = cURLs.cdn.lfg.coin.replace(cVARs.url.emoteID, cK);
+        for (let c = 0; c < cmd.coins[i].quantity; c++)
+        {
+         const cName = 'C' + cK;
+         p.push({svc: cSources.service.cheer, url: imgPath, str: cName, pos: idx, scope: null});
+         idx += cName.length;
+        }
+       }
+       return p;
+      }
+
+      function _k(n)
+      {
+       const v = parseInt(n, 10);
+       if (v < 1000)
+        return '' + v;
+       return Math.floor(n / 1000) + 'k';
+      }
+
+      return {
+       emoji: $emoji,
+       lfg: $lfg,
+       coins: $coins
+      };
+     }();
+
+     const $line = function()
+     {
+      async function $c_line(cmd, attrContent = 'content', andCheers = true)
+      {
+       const u = _parse.user(cmd);
+       if (service.parse.ignored(u))
+        return;
+       if (!cmd.hasOwnProperty(attrContent) || cmd[attrContent] === null || cmd[attrContent] === '')
+        return;
+       const lvChk = new _level(cmd);
+       if (await _parseCommand(cmd, attrContent, lvChk))
+        return;
+       const p = _handleDuplicates(_eListFromCmd(cmd, attrContent, null, andCheers));
+       if (p.length === 0)
+        return;
+       if (!(await lvChk.check(cfg.display.access)))
+        return;
+       display.emote.addToShowList(p);
+       display.emote.showEmotes();
+      }
+
+      function _parseCommand(cmd, attrContent, lvChk)
+      {
+       const m = cmd[attrContent].toLowerCase();
+       const a = _handleDuplicates(_eListFromCmd(cmd, attrContent, true));
+       let mID = false;
+       if (cmd.hasOwnProperty('id'))
+        mID = 'lfg:' + cmd.id;
+       return service.parse.line.parseCommand(m, lvChk, a, mID);
+      }
+
+      return $c_line;
+     }();
+
+     const $event = function()
+     {
+      async function $cheer(cmd)
+      {
+       if (!cfg.event.lfg.cheer)
+        return false;
+       if (!cfg.event.lfg.cheer.coins)
+        return false;
+       const u = _parse.user(cmd);
+       if (service.parse.ignored(u))
+        return false;
+       if (!cmd.hasOwnProperty('coins'))
+        return false;
+       if (!cmd.hasOwnProperty('tip'))
+        return false;
+       if (cmd.tip < 1)
+        return false;
+       let p = [];
+       if (cfg.event.lfg.cheer.useMsg)
+       {
+        const a = _eListFromCmd(cmd, 'message');
+        p.push(...a);
+       }
+       else
+       {
+        const b = _parse.content.coins(cmd);
+        p.push(...b);
+        await _parse.line(cmd, 'message', false);
+       }
+       p = _handleDuplicates(p);
+       if (p.length === 0)
+        return false;
+       const r = shared.findInMaybeRange(cfg.event.lfg.cheer.coins, cmd.tip);
+       if (r === false)
+       {
+        display.emote.addToShowList(p);
+        display.emote.showEmotes();
+        return true;
+       }
+       display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: cmd.tip});
+       return true;
+      }
+
+      async function $raid(u, count)
+      {
+       if (!cfg.event.lfg.raid)
+        return;
+       if (!cfg.event.lfg.raid.raiders)
+        return;
+       if (service.parse.ignored(u))
+        return;
+       const r = shared.findInMaybeRange(cfg.event.lfg.raid.raiders, count);
+       if (r === false)
+        return;
+       if (!cfg.event.lfg.raid.originEmotes)
+       {
+        display.kappa.show(false, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: count});
+        return;
+       }
+       const e = await _findEmote_channel(u);
+       display.kappa.show(e, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: count});
+      }
+
+      function $follow(cmd)
+      {
+       if (!cfg.event.lfg.follow)
+        return;
+       const u = _parse.user(cmd);
+       if (service.parse.ignored(u))
+        return;
+       display.kappa.show(false, cfg.event.lfg.follow, {[cVARs.evt.user]: u.ascii});
+      }
+
+      function $sub(cmd)
+      {
+       if (!cfg.event.lfg.sub)
+        return;
+       if (!cfg.event.lfg.sub.pass)
+        return;
+       const u = _parse.user(cmd);
+       if (service.parse.ignored(u))
+        return;
+       display.kappa.show(false, cfg.event.lfg.sub.pass, {[cVARs.evt.user]: u.ascii});
+      }
+
+      function $gift(cmd)
+      {
+       if (!cfg.event.lfg.sub)
+        return;
+       if (!cfg.event.lfg.sub.gift)
+        return;
+       const uFrom = _parse.user(cmd);
+       const uTo = _parse.user(cmd, true);
+       if (service.parse.ignored(uFrom))
+        return;
+       display.kappa.show(false, cfg.event.lfg.sub.gift, {[cVARs.evt.sender]: uFrom.ascii, [cVARs.evt.user]: uTo.ascii});
+      }
+
+      function $giftpack(cmd)
+      {
+       if (!cfg.event.lfg.sub)
+        return;
+       if (!cfg.event.lfg.sub.giftpack)
+        return;
+       if (!cmd.hasOwnProperty('amount') || cmd.amount === null)
+        return;
+       const u = _parse.user(cmd);
+       if (service.parse.ignored(u))
+        return;
+       const gpb = shared.findInMaybeRange(cfg.event.lfg.sub.giftpack, cmd.amount);
+       if (gpb === false)
+        return;
+       display.kappa.show(false, gpb, {[cVARs.evt.sender]: u.ascii, [cVARs.evt.amount]: cmd.amount});
+      }
+
+      function $timeout(cmd)
+      {
+       if (!cfg.event.lfg.timeout)
+        return;
+       const u = _parse.user(cmd, true);
+       if (u.id === 0 && !u._slug && !u._name)
+        return;
+       if (service.parse.ignored(u))
+        return;
+       const dDur = cmd.metadata.duration;
+       const r = shared.findInMaybeRange(cfg.event.lfg.timeout, dDur);
+       if (r === false)
+        return;
+       display.kappa.show(false, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: dDur});
+      }
+
+      function $ban(cmd)
+      {
+       if (!cfg.event.lfg.ban)
+        return;
+       const u = _parse.user(cmd, true);
+       if (service.parse.ignored(u))
+        return;
+       display.kappa.show(false, cfg.event.lfg.ban, {[cVARs.evt.user]: u.ascii});
+      }
+
+      const $shoutoutCreate = function()
+      {
+       const _hist = {};
+       const _soLimit = 3600000;
+
+       async function $c_shoutoutCreate(cmd)
+       {
+        const u = _parse.user(cmd, true);
+        if (!u._slug)
+         return;
+        if (_hist.hasOwnProperty(u._slug))
+        {
+         const lastSO = _hist[u._slug];
+         if (Date.now() - lastSO < _soLimit)
+          return;
+        }
+        const jUser = await lfg.net.userInfo(u._slug, 1800);
+        let dn = u.ascii;
+        if (!!jUser && jUser.hasOwnProperty('display_name'))
+         dn = jUser.display_name;
+        if (!cfg.event.lfg.shoutout)
+         return;
+        if (!cfg.event.lfg.shoutout.create)
+         return;
+        if (!cfg.event.lfg.shoutout.create.styles)
+         return;
+        _hist[u._slug] = Date.now();
+        if (!cfg.event.lfg.shoutout.create.targetEmotes)
+        {
+         display.kappa.show(false, cfg.event.lfg.shoutout.create.styles, {[cVARs.evt.user]: dn});
+         return;
+        }
+        const e = await _findEmote_channel(u);
+        display.kappa.show(e, cfg.event.lfg.shoutout.create.styles, {[cVARs.evt.user]: dn});
+       }
+
+       return $c_shoutoutCreate;
+      }()
+
+      return {
+       cheer: $cheer,
+       raid: $raid,
+       follow: $follow,
+       sub: $sub,
+       gift: $gift,
+       giftpack: $giftpack,
+       timeout: $timeout,
+       ban: $ban,
+       shoutoutCreate: $shoutoutCreate
+      };
+     }();
+
+     class _level
+     {
+      constructor(cmd)
+      {
+       this.cmd = cmd;
+       this.rFH = 3600000;
+      }
+
+      async check(rq)
+      {
+       let r = lfg.Access.STRANGER;
+       if (this.cmd.hasOwnProperty('role'))
+       {
+        switch (this.cmd.role)
+        {
+         case 'BROADCASTER':
+          r |= lfg.Access.BROADCASTER;
+          break;
+         case 'MODERATOR':
+          r |= lfg.Access.MODERATOR;
+          break;
+         case 'VIP':
+          r |= lfg.Access.VIP;
+          break;
+        }
+       }
+       else
+       {
+        if (this.cmd.hasOwnProperty('broadcasterUsername') && this.cmd.hasOwnProperty('senderUsername') && this.cmd.broadcasterUsername === this.cmd.senderUsername)
+         r |= lfg.Access.BROADCASTER;
+       }
+       if (this.cmd.hasOwnProperty('coins') && this.cmd.hasOwnProperty('tip'))
+        r |= lfg.Access.CHEERER;
+       if ((r & rq) !== 0)
+        return true;
+       if ((rq & lfg.Access.FOLLOWER) === 0 && (rq & lfg.Access.SUBSCRIBER) === 0)
+        return false;
+       const u = _parse.user(this.cmd);
+       if (!u._slug)
+        return false;
+       /* api-heavy, only check if follower access is allowed and there's a chance it matters */
+       if ((rq & lfg.Access.FOLLOWER) !== 0)
+       {
+        const oF = await this._checkFollower(u);
+        if (oF !== false)
+         return oF;
+       }
+       if ((rq & lfg.Access.SUBSCRIBER) !== 0)
+       {
+        const oS = await _level._checkSub(u);
+        if ((rq & oS) !== 0)
+         return true;
+       }
+       return false;
+      }
+
+      async _checkFollower(u)
+      {
+       if (lfg.net.fList.hasOwnProperty(u._slug))
+       {
+        const tDif = Date.now() - lfg.net.fList[u._slug].t;
+        if (tDif < this.rFH)
+         return lfg.net.fList[u._slug].value;
+       }
+       await lfg.net.followers();
+       if (!lfg.net.fList.hasOwnProperty(u._slug))
+        return false;
+       return lfg.net.fList[u._slug].value;
+      }
+
+      static async _checkSub(u)
+      {
+       const sub = await lfg.net.subscribers.checkSub(u);
+       if (sub === 0)
+        return 0;
+       return lfg.Access.SUBSCRIBER;
+      }
+     }
+
+     function _handleDuplicates(a)
+     {
+      const lA = a.length;
+      if (lA < 1)
+       return a;
+      const r = [];
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.url)
+        r.push(a[i]);
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.cheer)
+       {
+        if (service.parse.notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].scope === cSources.scope.user)
+       {
+        if (service.parse.notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.lfg && a[i].scope === cSources.scope.channel)
+       {
+        if (service.parse.notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
+      {
+       for (let i = 0; i < lA; i++)
+       {
+        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (service.parse.notDupe(a[i], r))
+          r.push(a[i]);
+        }
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.lfg && a[i].scope === cSources.scope.global)
+       {
+        if (service.parse.notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
+      {
+       for (let i = 0; i < lA; i++)
+       {
+        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (service.parse.notDupe(a[i], r))
+          r.push(a[i]);
+        }
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.emoji)
+       {
+        if (service.parse.notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      return r;
+     }
+
+     function _eListFromCmd(cmd, attrContent = 'content', dup = null, andCheers = true)
+     {
+      const r = [];
+      const u = _parse.user(cmd);
+      if (service.parse.ignored(u))
+       return r;
+      if (andCheers && cmd.hasOwnProperty('tip') && cmd.tip > 0)
+       r.push(..._parse.content.coins(cmd));
+      r.push(..._parse.content.lfg(cmd, dup));
+      if (cfg.display.useEmoji)
+       r.push(..._parse.content.emoji(cmd, attrContent, dup));
+      if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
+      {
+       for (let i = r.length - 1; i >= 0; i--)
+       {
+        const m = r[i].str;
+        if (cfg.ignore.emotes.includes(m))
+         r.splice(i, 1);
+       }
+      }
+      const t = Date.now();
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       r[i].timestamp = t;
+       if (r[i].hasOwnProperty('width') || r[i].hasOwnProperty('height'))
+        continue;
+       if (!r[i].hasOwnProperty('url'))
+        continue;
+       const sz = shared.ec.get(r[i].url);
+       if (sz === null)
+        continue;
+       r[i].width = sz.width;
+       r[i].height = sz.height;
+      }
+      if (cmd.hasOwnProperty('id'))
+      {
+       for (let i = 0, l = r.length; i < l; i++)
+       {
+        r[i].origin = 'lfg:' + cmd.id;
+       }
+      }
+      return r;
+     }
+
+     return {
+      user: $parseUser,
+      userRole: Object.freeze({
+       sender: Symbol(),
+       recipient: Symbol(),
+       any: Symbol()
+      }),
+      content: $content,
+      line: $line,
+      event: $event,
+      uReg: /[^A-Za-z0-9_]/
+     };
+    }();
+
+    async function _findEmote_channel(u, n = false)
+    {
+     if (u.id === 0)
+      u.id = await _getUserID(u);
+     const url = cURLs.api.lfg.emotes;
+     const b = 'uid=' + encodeURIComponent(u.id);
+     const r = await shared.httpRequest('POST', url, {}, b, false);
+     if (!r.success)
+      return [];
+     const j = r.json;
+     if (j === null)
+      return [];
+     if (!Array.isArray(j))
+      return [];
+     const ret = [];
+     for (let i = 0, l = j.length; i < l; i++)
+     {
+      if (!j[i].hasOwnProperty('id'))
+       continue;
+      if (!j[i].hasOwnProperty('name'))
+       continue;
+      if (!j[i].hasOwnProperty('type'))
+       continue;
+      if (!j[i].hasOwnProperty('uid'))
+       continue;
+      const ext = j[i].type;
+      if (!cURLs.cdn.lfg.emote.hasOwnProperty(ext))
+       continue;
+      const iURL = cURLs.cdn.lfg.emote[ext].replaceAll(cVARs.url.userID, j[i].uid).replaceAll(cVARs.url.emoteID, j[i].id);
+      ret.push({url: iURL});
+      if (n === false)
+       continue;
+      n[j[i].name] = {
+       scope: cSources.scope.channel,
+       url: iURL,
+       id: j[i].id
+      };
+     }
+     return ret;
+    }
+
+    const _submitEmote = function()
+    {
+     const _hist = {};
+
+     async function $c_submitEmote(eURL, eName)
+     {
+      if (_hist.hasOwnProperty(eURL) && _hist[eURL].name === eName && Date.now() - _hist[eURL].time < 21600000)
+       return false;
+      _hist[eURL] = {name: eName, time: Date.now()};
+      const url = cURLs.api.lfg.emotes;
+      const b = 'url=' + encodeURIComponent(eURL) + '&name=' + encodeURIComponent(eName);
+      const r = await shared.httpRequest('POST', url, {}, b, false);
+      if (!r.success)
+       return false;
+      if (!r.json)
+       return false;
+      return r.json.result;
+     }
+
+     return $c_submitEmote;
+    }();
+
+    async function _getUserID(u)
+    {
+     let un = false;
+     if (!!u._slug)
+      un = u._slug;
+     if (!!u._name)
+      un = u._name.toLowerCase();
+     if (!un)
+      return false;
+     const jUser = await lfg.net.userInfo(un);
+     if (!jUser)
+      return false;
+     return jUser.id;
+    }
+
+    return {
+     net: $net,
+     Access: Object.freeze({
+      STRANGER: 0x001,
+      FOLLOWER: 0x002,
+      CHEERER: 0x004,
+      SUBSCRIBER: 0x010,
+      VIP: 0x100,
+      MODERATOR: 0x400,
+      BROADCASTER: 0x800
+     })
+    };
+   }();
+
    const service = function()
    {
     const $parse = function()
@@ -15354,7 +17086,7 @@
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead)
        return;
       const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
@@ -15371,7 +17103,7 @@
       }
       if (_ws === null)
        return;
-      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead)
       {
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -15525,7 +17257,7 @@
       _ws.onclose = null;
       _ws.close();
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead)
        return;
       streamlabs.socket();
      }
@@ -15639,7 +17371,7 @@
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead)
        return;
       const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
@@ -15656,7 +17388,7 @@
       }
       if (_ws === null)
        return;
-      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead)
       {
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -15802,7 +17534,7 @@
       _ws.onclose = null;
       _ws.close();
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead && kick.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead)
        return;
       streamelements.socket();
      }
@@ -17001,7 +18733,7 @@
      const $socketEx = function()
      {
       const appID = 'emote-wall';
-      const appVer = '1.4';
+      const appVer = '1.5';
       const _lDelay = 3000;
       const _chList = {};
       let _statusWS = null;
@@ -19166,7 +20898,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
      cmdLogin.innerHTML = 'Twitch<br><span>Log In</span>';
-     if (auto && (youtube.net.oAuth.hasLogin || kick.net.oAuth.hasLogin))
+     if (auto && (youtube.net.oAuth.hasLogin || kick.net.oAuth.hasLogin || lfg.net.oAuth.hasLogin))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
      shared.hueSync();
@@ -19393,7 +21125,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginYT.begin();');
      cmdLogin.innerHTML = 'YouTube<br><span>Log In</span>';
-     if (auto && (twitch.net.oAuth.hasLogin || kick.net.oAuth.hasLogin))
+     if (auto && (twitch.net.oAuth.hasLogin || kick.net.oAuth.hasLogin || lfg.net.oAuth.hasLogin))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
      shared.hueSync();
@@ -19559,7 +21291,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginK.begin();');
      cmdLogin.innerHTML = 'Kick<br><span>Log In</span>';
-     if (auto && (youtube.net.oAuth.hasLogin || twitch.net.oAuth.hasLogin))
+     if (auto && (youtube.net.oAuth.hasLogin || twitch.net.oAuth.hasLogin || lfg.net.oAuth.hasLogin))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
      shared.hueSync();
@@ -19672,6 +21404,173 @@
     };
    }();
 
+   const loginL = function()
+   {
+    let _tL = false;
+    const _visTime = 5000;
+    const _idLogin = 'cmdLLogin';
+    const _idLogout = 'cmdLLogout';
+
+    function $path()
+    {
+     return shared.cfgHash + '.lfg';
+    }
+
+    function $use()
+    {
+     if (loginL.inUse === false)
+      return false;
+     if (lfg.net.oAuth.hasLogin)
+     {
+      loginL.showOut();
+      return false;
+     }
+     loginL.showIn(true);
+     return true;
+    }
+
+    async function $begin()
+    {
+     let r = await shared.inputBox('Enter your LFG Channel:');
+     if (r === '' || r === false || r === null)
+      return;
+     r = r.toLowerCase();
+     if (r.indexOf('lfg.tv/') > -1)
+      r = r.slice(r.indexOf('lfg.tv/') + 7);
+     shared.storage.setItem(loginL.path() + '.channel', r);
+     if (window.location.hash.length < 2)
+      window.location.reload();
+     else
+      window.location = window.location.href.slice(0, -1 * window.location.hash.length);
+    }
+
+    function $showIn(auto = false)
+    {
+     if (document.getElementById(_idLogout))
+      document.body.removeChild(document.getElementById(_idLogout));
+     const cmdLogin = document.createElement('button');
+     cmdLogin.setAttribute('id', _idLogin);
+     cmdLogin.setAttribute('type', 'button');
+     cmdLogin.classList.add('lfg');
+     cmdLogin.classList.add('auth');
+     cmdLogin.classList.add('unauthorized');
+     document.addEventListener('mouseover', _fadeInLogin);
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+     cmdLogin.setAttribute('onclick', 'loginL.begin();');
+     cmdLogin.innerHTML = 'LFG<br><span>Log In</span>';
+     if (auto && (youtube.net.oAuth.hasLogin || twitch.net.oAuth.hasLogin || kick.net.oAuth.hasLogin))
+      cmdLogin.classList.add('hidden');
+     document.body.appendChild(cmdLogin);
+     shared.hueSync();
+    }
+
+    function _fadeInLogin()
+    {
+     if (document.getElementById(_idLogin) && document.getElementById(_idLogin).classList.contains('hidden'))
+     {
+      document.getElementById(_idLogin).classList.remove('hidden');
+      shared.hueSync();
+     }
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+    }
+
+    function _fadeOutLogin()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById(_idLogin))
+      document.getElementById(_idLogin).classList.add('hidden');
+    }
+
+    function $showOut(v = false)
+    {
+     if (document.getElementById(_idLogin))
+      document.body.removeChild(document.getElementById(_idLogin));
+     if (document.getElementById(_idLogout))
+      document.body.removeChild(document.getElementById(_idLogout));
+     const cmdLogout = document.createElement('button');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     cmdLogout.setAttribute('id', _idLogout);
+     cmdLogout.setAttribute('type', 'button');
+     cmdLogout.classList.add('lfg');
+     cmdLogout.classList.add('auth');
+     document.addEventListener('mousemove', _fadeInLogout);
+     if (v)
+     {
+      cmdLogout.classList.add('unauthorized');
+      cmdLogout.setAttribute('onclick', 'loginL.begin();');
+      cmdLogout.innerHTML = 'LFG<br><span>Re-Auth</span>';
+      _tL = window.setTimeout(_fadeOutLogout, _visTime);
+     }
+     else
+     {
+      cmdLogout.classList.add('authorized');
+      cmdLogout.setAttribute('onclick', 'loginL.logOut();');
+      cmdLogout.innerHTML = 'LFG<br><span>Log Out</span>';
+      cmdLogout.classList.add('hidden');
+     }
+     document.body.appendChild(cmdLogout);
+     shared.hueSync();
+    }
+
+    function $logOut()
+    {
+     shared.storage.removeItem(loginL.path() + '.channel');
+     if (window.location.hash.length < 2)
+      window.location.reload();
+     else
+      window.location = window.location.href.slice(0, -1 * window.location.hash.length);
+    }
+
+    function _fadeInLogout()
+    {
+     if (document.getElementById(_idLogout) && document.getElementById(_idLogout).classList.contains('hidden'))
+     {
+      document.getElementById(_idLogout).classList.remove('hidden');
+      shared.hueSync();
+     }
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogout, _visTime);
+    }
+
+    function _fadeOutLogout()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById(_idLogout))
+      document.getElementById(_idLogout).classList.add('hidden');
+    }
+
+    return {
+     inUse: false,
+     use: $use,
+     begin: $begin,
+     showIn: $showIn,
+     showOut: $showOut,
+     logOut: $logOut,
+     path: $path
+    };
+   }();
+
    const startup = function()
    {
     async function $c_startup()
@@ -19684,6 +21583,7 @@
      await twitch.net.oAuth.init();
      await youtube.net.oAuth.init();
      kick.net.oAuth.init();
+     lfg.net.oAuth.init();
      await streamelements.oAuth.init();
      shared.mspf.init();
      if (cfg.display.hasOwnProperty('hue') && cfg.display.hue === 'rave' && !_hasRaveToggle())
@@ -19699,13 +21599,16 @@
      loginT.use();
      loginYT.use();
      loginK.use();
+     loginL.use();
      const bT = twitch.net.oAuth.hasLogin;
      const bYT = youtube.net.oAuth.hasLogin;
      const bK = kick.net.oAuth.hasLogin;
+     const bL = lfg.net.oAuth.hasLogin;
      const scks = [];
+     if (bT | bYT | bK | bL)
+      scks.push(_emoji());
      if (bT | bYT | bK)
      {
-      scks.push(_emoji());
       scks.push(_streamlabs());
       scks.push(_streamelements());
       scks.push(_7tv());
@@ -19731,6 +21634,10 @@
       svcs.push(_kick());
      else
       kick.net.dead = true;
+     if (bL)
+      svcs.push(_lfg());
+     else
+      lfg.net.dead = true;
      if (svcs.length === 0)
       return;
      const rets = await Promise.allSettled(svcs);
@@ -19751,6 +21658,12 @@
       const rK = rets.shift();
       if (rK.status !== 'fulfilled' || rK.value === false)
        kick.net.dead = true;
+     }
+     if (bL)
+     {
+      const rL = rets.shift();
+      if (rL.status !== 'fulfilled' || rL.value === false)
+       lfg.net.dead = true;
      }
     }
 
@@ -20490,6 +22403,16 @@
      return true;
     }
 
+    async function _lfg()
+    {
+     if (!lfg.net.oAuth.hasLogin)
+      return false;
+     await lfg.net.socket();
+     if (cfg.event.lfg.hypetrain.begin !== false || cfg.event.lfg.hypetrain.end !== false)
+      lfg.net.hypetrains();
+     return true;
+    }
+
     function _streamlabs()
     {
      if (!streamlabs.hasLogin)
@@ -20797,6 +22720,9 @@
 
       if (cfg.hasOwnProperty('kick') && cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null)
        h = h.replaceAll('/* {INSERT:KICK_OFF} *\/', 'display: none;');
+
+      if (cfg.hasOwnProperty('lfg') && cfg.lfg.hasOwnProperty('channel') && cfg.lfg.channel === null)
+       h = h.replaceAll('/* {INSERT:LFG_OFF} *\/', 'display: none;');
 
       return h;
      }
@@ -21610,6 +23536,19 @@
     color: #000000;
     font-size: 14px;
    }
+   #notices .sLFG
+   {
+    background-color: #1C78E6;
+   }
+   #notices .sLFG:after
+   {
+    position: absolute;
+    top: 0;
+    left: 7px;
+    content: 'L';
+    color: #000000;
+    font-size: 14px;
+   }
    #notices .tStreamElements
    {
     background-color: #0000FF;
@@ -21715,6 +23654,20 @@
     background-color: #60FF60;
    }
 
+   button.lfg
+   {
+    /* {INSERT:LFG_OFF} */
+    background-color: #2080E0;
+   }
+   button.lfg:focus, button.lfg:hover
+   {
+    background-color: #0050A0;
+   }
+   button.lfg:active
+   {
+    background-color: #6080E0;
+   }
+
    button.youtube
    {
     /* {INSERT:YOUTUBE_OFF} */
@@ -21756,6 +23709,10 @@
    button.auth.youtube
    {
     top: 5em;
+   }
+   button.auth.lfg
+   {
+    top: 7.25em;
    }
    button.auth::before
    {

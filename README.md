@@ -1,5 +1,5 @@
 # RealityRipple's Home-Made Emote Wall
-A home-made emote wall for Twitch.TV, Kick, and YouTube Livestreams, supporting animated Twitch emotes, BetterTTV, FrankerFaceZ, 7TV, and Emojis! Kappagen command and event triggers are also available, with advanced configuration capabilities.
+A home-made emote wall for Twitch.TV, Kick, YouTube, and LFG Livestreams, supporting animated Twitch emotes, BetterTTV, FrankerFaceZ, 7TV, and Emojis! Kappagen command and event triggers are also available, with advanced configuration capabilities.
 
 #### Supports
  * Chromium-based browsers
@@ -39,7 +39,7 @@ Priority for emotes with identical names (case-sensitive) uses this exact order:
  4) Global Emotes
  5) Emojis
 
-The order between services can be re-arranged in the configuration, but first-party (Twitch, YouTube, or Kick) is always first.  
+The order between services can be re-arranged in the configuration, but first-party (Twitch, YouTube, Kick, or LFG) is always first.  
 
 This priority order is slightly different from most extensions, and prioritizes the ability to override global emotes with channel-themed ones, as well as allowing third-party User emotes to override any others, except cheers.
 
