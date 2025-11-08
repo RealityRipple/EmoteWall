@@ -19964,6 +19964,370 @@
      };
     }();
 
+    const $aesgcm = function()
+    {
+     const _blocks = function()
+     {
+      const _R = new Uint8Array([0xE1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+
+      function $zeros(l)
+      {
+       const r = [];
+       for (let i = 0; i < l; i++)
+       {
+        r.push(0);
+       }
+       return r;
+      }
+
+      function $xor(b0, b1)
+      {
+       const r = [];
+       for (let i = 0; i < b0.length; i++)
+       {
+        r[i] = b0[i] ^ b1[i];
+       }
+       return r;
+      }
+
+      function _shiftR(b)
+      {
+       let c = 0;
+       for (let i = 0; i < b.length; i++)
+       {
+        const cC = c;
+        c = b[i] & 0x01;
+        b[i] >>= 1;
+        if (cC)
+         b[i] |= 0x80;
+       }
+       return b;
+      }
+
+      function $multiply(b0, b1)
+      {
+       let v = new Uint8Array(b1);
+       let z = new Uint8Array(_blocks.zeros(16));
+       for (let i = 0; i < 16; i++)
+       {
+        for (let j = 7; j >= 0; j--)
+        {
+         if (b0[i] & (0x01 << j))
+          z = _blocks.xor(z, v);
+         if (v[15] & 0x01)
+          v = _blocks.xor(_shiftR(v), _R);
+         else
+          v = _shiftR(v);
+        }
+       }
+       return z;
+      }
+
+      function $incrLo32(b)
+      {
+       const r = new Uint8Array(b);
+       for (let i = 15; i > 11; i--)
+       {
+        r[i]++;
+        if (r[i] === 256)
+         r[i] = 0;
+        else
+         break;
+       }
+       return r;
+      }
+
+      return {
+       xor: $xor,
+       multiply: $multiply,
+       incrLo32: $incrLo32,
+       zeros: $zeros
+      };
+     }();
+
+     const _aes = function()
+     {
+      const _SBOX = [
+       new Uint8Array([0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76]),
+       new Uint8Array([0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0]),
+       new Uint8Array([0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15]),
+       new Uint8Array([0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75]),
+       new Uint8Array([0x09, 0x83, 0x2c, 0x1a, 0x1b, 0x6e, 0x5a, 0xa0, 0x52, 0x3b, 0xd6, 0xb3, 0x29, 0xe3, 0x2f, 0x84]),
+       new Uint8Array([0x53, 0xd1, 0x00, 0xed, 0x20, 0xfc, 0xb1, 0x5b, 0x6a, 0xcb, 0xbe, 0x39, 0x4a, 0x4c, 0x58, 0xcf]),
+       new Uint8Array([0xd0, 0xef, 0xaa, 0xfb, 0x43, 0x4d, 0x33, 0x85, 0x45, 0xf9, 0x02, 0x7f, 0x50, 0x3c, 0x9f, 0xa8]),
+       new Uint8Array([0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5, 0xbc, 0xb6, 0xda, 0x21, 0x10, 0xff, 0xf3, 0xd2]),
+       new Uint8Array([0xcd, 0x0c, 0x13, 0xec, 0x5f, 0x97, 0x44, 0x17, 0xc4, 0xa7, 0x7e, 0x3d, 0x64, 0x5d, 0x19, 0x73]),
+       new Uint8Array([0x60, 0x81, 0x4f, 0xdc, 0x22, 0x2a, 0x90, 0x88, 0x46, 0xee, 0xb8, 0x14, 0xde, 0x5e, 0x0b, 0xdb]),
+       new Uint8Array([0xe0, 0x32, 0x3a, 0x0a, 0x49, 0x06, 0x24, 0x5c, 0xc2, 0xd3, 0xac, 0x62, 0x91, 0x95, 0xe4, 0x79]),
+       new Uint8Array([0xe7, 0xc8, 0x37, 0x6d, 0x8d, 0xd5, 0x4e, 0xa9, 0x6c, 0x56, 0xf4, 0xea, 0x65, 0x7a, 0xae, 0x08]),
+       new Uint8Array([0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a]),
+       new Uint8Array([0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e]),
+       new Uint8Array([0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf]),
+       new Uint8Array([0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16])
+      ];
+      const _Rcon = [
+       new Uint8Array([0x00, 0x00, 0x00, 0x00]), new Uint8Array([0x01, 0x00, 0x00, 0x00]), new Uint8Array([0x02, 0x00, 0x00, 0x00]), new Uint8Array([0x04, 0x00, 0x00, 0x00]),
+       new Uint8Array([0x08, 0x00, 0x00, 0x00]), new Uint8Array([0x10, 0x00, 0x00, 0x00]), new Uint8Array([0x20, 0x00, 0x00, 0x00]), new Uint8Array([0x40, 0x00, 0x00, 0x00]),
+       new Uint8Array([0x80, 0x00, 0x00, 0x00]), new Uint8Array([0x1b, 0x00, 0x00, 0x00]), new Uint8Array([0x36, 0x00, 0x00, 0x00])
+      ];
+
+      function _addRoundKey(s, a, idx)
+      {
+       for (let i = 0; i < 4; i++)
+       {
+        for (let j = 0; j < 4; j++)
+        {
+         s[i][j] ^= a[idx + j][i];
+        }
+       }
+      }
+
+      function _subBytes(s)
+      {
+       for (let i = 0; i < 4; i++)
+       {
+        for (let j = 0; j < 4; j++)
+        {
+         s[i][j] = _SBOX[(s[i][j] & 0xF0) >> 4][(s[i][j] & 0x0F)];
+        }
+       }
+      }
+
+      function _subWORD(v)
+      {
+       for (let i = 0; i < 4; i++)
+       {
+        v[i] = _SBOX[(v[i] & 0xF0) >> 4][(v[i] & 0x0F)];
+       }
+      }
+
+      function _rotWORD(v)
+      {
+       const t = v[0];
+       v[0] = v[1];
+       v[1] = v[2];
+       v[2] = v[3];
+       v[3] = t;
+      }
+
+      function _shiftRows(s)
+      {
+       for (let i = 1; i < 4; i++)
+       {
+        for (let j = 0; j < ((i - 1) % 2) + 1; j++)
+        {
+         const t = s[i][j];
+         let k = j;
+         while (true)
+         {
+          let l = k + i;
+          if (l >= 4)
+           l -= 4;
+          if (l === j)
+           break;
+          s[i][k] = s[i][l];
+          k = l;
+         }
+         s[i][k] = t;
+        }
+       }
+      }
+
+      function _fieldMul(v0, v1)
+      {
+       let r = 0;
+       for (let i = 0; i < 8; i++)
+       {
+        if ((v1 & 1) !== 0)
+         r ^= v0;
+        if ((v0 & 0x80) !== 0)
+        {
+         v0 <<= 1;
+         v0 ^= 0x11b;
+        }
+        else
+         v0 <<= 1;
+        v1 >>= 1;
+       }
+       return r;
+      }
+
+      function _mixColumns(s)
+      {
+       const t = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
+       for (let i = 0; i < 4; i++)
+       {
+        t[0][i] = _fieldMul(0x02, s[0][i]) ^ _fieldMul(0x03, s[1][i]) ^ s[2][i] ^ s[3][i];
+        t[1][i] = s[0][i] ^ _fieldMul(0x02, s[1][i]) ^ _fieldMul(0x03, s[2][i]) ^ s[3][i];
+        t[2][i] = s[0][i] ^ s[1][i] ^ _fieldMul(0x02, s[2][i]) ^ _fieldMul(0x03, s[3][i]);
+        t[3][i] = _fieldMul(0x03, s[0][i]) ^ s[1][i] ^ s[2][i] ^ _fieldMul(0x02, s[3][i]);
+       }
+       for (let i = 0; i < 4; i++)
+       {
+        for (let j = 0; j < 4; j++)
+        {
+         s[i][j] = t[i][j];
+        }
+       }
+      }
+
+      function _keyExpansion(lim, key)
+      {
+       const nK = parseInt(key.length / 4, 10);
+       const r = [];
+       for (let i = 0; i < key.length; i++)
+       {
+        if (i % 4 ===  0)
+         r.push(new Uint8Array(4));
+        r[parseInt(i / 4, 10)][i % 4] = key[i];
+       }
+       for (let i = nK; i < 4 * lim; i++)
+       {
+        r[i] = new Uint8Array(4);
+        const t = r[i - 1].slice();
+        if (i % nK === 0)
+        {
+         _rotWORD(t);
+         _subWORD(t);
+         for (let j = 0; j < 4; j++)
+         {
+          t[j] ^= _Rcon[parseInt(i / nK, 10)][j];
+         }
+        }
+        else if (nK > 6 && (i % nK) === 4)
+        {
+         _subWORD(t);
+        }
+        for (let j = 0; j < 4; j++)
+        {
+         r[i][j] = r[i - nK][j] ^ t[j];
+        }
+       }
+       return r;
+      }
+
+      function $c_aes(input, key)
+      {
+       if (key.length !== 32)
+        return false;
+       const rL = 15;
+       const w = _keyExpansion(rL, key);
+       const s = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
+       for (let i = 0; i < 15; i++)
+       {
+        s[parseInt(i / 4, 10)][i % 4] = input[(i * 4) % 15];
+       }
+       s[3][3] = input[15];
+       _addRoundKey(s, w, 0);
+       for (let i = 1; i < rL; i++)
+       {
+        _subBytes(s);
+        _shiftRows(s);
+        if (i + 1 < rL)
+         _mixColumns(s);
+        _addRoundKey(s, w, i * 4);
+       }
+       const o = [];
+       for (let i = 0; i < 4; i++)
+       {
+        for (let j = 0; j < 4; j++)
+        {
+         o.push(s[j][i]);
+        }
+       }
+       return new Uint8Array(o);
+      }
+
+      return $c_aes;
+     }();
+
+     const $gcm = function()
+     {
+      function _ghash(input, k)
+      {
+       let r = new Uint8Array(_blocks.zeros(16));
+       for (let i = 0; i < input.length; i += 16)
+       {
+        r = _blocks.multiply(_blocks.xor(r, input.slice(i, Math.min(i + 16, input.length))), k);
+       }
+       return r;
+      }
+
+      function _gctr(input, initCB, key)
+      {
+       if (input.length === 0)
+        return input;
+       const n = Math.ceil(input.length / 16);
+       const o = [];
+       let cb = initCB;
+       for (let i = 0; i < n; i++)
+       {
+        const cbK = _aes(cb, key);
+        if (!cbK)
+         return false;
+        const y = _blocks.xor(input.slice(i * 16, Math.min((i + 1) * 16, input.length)), cbK);
+        for (let j = 0; j < y.length; j++)
+        {
+         o.push(y[j]);
+        }
+        if (n > i + 1)
+         cb = _blocks.incrLo32(cb);
+       }
+       return new Uint8Array(o);
+      }
+
+      function _compareArrays(a, b)
+      {
+       if (a.length !== b.length)
+        return false;
+       let r = true;
+       for (let i = 0; i < a.length; i++)
+       {
+        if (a[i] !== b[i])
+         r = false;
+       }
+       return r;
+      }
+
+      function $c_gcm(cipherText, aad, iv, tag, key)
+      {
+       if (iv.length !== 12)
+        return false;
+       const hashSubKey = _aes(new Uint8Array(_blocks.zeros(16)), key);
+       if (!hashSubKey)
+        return false;
+       const preCB = new Uint8Array(16);
+       preCB.set(iv);
+       preCB[15] = 0x01;
+       const plainText = _gctr(cipherText, _blocks.incrLo32(preCB), key);
+       if (!plainText)
+        return false;
+       const aaLen = Math.ceil(aad.length / 16) * 16;
+       const ctLen = Math.ceil(cipherText.length / 16) * 16;
+       const tLen = aaLen + ctLen + 16;
+       const plainTag = new Uint8Array(tLen);
+       if (aaLen > 0)
+        plainTag.set(aad);
+       if (ctLen > 0)
+        plainTag.set(cipherText, aaLen);
+       const aadBits = aad.length * 8;
+       const cipBits = cipherText.length * 8;
+       plainTag.set([(aadBits & 0xFF000000) >>> 24, (aadBits & 0xFF0000) >> 16, (aadBits & 0xFF00) >> 8, aadBits & 0xFF], aaLen + ctLen + 4);
+       plainTag.set([(cipBits & 0xFF000000) >>> 24, (cipBits & 0xFF0000) >> 16, (cipBits & 0xFF00) >> 8, cipBits & 0xFF], aaLen + ctLen + 12);
+       const tCt = _gctr(_ghash(plainTag, hashSubKey), preCB, key);
+       if (!tCt)
+        return false;
+       if (!_compareArrays(tCt, tag))
+        return false;
+       return plainText;
+      }
+
+      return $c_gcm;
+     }();
+
+     return $gcm;
+    }();
+
     function $getHashParams()
     {
      const d = function(s)
@@ -20725,6 +21089,7 @@
      inputBox: $inputBox,
      rnd: $rnd,
      hashCode: $hashCode,
+     aesgcm: $aesgcm,
      getHashParams: $getHashParams,
      httpRequest: $httpRequest,
      errTimeout: Symbol(),
