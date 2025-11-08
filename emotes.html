@@ -3413,8 +3413,8 @@
      {
       const c = cCrew.prefix + encodeURIComponent(cCrew.svg.tag.open + cCrew.css.tag.open);
       if (u.slice(0, c.length) === c)
-       return shared.hashCode(c);
-      return shared.hashCode(u);
+       return shared.hashCode.gen(c);
+      return shared.hashCode.gen(u);
      }
 
      function $addToShowList(p)
@@ -7411,7 +7411,7 @@
        if (cfg.twitch.hasOwnProperty('oauth') && cfg.twitch.oauth !== null && cfg.twitch.oauth !== false && cfg.twitch.oauth !== 'OAUTH_ID')
        {
         loginT.inUse = false;
-        loginT.cfgHash = shared.hashCode(cfg.twitch.oauth);
+        loginT.cfgHash = shared.hashCode.gen(cfg.twitch.oauth);
         await _genAccess(cfg.twitch.oauth);
         return;
        }
@@ -7419,7 +7419,7 @@
        {
         loginT.inUse = false;
         let sRef = cfg.twitch.oauth_refresh;
-        loginT.cfgHash = shared.hashCode(sRef);
+        loginT.cfgHash = shared.hashCode.gen(sRef);
         const lsRef = shared.storage.getItem(loginT.path() + _pathRefresh);
         if (lsRef !== null)
          sRef = lsRef;
@@ -10523,7 +10523,7 @@
        if (cfg.youtube.hasOwnProperty('oauth') && cfg.youtube.oauth !== null && cfg.youtube.oauth !== false && cfg.youtube.oauth !== 'OAUTH_ID')
        {
         loginYT.inUse = false;
-        loginYT.cfgHash = shared.hashCode(cfg.youtube.oauth);
+        loginYT.cfgHash = shared.hashCode.gen(cfg.youtube.oauth);
         await _genAccess(cfg.youtube.oauth);
         return;
        }
@@ -10531,7 +10531,7 @@
        {
         loginYT.inUse = false;
         let sRef = cfg.youtube.oauth_refresh;
-        loginYT.cfgHash = shared.hashCode(sRef);
+        loginYT.cfgHash = shared.hashCode.gen(sRef);
         const lsRef = shared.storage.getItem(loginYT.path() + _pathRefresh);
         if (lsRef !== null)
          sRef = lsRef;
@@ -17563,14 +17563,14 @@
       }
       if (cfg.streamelements.hasOwnProperty('oauth') && cfg.streamelements.oauth !== false && cfg.streamelements.oauth !== null && cfg.streamelements.oauth !== 'OAUTH_ID')
       {
-       streamelements.cfgHash = shared.hashCode(cfg.streamelements.oauth);
+       streamelements.cfgHash = shared.hashCode.gen(cfg.streamelements.oauth);
        _genAccess(cfg.streamelements.oauth);
        return;
       }
       if (cfg.streamelements.hasOwnProperty('oauth_refresh') && cfg.streamelements.oauth_refresh !== null && cfg.streamelements.oauth_refresh !== false && cfg.streamelements.oauth_refresh !== 'OAUTH_REFRESH')
       {
        let sRef = cfg.streamelements.oauth_refresh;
-       streamelements.cfgHash = shared.hashCode(sRef);
+       streamelements.cfgHash = shared.hashCode.gen(sRef);
        const lsRef = shared.storage.getItem(_path() + _pathRefresh);
        if (lsRef !== null)
         sRef = lsRef;
@@ -19804,7 +19804,7 @@
       * fitness for purpose.
       */
 
-     function $c_hashCode(o)
+     function $gen(o, outW = 8)
      {
       const input = JSON.stringify(o);
       const ab = {a: [], b: [], p: 1};
@@ -19839,7 +19839,10 @@
           {
            _beltmill(ab);
           }
-          return _fmt64(ab);
+          if (outW < 1)
+           return ab;
+          const rA = shared.hashCode.next(ab, outW);
+          return _u32ToBase64(rA);
          }
          let x = input.charCodeAt(v);
          x &= 0xff;
@@ -19858,7 +19861,10 @@
       {
        _beltmill(ab);
       }
-      return _fmt64(ab);
+      if (outW < 1)
+       return ab;
+      const rB = shared.hashCode.next(ab, outW);
+      return _u32ToBase64(rB);
      }
 
      function _beltmill(ab)
@@ -19926,8 +19932,9 @@
              ((r & 0x000000ff) <<  24);
      }
 
-     function _u8ToBase64(bytes)
+     function _u32ToBase64(words)
      {
+      const bytes = new Uint8Array(words.buffer);
       let binary = '';
       for (let i = 0, l = bytes.byteLength; i < l; i++)
       {
@@ -19936,22 +19943,25 @@
       return window.btoa(binary).replaceAll('/', '_').replaceAll('+', '-').replaceAll('=', '');
      }
 
-     function _fmt64(ab)
+     function $next(ab, outW = 1)
      {
+      if (outW < 1)
+       outW = 1;
       const a = [];
-      for (let i = 0; i < 8; i++)
+      for (let i = 0; i < outW; i++)
       {
        let z = _rng(ab);
        if (z < 0)
         z += 0x100000000;
        a.push(z);
       }
-      const b32 = new Uint32Array(a);
-      const b8 = new Uint8Array(b32.buffer);
-      return _u8ToBase64(b8);
+      return new Uint32Array(a);
      }
 
-     return $c_hashCode;
+     return {
+      gen: $gen,
+      next: $next
+     };
     }();
 
     function $getHashParams()
@@ -21575,7 +21585,7 @@
    {
     async function $c_startup()
     {
-     shared.cfgHash = shared.hashCode(cfg);
+     shared.cfgHash = shared.hashCode.gen(cfg);
      if (shared.storage.getItem('emotewall.oobe') !== '0' && !window.hasOwnProperty('obsstudio') && !window.hasOwnProperty('hostApp') && !window.hasOwnProperty('CefSharp') && navigator.userAgent.indexOf(' XSplitBroadcaster/') === -1)
       await _inBrowser(window.location.protocol === 'file:');
      await _isOnline();
