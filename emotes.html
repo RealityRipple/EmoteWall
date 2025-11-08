@@ -80,7 +80,8 @@
      share: false
     },
     kick: {
-     channel: 'CHANNEL_NAME'
+     oauth_refresh: 'OAUTH_REFRESH',
+     share: false
     },
     lfg: {
      channel: null,
@@ -1277,7 +1278,8 @@
    const wsRetryBase = 5;
    const oauthClient = Object.freeze({
     t: '4umzcpmjkg6ar78b81s7302jlj33t8',
-    yt: '71876675824-aepsnb3onligbj62r1i2qakfjh9sr8kg.apps.googleusercontent.com'
+    yt: '71876675824-aepsnb3onligbj62r1i2qakfjh9sr8kg.apps.googleusercontent.com',
+    k: '01JQMJG1D824X124BW9BGYY6X9'
    });
    const cVARs = Object.freeze({
     crew: Object.freeze({
@@ -1380,9 +1382,16 @@
      }),
      kick: Object.freeze({
       users: 'https://kick.com/api/v2/channels/' + cVARs.url.channelName + '/users/' + cVARs.url.user,
-      channels: 'https://kick.com/api/v2/channels/' + cVARs.url.channelName,
+      channels: Object.freeze({
+       oauth: 'https://api.kick.com/public/v1/channels',
+       name: 'https://kick.com/api/v2/channels/' + cVARs.url.channelName
+      }),
       followers: 'https://kick.com/api/internal/v1/channels/' + cVARs.url.channelName + '/followers-count',
-      emotes: 'https://kick.com/emotes/' + cVARs.url.channelName
+      emotes: 'https://kick.com/emotes/' + cVARs.url.channelName,
+      eventSub: Object.freeze({
+       get: 'https://api.kick.com/public/v1/events/subscriptions',
+       delete: 'https://api.kick.com/public/v1/events/subscriptions?id=' + cVARs.url.eventID
+      })
      }),
      lfg: Object.freeze({
       users: 'https://api.lfg.tv/v1/users/' + cVARs.url.user,
@@ -1427,6 +1436,7 @@
       refresh: Object.freeze({
        t: 'https://ew.realityripple.com/t/auth',
        yt: 'https://ew.realityripple.com/yt/auth',
+       k: 'https://ew.realityripple.com/k/auth',
        se: 'https://ew.realityripple.com/se/auth'
       })
      })
@@ -1473,12 +1483,14 @@
      rr: Object.freeze({
       auth: Object.freeze({
        t: 'https://ew.realityripple.com/t/login',
-       yt: 'https://ew.realityripple.com/yt/login'
+       yt: 'https://ew.realityripple.com/yt/login',
+       k: 'https://ew.realityripple.com/k/login'
       }),
       redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php'
      }),
      twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=' + cVARs.url.clientID + '&redirect_uri=' + cVARs.url.uri + '&response_type=code&scope=' + cVARs.url.scope + '&state=redirto_' + cVARs.url.origin + '&force_verify=true',
-     youtube: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=' + cVARs.url.clientID + '&redirect_uri=' + cVARs.url.uri + '&response_type=code&access_type=offline&scope=' + cVARs.url.scope + '&state=redirto_' + cVARs.url.origin + '&prompt=consent%20select_account&include_granted_scopes=false'
+     youtube: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=' + cVARs.url.clientID + '&redirect_uri=' + cVARs.url.uri + '&response_type=code&access_type=offline&scope=' + cVARs.url.scope + '&state=redirto_' + cVARs.url.origin + '&prompt=consent%20select_account&include_granted_scopes=false',
+     kick: 'https://id.kick.com/oauth/authorize?client_id=' + cVARs.url.clientID + '&redirect_uri=' + cVARs.url.uri + '&response_type=code&scope=' + cVARs.url.scope + '&state=redirto_' + cVARs.url.origin + '&code_challenge=' + encodeURIComponent('YFP8iBiBKukSUiDYUzVLhNrqCoqMjnY9isK2YhHN0mc=') + '&code_challenge_method=S256'
     })
    });
    const cScopes = Object.freeze({
@@ -1496,6 +1508,10 @@
     youtube: Object.freeze({
      readonly: 'https://www.googleapis.com/auth/youtube.readonly',
      memberships: 'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
+    }),
+    kick: Object.freeze({
+     channel: 'channel:read',
+     events: 'events:subscribe'
     })
    });
    const cSources = Object.freeze({
@@ -1604,6 +1620,9 @@
        break;
       case notice.Type.KICK_NETWORK:
        _setNotice(i, [_nC.t.i, _nC.s.k], 'Connected', tInfo);
+       break;
+      case notice.Type.KICK_EVENT:
+       _setNotice(i, [_nC.t.i, _nC.s.k], 'Events Connected', tInfo);
        break;
       case notice.Type.LFG_NETWORK:
        _setNotice(i, [_nC.t.i, _nC.s.l], 'Connected', tInfo);
@@ -1752,11 +1771,39 @@
       case notice.Type.KICK_NAME:
        _setNotice(e, [_nC.t.e, _nC.s.k], 'Connection Rejected<br>Please check your Kick channel name.');
        break;
+      case notice.Type.KICK_TOKEN:
+       if (typeof loginK !== 'undefined' && loginK.inUse)
+       {
+        _setNotice(e, [_nC.t.e, _nC.s.k], 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
+        loginK.showOut(true);
+        window.setTimeout(function(){loginK.showIn();}, tRetry);
+       }
+       else
+        _setNotice(e, [_nC.t.e, _nC.s.k], 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
+       break;
       case notice.Type.KICK_NETWORK:
        _setNotice(e, [_nC.t.e, _nC.s.k], 'Disconnected');
        break;
+      case notice.Type.KICK_EVENT:
+       _setNotice(e, [_nC.t.e, _nC.s.k], 'Events Disconnected');
+       break;
       case notice.Type.KICK_UNKNOWN:
        _setNotice(e, [_nC.t.e, _nC.s.k], 'Kick Connection Error<br>' + sMsg);
+       break;
+      case notice.Type.KICK_DECRYPT:
+       switch (sMsg)
+       {
+        case notice.DecryptType.IV_MISSING:
+         sDecErr = 'Encrypted Token Invalid<br>Your &quot;cfg.kick.oauth_refresh&quot; value has no &quot;iv&quot; attribute.';
+         break;
+        case notice.DecryptType.B64_INVALID:
+         sDecErr = 'Encrypted Token Invalid<br>Your &quot;cfg.kick.oauth_refresh&quot; value has been corrupted.';
+         break;
+        case notice.DecryptType.DATA_INVALID:
+         sDecErr = 'Decrypted Token Invalid<br>Your &quot;cfg.kick.oauth_refresh&quot; value has been corrupted.';
+         break;
+       }
+       _setNotice(e, [_nC.t.e, _nC.s.t], sDecErr);
        break;
       case notice.Type.LFG_NAME:
        _setNotice(e, [_nC.t.e, _nC.s.l], 'Connection Rejected<br>Please check your LFG channel name.');
@@ -2138,8 +2185,11 @@
       YOUTUBE_UNKNOWN: Symbol(0x0109),
       YOUTUBE_DECRYPT: Symbol(0x010D),
       KICK_NETWORK: Symbol(0x0041),
+      KICK_EVENT: Symbol(0x0081),
+      KICK_TOKEN: Symbol(0x0043),
       KICK_NAME: Symbol(0x0044),
       KICK_UNKNOWN: Symbol(0x0049),
+      KICK_DECRYPT: Symbol(0x004D),
       LFG_NETWORK: Symbol(0x0201),
       LFG_NAME: Symbol(0x0202),
       LFG_ACCOUNT: Symbol(0x0204),
@@ -2165,6 +2215,7 @@
       TWITCH_IRC: 0x001,
       TWITCH_EVENTSUB: 0x002,
       KICK: 0x004,
+      KICK_EVENT: 0x008,
       YOUTUBE: 0x010,
       LFG: 0x020,
       STREAMELEMENTS: 0x100,
@@ -9584,6 +9635,7 @@
 
     return {
      net: $net,
+     parseMessage: _parse.message,
      global: $global,
      Access: Object.freeze({
       STRANGER: 0x001,
@@ -11798,8 +11850,6 @@
 
    const kick = function()
    {
-    let _usesHyphen = 0;
-
     const $net = function()
     {
      const $socket = function()
@@ -11823,7 +11873,10 @@
         await _getChIDs();
         if (kick.net.channelID === 0 || kick.net.chatID === 0)
         {
-         notice.error(notice.Type.KICK_NAME);
+         if (kick.net.oAuth.usesChannel)
+          notice.error(notice.Type.KICK_NAME);
+         else
+          notice.error(notice.Type.KICK_TOKEN);
          kick.net.dead = true;
          return;
         }
@@ -12075,7 +12128,7 @@
           window.clearTimeout(_tExpire);
           _tExpire = false;
          }
-         await _loadEmote_channel(kick.net.oAuth.auth.channel);
+         await _loadEmote_channel(kick.net.oAuth.auth.slug);
          if (cfg.display.extended.use7TV && kick.net.userID !== 0)
          {
           thirdparty['7tv'].channel('kick', kick.net.userID);
@@ -12419,18 +12472,10 @@
 
       async function _getChIDs()
       {
-       const slug = _usesHyphen === true ? kick.net.oAuth.auth.channel.replaceAll('_', '-') : kick.net.oAuth.auth.channel;
-       const url = cURLs.api.kick.channels.replaceAll(cVARs.url.channelName, encodeURIComponent(slug));
+       const url = cURLs.api.kick.channels.name.replaceAll(cVARs.url.channelName, encodeURIComponent(kick.net.oAuth.auth.slug));
        const r = await shared.httpRequest('GET', url);
        if (!r.success)
-       {
-        if (r.code === 404 && _usesHyphen === 0)
-        {
-         _usesHyphen = true;
-         return _getChIDs();
-        }
         return false;
-       }
        const j = r.json;
        if (j === null)
         return false;
@@ -12442,8 +12487,6 @@
         return false;
        if (!j.chatroom.hasOwnProperty('id') || j.chatroom.id === null)
         return false;
-       if (_usesHyphen === 0)
-        _usesHyphen = false;
        kick.net.channelID = j.id;
        kick.net.chatID = j.chatroom.id;
        kick.net.userID = j.user_id;
@@ -12457,14 +12500,588 @@
      {
       let _uLC = -1;
       let _tS = false;
+      let _evIDs = {};
+      const _fHist = new Set();
       const _rSC = 5000;
 
-      function $c_followers()
+      async function $c_followers()
       {
-       if (!cfg.event.kick.follow)
+       if (kick.net.oAuth.usesChannel)
+       {
+        _tS = window.setTimeout(_detect, _rSC);
         return;
-       _tS = window.setTimeout(_detect, _rSC);
+       }
+       const haveSubs = await _eventSubCtl.init();
+       if (!haveSubs)
+        return;
+       _irc();
       }
+
+      const _eventSubCtl = function()
+      {
+       async function $init()
+       {
+        const aSubs = [
+         {id: _eventSubCtl.sub.follow, scope: [cScopes.kick.events], cfg: ['event.kick.follow']}
+        ];
+        const aActive = await _cleanAndRecover();
+        let didSomething = aActive.length > 0;
+        const toHandle = [];
+        for (let i = 0, l = aSubs.length; i < l; i++)
+        {
+         toHandle.push(_handleSub(aSubs[i], aActive));
+        }
+        if (toHandle.length > 0)
+        {
+         const handled = await Promise.allSettled(toHandle);
+         for (let i = 0, l = handled.length; i < l; i++)
+         {
+          if (handled[i].status !== 'fulfilled')
+           continue;
+          if (handled[i].value !== false)
+          {
+           didSomething = true;
+           break;
+          }
+         }
+        }
+        return didSomething;
+       }
+
+       function _handleSub(sub, aActive)
+       {
+        if (sub.hasOwnProperty('cfg') && sub.cfg !== false)
+        {
+         let found = true;
+         for (let i = 0, l = sub.cfg.length; i < l; i++)
+         {
+          const aPref = sub.cfg[i].split('.');
+          let cPref = cfg;
+          found = true;
+          for (let j = 0, m = aPref.length; j < m; j++)
+          {
+           if (!cPref.hasOwnProperty(aPref[j]))
+           {
+            found = false;
+            break;
+           }
+           if (cPref[aPref[j]] === false)
+           {
+            found = false;
+            break;
+           }
+           cPref = cPref[aPref[j]];
+          }
+          if (found !== false)
+           break;
+         }
+         if (found === false)
+          return false;
+        }
+        if (sub.hasOwnProperty('scope') && sub.scope !== false)
+        {
+         for (let i = 0, l = sub.scope.length; i < l; i++)
+         {
+          if (!kick.net.oAuth.auth.scope.includes(sub.scope[i]))
+           return false;
+         }
+        }
+        if (aActive.includes(sub.id))
+         return false;
+        if (!sub.hasOwnProperty('v'))
+         return _eventSubCtl.subscribe(sub.id);
+        return _eventSubCtl.subscribe(sub.id, sub.v);
+       }
+
+       async function _getList()
+       {
+        const r = await shared.httpRequest('GET', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers());
+        if (!r.success)
+         return [];
+        const j = r.json;
+        if (j === null)
+         return [];
+        if (!j.hasOwnProperty('data'))
+         return [];
+        return j.data;
+       }
+
+       async function $erase()
+       {
+        const d = await _getList();
+        if (d.length < 1)
+         return;
+        const unList = [];
+        for (let i = 0, l = d.length; i < l; i++)
+        {
+         if (!d[i].hasOwnProperty('id'))
+          continue;
+         unList.push(_unsubscribe(d[i].id));
+        }
+        if (unList.length > 0)
+         await Promise.allSettled(unList);
+        if (window.location.hash.length < 2)
+         window.location.reload();
+        else
+         window.location = window.location.href.slice(0, -1 * window.location.hash.length);
+       }
+
+       async function _cleanAndRecover()
+       {
+        const d = await _getList();
+        if (d.length < 1)
+         return [];
+        _evIDs = {};
+        const rList = [];
+        for (let i = 0, l = d.length; i < l; i++)
+        {
+         if (!d[i].hasOwnProperty('id'))
+          continue;
+         if (!d[i].hasOwnProperty('method'))
+          continue;
+         if (d[i].method !== 'webhook')
+          continue;
+         if (!d[i].hasOwnProperty('app_id'))
+          continue;
+         if (d[i].app_id !== oauthClient.k)
+          continue;
+         if (!d[i].hasOwnProperty('event'))
+          continue;
+         if (!d[i].hasOwnProperty('broadcaster_user_id'))
+          continue;
+         if (d[i].broadcaster_user_id !== kick.net.oAuth.auth.uid)
+          continue;
+         _evIDs[d[i].id] = d[i].event;
+         rList.push(d[i].event);
+        }
+        return rList;
+       }
+
+       async function $subscribe(type, version = '1')
+       {
+        const d = {
+         'broadcaster_user_id': kick.net.channelID,
+         'events': {'name': type, 'version': version},
+         'method': 'webhook'
+        };
+        const r = await shared.httpRequest('POST', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers(true), JSON.stringify(d), false);
+        if (r.success)
+         return true;
+        return false;
+       }
+
+       async function _unsubscribe(id)
+       {
+        const r = await shared.httpRequest('DELETE', cURLs.api.kick.eventSub.delete.replaceAll(cVARs.url.eventID, id), kick.net.oAuth.headers(), null, false);
+        if (!r.success)
+         return false;
+        return true;
+       }
+
+       return {
+        init: $init,
+        subscribe: $subscribe,
+        erase: $erase,
+        channelID: 0,
+        sub: Object.freeze({
+         follow: 'channel.followed'
+        })
+       };
+      }();
+
+      const _irc = function()
+      {
+       let _wsRetry = 0;
+       let _firstRS = true;
+       let _ws = null;
+       const _sComm = 'kickevent';
+       const _sAnon = 'justinfan';
+       const _lPing = 30000;
+       const _lTimeout = 35000;
+       const _lExpire = 5000;
+       let _tTimeout = false;
+       let _tExpire = false;
+       let _tPing = 0;
+
+       function $c_irc()
+       {
+        notice.expect |= notice.Connection.KICK_EVENT;
+        _tPing = 0;
+        _firstRS = true;
+        _ws = new WebSocket(cURLs.ws.twitch.irc);
+        _ws.onopen = _wsOpen;
+        _ws.onclose = _wsClose;
+        _ws.onmessage = _wsMessage;
+       }
+
+       function _wsOpen()
+       {
+        if (_ws === null)
+         return;
+        if (_ws.readyState !== 1)
+         return;
+        _ws.onopen = null;
+        _tExpire = window.setTimeout(_wsExpire, _lExpire);
+        _ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
+        _ws.send('NICK ' + _sAnon + shared.rnd(100000));
+        _ws.send('JOIN #' + _sComm);
+       }
+
+       function _wsClose()
+       {
+        notice.error(notice.Type.KICK_EVENT);
+        notice.active &= ~notice.Connection.KICK_EVENT;
+        notice.resetHide();
+        if (_tPing !== 0)
+        {
+         window.clearInterval(_tPing);
+         _tPing = 0;
+        }
+        if (_tExpire !== false)
+        {
+         window.clearTimeout(_tExpire);
+         _tExpire = false;
+        }
+        if (_tTimeout !== false)
+        {
+         window.clearTimeout(_tTimeout);
+         _tTimeout = false;
+        }
+        if (_ws === null)
+         return;
+        _ws.onopen = null;
+        _ws.onmessage = null;
+        _ws.onclose = null;
+        _ws = null;
+        if (kick.net.dead)
+         return;
+        const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
+        if (_wsRetry < 2)
+         _wsRetry += 0.2;
+        window.setTimeout(_irc, wsWait);
+       }
+
+       const _wsMessage = function()
+       {
+        function $c_wsMessage(ev)
+        {
+         if (_tTimeout !== false)
+         {
+          window.clearTimeout(_tTimeout);
+          _tTimeout = false;
+         }
+         if (_tPing !== 0)
+         {
+          window.clearInterval(_tPing);
+          _tPing = 0;
+         }
+         _tPing = window.setInterval(_wsPing, _lPing);
+         if (_ws === null)
+          return;
+         if (kick.net.dead)
+         {
+          if (_tExpire !== false)
+          {
+           window.clearTimeout(_tExpire);
+           _tExpire = false;
+          }
+          _ws.onopen = null;
+          _ws.onmessage = null;
+          _ws.onclose = null;
+          _ws.close();
+          _ws = null;
+          return;
+         }
+         _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+         _wsRetry = 0;
+         const data = ev.data.split('\r\n');
+         for (let i = 0, l = data.length; i < l; i++)
+         {
+          if (data[i].length === 0)
+           continue;
+          const cmd = twitch.parseMessage(data[i]);
+          if (cmd === false)
+           continue;
+          notice.info(notice.Type.KICK_EVENT);
+          notice.active |= notice.Connection.KICK_EVENT;
+          notice.resetHide();
+          switch (cmd.command)
+          {
+           case 'PING':
+            _PING(cmd);
+            break;
+           case 'PRIVMSG':
+            _PRIVMSG(cmd);
+            break;
+           case 'ROOMSTATE':
+            _ROOMSTATE();
+            break;
+           case 'RECONNECT':
+            _RECONNECT();
+            return;
+          }
+         }
+        }
+
+        function _PING(cmd)
+        {
+         if (_ws.readyState === 1)
+          _ws.send('PONG ' + cmd.params[0]);
+        }
+
+        function _PRIVMSG(cmd)
+        {
+         if (cmd.params.length < 2)
+          return;
+         if (!cmd.hasOwnProperty('tags'))
+          return;
+         if (!cmd.tags.hasOwnProperty('room-id'))
+          return;
+         if (!cmd.tags.hasOwnProperty('user-id'))
+          return;
+         if (cmd.tags['room-id'] !== cmd.tags['user-id'])
+          return;
+         if (cmd.tags.hasOwnProperty('source-room-id') && cmd.tags['room-id'] !== cmd.tags['source-room-id'])
+          return;
+         cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
+         const jEv = JSON.parse(cmd.params[1]);
+         if (!jEv)
+          return;
+         _ircEvent(jEv);
+        }
+
+        function _ROOMSTATE()
+        {
+         if (!_firstRS)
+          return;
+         if (_tExpire !== false)
+         {
+          window.clearTimeout(_tExpire);
+          _tExpire = false;
+         }
+         _firstRS = false;
+        }
+
+        function _RECONNECT()
+        {
+         if (_tExpire !== false)
+         {
+          window.clearTimeout(_tExpire);
+          _tExpire = false;
+         }
+         if (_tTimeout !== false)
+         {
+          window.clearTimeout(_tTimeout);
+          _tTimeout = false;
+         }
+         if (_tPing !== 0)
+         {
+          window.clearInterval(_tPing);
+          _tPing = 0;
+         }
+         _ws.onmessage = null;
+         _ws.onclose = null;
+         _ws.close();
+         _ws = null;
+         if (kick.net.dead === true)
+          return;
+         window.setTimeout(_irc, 1000);
+        }
+
+        return $c_wsMessage;
+       }();
+
+       function _wsExpire()
+       {
+        notice.error(notice.Type.KICK_EVENT);
+        notice.active &= ~notice.Connection.KICK_EVENT;
+        notice.resetHide();
+        if (_tTimeout !== false)
+        {
+         window.clearTimeout(_tTimeout);
+         _tTimeout = false;
+        }
+        if (_tPing !== 0)
+        {
+         window.clearInterval(_tPing);
+         _tPing = 0;
+        }
+        if (_ws === null)
+         return;
+        if (kick.net.dead === true)
+         return;
+        //kick.net.dead = true;
+        if (_tExpire !== false)
+        {
+         window.clearTimeout(_tExpire);
+         _tExpire = false;
+        }
+        _ws.close();
+        _ws = null;
+       }
+
+       function _wsPing()
+       {
+        if (_ws === null)
+         return;
+        if (_ws.readyState !== 1)
+         return;
+        _ws.send('PING');
+       }
+
+       function _wsTimeout()
+       {
+        notice.error(notice.Type.KICK_EVENT);
+        notice.active &= ~notice.Connection.KICK_EVENT;
+        notice.resetHide();
+        if (_tExpire !== false)
+        {
+         window.clearTimeout(_tExpire);
+         _tExpire = false;
+        }
+        if (_tTimeout !== false)
+        {
+         window.clearTimeout(_tTimeout);
+         _tTimeout = false;
+        }
+        if (_tPing !== 0)
+        {
+         window.clearInterval(_tPing);
+         _tPing = 0;
+        }
+        if (_ws === null)
+         return;
+        _ws.onopen = null;
+        _ws.onmessage = null;
+        _ws.onclose = null;
+        _ws.close();
+        _ws = null;
+        if (kick.net.dead === true)
+         return;
+        _irc();
+       }
+
+       return $c_irc;
+      }();
+
+      const _ircEvent = function()
+      {
+       function $c_ircEvent(data)
+       {
+        if (!data.hasOwnProperty('sub'))
+         return;
+        if (!data.sub.hasOwnProperty('bin'))
+         return;
+        if (!data.sub.hasOwnProperty('salt'))
+         return;
+        if (!data.hasOwnProperty('value'))
+         return;
+        if (!data.value.hasOwnProperty('bin'))
+         return;
+        if (!data.value.hasOwnProperty('salt'))
+         return;
+        if (!data.value.hasOwnProperty('vector'))
+         return;
+        if (!data.value.hasOwnProperty('tag'))
+         return;
+        if (!data.value.hasOwnProperty('aad'))
+         return;
+        let thisEV = false;
+        const evKs = Object.keys(_evIDs);
+        for (let i = 0; i < evKs.length; i++)
+        {
+         const evsHash = shared.hashCode.gen({'salt': data.sub.salt, 'sub': evKs[i]});
+         const subHash = shared.hashCode.gen({'hash': evsHash, 'user': kick.net.oAuth.auth.uid});
+         if (data.sub.bin === subHash)
+         {
+          thisEV = evKs[i];
+          break;
+         }
+        }
+        if (!thisEV)
+         return;
+        const evvHash = shared.hashCode.gen({'salt': data.value.salt, 'sub': thisEV});
+        const valHash = shared.hashCode.gen({'hash': evvHash, 'user': kick.net.oAuth.auth.uid}, true);
+        const evaHash = shared.hashCode.gen({'aad': data.value.aad, 'sub': thisEV});
+        const aadHash = shared.hashCode.gen({'hash': evaHash, 'bin': data.sub.bin}, true);
+        const vRet = shared.aesgcm(_b64U8(data.value.bin), aadHash, _b64U8(data.value.vector), _b64U8(data.value.tag), valHash);
+        if (!vRet)
+         return;
+        const jRet = JSON.parse(_aS(vRet));
+        if (!jRet)
+         return;
+        switch (_evIDs[thisEV])
+        {
+         case _eventSubCtl.sub.follow:
+          _ircFollow(jRet);
+          break;
+        }
+       }
+
+       function _b64U8(d)
+       {
+        try
+        {
+         d = d.replaceAll('_', '/');
+         d = d.replaceAll('-', '+');
+         const s = window.atob(d);
+         const l = s.length;
+         const r = new Uint8Array(l);
+         for (let i = 0; i < l; i++)
+         {
+          r[i] = s.charCodeAt(i);
+         }
+         return r;
+        }
+        catch
+        {
+         return false;
+        }
+       }
+
+       function _aS(a)
+       {
+        let s = '';
+        for (let i = 0; i < a.length; i++)
+        {
+         s += String.fromCharCode(a[i]);
+        }
+        return s;
+       }
+
+       function _ircFollow(data)
+       {
+        if (!data.hasOwnProperty('id'))
+        {
+         if (document.visibilityState === 'hidden')
+          return;
+         if (cfg.event.kick.follow === false)
+          return;
+         display.kappa.show(false, cfg.event.kick.follow, {[cVARs.evt.user]: 'Kick User'});
+         return;
+        }
+        if (!data.hasOwnProperty('slug'))
+         return;
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(data.slug))
+         return;
+        let sName = data.slug;
+        if (data.hasOwnProperty('name'))
+         sName = data.name;
+        if (cfg.ignore.users !== false && cfg.ignore.users.includes(sName))
+         return;
+        kick.net.fList[data.id] = {value: true, t: Date.now()};
+        if (_fHist.has(data.id))
+         return;
+        _fHist.add(data.id);
+        if (document.visibilityState === 'hidden')
+         return;
+        if (cfg.event.kick.follow === false)
+         return;
+        display.kappa.show(false, cfg.event.kick.follow, {[cVARs.evt.user]: sName});
+       }
+
+       return $c_ircEvent;
+      }();
 
       async function _detect()
       {
@@ -12487,20 +13104,10 @@
 
       async function _getChange()
       {
-       const slug = _usesHyphen === true ? kick.net.oAuth.auth.channel.replaceAll('_', '-') : kick.net.oAuth.auth.channel;
-       const url = cURLs.api.kick.followers.replaceAll(cVARs.url.channelName, encodeURIComponent(slug));
+       const url = cURLs.api.kick.followers.replaceAll(cVARs.url.channelName, encodeURIComponent(kick.net.oAuth.auth.slug));
        const r = await shared.httpRequest('GET', url);
        if (!r.success)
-       {
-        if (r.code === 0 && r.data === '')
-         return 0;
-        if (r.code === 404 && _usesHyphen === 0)
-        {
-         _usesHyphen = true;
-         return _getChange();
-        }
         return 0;
-       }
        const j = r.json;
        if (j === null)
         return 0;
@@ -12508,8 +13115,6 @@
         return 0;
        if (!j.data.hasOwnProperty('count') || j.data.count === null)
         return 0;
-       if (_usesHyphen === 0)
-        _usesHyphen = false;
        if (_uLC === -1)
         _uLC = j.data.count;
        if (j.data.count !== _uLC)
@@ -12565,55 +13170,411 @@
 
      const $oAuth = function()
      {
-      function $init()
+      const _pathRefresh = '.refresh';
+      const _pathSlug = '.slug';
+      const _pathChannel = '.channel';
+
+      async function $init()
       {
-       if (cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null)
+       if ((cfg.kick.hasOwnProperty('oauth_refresh') && cfg.kick.oauth_refresh === null) || (cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null))
+       {
+        loginK.cfgHash = false;
+        loginK.inUse = false;
+        _populateNoAuth();
+        return;
+       }
+       if (cfg.kick.hasOwnProperty('oauth') && cfg.kick.oauth !== null && cfg.kick.oauth !== false && cfg.kick.oauth !== 'OAUTH_ID')
        {
         loginK.inUse = false;
-        _populateAuth();
+        loginK.cfgHash = shared.hashCode.gen(cfg.kick.oauth);
+        await _genAccess(cfg.kick.oauth);
+        return;
+       }
+       if (cfg.kick.hasOwnProperty('oauth_refresh') && cfg.kick.oauth_refresh !== null && cfg.kick.oauth_refresh !== false && cfg.kick.oauth_refresh !== 'OAUTH_REFRESH')
+       {
+        loginK.inUse = false;
+        let sRef = cfg.kick.oauth_refresh;
+        loginK.cfgHash = shared.hashCode.gen(sRef);
+        shared.storage.removeItem(loginK.path() + _pathSlug);
+        shared.storage.removeItem(loginK.path() + _pathChannel);
+        const lsRef = shared.storage.getItem(loginK.path() + _pathRefresh);
+        if (lsRef !== null)
+         sRef = lsRef;
+        const sRet = await _genRefresh(sRef);
+        if (sRet !== false)
+         shared.storage.setItem(loginK.path() + _pathRefresh, sRet);
+        else
+         shared.storage.removeItem(loginK.path() + _pathRefresh);
         return;
        }
        if (cfg.kick.hasOwnProperty('channel') && cfg.kick.channel !== null && cfg.kick.channel !== false && cfg.kick.channel !== 'CHANNEL_NAME')
        {
+        loginK.cfgHash = false;
         loginK.inUse = false;
-        _populateAuth(cfg.kick.channel);
+        shared.storage.removeItem(loginK.path() + _pathSlug);
+        shared.storage.removeItem(loginK.path() + _pathChannel);
+        shared.storage.removeItem(loginK.path() + _pathRefresh);
+        const tSlug = await _slugFromChannel(cfg.kick.channel);
+        if (tSlug === false)
+        {
+         _populateNoAuth();
+         return;
+        }
+        _populateNoAuth(tSlug);
         return;
        }
        loginK.inUse = true;
-       const lsChannel = shared.storage.getItem(loginK.path() + '.channel');
-       if (lsChannel === null)
+       loginK.cfgHash = false;
+       const h = shared.getHashParams();
+       if (h.hasOwnProperty('service') && h.service === 'kick')
+       {
+        if (h.hasOwnProperty('oauth_refresh'))
+        {
+         let slug = null;
+         if (h.hasOwnProperty('slug'))
+          slug = h.slug;
+         const sHRet = await _genRefresh(h.oauth_refresh, slug);
+         if (sHRet === false || (sHRet.refresh === false && sHRet.slug === false))
+         {
+          shared.storage.removeItem(loginK.path() + _pathSlug);
+          shared.storage.removeItem(loginK.path() + _pathChannel);
+          shared.storage.removeItem(loginK.path() + _pathRefresh);
+          return;
+         }
+         if (sHRet.slug !== false)
+          shared.storage.setItem(loginK.path() + _pathSlug, sHRet.slug);
+         else
+          shared.storage.removeItem(loginK.path() + _pathSlug);
+         shared.storage.removeItem(loginK.path() + _pathChannel);
+         if (sHRet.refresh !== false)
+          shared.storage.setItem(loginK.path() + _pathRefresh, sHRet.refresh);
+         else
+          shared.storage.removeItem(loginK.path() + _pathRefresh);
+         return;
+        }
+        if (h.hasOwnProperty('slug'))
+        {
+         shared.storage.setItem(loginK.path() + _pathSlug, h.slug);
+         shared.storage.removeItem(loginK.path() + _pathChannel);
+         shared.storage.removeItem(loginK.path() + _pathRefresh);
+         _populateNoAuth(h.slug);
+         return;
+        }
+       }
+       const lsRefresh = shared.storage.getItem(loginK.path() + _pathRefresh);
+       if (lsRefresh !== null)
+       {
+        shared.storage.removeItem(loginK.path() + _pathSlug);
+        shared.storage.removeItem(loginK.path() + _pathChannel);
+        const sLRet = await _genRefresh(lsRefresh);
+        if (sLRet !== false)
+         shared.storage.setItem(loginK.path() + _pathRefresh, sLRet);
+        else
+         shared.storage.removeItem(loginK.path() + _pathRefresh);
+        return;
+       }
+       const lsSlug = shared.storage.getItem(loginK.path() + _pathSlug);
+       if (lsSlug !== null)
+       {
+        shared.storage.removeItem(loginK.path() + _pathChannel);
+        shared.storage.removeItem(loginK.path() + _pathRefresh);
+        _populateNoAuth(lsSlug);
+        return;
+       }
+       const lsChannel = shared.storage.getItem(loginK.path() + _pathChannel);
+       if (lsChannel !== null)
+       {
+        const tSlug = await _slugFromChannel(lsChannel);
+        if (tSlug === false)
+        {
+         shared.storage.removeItem(loginK.path() + _pathSlug);
+         shared.storage.removeItem(loginK.path() + _pathChannel);
+         shared.storage.removeItem(loginK.path() + _pathRefresh);
+         _populateNoAuth();
+         return;
+        }
+        shared.storage.setItem(loginK.path() + _pathSlug, tSlug);
+        shared.storage.removeItem(loginK.path() + _pathChannel);
+        shared.storage.removeItem(loginK.path() + _pathRefresh);
+        _populateNoAuth(tSlug);
+        return;
+       }
+       _populateAuth();
+      }
+
+      async function _genAccess(a)
+      {
+       const c = await _channel(a);
+       if (c === false)
+       {
+        _populateAuth();
+        return false;
+       }
+       _populateAuth({'access_token': a}, c);
+       return a;
+      }
+
+      async function _genRefresh(r, slug = false)
+      {
+       const oR = await _refresh(r);
+       if (oR === false)
+       {
+        _populateAuth();
+        return false;
+       }
+       const a = oR.access_token;
+       const r2 = oR.refresh_token;
+       if (!oR.hasOwnProperty('scope'))
+       {
+        _populateAuth();
+        return false;
+       }
+       if (!oR.scope.split(' ').includes('channel:read'))
+       {
+        _populateAuth();
+        return false;
+       }
+       const c = await _channel(a);
+       if (c === false)
+       {
+        _populateAuth();
+        return false;
+       }
+       if (slug === false)
+       {
+        _populateAuth(oR, c);
+        return r2;
+       }
+       if (oR.scope.split(' ').includes('events:subscribe'))
+       {
+        _populateAuth(oR, c);
+        return {refresh: r2, slug: false};
+       }
+       if (slug !== null)
+       {
+        _populateNoAuth(slug);
+        return {refresh: false, slug: slug};
+       }
+       _populateAuth();
+       return {refresh: false, slug: false};
+      }
+
+      function _populateAuth(o = null, c = null)
+      {
+       kick.net.oAuth.auth.time = Date.now();
+       if (o === null || c === null)
+       {
+        kick.net.oAuth.auth.slug = false;
+        kick.net.oAuth.auth.uid = false;
+        kick.net.oAuth.auth.scope = [];
+        kick.net.oAuth.auth.access_token = false;
+        kick.net.oAuth.auth.refresh_token = false;
+        kick.net.oAuth.auth.expires = 0;
+        return;
+       }
+       kick.net.oAuth.auth.slug = c.slug;
+       kick.net.oAuth.auth.uid = c.broadcaster_user_id;
+       kick.net.oAuth.auth.scope = o.scope.split(' ');
+       kick.net.oAuth.auth.access_token = o.access_token;
+       if (o.hasOwnProperty('refresh_token'))
+        kick.net.oAuth.auth.refresh_token = o.refresh_token;
+       else
+        kick.net.oAuth.auth.refresh_token = false;
+       kick.net.oAuth.auth.expires = o.expires_in;
+      }
+
+      function _populateNoAuth(c = null)
+      {
+       kick.net.oAuth.auth.time = Date.now();
+       if (c === null)
+        kick.net.oAuth.auth.slug = false;
+       else
+        kick.net.oAuth.auth.slug = c;
+       kick.net.oAuth.auth.uid = false;
+       kick.net.oAuth.auth.scope = [];
+       kick.net.oAuth.auth.access_token = false;
+       kick.net.oAuth.auth.refresh_token = false;
+       kick.net.oAuth.auth.expires = 0;
+      }
+
+      async function _refresh(t)
+      {
+       const url = cURLs.api.rr.refresh.k;
+       let b = 'refresh=' + encodeURIComponent(t);
+       if (cfg.kick.share)
+        b += '&share=1';
+       const r = await shared.httpRequest('POST', url, {}, b, false);
+       if (!r.success)
+       {
+        if (r.code === 401)
+        {
+         notice.error(notice.Type.KICK_TOKEN);
+         kick.net.oAuth.clear();
+        }
+        return false;
+       }
+       const j = r.json;
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('access_token'))
+        return false;
+       if (!j.hasOwnProperty('refresh_token'))
+        return false;
+       return j;
+      }
+
+      async function _channel(t)
+      {
+       const url = cURLs.api.kick.channels.oauth;
+       const h = {'Authorization': 'Bearer ' + t};
+       const r = await shared.httpRequest('GET', url, h, null, false);
+       if (!r.success)
+       {
+        if (r.code === 401)
+        {
+         notice.error(notice.Type.KICK_TOKEN);
+         kick.net.oAuth.clear();
+        }
+        return false;
+       }
+       const j = r.json;
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('data'))
+        return false;
+       if (!Array.isArray(j.data))
+        return false;
+       if (j.data.length !== 1)
+        return false;
+       if (!j.data[0].hasOwnProperty('broadcaster_user_id'))
+        return false;
+       if (!j.data[0].hasOwnProperty('slug'))
+        return false;
+       return j.data[0];
+      }
+
+      async function $update()
+      {
+       if (kick.net.oAuth.auth.expires > 0)
+       {
+        const nowTime = Date.now();
+        const exTime = kick.net.oAuth.auth.time + (kick.net.oAuth.auth.expires * 1000 * 0.75);
+        if (nowTime < exTime)
+         return;
+       }
+       const r = await _refresh(kick.net.oAuth.auth.refresh_token);
+       if (r === false)
        {
         _populateAuth();
         return;
        }
-       _populateAuth(lsChannel);
-      }
-
-      function _populateAuth(c = null)
-      {
-       kick.net.oAuth.auth.time = Date.now();
-       if (c === null)
+       const sAccess = r.access_token;
+       const sRefresh = r.refresh_token;
+       const c = await _channel(sAccess);
+       if (c === false)
        {
-        kick.net.oAuth.auth.channel = false;
+        _populateAuth();
         return;
        }
-       kick.net.oAuth.auth.channel = c;
+       _populateAuth(r, c);
+       if (sRefresh !== kick.net.oAuth.auth.refresh_token)
+        shared.storage.setItem(loginK.path() + _pathRefresh, sRefresh);
+      }
+
+      async function $reinit()
+      {
+       if (kick.net.oAuth.hasRefresh)
+       {
+        kick.net.oAuth.auth.expires = 0;
+        await kick.net.oAuth.update();
+        if (kick.net.oAuth.hasLogin)
+         return true;
+        kick.net.oAuth.clear();
+       }
+       return false;
+      }
+
+      function $clear()
+      {
+       _populateAuth();
+       shared.storage.removeItem(loginK.path() + _pathSlug);
+       shared.storage.removeItem(loginK.path() + _pathChannel);
+       shared.storage.removeItem(loginK.path() + _pathRefresh);
       }
 
       function _cfgVals()
       {
        let r = 0;
-       if (kick.net.oAuth.auth.channel !== false)
+       if (kick.net.oAuth.auth.refresh_token !== false)
+        r |= shared.cfgVal.REFRESH_TOKEN;
+       else
+       {
+        const lsRefresh = shared.storage.getItem(loginK.path() + _pathRefresh);
+        if (lsRefresh !== null)
+         r |= shared.cfgVal.REFRESH_TOKEN;
+       }
+       if (kick.net.oAuth.auth.access_token !== false)
+        r |= shared.cfgVal.ACCESS_TOKEN;
+       if (cfg.kick.hasOwnProperty('channel') && cfg.kick.channel !== null && cfg.kick.channel !== false && cfg.kick.channel !== 'CHANNEL_NAME')
         r |= shared.cfgVal.CHANNEL;
+       else
+       {
+        const lsSlug = shared.storage.getItem(loginK.path() + _pathSlug);
+        const lsChannel = shared.storage.getItem(loginK.path() + _pathChannel);
+        if (lsSlug !== null || lsChannel !== null)
+         r |= shared.cfgVal.CHANNEL;
+       }
        return r;
+      }
+
+      function $headers(post = false)
+      {
+       const h = {
+        'Authorization': 'Bearer ' + kick.net.oAuth.auth.access_token
+       };
+       if (post)
+        h['Content-Type'] = 'application/json';
+       return h;
+      }
+
+      async function _slugFromChannel(c)
+      {
+       const url = cURLs.api.kick.channels.name.replaceAll(cVARs.url.channelName, encodeURIComponent(c));
+       const r = await shared.httpRequest('GET', url);
+       if (r.success && r.json !== null && r.json.hasOwnProperty('slug') && r.json.slug !== null)
+        return r.json.slug;
+       if (c.includes('_'))
+        return _slugFromChannel(c.replaceAll('_', '-'));
+       return false;
       }
 
       return {
        init: $init,
-       get hasLogin() {return (_cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL;},
+       update: $update,
+       reinit: $reinit,
+       clear: $clear,
+       get hasRefresh() {return (_cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN;},
+       get hasLogin()
+       {
+        if ((_cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL)
+         return true;
+        return (_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
+       },
+       get usesChannel()
+       {
+        if ((_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN)
+         return false;
+        return (_cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL;
+       },
+       headers: $headers,
        auth: {
-        channel: false,
-        time: 0
+        slug: false,
+        uid: false,
+        scope: [],
+        access_token: false,
+        refresh_token: false,
+        time: 0,
+        expires: 0
        }
       };
      }();
@@ -13603,16 +14564,10 @@
 
     async function _getUserProfile(dn, retry = true)
     {
-     const slug = _usesHyphen === true ? kick.net.oAuth.auth.channel.replaceAll('_', '-') : kick.net.oAuth.auth.channel;
-     const url = cURLs.api.kick.users.replaceAll(cVARs.url.channelName, encodeURIComponent(slug)).replaceAll(cVARs.url.user, encodeURIComponent(dn));
+     const url = cURLs.api.kick.users.replaceAll(cVARs.url.channelName, encodeURIComponent(kick.net.oAuth.auth.slug)).replaceAll(cVARs.url.user, encodeURIComponent(dn));
      const r = await shared.httpRequest('GET', url);
      if (!r.success)
      {
-      if (r.code === 404 && _usesHyphen === 0)
-      {
-       _usesHyphen = true;
-       return _getUserProfile(dn);
-      }
       if (retry && r.code === 0 && r.data === '')
        return _getUserProfile(dn, false);
       return false;
@@ -13620,8 +14575,6 @@
      const j = r.json;
      if (j === null)
       return false;
-     if (_usesHyphen === 0)
-      _usesHyphen = false;
      const ret = {
       id: 0,
       _slug: false,
@@ -21619,8 +22572,24 @@
     const _idLogin = 'cmdKLogin';
     const _idLogout = 'cmdKLogout';
 
+    function _activeScope()
+    {
+     const r = [];
+     r.push(cScopes.kick.channel);
+     if (cfg.event.kick.follow !== false)
+      r.push(cScopes.kick.events);
+     return r;
+    }
+
+    function _uScope()
+    {
+     return encodeURIComponent(_activeScope().join(' '));
+    }
+
     function $path()
     {
+     if (loginK.cfgHash !== false)
+      return 'kick.' + loginK.cfgHash;
      return shared.cfgHash + '.kick';
     }
 
@@ -21637,19 +22606,56 @@
      return true;
     }
 
-    async function $begin()
+    function $begin()
     {
-     let r = await shared.inputBox('Enter your Kick Channel:');
-     if (r === '' || r === false || r === null)
+     kick.net.oAuth.clear(true);
+     let loc = window.location.toString();
+     if (window.location.hash.length > 1)
+      loc = loc.slice(0, -1 * window.location.hash.length);
+     const o = encodeURIComponent(btoa(loc));
+     const c = encodeURIComponent(oauthClient.k);
+     const r = encodeURIComponent(cURLs.html.rr.auth.k);
+     const u = cURLs.html.kick.replaceAll(cVARs.url.clientID, c).replaceAll(cVARs.url.uri, r).replaceAll(cVARs.url.scope, _uScope()).replaceAll(cVARs.url.origin, o);
+     if (u.length < 1500)
+     {
+      window.location = u;
       return;
-     r = r.toLowerCase();
-     if (r.indexOf('kick.com/') > -1)
-      r = r.slice(r.indexOf('kick.com/') + 9);
-     shared.storage.setItem(loginK.path() + '.channel', r);
-     if (window.location.hash.length < 2)
-      window.location.reload();
-     else
-      window.location = window.location.href.slice(0, -1 * window.location.hash.length);
+     }
+     const f = document.createElement('form');
+     f.setAttribute('method', 'POST');
+     f.setAttribute('action', cURLs.html.rr.redir);
+     const ft = document.createElement('input');
+     ft.setAttribute('type', 'hidden');
+     ft.setAttribute('name', 't');
+     ft.setAttribute('value', 'code');
+     f.appendChild(ft);
+     const fv = document.createElement('input');
+     fv.setAttribute('type', 'hidden');
+     fv.setAttribute('name', 'v');
+     fv.setAttribute('value', 'kick');
+     f.appendChild(fv);
+     const fc = document.createElement('input');
+     fc.setAttribute('type', 'hidden');
+     fc.setAttribute('name', 'c');
+     fc.setAttribute('value', oauthClient.k);
+     f.appendChild(fc);
+     const fr = document.createElement('input');
+     fr.setAttribute('type', 'hidden');
+     fr.setAttribute('name', 'r');
+     fr.setAttribute('value', cURLs.html.rr.auth.k);
+     f.appendChild(fr);
+     const fs = document.createElement('input');
+     fs.setAttribute('type', 'hidden');
+     fs.setAttribute('name', 's');
+     fs.setAttribute('value', _activeScope().join(' '));
+     f.appendChild(fs);
+     const fu = document.createElement('input');
+     fu.setAttribute('type', 'hidden');
+     fu.setAttribute('name', 'u');
+     fu.setAttribute('value', loc);
+     f.appendChild(fu);
+     document.body.appendChild(f);
+     f.submit();
     }
 
     function $showIn(auto = false)
@@ -21735,7 +22741,7 @@
 
     function $logOut()
     {
-     shared.storage.removeItem(loginK.path() + '.channel');
+     kick.net.oAuth.clear(true);
      if (window.location.hash.length < 2)
       window.location.reload();
      else
@@ -21957,7 +22963,7 @@
      await _hashRefreshes();
      await twitch.net.oAuth.init();
      await youtube.net.oAuth.init();
-     kick.net.oAuth.init();
+     await kick.net.oAuth.init();
      lfg.net.oAuth.init();
      await streamelements.oAuth.init();
      shared.mspf.init();
@@ -22506,6 +23512,7 @@
       }
       await _handleT(k);
       await _handleY(k);
+      await _handleK(k);
       await _handleSEO(k);
       await _handleSET(k);
       await _handleSL(k);
@@ -22600,6 +23607,37 @@
        return;
       }
       cfg.youtube.oauth_refresh = r;
+     }
+
+     async function _handleK(k)
+     {
+      if (!cfg.kick.oauth_refresh)
+       return;
+      if (cfg.kick.oauth_refresh.slice(0, _preKey.length) !== _preKey)
+       return;
+      if (cfg.kick.oauth_refresh.indexOf(_preIV) === -1)
+      {
+       cfg.kick.oauth_refresh = null;
+       notice.error(notice.Type.KICK_DECRYPT, notice.DecryptType.IV_MISSING);
+       return;
+      }
+      const p = cfg.kick.oauth_refresh.slice(_preKey.length).split(_preIV, 2);
+      const d = _b64AB(p[0]);
+      const iv = _b64AB(p[1]);
+      if (d === false || iv === false || iv.byteLength * 8 !== _lIV)
+      {
+       cfg.kick.oauth_refresh = null;
+       notice.error(notice.Type.KICK_DECRYPT, notice.DecryptType.B64_INVALID);
+       return;
+      }
+      const r = await _decryptData(k, d, iv);
+      if (r === false)
+      {
+       cfg.kick.oauth_refresh = null;
+       notice.error(notice.Type.KICK_DECRYPT, notice.DecryptType.DATA_INVALID);
+       return;
+      }
+      cfg.kick.oauth_refresh = r;
      }
 
      async function _handleSEO(k)
@@ -22774,6 +23812,8 @@
      if (!kick.net.oAuth.hasLogin)
       return false;
      await kick.net.socket();
+     if (!cfg.event.kick.follow)
+      return true;
      kick.net.followers();
      return true;
     }
@@ -23093,7 +24133,7 @@
       if (cfg.hasOwnProperty('youtube') && cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null)
        h = h.replaceAll('/* {INSERT:YOUTUBE_OFF} *\/', 'display: none;');
 
-      if (cfg.hasOwnProperty('kick') && cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null)
+      if (cfg.hasOwnProperty('kick') && ((cfg.kick.hasOwnProperty('oauth_refresh') && cfg.kick.oauth_refresh === null) || (cfg.kick.hasOwnProperty('channel') && cfg.kick.channel === null)))
        h = h.replaceAll('/* {INSERT:KICK_OFF} *\/', 'display: none;');
 
       if (cfg.hasOwnProperty('lfg') && cfg.lfg.hasOwnProperty('channel') && cfg.lfg.channel === null)

@@ -79,7 +79,7 @@ There are only a few actual problems with Twitch's API; many of the issues liste
 > [Emoji RFC](//gist.github.com/Mm2PL/982c76964fe53f80fcf6b6963bba049f)
 
 ### YouTube API
-YouTube Livestream support is still under active development, and may not correctly support Monetized Channel events such as memberships, super chats, or stickers. It will, however, detect and send information on such events to the RealityRipple webserver for development purposes, if you enable the `feedback` option in the configuration. Additionally, due to the myriad limitations in the YouTube API, there is currently no method to load any custom channel emojis, and Google's interest in improving the API seems to be, essentially, nonexistent.  
+YouTube Livestream support is still under active development, and may not correctly support Monetized Channel events such as memberships, super chats, or stickers. Due to the myriad limitations in the YouTube API, there is currently no method to load any custom channel emojis, and Google's interest in improving the API seems to be, essentially, nonexistent.  
 Despite these numerous issues, the Emote Wall still functions on YouTube, and needs your feedback to improve! If you're monetized on YouTube, please let me know if membership and "super" events correctly trigger kappagen events for you!
 
 > #### [Rate Limits](https://issuetracker.google.com/issues/271492711)
@@ -107,6 +107,12 @@ Despite these numerous issues, the Emote Wall still functions on YouTube, and ne
 
 > #### [Membership API](https://issuetracker.google.com/issues/302817011)
 > Access to member-specific APIs are behind a permission wall, but the documentation doesn't say who has to get permission: the developer or the streamer.
+
+### Kick API
+The Kick API is being actively developed and improved, but some issues haven't been addressed yet.
+
+> #### [WebSockets](https://github.com/KickEngineering/KickDevDocs/issues/20)
+> Events currently are sent only over WebHooks from server to server. A redirection system using a dummy Twitch account currently works around this lack of server-to-client WebSocket support.
 
 ### OBS
 This emote wall may do better if the browser source has a frame rate limit of 30 or 60. If you use your GPU while streaming, you may wish to disable Browser Source Hardware Acceleration. It may also work better using a smaller screen resolution (such as 720p on a 1080p screen) and then stretching the browser source to fit to the screen using the OBS Transform feature.
