@@ -21576,7 +21576,7 @@
     async function $c_startup()
     {
      shared.cfgHash = shared.hashCode(cfg);
-     if (shared.storage.getItem('emotewall.oobe') !== '0' && !window.hasOwnProperty('obsstudio') && !window.hasOwnProperty('hostApp') && !window.hasOwnProperty('CefSharp') && navigator.userAgent.indexOf(' XSplitBroadcaster/') === -1)
+     if (shared.storage.getItem('emotewall.oobe') !== '0' && !_isApp())
       await _inBrowser(window.location.protocol === 'file:');
      await _isOnline();
      await _hashRefreshes();
@@ -21591,7 +21591,7 @@
      _css();
      if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === 'init')
       notice.initHide();
-     if (!shared.storage.getItem('emotewall.obs_notfound') && !window.hasOwnProperty('obsstudio') && !window.hasOwnProperty('hostApp') && !window.hasOwnProperty('CefSharp') && navigator.userAgent.indexOf(' XSplitBroadcaster/') === -1)
+     if (!shared.storage.getItem('emotewall.obs_notfound') && !_isApp())
      {
       shared.storage.setItem('emotewall.obs_notfound', '1');
       notice.error(notice.Type.GLOBAL_OBS);
@@ -21665,6 +21665,27 @@
       if (rL.status !== 'fulfilled' || rL.value === false)
        lfg.net.dead = true;
      }
+    }
+
+    function _isApp()
+    {
+     if (window.hasOwnProperty('obsstudio'))
+      return true;
+     if (window.hasOwnProperty('hostApp'))
+      return true;
+     if (window.hasOwnProperty('CefSharp'))
+      return true;
+     if (navigator.userAgent.indexOf(' XSplitBroadcaster/') !== -1)
+      return true;
+     if (navigator.userAgent.indexOf('WebView') !== -1)
+      return true;
+     if (navigator.userAgent.match(/; ?wv[);]/))
+      return true;
+     if (navigator.userAgent.match(/iP(hone|od|ad)(?!.*Safari)/))
+      return true;
+     if (navigator.userAgent.indexOf('Linux; U; Android') !== -1)
+      return true;
+     return false;
     }
 
     function _inBrowser(local)
