@@ -16,11 +16,10 @@ Configuration Information
     This value is used instead of the oauth value above, by default. Using a refresh token allows the emote wall to stay logged in for a much longer period of time. Please note that this feature makes use of the browser's Local Storage to store new OAuth Tokens and Refresh Tokens as they're generated.  
     New OAuth Tokens are generated every 60 minutes, and Twitch may or may not send a new Refresh Token at the same time. If the token expires, the Local Storage values will be erased on the next refesh attempt automatically.
 
-    > **How to generate an OAuth ID and matching Client ID:**
+    > **How to generate an OAuth ID:**
     > - Visit <https://realityripple.com/Tools/Twitch/EmoteWall/>
     > - Click the "Authenticate on Twitch" button under "Do-it-Yourself" and log in
     > - Fill out the captcha prompt, if necessary
-    > - Copy the Client ID value and paste it into "client:"
     > - Copy the OAuth Refresh value and paste it into "oauth_refresh:"
 
     If you ever stop using this emote wall, please log into Twitch and visit <https://www.twitch.tv/settings/connections>. Under "Other Connections", click the "Disconnect" button next to "RealityRipple's Home-Made Emote Wall".
@@ -49,11 +48,10 @@ Configuration Information
     This value is used instead of the oauth value above, by default. Using a refresh token allows the emote wall to stay logged in for a much longer period of time. Please note that this feature makes use of the browser's Local Storage to store new OAuth Tokens and Refresh Tokens as they're generated.  
     New OAuth Tokens are generated every 60 minutes, and YouTube may or may not send a new Refresh Token at the same time. If the token expires, the Local Storage values will be erased on the next refesh attempt automatically.
 
-    > How to generate an OAuth ID and matching Client ID:
+    > How to generate an OAuth ID:
     > - Visit <https://realityripple.com/Tools/Twitch/EmoteWall/>
     > - Click the "Authenticate on YouTube" button under "Do-it-Yourself" and log in
     > - Fill out the captcha prompt, if necessary
-    > - Copy the Client ID value and paste it into "client:"
     > - Copy the OAuth Refresh value and paste it into "oauth_refresh:"
 
     If you ever stop using this emote wall, please log into YouTube and visit <https://myaccount.google.com/permissions>. Under "Apps with access to your account", click the "Disconnect" button next to "RealityRipple's Home-Made Emote Wall".
@@ -121,9 +119,33 @@ Configuration Information
   *Settings related to the Kick login process.*
 
   * `channel`  
-    *The name of the channel to join.*
-     - [ ] If `false` (or missing), the Kick interactive login process will be enabled.
-     - [ ] If `null`, Kick support will be effectively disabled.
+    *The name of the channel to join.*  
+    By default, this value is not required.  
+    If you do not wish to use any authentication method, this allows you to join a channel by name alone, but without Follower event support.
+
+  * `oauth`   
+    *The OAuth ID value is used in lieu of a password to access the Kick API.*  
+    By default, this value is not required.  
+    If you do not wish to use the `oauth_refresh` method, which relies on a file on my webserver, you can generate your own OAuth2 token manually using a third-party Kick Token Generator, and set this value to the token you receive. However, it will expire and require updating manually.
+
+  * `oauth_refresh`  
+    *A refresh token to get a new Kick OAuth ID when the current one expires.*  
+    This value is used instead of the oauth value above, by default. Using a refresh token allows the emote wall to stay logged in for a much longer period of time. Please note that this feature makes use of the browser's Local Storage to store new OAuth Tokens and Refresh Tokens as they're generated.  
+    New OAuth Tokens are generated every 60 minutes, and Kick may or may not send a new Refresh Token at the same time. If the token expires, the Local Storage values will be erased on the next refesh attempt automatically.
+
+    > **How to generate an OAuth ID:**
+    > - Visit <https://realityripple.com/Tools/Twitch/EmoteWall/>
+    > - Click the "Authenticate on Kick" button under "Do-it-Yourself" and log in
+    > - Fill out the captcha prompt, if necessary
+    > - Copy the OAuth Refresh value and paste it into "oauth_refresh:"
+
+    If you ever stop using this emote wall, please log into Kick and visit <https://kick.com/settings/connections>. Under "Extensions Connections", click the "Disconnect" button next to "Emote Wall".
+
+     - [ ] If `channel`, `oauth` and `oauth_refresh` are all `false` (or missing), the Kick interactive login process will be enabled.
+     - [ ] If `oauth_refresh` is `null`, Kick support will be effectively disabled.
+
+  * `share`  
+    *Share your Twitch channel on the Emote Wall home page!*
 
 * `lfg`  
   *Settings related to the LFG login process.*
