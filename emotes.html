@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v1.6
+    * v1.6.1
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -12651,17 +12651,24 @@
           continue;
          if (d[i].broadcaster_user_id !== kick.net.oAuth.auth.uid)
           continue;
+         if (!d[i].hasOwnProperty('updated_at'))
+          continue;
+         if ((Date.now() - new Date(d[i].updated_at).getTime()) / 1000 / 60 / 60 > 24)
+         {
+          await _unsubscribe(d[i].id);
+          continue;
+         }
          _evIDs[d[i].id] = d[i].event;
          rList.push(d[i].event);
         }
         return rList;
        }
 
-       async function $subscribe(type, version = '1')
+       async function $subscribe(type, version = 1)
        {
         const d = {
          'broadcaster_user_id': kick.net.channelID,
-         'events': {'name': type, 'version': version},
+         'events': [{'name': type, 'version': version}],
          'method': 'webhook'
         };
         const r = await shared.httpRequest('POST', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers(true), JSON.stringify(d), false);
@@ -13001,10 +13008,10 @@
         if (!thisEV)
          return;
         const evvHash = shared.hashCode.gen({'salt': data.value.salt, 'sub': thisEV});
-        const valHash = shared.hashCode.gen({'hash': evvHash, 'user': kick.net.oAuth.auth.uid}, true);
+        const valHash = shared.hashCode.gen({'hash': evvHash, 'user': kick.net.oAuth.auth.uid});
         const evaHash = shared.hashCode.gen({'aad': data.value.aad, 'sub': thisEV});
-        const aadHash = shared.hashCode.gen({'hash': evaHash, 'bin': data.sub.bin}, true);
-        const vRet = shared.aesgcm(_b64U8(data.value.bin), aadHash, _b64U8(data.value.vector), _b64U8(data.value.tag), valHash);
+        const aadHash = shared.hashCode.gen({'hash': evaHash, 'bin': data.sub.bin});
+        const vRet = shared.aesgcm(_b64U8(data.value.bin), _b64U8(aadHash), _b64U8(data.value.vector), _b64U8(data.value.tag), _b64U8(valHash));
         if (!vRet)
          return;
         const jRet = JSON.parse(_aS(vRet));
@@ -19686,7 +19693,7 @@
      const $socketEx = function()
      {
       const appID = 'emote-wall';
-      const appVer = '1.5';
+      const appVer = '1.6';
       const _lDelay = 3000;
       const _chList = {};
       let _statusWS = null;
