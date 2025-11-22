@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v1.6.1
+    * v1.6.2
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -7559,7 +7559,7 @@
        twitch.net.oAuth.auth.expires = j.expires_in;
       }
 
-      async function _refresh(t)
+      async function _refresh(t, retry = false)
       {
        const url = cURLs.api.rr.refresh.t;
        let b = 'refresh=' + encodeURIComponent(t);
@@ -7568,16 +7568,17 @@
        const r = await shared.httpRequest('POST', url, {}, b, false);
        if (!r.success)
        {
-        if (r.code === 401)
+        switch (r.code)
         {
-         notice.error(notice.Type.TWITCH_TOKEN);
-         twitch.net.oAuth.clear();
-        }
-        const eJ = r.json;
-        if (eJ !== null && eJ.hasOwnProperty('message') && eJ.message === 'Invalid refresh token')
-        {
-         notice.error(notice.Type.TWITCH_TOKEN);
-         twitch.net.oAuth.clear();
+         case 401:
+          notice.error(notice.Type.TWITCH_TOKEN);
+          twitch.net.oAuth.clear();
+          twitch.net.dead = true;
+          break;
+         default:
+          if (!retry)
+           return _refresh(t, true);
+          break;
         }
         return false;
        }
@@ -10672,65 +10673,42 @@
        youtube.net.oAuth.auth.expires = parseInt(j.expires_in, 10);
       }
 
-      async function _refresh(t, retries = false)
+      async function _refresh(t, retry = false)
       {
        const url = cURLs.api.rr.refresh.yt;
        let b = 'refresh=' + encodeURIComponent(t);
        if (cfg.youtube.share)
         b += '&share=1';
        const r = await shared.httpRequest('POST', url, {}, b, false);
-       const j = r.json;
        if (!r.success)
        {
-        if (r.code === 0 && r.data === '')
+        switch (r.code)
         {
-         notice.error(notice.Type.YOUTUBE_CORS, 'OAuth token');
-         youtube.net.oAuth.clear(false);
-         youtube.net.dead = true;
-         return false;
+         case 401:
+          notice.error(notice.Type.YOUTUBE_TOKEN);
+          youtube.net.oAuth.clear(true);
+          youtube.net.dead = true;
+          break;
+         case 403:
+          notice.error(notice.Type.YOUTUBE_UNKNOWN, 'The server did not like the request.');
+          youtube.net.oAuth.clear(false);
+          youtube.net.dead = true;
+          break;
+         case 502:
+          if (retry === false)
+           return _refresh(t, true);
+          notice.error(notice.Type.YOUTUBE_UNKNOWN, 'The server ran into an internal problem.');
+          youtube.net.oAuth.clear(false);
+          youtube.net.dead = true;
+          break;
+         default:
+          if (retry === false)
+           return _refresh(t, true);
+          break;
         }
-        if (r.code === 408 && r.data === shared.errTimeout)
-        {
-         if (retries === false)
-          return _refresh(t, true);
-         return false;
-        }
-        if (j !== null)
-        {
-         const e = _flatJSON(j);
-         if (e.hasOwnProperty('error'))
-         {
-          if (e.error === 'internal_failure')
-          {
-           if (retries === false)
-            return _refresh(t, true);
-           notice.error(notice.Type.YOUTUBE_UNKNOWN, 'The server ran into an internal problem.');
-           youtube.net.oAuth.clear(false);
-           youtube.net.dead = true;
-           return false;
-          }
-          if (e.error === 'invalid_grant' & e.hasOwnProperty('error_description'))
-          {
-           switch (e.error_description)
-           {
-            case 'Token has been expired or revoked.':
-             notice.error(notice.Type.YOUTUBE_NETWORK);
-             notice.error(notice.Type.YOUTUBE_TOKEN);
-             youtube.net.oAuth.clear(true);
-             youtube.net.dead = true;
-             return false;
-            case 'Bad Request':
-             notice.error(notice.Type.YOUTUBE_UNKNOWN, 'The server did not like the request.');
-             youtube.net.oAuth.clear(false);
-             youtube.net.dead = true;
-             return false;
-           }
-          }
-         }
-        }
-        notice.error(notice.Type.YOUTUBE_UNKNOWN, 'Error Getting OAuth Token: ' + r.code);
         return false;
        }
+       const j = r.json;
        if (j === null)
         return false;
        if (!j.hasOwnProperty('access_token'))
@@ -13404,7 +13382,7 @@
        kick.net.oAuth.auth.expires = 0;
       }
 
-      async function _refresh(t)
+      async function _refresh(t, retry = false)
       {
        const url = cURLs.api.rr.refresh.k;
        let b = 'refresh=' + encodeURIComponent(t);
@@ -13413,10 +13391,17 @@
        const r = await shared.httpRequest('POST', url, {}, b, false);
        if (!r.success)
        {
-        if (r.code === 401)
+        switch (r.code)
         {
-         notice.error(notice.Type.KICK_TOKEN);
-         kick.net.oAuth.clear();
+         case 401:
+          notice.error(notice.Type.KICK_TOKEN);
+          kick.net.oAuth.clear();
+          kick.net.dead = true;
+          break;
+         default:
+          if (retry === false)
+           return _refresh(t, true);
+          break;
         }
         return false;
        }
@@ -18628,14 +18613,23 @@
       streamelements.oAuth.auth.expires = 0;
      }
 
-     async function _refresh(t)
+     async function _refresh(t, retry = false)
      {
       const url = cURLs.api.rr.refresh.se;
       const b = 'refresh=' + encodeURIComponent(t);
       const r = await shared.httpRequest('POST', url, {}, b, false);
       if (!r.success)
       {
-       notice.error(notice.Type.STREAMELEMENTS_TOKEN);
+       switch (r.code)
+       {
+        case 401:
+         notice.error(notice.Type.STREAMELEMENTS_TOKEN);
+         break;
+        default:
+         if (retry === false)
+          return _refresh(t, true);
+         break;
+       }
        return false;
       }
       const j = r.json;
@@ -18770,13 +18764,9 @@
        return;
       if (ch !== false)
       {
-       if (list[code].channel.includes(ch))
-        _removeEmote(list, scope, code, ch);
-       else
-       {
+       if (!list[code].channel.includes(ch))
         list[code].channel.push(ch);
-        return;
-       }
+       return;
       }
       else
        _removeEmote(list, scope, code, ch);
@@ -24698,7 +24688,7 @@
 
    .zweFramed.zweLPad.zweHat img, img.zweFramed.zweLPad.zweHat
    {
-    border-width: calc(var(--emote-height) * 0.35) 
+    border-width: calc(var(--emote-height) * 0.35)
                   calc(var(--emote-width)  * 0.05)
                   calc(var(--emote-height) * 0.05)
                   calc(var(--emote-width)  * 0.15);
