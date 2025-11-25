@@ -15243,6 +15243,8 @@
        }
        for (const slug in lfg.net.fList)
        {
+        if (!lfg.net.fList.hasOwnProperty(slug))
+         continue;
         if (aList.includes(slug))
          continue;
         lfg.net.fList[slug] = false;
@@ -18768,8 +18770,7 @@
         list[code].channel.push(ch);
        return;
       }
-      else
-       _removeEmote(list, scope, code, ch);
+      _removeEmote(list, scope, code, ch);
      }
      list[code] = {scope: scope, url: url, channel: [], id: id, width: w, height: h};
      if (ch !== false)
