@@ -158,6 +158,39 @@ Configuration Information
   * `sharedChat`  
     *Show emotes and events from other channels during Shared Chat sessions.*
 
+* `trovo`   
+  *Settings related to the Trovo login process.*
+
+  > **NOTE**: OAuth refresh tokens expire automatically (usually after around half a year). If you don't use the Emote Wall for around this long, you may have to log in again. Regular OAuth tokens expire much sooner (usually after 60 days). If you use the manual oauth method, please make sure to update these values on a regular basis.
+
+  * `oauth`   
+    *The OAuth ID value is used in lieu of a password to access the Trovo API.*  
+    By default, this value is not required.  
+    If you do not wish to use the `oauth_refresh` method, which relies on a file on my webserver, you can generate your own OAuth2 token manually using a third-party Trovo Token Generator, and set this value to the token you receive. However, it will expire and require updating manually.
+
+  * `oauth_refresh`  
+    *A refresh token to get a new Trovo OAuth ID when the current one expires.*  
+    This value is used instead of the oauth value above, by default. Using a refresh token allows the emote wall to stay logged in for a much longer period of time. Please note that this feature makes use of the browser's Local Storage to store new OAuth Tokens and Refresh Tokens as they're generated.  
+    New OAuth Tokens are generated every 60 minutes, and Trovo may or may not send a new Refresh Token at the same time. If the token expires, the Local Storage values will be erased on the next refesh attempt automatically.
+
+    > **How to generate an OAuth ID and matching Client ID:**
+    > - Visit <https://realityripple.com/Tools/Twitch/EmoteWall/>
+    > - Click the "Authenticate on Trovo" button under "Do-it-Yourself" and log in
+    > - Fill out the captcha prompt, if necessary
+    > - Copy the Client ID value and paste it into "client:"
+    > - Copy the OAuth Refresh value and paste it into "oauth_refresh:"
+
+    If you ever stop using this emote wall, please log into Trovo and visit <https://trovo.live/settings/account>. Under "Connected Apps", click the "Connection" link next to "Apps with access to your Trovo account", then click the "Disconnect" button next to "RealityRipple's Home-Made Emote Wall".
+
+     - [ ] If both `oauth` and `oauth_refresh` are `false` (or missing), the Trovo interactive login process will be enabled.
+     - [ ] If `oauth_refresh` is `null`, Trovo support will be effectively disabled.
+
+  * `share`  
+    *Share your Trovo channel on the Emote Wall home page!*
+
+  * `bundle_time`  
+    *Time to wait for additional events to bundle together into a single Kappagen. The default value is 2 seconds (2000).*
+
 * `streamlabs`
   *Settings related to Streamlabs tips.*
 
@@ -245,20 +278,20 @@ Configuration Information
   * `access`  
     *A bitwise flag representing which users' messages show up on the emote wall.*  
     Account types are represented by the following values:
-    |   Flag  | Meaning                  | Twitch | YouTube | Kick | LFG | Variations     |
-    | ------: | :----------------------- | :----: | :-----: | :--: | :-: | :------------- |
-    | `0x800` | broadcaster              |   T    |   YT    |  K   |  L  |                |
-    | `0x400` | moderator badge          |   T    |   YT    |  K   |  L  |                |
-    | `0x200` | founder badge            |   T    |         |  K   |     |                |
-    | `0x100` | vip badge                |   T    |         |  K   |  L  |                |
-    | `0x080` | artist badge             |   T    |         |      |     |                |
-    | `0x040` | tier 3 subscriber badge  |   T    |         |  K   |     | K: OG          |
-    | `0x020` | tier 2 subscriber badge  |   T    |         |      |     |                |
-    | `0x010` | tier 1 subscriber badge  |   T    |   YT    |  K   |  L  | YT: Member     |
-    | `0x008` | verified user            |        |   YT    |  K   |     |                |
-    | `0x004` | cheer badge              |   T    |         |  K   |  L  | Cheer Messages |
-    | `0x002` | follower                 |   T    |   YT    |  K   |  L  | YT: Subscriber |
-    | `0x001` | stranger                 |   T    |   YT    |  K   |  L  |                |
+    |   Flag  | Meaning                  | Twitch | YouTube | Kick | LFG | Trovo | Variations     |
+    | ------: | :----------------------- | :----: | :-----: | :--: | :-: | :---: | :------------- |
+    | `0x800` | broadcaster              |   T    |   YT    |  K   |  L  |  TL   |                |
+    | `0x400` | moderator badge          |   T    |   YT    |  K   |  L  |  TL   |                |
+    | `0x200` | founder badge            |   T    |         |  K   |     |       |                |
+    | `0x100` | vip badge                |   T    |         |  K   |  L  |  TL   |                |
+    | `0x080` | artist badge             |   T    |         |      |     |       |                |
+    | `0x040` | tier 3 subscriber badge  |   T    |         |  K   |     |  TL   | K: OG          |
+    | `0x020` | tier 2 subscriber badge  |   T    |         |      |     |  TL   |                |
+    | `0x010` | tier 1 subscriber badge  |   T    |   YT    |  K   |  L  |  TL   | YT: Member     |
+    | `0x008` | verified user            |        |   YT    |  K   |     |       |                |
+    | `0x004` | cheer badge              |   T    |         |  K   |  L  |  TL   | Cheer Messages |
+    | `0x002` | follower                 |   T    |   YT    |  K   |  L  |  TL   | YT: Subscriber |
+    | `0x001` | stranger                 |   T    |   YT    |  K   |  L  |  TL   |                |
 
     Just put a vertical pipe (`|`) in between each of the values representing levels of access:
     | Access                                      | Meaning                                                |
@@ -1493,6 +1526,276 @@ Configuration Information
     * `timeout`  
       *Minimum time for a kappagen when a user is timed out.*  
       > **NOTE**: At present, LFG has a hard-set timeout of `3` seconds, however the full functionality of this feature is expected to become available as the platform evolves.
+      This value can be a boolean, integer, or array:
+      - [ ] If `true`, a kappagen will occur on all timeouts.
+      - [ ] If `false`, no kappagen will occur on timeouts.
+      - [ ] If Integer, the value is the minimum seconds required for a timeout to trigger a kappagen.
+        - [ ] If `0`, no kappagen will occur on timeouts.
+      - [ ]  If Array, each key of the array should be a string containing a range of integers, such as `'3'`, `'5-30'` or `'60-180'`, or an open-maximum range such as `'300+'`.  
+      Each value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `ban`  
+      *A user is banned in the channel.*  
+      This value can be a boolean or array:
+      - [ ] If `true`, a kappagen will occur.
+      - [ ] If `false`, no kappagen will occur.
+      - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+  * `trovo`  
+    *Settings related to Trovo channel events.*
+
+    * `raid`  
+      *Settings related to kappagens when being raided.*
+
+      * `raiders`  
+        *A streamer raids the channel with viewers.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on all raids.
+        - [ ] If `false`, no kappagen will occur on raids.
+        - [ ] If Integer, the value is the minimum raiders required for a raid to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur on raid.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-4'` or `'5-9'`, or an open-maximum range such as `'10+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `originEmotes`  
+        *A boolean to toggle the use of the raiding streamer's channel emotes for raid kappagens.*
+        - [ ] If `true`, raid kappagens will use channel emotes from the raider's channel.
+        - [ ] If `false`, raid kappagens will use your channel's emotes.
+
+    * `follow`  
+      *A user follows the channel.*  
+      This value can be a boolean or array:
+      - [ ] If `true`, a kappagen will occur.
+      - [ ] If `false`, no kappagen will occur.
+      - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `sub`  
+      *Settings related to kappagens on a subscribe event.*
+
+      * `t1`  
+        *Settings related to kappagens on a **Tier 1** subscribe event.*
+
+        * `first`  
+          *A user subscribes at **Tier 1** for the first time.*  
+          This value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+        * `resub`  
+          *A user resubscribes at **Tier 1**.*  
+          This value can be a boolean, integer, or array:
+          - [ ] If `true`, a kappagen will occur on all **Tier 1** resubs.
+          - [ ] If `false`, no kappagen will occur on **Tier 1** resubs.
+          - [ ] If Integer, the value is the minimum months required for a **Tier 1** resub to trigger a kappagen.
+            - [ ] If `0`, no kappagen will occur.
+            - [ ] If `1`, a kappagen will occur every month.
+            - [ ] If `greater than 1`, the number of months subscribed must be greater than or equal to this number to trigger a kappagen.
+          - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-4'` or `'5-9'`, or an open-maximum range such as `'10+'`.  
+             Each value can be a boolean or array:
+            - [ ] If `true`, a kappagen will occur.
+            - [ ] If `false`, no kappagen will occur.
+            - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+        * `gift`  
+          *A user gifts another user a **Tier 1** subscription.*  
+          This value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+        * `giftbomb`  
+          *A user gifts multiple **Tier 1** subscriptions.*  
+          This value can be a boolean, integer, or array:
+          - [ ] If `true`, a kappagen will occur on any random gift.
+          - [ ] If `false`, no kappagen will occur on giftbombs.
+          - [ ] If Integer, the value is the minimum gifts required for a gift bomb to trigger a kappagen.
+            - [ ] If `0`, no kappagen will occur.
+            - [ ] If `1`, a kappagen will occur on any random gift.
+            - [ ] If `greater than 1`, the number of gifted users in a **Tier 1** giftbomb must be greater than or equal to this number to trigger a kappagen.
+          - [ ]  If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-4'` or `'5-9'`, or an open-maximum range such as `'10+'`.  
+           Each value can be a boolean or array:
+            - [ ] If `true`, a kappagen will occur.
+            - [ ] If `false`, no kappagen will occur.
+            - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `t2`  
+        *Identical to `t1`, but for **Tier 2** subscriptions.*
+
+      * `t3`  
+        *Identical to `t1`, but for **Tier 3** subscriptions.*
+
+    * `cheer`
+      *Settings related to kappagens on an Elixir Spell reward.*  
+
+      * `spells`  
+        *A global Spell cast in your channel for Elixir.*  
+
+        * `useMsg`
+          - [ ] If `true`, any emotes in Spell messages will also be included in the kappagen.
+          - [ ] If `false`, any emotes in Spell messages will show up like normal emotes.
+
+        * `elixir`  
+          *Minimum amount of Elixir for a kappagen.*  
+          This value can be a boolean, integer, or array:
+          - [ ] If `true`, a kappagen will occur on all global Elixir Spells.
+          - [ ] If `false`, no kappagen will occur on global Elixir Spells.
+          - [ ]  If Integer, the value is the minimum Elixir required for a Spell to trigger a kappagen.
+            - [ ] If `0`, no kappagen will occur on global Elixir Spells.
+          - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'10-500'` or `'2500-5000'`, or an open-maximum range such as `'100+'`.  
+          Each value can be a boolean or array:
+            - [ ] If `true`, a kappagen will occur.
+            - [ ] If `false`, no kappagen will occur.
+            - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `ace`  
+        *A Trovo Ace Spell cast in your channel for Elixir.*  
+
+        * `elixir`  
+          *Minimum amount of Elixir for a kappagen.*  
+          This value can be a boolean, integer, or array:
+          - [ ] If `true`, a kappagen will occur on all Ace Spells.
+          - [ ] If `false`, no kappagen will occur on Ace Spells.
+          - [ ]  If Integer, the value is the minimum Elixir required for an Ace Spell to trigger a kappagen.
+            - [ ] If `0`, no kappagen will occur on Ace Spells.
+          - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'10-500'` or `'2500-5000'`, or an open-maximum range such as `'100+'`.  
+          Each value can be a boolean or array:
+            - [ ] If `true`, a kappagen will occur.
+            - [ ] If `false`, no kappagen will occur.
+            - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `super_cap`  
+        *The "Super Cap" Spell has been cast in your channel.*  
+
+        * `useMsg`
+          - [ ] If `true`, any emotes in Super Cap messages will also be included in the kappagen.
+          - [ ] If `false`, any emotes in Super Cap messages will show up like normal emotes.
+
+        * `styles`  
+          This value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `colorful_chat`  
+        *The "Colorful Chat" Spell has been cast in your channel.*  
+
+        * `useMsg`
+          - [ ] If `true`, any emotes in Colorful Chat messages will also be included in the kappagen.
+          - [ ] If `false`, any emotes in Colorful Chat messages will show up like normal emotes.
+
+        * `styles`  
+          This value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `spell_chat`  
+        *The "Spell Chat" Spell has been cast in your channel.*  
+
+        * `useMsg`
+          - [ ] If `true`, any emotes in Spell Chat messages will also be included in the kappagen.
+          - [ ] If `false`, any emotes in Spell Chat messages will show up like normal emotes.
+
+        * `styles`  
+          This value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `custom`  
+        *A custom Spell cast in your channel for Elixir.*  
+
+        * `elixir`  
+          *Minimum amount of Elixir for a kappagen.*  
+          This value can be a boolean, integer, or array:
+          - [ ] If `true`, a kappagen will occur on all custom Spells.
+          - [ ] If `false`, no kappagen will occur on custom Spells.
+          - [ ]  If Integer, the value is the minimum Elixir required for a custom Spell to trigger a kappagen.
+            - [ ] If `0`, no kappagen will occur on custom Spells.
+          - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'10-500'` or `'2500-5000'`, or an open-maximum range such as `'100+'`.  
+          Each value can be a boolean or array:
+            - [ ] If `true`, a kappagen will occur.
+            - [ ] If `false`, no kappagen will occur.
+            - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `shop`  
+        *A Shop Spell cast in your channel for Elixir.*  
+
+        * `elixir`  
+          *Minimum amount of Elixir for a kappagen.*  
+          This value can be a boolean, integer, or array:
+          - [ ] If `true`, a kappagen will occur on all Shop Spells.
+          - [ ] If `false`, no kappagen will occur on Shop Spells.
+          - [ ]  If Integer, the value is the minimum Elixir required for an Shop Spell to trigger a kappagen.
+            - [ ] If `0`, no kappagen will occur on Shop Spells.
+          - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'10-500'` or `'2500-5000'`, or an open-maximum range such as `'100+'`.  
+          Each value can be a boolean or array:
+            - [ ] If `true`, a kappagen will occur.
+            - [ ] If `false`, no kappagen will occur.
+            - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `poll`  
+      *Settings related to polls.*  
+      Requires `channel:read:polls` scope.
+
+      * `begin`  
+        *A poll begins in your channel.*  
+        This value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `end`  
+        *A poll ends in your channel.*  
+        This value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `redeem`  
+      *Settings related to kappagens on a Mana Spell reward.*  
+
+      * `spells`  
+        *A global Spell cast in your channel for Mana.*  
+
+        * `mana`  
+          *Minimum amount of Mana for a kappagen.*  
+          This value can be a boolean, integer, or array:
+          - [ ] If `true`, a kappagen will occur on all global Mana Spells.
+          - [ ] If `false`, no kappagen will occur on global Mana Spells.
+          - [ ]  If Integer, the value is the minimum Mana required for a Spell to trigger a kappagen.
+            - [ ] If `0`, no kappagen will occur on global Mana Spells.
+          - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'10-500'` or `'2500-5000'`, or an open-maximum range such as `'100+'`.  
+          Each value can be a boolean or array:
+            - [ ] If `true`, a kappagen will occur.
+            - [ ] If `false`, no kappagen will occur.
+            - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `custom`  
+        *A custom channel Spell cast in your channel for Mana.*  
+
+        * `mana`  
+          *Minimum amount of Mana for a kappagen.*  
+          This value can be a boolean, integer, or array:
+          - [ ] If `true`, a kappagen will occur on all custom Mana Spells.
+          - [ ] If `false`, no kappagen will occur on custom Mana Spells.
+          - [ ]  If Integer, the value is the minimum Mana required for a Spell to trigger a kappagen.
+            - [ ] If `0`, no kappagen will occur on custom Mana Spells.
+          - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'10-500'` or `'2500-5000'`, or an open-maximum range such as `'100+'`.  
+          Each value can be a boolean or array:
+            - [ ] If `true`, a kappagen will occur.
+            - [ ] If `false`, no kappagen will occur.
+            - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `timeout`  
+      *Minimum time for a kappagen when a user is timed out.*  
       This value can be a boolean, integer, or array:
       - [ ] If `true`, a kappagen will occur on all timeouts.
       - [ ] If `false`, no kappagen will occur on timeouts.

@@ -87,6 +87,11 @@
      channel: null,
      sharedChat: false
     },
+    trovo: {
+     oauth_refresh: 'OAUTH_REFRESH',
+     share: false,
+     bundle_time: 2000
+    },
     streamlabs: {
      token: 'JWT_TOKEN', //Requires socket.token
      curMul: 100,
@@ -397,6 +402,74 @@
       hypetrain: {
        begin: false,
        success: false
+      },
+      timeout: false,
+      ban: false
+     },
+     trovo: {
+      raid: {
+       raiders: 2,
+       originEmotes: true
+      },
+      follow: true,
+      sub: {
+       t1: {
+        first: true,
+        resub: true,
+        gift: true,
+        giftbomb: 1
+       },
+       t2: {
+        first: true,
+        resub: true,
+        gift: true,
+        giftbomb: 1
+       },
+       t3: {
+        first: true,
+        resub: true,
+        gift: true,
+        giftbomb: 1
+       }
+      },
+      cheer: {
+       spells: {
+        useMsg: true,
+        elixir: 100
+       },
+       ace: {
+        elixir: 100
+       },
+       super_cap: {
+        useMsg: true,
+        styles: true
+       },
+       colorful_chat: {
+        useMsg: true,
+        styles: true
+       },
+       spell_chat: {
+        useMsg: true,
+        styles: true
+       },
+       custom: {
+        elixir: 50
+       },
+       shop: {
+        elixir: 40
+       }
+      },
+      poll: {
+       begin: false,
+       end: false
+      },
+      redeem: {
+       spells: {
+        mana: false
+       },
+       custom: {
+        mana: false
+       }
       },
       timeout: false,
       ban: false
@@ -1279,7 +1352,8 @@
    const oauthClient = Object.freeze({
     t: '4umzcpmjkg6ar78b81s7302jlj33t8',
     yt: '71876675824-aepsnb3onligbj62r1i2qakfjh9sr8kg.apps.googleusercontent.com',
-    k: '01JQMJG1D824X124BW9BGYY6X9'
+    k: '01JQMJG1D824X124BW9BGYY6X9',
+    tl: '766f1f87893b7256d54f89a18a0bd167'
    });
    const cVARs = Object.freeze({
     crew: Object.freeze({
@@ -1295,6 +1369,7 @@
      result: '%RESULT%',
      sender: '%SENDER%',
      sticker: '%STICKER%',
+     spell: '%SPELL%',
      title: '%TITLE%',
      type: '%TYPE%',
      user: '%USER%'
@@ -1331,6 +1406,10 @@
      }),
      kick: 'wss://ws-us2.pusher.com/app/' + cVARs.url.chatID + '?protocol=7&client=js&version=7.6.0&flash=false',
      lfg: 'wss://chat.lfg.tv/socket.io/?EIO=4&transport=websocket',
+     trovo: Object.freeze({
+      chat: 'wss://open-chat.trovo.live/chat',
+      pubSub: 'wss://pubsub.trovo.live/sub'
+     }),
      streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket&token=' + cVARs.url.token,
      streamelements: 'wss://realtime.streamelements.com/socket.io/?transport=websocket',
      bttv: 'wss://sockets.betterttv.net/ws',
@@ -1400,6 +1479,19 @@
       subscribed: 'https://api.lfg.tv/v1/users/' + cVARs.url.user + '/subscribed/' + cVARs.url.channelName,
       hypetrains: 'https://api.lfg.tv/v1/streams/' + cVARs.url.streamID + '/hype-train'
      }),
+     trovo: Object.freeze({
+      chat: Object.freeze({
+       self: 'https://open-api.trovo.live/openplatform/chat/token',
+       id: 'https://open-api.trovo.live/openplatform/chat/channel-token/' + cVARs.url.userID
+      }),
+      emotes: 'https://open-api.trovo.live/openplatform/getemotes',
+      users: Object.freeze({
+       id: 'https://open-api.trovo.live/openplatform/getusers',
+       info: 'https://open-api.trovo.live/openplatform/channels/id'
+      }),
+      gql: 'https://ew.realityripple.com/tl/gql',
+      validate: 'https://open-api.trovo.live/openplatform/validate'
+     }),
      ffz: Object.freeze({
       set: Object.freeze({
        global: 'https://api.frankerfacez.com/v1/set/global'
@@ -1437,6 +1529,7 @@
        t: 'https://ew.realityripple.com/t/auth',
        yt: 'https://ew.realityripple.com/yt/auth',
        k: 'https://ew.realityripple.com/k/auth',
+       tl: 'https://ew.realityripple.com/tl/auth',
        se: 'https://ew.realityripple.com/se/auth'
       }),
       feedback: 'https://ew.realityripple.com/feedback'
@@ -1485,13 +1578,15 @@
       auth: Object.freeze({
        t: 'https://ew.realityripple.com/t/login',
        yt: 'https://ew.realityripple.com/yt/login',
-       k: 'https://ew.realityripple.com/k/login'
+       k: 'https://ew.realityripple.com/k/login',
+       tl: 'https://ew.realityripple.com/tl/login'
       }),
       redir: 'https://realityripple.com/Tools/Twitch/tempRedir.php'
      }),
      twitch: 'https://id.twitch.tv/oauth2/authorize?client_id=' + cVARs.url.clientID + '&redirect_uri=' + cVARs.url.uri + '&response_type=code&scope=' + cVARs.url.scope + '&state=redirto_' + cVARs.url.origin + '&force_verify=true',
      youtube: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=' + cVARs.url.clientID + '&redirect_uri=' + cVARs.url.uri + '&response_type=code&access_type=offline&scope=' + cVARs.url.scope + '&state=redirto_' + cVARs.url.origin + '&prompt=consent%20select_account&include_granted_scopes=false',
-     kick: 'https://id.kick.com/oauth/authorize?client_id=' + cVARs.url.clientID + '&redirect_uri=' + cVARs.url.uri + '&response_type=code&scope=' + cVARs.url.scope + '&state=redirto_' + cVARs.url.origin + '&code_challenge=' + encodeURIComponent('YFP8iBiBKukSUiDYUzVLhNrqCoqMjnY9isK2YhHN0mc=') + '&code_challenge_method=S256'
+     kick: 'https://id.kick.com/oauth/authorize?client_id=' + cVARs.url.clientID + '&redirect_uri=' + cVARs.url.uri + '&response_type=code&scope=' + cVARs.url.scope + '&state=redirto_' + cVARs.url.origin + '&code_challenge=' + encodeURIComponent('YFP8iBiBKukSUiDYUzVLhNrqCoqMjnY9isK2YhHN0mc=') + '&code_challenge_method=S256',
+     trovo: 'https://open.trovo.live/page/login.html?client_id=' + cVARs.url.clientID + '&redirect_uri=' + cVARs.url.uri + '&response_type=code&scope=' + cVARs.url.scope + '&state=redirto_' + cVARs.url.origin
     })
    });
    const cScopes = Object.freeze({
@@ -1513,6 +1608,9 @@
     kick: Object.freeze({
      channel: 'channel:read',
      events: 'events:subscribe'
+    }),
+    trovo: Object.freeze({
+     chat: 'chat_connect'
     })
    });
    const cSources = Object.freeze({
@@ -1523,6 +1621,7 @@
      youtube: Symbol(),
      kick: Symbol(),
      lfg: Symbol(),
+     trovo: Symbol(),
      ffz: Symbol(),
      bttv: Symbol(),
      '7tv': Symbol(),
@@ -1580,6 +1679,7 @@
       y: 'sYouTube',
       k: 'sKick',
       l: 'sLFG',
+      tl: 'sTrovo',
       se: 'tStreamElements',
       sl: 'tStreamlabs',
       b: 'eBTTV',
@@ -1627,6 +1727,12 @@
        break;
       case notice.Type.LFG_NETWORK:
        _setNotice(i, [_nC.t.i, _nC.s.l], 'Connected', tInfo);
+       break;
+      case notice.Type.TROVO_CHAT:
+       _setNotice(i, [_nC.t.i, _nC.s.tl], 'Chat Connected', tInfo);
+       break;
+      case notice.Type.TROVO_PUBSUB:
+       _setNotice(i, [_nC.t.i, _nC.s.tl], 'PubSub Connected', tInfo);
        break;
       case notice.Type.STREAMELEMENTS_NETWORK:
        _setNotice(i, [_nC.t.i, _nC.s.se], 'Connected', tInfo);
@@ -1822,6 +1928,43 @@
        break;
       case notice.Type.LFG_UNKNOWN:
        _setNotice(e, [_nC.t.e, _nC.s.l], 'LFG Connection Error<br>' + sMsg);
+       break;
+      case notice.Type.TROVO_NAME:
+       _setNotice(e, [_nC.t.e, _nC.s.tl], 'Connection Rejected<br>Please check your Trovo channel name.');
+       break;
+      case notice.Type.TROVO_TOKEN:
+       if (typeof loginTL !== 'undefined' && loginTL.inUse)
+       {
+        _setNotice(e, [_nC.t.e, _nC.s.tl], 'OAuth Token Rejected<br>Please click &quot;Re-Auth&quot; to get a new Token.');
+        loginTL.showOut(true);
+        window.setTimeout(function(){loginTL.showIn();}, tRetry);
+       }
+       else
+        _setNotice(e, [_nC.t.e, _nC.s.tl], 'OAuth Token Rejected<br>Please update your OAuth Refresh token.');
+       break;
+      case notice.Type.TROVO_CHAT:
+       _setNotice(e, [_nC.t.e, _nC.s.tl], 'Chat Disconnected');
+       break;
+      case notice.Type.TROVO_PUBSUB:
+       _setNotice(e, [_nC.t.e, _nC.s.tl], 'PubSub Disconnected');
+       break;
+      case notice.Type.TROVO_UNKNOWN:
+       _setNotice(e, [_nC.t.e, _nC.s.tl], 'Trovo Connection Error<br>' + sMsg);
+       break;
+      case notice.Type.TROVO_DECRYPT:
+       switch (sMsg)
+       {
+        case notice.DecryptType.IV_MISSING:
+         sDecErr = 'Encrypted Token Invalid<br>Your &quot;cfg.trovo.oauth_refresh&quot; value has no &quot;iv&quot; attribute.';
+         break;
+        case notice.DecryptType.B64_INVALID:
+         sDecErr = 'Encrypted Token Invalid<br>Your &quot;cfg.trovo.oauth_refresh&quot; value has been corrupted.';
+         break;
+        case notice.DecryptType.DATA_INVALID:
+         sDecErr = 'Decrypted Token Invalid<br>Your &quot;cfg.trovo.oauth_refresh&quot; value has been corrupted.';
+         break;
+       }
+       _setNotice(e, [_nC.t.e, _nC.s.tl], sDecErr);
        break;
       case notice.Type.STREAMELEMENTS_TOKEN:
        _setNotice(e, [_nC.t.e, _nC.s.se], 'OAuth Token Rejected<br>Please update your StreamElements OAuth Token.');
@@ -2195,6 +2338,12 @@
       LFG_NAME: Symbol(0x0202),
       LFG_ACCOUNT: Symbol(0x0204),
       LFG_UNKNOWN: Symbol(0x0209),
+      TROVO_CHAT: Symbol(0x0401),
+      TROVO_PUBSUB: Symbol(0x0801),
+      TROVO_TOKEN: Symbol(0x0403),
+      TROVO_NAME: Symbol(0x0404),
+      TROVO_UNKNOWN: Symbol(0x0409),
+      TROVO_DECRYPT: Symbol(0x040D),
       STREAMELEMENTS_NETWORK: Symbol(0x1001),
       STREAMELEMENTS_TOKEN: Symbol(0x1003),
       STREAMELEMENTS_DECRYPT_OAUTH: Symbol(0x100D),
@@ -2219,6 +2368,8 @@
       KICK_EVENT: 0x008,
       YOUTUBE: 0x010,
       LFG: 0x020,
+      TROVO_CHAT: 0x040,
+      TROVO_PUBSUB: 0x080,
       STREAMELEMENTS: 0x100,
       STREAMLABS: 0x200,
       BTTV: 0x400,
@@ -5130,6 +5281,14 @@
         r.push(v);
         continue;
        }
+       if (service.emotes.hasOwnProperty('trovo') && service.emotes.trovo.hasOwnProperty(s[i]) && service.emotes.trovo[s[i]].scope === cSources.scope.channel)
+       {
+        v.svc = cSources.service.trovo;
+        v.url = service.emotes.trovo[s[i]].url;
+        v.scope = service.emotes.trovo[s[i]].scope;
+        r.push(v);
+        continue;
+       }
        if (service.emotes.hasOwnProperty('ffz') && service.emotes.ffz.hasOwnProperty(s[i]) && service.emotes.ffz[s[i]].scope === cSources.scope.channel)
        {
         v.svc = cSources.service.ffz;
@@ -5181,6 +5340,14 @@
         v.svc = cSources.service.kick;
         v.url = service.emotes.kick[s[i]].url;
         v.scope = service.emotes.kick[s[i]].scope;
+        r.push(v);
+        continue;
+       }
+       if (service.emotes.hasOwnProperty('trovo') && service.emotes.trovo.hasOwnProperty(s[i]) && service.emotes.trovo[s[i]].scope === cSources.scope.global)
+       {
+        v.svc = cSources.service.trovo;
+        v.url = service.emotes.trovo[s[i]].url;
+        v.scope = service.emotes.trovo[s[i]].scope;
         r.push(v);
         continue;
        }
@@ -16261,6 +16428,2680 @@
     };
    }();
 
+   const trovo = function()
+   {
+    const _minBundle = 500;
+
+    const $net = function()
+    {
+     let _msgHistory = {};
+     const _pollHistory = [];
+
+     const $socket = function()
+     {
+      let _wsRetry = 0;
+      let _ws = null;
+      let _chatTok = false;
+      let _lPing = 30000;
+      let _lTimeout = 35000;
+      const _lExpire = 5000;
+      let _tTimeout = false;
+      let _tExpire = false;
+      let _tPing = 0;
+
+      async function $c_socket()
+      {
+       if (trovo.net.oAuth.hasChannel)
+        _chatTok = await _getChatToken(trovo.net.channelID);
+       else
+        _chatTok = await _getChatToken();
+       if (!_chatTok)
+       {
+        notice.error(notice.Type.TROVO_CHAT);
+        notice.active &= ~notice.Connection.TROVO_CHAT;
+        notice.resetHide();
+        return;
+       }
+       notice.expect |= notice.Connection.TROVO_CHAT;
+       _tPing = 0;
+       _ws = new WebSocket(cURLs.ws.trovo.chat);
+       _ws.onopen = _wsOpen;
+       _ws.onclose = _wsClose;
+       _ws.onmessage = _wsMessage;
+      }
+
+      function _wsOpen()
+      {
+       if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
+        return;
+       if (!_chatTok)
+        return;
+       _ws.onopen = null;
+       _lPing = 30000;
+       _lTimeout = 35000;
+       _tExpire = window.setTimeout(_wsExpire, _lExpire);
+       const auth = {
+        'type': 'AUTH',
+        'nonce': _nonce(),
+        'data': {'token': _chatTok}
+       };
+       _ws.send(JSON.stringify(auth));
+      }
+
+      function _wsClose()
+      {
+       notice.error(notice.Type.TROVO_CHAT);
+       notice.active &= ~notice.Connection.TROVO_CHAT;
+       notice.resetHide();
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
+       }
+       if (_tExpire !== false)
+       {
+        window.clearTimeout(_tExpire);
+        _tExpire = false;
+       }
+       if (_tTimeout !== false)
+       {
+        window.clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       if (_ws === null)
+        return;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
+       _ws = null;
+       if (trovo.net.dead)
+        return;
+       const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
+       if (_wsRetry < 2)
+        _wsRetry += 0.2;
+       window.setTimeout(trovo.net.socket, wsWait);
+      }
+
+      const _wsMessage = function()
+      {
+       async function $c_wsMessage(ev)
+       {
+        if (_ws === null)
+         return;
+        if (trovo.net.dead)
+        {
+         if (_tExpire !== false)
+         {
+          window.clearTimeout(_tExpire);
+          _tExpire = false;
+         }
+         _ws.onopen = null;
+         _ws.onmessage = null;
+         _ws.onclose = null;
+         _ws.close();
+         _ws = null;
+         return;
+        }
+        _wsRetry = 0;
+        const data = JSON.parse(ev.data);
+        if (data === null)
+         return;
+        if (!data.hasOwnProperty('type'))
+         return;
+        notice.info(notice.Type.TROVO_CHAT);
+        notice.active |= notice.Connection.TROVO_CHAT;
+        switch (data.type)
+        {
+         case 'RESPONSE':
+          if (_tTimeout !== false)
+          {
+           window.clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          if (_tPing !== 0)
+          {
+           window.clearInterval(_tPing);
+           _tPing = 0;
+          }
+          _lPing = 30000;
+          _lTimeout = _lPing + 5000;
+          if (_tExpire !== false)
+          {
+           window.clearTimeout(_tExpire);
+           _tExpire = false;
+          }
+          _tPing = window.setInterval(_wsPing, _lPing);
+          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+          if (trovo.net.channelID !== 0)
+          {
+           await _loadEmote_channel(trovo.net.channelID);
+           _pubSub();
+          }
+          break;
+         case 'PONG':
+          if (!data.hasOwnProperty('data'))
+           return;
+          if (!data.data.hasOwnProperty('gap'))
+           return;
+          if (_tTimeout !== false)
+          {
+           window.clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          if (_tPing !== 0)
+          {
+           window.clearInterval(_tPing);
+           _tPing = 0;
+          }
+          _lPing = Math.floor(data.data.gap * 1000);
+          _lTimeout = _lPing + 5000;
+          _tPing = window.setInterval(_wsPing, _lPing);
+          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+          break;
+         case 'CHAT':
+          if (!data.hasOwnProperty('channel_info'))
+           return;
+          if (!data.hasOwnProperty('data'))
+           return;
+          if (!data.data.hasOwnProperty('chats') || !Array.isArray(data.data.chats))
+           return;
+          const gifts = [];
+          for (let i = 0, l = data.data.chats.length; i < l; i++)
+          {
+           if (!data.data.chats[i].hasOwnProperty('type'))
+            continue;
+           if (data.data.chats[i].hasOwnProperty('user_name') && data.data.chats[i].hasOwnProperty('message_id'))
+           {
+            if (!_msgHistory.hasOwnProperty(data.data.chats[i].user_name))
+             _msgHistory[data.data.chats[i].user_name] = new Set();
+            _msgHistory[data.data.chats[i].user_name].add(data.data.chats[i].message_id);
+           }
+           switch (data.data.chats[i].type)
+           {
+            case 0:
+             _chat(data.data.chats[i]);
+             break;
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 5009:
+             await _spells(data.data.chats[i]);
+             break;
+            case 5001:
+             _sub.sub(data.data.chats[i]);
+             break;
+            case 5003:
+             _follow(data.data.chats[i]);
+             break;
+            case 5006:
+             gifts.push(data.data.chats[i]);
+             break;
+            case 5007:
+             _botEvent(data.data.chats[i]);
+             break;
+            case 5008:
+             _raid(data.data.chats[i]);
+             break;
+           }
+          }
+          if (gifts.length > 0)
+           _sub.gift(gifts);
+          break;
+        }
+       }
+
+       function _chat(cmd)
+       {
+        if (!cmd.hasOwnProperty('content'))
+         return;
+        if (document.visibilityState === 'hidden')
+         return;
+        _parse.line(cmd);
+       }
+
+       const _spells = function()
+       {
+        const _spellCache = {};
+
+        async function $c_spells(cmd)
+        {
+         if (!cmd.hasOwnProperty('sender_id'))
+          return;
+         const c = _giftInfo(cmd);
+         if (!c)
+          return;
+         if (c.type !== 'Mana' && c.type !== 'Elixir')
+          return;
+         c.from = _parse.user(cmd);
+         if (!service.emotes.spells.hasOwnProperty(c.id))
+          await trovo.channelSpells();
+         c.raw = cmd;
+         switch (cmd.type)
+         {
+          case 6:
+           if (document.visibilityState === 'hidden')
+            return;
+           await _parse.event.cheer.chat(c, 'super_cap');
+           return;
+          case 7:
+           if (document.visibilityState === 'hidden')
+            return;
+           await _parse.event.cheer.chat(c, 'colorful_chat');
+           return;
+          case 8:
+           if (document.visibilityState === 'hidden')
+            return;
+           await _parse.event.cheer.chat(c, 'spell_chat');
+           return;
+         }
+         let kC = false;
+         for (const k of cfg.commands)
+         {
+          if (!k.hasOwnProperty('redeem'))
+           continue;
+          if (!k.redeem.includes(c.name))
+           continue;
+          kC = k.styles;
+          break;
+         }
+         if (!!kC)
+         {
+          if (document.visibilityState === 'hidden')
+           return;
+          _parse.event.cheer.command(c, kC);
+          return;
+         }
+
+         const spellGrp = c.id + '.' + cmd.sender_id;
+         if (!_spellCache.hasOwnProperty(spellGrp))
+          _spellCache[spellGrp] = {entries: [], t: null};
+         _spellCache[spellGrp].entries.push(cmd);
+         if (_spellCache[spellGrp].t !== null)
+         {
+          window.clearTimeout(_spellCache[spellGrp].t);
+          _spellCache[spellGrp].t = null;
+         }
+         _spellCache[spellGrp].t = window.setTimeout(_spellBundle, Math.max(cfg.trovo.bundle_time, _minBundle), spellGrp);
+        }
+
+        async function _spellBundle(spellGrp)
+        {
+         if (_spellCache[spellGrp].t === null)
+          return;
+         window.clearTimeout(_spellCache[spellGrp].t);
+         _spellCache[spellGrp].t = null;
+         const cmds = _spellCache[spellGrp].entries;
+         delete _spellCache[spellGrp];
+         if (document.visibilityState === 'hidden')
+          return;
+         let trueC = false;
+         let usr = false;
+         let qty = 0;
+         for (let i = 0; i < cmds.length; i++)
+         {
+          if (!usr)
+          {
+           const u = _parse.user(cmds[i]);
+           if (u.id !== 0)
+            usr = u;
+          }
+          const tmpC = _giftInfo(cmds[i]);
+          if (!tmpC)
+           continue;
+          if (!trueC)
+           trueC = tmpC;
+          qty += tmpC.qty;
+         }
+         if (!trueC)
+          return;
+         if (!usr)
+          return;
+         trueC.from = usr;
+         trueC.qty = qty;
+         trueC.raw = cmds;
+         let tab = 'custom';
+         if (service.emotes.spells.hasOwnProperty(trueC.id))
+          tab = service.emotes.spells[trueC.id].tab;
+         const coin = trueC.type.toLowerCase();
+         if (tab === 'spells' && coin === 'elixir')
+          await _parse.event.cheer.spell(trueC);
+         else
+          _parse.event.cheer.custom(trueC, tab, coin);
+        }
+
+        function _giftInfo(cmd)
+        {
+         const info = {
+          id: false,
+          name: false,
+          qty: false,
+          value: false,
+          type: false
+         };
+         if (cmd.hasOwnProperty('content_data'))
+         {
+          if (cmd.content_data.hasOwnProperty('gift_id'))
+           info.id = cmd.content_data.gift_id;
+          else if (cmd.content_data.hasOwnProperty('magicChatGiftID'))
+           info.id = cmd.content_data.magicChatGiftID;
+          if (cmd.content_data.hasOwnProperty('gift_display_name'))
+           info.name = cmd.content_data.gift_display_name;
+          if (cmd.content_data.hasOwnProperty('gift_num'))
+           info.qty = cmd.content_data.gift_num;
+          if (cmd.content_data.hasOwnProperty('gift_price_info'))
+          {
+           if (cmd.content_data.gift_price_info.hasOwnProperty('number'))
+            info.value = cmd.content_data.gift_price_info.number;
+           if (cmd.content_data.gift_price_info.hasOwnProperty('currencyType'))
+           {
+            switch (cmd.content_data.gift_price_info.currencyType)
+            {
+             case 1:
+              info.type = 'Elixir';
+              break;
+             case 2:
+              info.type = 'Mana';
+              break;
+            }
+           }
+          }
+         }
+         if (info.id !== false && info.name !== false && info.qty !== false && info.value !== false && info.qty !== false)
+          return info;
+         if (cmd.hasOwnProperty('content'))
+         {
+          let jData = false;
+          try
+          {
+           jData = JSON.parse(cmd.content);
+          }
+          catch
+          {
+           jData = false;
+          }
+          if (jData !== false)
+          {
+           if (jData.hasOwnProperty('gift_id'))
+            info.id = jData.gift_id;
+           if (jData.hasOwnProperty('gift'))
+            info.name = jData.gift;
+           if (jData.hasOwnProperty('num'))
+            info.qty = jData.num;
+           if (jData.hasOwnProperty('gift_value'))
+            info.value = jData.gift_value;
+           if (jData.hasOwnProperty('value_type'))
+            info.type = jData.value_type;
+          }
+         }
+         if (info.id !== false && info.name !== false && info.qty !== false && info.value !== false && info.qty !== false)
+          return info;
+         return false;
+        }
+
+        return $c_spells;
+       }();
+
+       const _follow = function()
+       {
+        const _fHist = new Set();
+
+        function $c_follow(cmd)
+        {
+         if (!cmd.hasOwnProperty('uid'))
+          return;
+         trovo.net.fList[cmd.uid] = {value: true, t: Date.now()};
+         if (_fHist.has(cmd.uid))
+          return;
+         _fHist.add(cmd.uid);
+         if (document.visibilityState === 'hidden')
+          return;
+         _parse.event.follow(cmd);
+        }
+
+        return $c_follow;
+       }();
+
+       const _sub = function()
+       {
+        const _subBucket = [];
+        let _giftBucket = [];
+        const _subDone = [];
+        const _giftDone = [];
+
+        function $sub(cmd)
+        {
+         const u = _parse.user(cmd);
+         if (u.id === 0)
+          return;
+         if (cmd.content_data.hasOwnProperty('isReSub'))
+         {
+          if (_subDone.includes(u.id))
+           return;
+          _subDone.push(u.id);
+          if (document.visibilityState === 'hidden')
+           return;
+          if (cmd.content_data.isReSub === 0)
+          {
+           _parse.event.sub.first(cmd);
+           return;
+          }
+          _parse.event.sub.resub(cmd);
+          return;
+         }
+         _subBucket.unshift({uid: '' + u.id, ev: cmd, t: Date.now()});
+         if (_giftBucket.length === 0)
+          return;
+         const cmds = _giftBucket;
+         _giftBucket = [];
+         _sub.gift(cmds);
+        }
+
+        function $gift(cmds)
+        {
+         const fGifts = {};
+         const toBucket = [];
+         const claimed = [];
+
+         for (let i = 0; i < cmds.length; i++)
+         {
+          if (!cmds[i].hasOwnProperty('sender_id'))
+           continue;
+          const from = '' + cmds[i].sender_id;
+          if (toBucket.includes(from))
+           continue;
+          if (!cmds[i].hasOwnProperty('content_data'))
+           return;
+          if (!cmds[i].content_data.hasOwnProperty('UserID'))
+           return;
+          const to = '' + cmds[i].content_data.UserID;
+          let oSub = false;
+          for (let d = _subBucket.length - 1; d >= 0; d--)
+          {
+           if (_subBucket[d].uid !== to)
+            continue;
+           if (claimed.includes(d))
+            continue;
+           claimed.push(d);
+           oSub = true;
+           break;
+          }
+          if (!oSub)
+          {
+           toBucket.push(from);
+           continue;
+          }
+         }
+
+         for (let i = 0; i < cmds.length; i++)
+         {
+          if (!cmds[i].hasOwnProperty('sender_id'))
+           continue;
+          if (!cmds[i].hasOwnProperty('content_data'))
+           return;
+          if (!cmds[i].content_data.hasOwnProperty('UserID'))
+           return;
+          const from = '' + cmds[i].sender_id;
+          const to = '' + cmds[i].content_data.UserID;
+          if (toBucket.includes(from))
+          {
+           _giftBucket.push(cmds[i]);
+           continue;
+          }
+          let oSub = false;
+          for (let d = _subBucket.length - 1; d >= 0; d--)
+          {
+           if (_subBucket[d].uid !== to)
+            continue;
+           oSub = _subBucket[d].ev;
+           _subBucket.splice(d, 1);
+           break;
+          }
+          if (!oSub)
+           continue;
+          if (!fGifts.hasOwnProperty(from))
+           fGifts[from] = {};
+          if (!fGifts[from].hasOwnProperty(to))
+           fGifts[from][to] = [];
+          fGifts[from][to].push({gift: cmds[i], sub: oSub});
+         }
+
+         const senders = Object.keys(fGifts);
+         for (let i = 0; i < senders.length; i++)
+         {
+          const sender = senders[i];
+          const recipients = Object.keys(fGifts[sender]);
+          if (recipients.length === 0)
+           continue;
+          if (recipients.length === 1)
+          {
+           const gift = fGifts[sender][recipients[0]];
+           const gID = sender + '.' + gift[0].sub.uid;
+           if (_giftDone.includes(gID))
+            continue;
+           _giftDone.push(gID);
+           if (document.visibilityState === 'hidden')
+            return;
+           _parse.event.sub.gift(gift);
+           continue;
+          }
+          let gID = sender;
+          for (let g = 0; g < recipients.length; g++)
+          {
+           gID += '.' + fGifts[sender][recipients[g]][0].sub.uid;
+          }
+          if (_giftDone.includes(gID))
+           continue;
+          _giftDone.push(gID);
+          if (document.visibilityState === 'hidden')
+           return;
+          _parse.event.sub.giftbomb(fGifts[sender]);
+         }
+        }
+
+        return {
+         sub: $sub,
+         gift: $gift
+        };
+       }();
+
+       function _raid(cmd)
+       {
+        if (document.visibilityState === 'hidden')
+         return;
+        _parse.event.raid(cmd);
+       }
+
+       const _botEvent = function()
+       {
+        function $c_botEvent(cmd)
+        {
+         if (!cmd.hasOwnProperty('content_data'))
+          return;
+         if (!cmd.content_data.hasOwnProperty('activity_topic'))
+          return;
+         switch (cmd.content_data.activity_topic)
+         {
+          case 'poll_start':
+           _poll_begin(cmd);
+           return;
+         }
+        }
+
+        function _poll_begin(cmd)
+        {
+         let foundEv = false;
+         for (let i = 0; i < _pollHistory.length; i++)
+         {
+          if (!_pollHistory[i].begin)
+           continue;
+          if (!!_pollHistory[i].chat)
+           continue;
+          if (!!_pollHistory[i].end)
+           continue;
+          if (_pollHistory[i].begin.pinInfo.pinTS === cmd.send_time)
+          {
+           _pollHistory[i].chat = cmd;
+           foundEv = _pollHistory[i].begin;
+           break;
+          }
+         }
+         if (!foundEv)
+         {
+          _pollHistory.push({begin: false, chat: cmd, end: false});
+          return;
+         }
+         if (document.visibilityState === 'hidden')
+          return;
+         _parse.event.poll.begin(foundEv);
+        }
+
+        return $c_botEvent;
+       }();
+
+       return $c_wsMessage;
+      }();
+
+      function _wsExpire()
+      {
+       notice.error(notice.Type.TROVO_CHAT);
+       notice.active &= ~notice.Connection.TROVO_CHAT;
+       notice.resetHide();
+       if (_tTimeout !== false)
+       {
+        window.clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
+       }
+       if (_ws === null)
+        return;
+       if (trovo.net.dead === true)
+        return;
+       trovo.net.dead = true;
+       if (_tExpire !== false)
+       {
+        window.clearTimeout(_tExpire);
+        _tExpire = false;
+       }
+       _ws.close();
+       _ws = null;
+      }
+
+      function _wsPing()
+      {
+       if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
+        return;
+       const p = {
+        'type': 'PING',
+        'nonce': _nonce()
+       };
+       _ws.send(JSON.stringify(p));
+      }
+
+      function _wsTimeout()
+      {
+       notice.error(notice.Type.TROVO_CHAT);
+       notice.active &= ~notice.Connection.TROVO_CHAT;
+       notice.resetHide();
+       if (_tExpire !== false)
+       {
+        window.clearTimeout(_tExpire);
+        _tExpire = false;
+       }
+       _lPing = 50000;
+       _lTimeout = 55000;
+       if (_tTimeout !== false)
+       {
+        window.clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
+       }
+       if (_ws === null)
+        return;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
+       _ws.close();
+       _ws = null;
+       if (trovo.net.dead === true)
+        return;
+       trovo.net.socket();
+      }
+
+      function _nonce()
+      {
+       return (shared.rnd(0xF0000000) + 0x10000000).toString(16);
+      }
+
+      return $c_socket;
+     }();
+
+     async function _getChatToken(uid = false)
+     {
+      let u = cURLs.api.trovo.chat.self;
+      if (uid !== false)
+       u = cURLs.api.trovo.chat.id.replaceAll(cVARs.url.userID, uid);
+      const h = trovo.net.oAuth.headers(false, 'OAuth');
+      const r = await shared.httpRequest('GET', u, h);
+      if (!r.success)
+       return false;
+      const j = r.json;
+      if (j === null)
+       return false;
+      if (!j.hasOwnProperty('token') || j.token === null)
+       return false;
+      return j.token;
+     }
+
+     const _pubSub = function()
+     {
+      let _wsRetry = 0;
+      let _ws = null;
+      let _pubsubTok = false;
+      let _lPing = 10000;
+      let _lTimeout = 15000;
+      let _tTimeout = false;
+      let _tPing = 0;
+
+      async function $c_pubSub()
+      {
+       if (_ws !== null)
+        return;
+       _pubsubTok = await _getPubSubToken();
+       if (!_pubsubTok)
+       {
+        notice.error(notice.Type.TROVO_PUBSUB);
+        notice.active &= ~notice.Connection.TROVO_PUBSUB;
+        notice.resetHide();
+        return;
+       }
+       notice.expect |= notice.Connection.TROVO_PUBSUB;
+       _tPing = 0;
+       _ws = new WebSocket(cURLs.ws.trovo.pubSub);
+       _ws.onopen = _wsOpen;
+       _ws.onclose = _wsClose;
+       _ws.onmessage = _wsMessage;
+      }
+
+      function _wsOpen()
+      {
+       if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
+        return;
+       if (!_pubsubTok)
+        return;
+       _ws.onopen = null;
+       _lPing = 10000;
+       _lTimeout = 15000;
+       const auth = {
+        'type': 'AUTH',
+        'nonce': 'AUTH_' + _nonce(),
+        'data': {'token': _pubsubTok}
+       };
+       _ws.send(JSON.stringify(auth));
+      }
+
+      function _wsClose()
+      {
+       notice.error(notice.Type.TROVO_PUBSUB);
+       notice.active &= ~notice.Connection.TROVO_PUBSUB;
+       notice.resetHide();
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
+       }
+       if (_tTimeout !== false)
+       {
+        window.clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       if (_ws === null)
+        return;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
+       _ws = null;
+       if (trovo.net.dead)
+        return;
+       const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
+       if (_wsRetry < 2)
+        _wsRetry += 0.2;
+       window.setTimeout(_pubSub, wsWait);
+      }
+
+      const _wsMessage = function()
+      {
+       async function $c_wsMessage(ev)
+       {
+        if (_ws === null)
+         return;
+        if (trovo.net.dead)
+        {
+         _ws.onopen = null;
+         _ws.onmessage = null;
+         _ws.onclose = null;
+         _ws.close();
+         _ws = null;
+         return;
+        }
+        _wsRetry = 0;
+        const data = JSON.parse(ev.data);
+        if (data === null)
+         return;
+        if (!data.hasOwnProperty('type'))
+         return;
+        notice.info(notice.Type.TROVO_PUBSUB);
+        notice.active |= notice.Connection.TROVO_PUBSUB;
+        switch (data.type)
+        {
+         case 'RESPONSE':
+          if (!data.hasOwnProperty('nonce') || data.nonce.slice(0, 5) !== 'AUTH_')
+           return;
+          if (_tTimeout !== false)
+          {
+           window.clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          if (_tPing !== 0)
+          {
+           window.clearInterval(_tPing);
+           _tPing = 0;
+          }
+          _lPing = 10000;
+          _lTimeout = _lPing + 5000;
+          _tPing = window.setInterval(_wsPing, _lPing);
+          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+          const listen = {
+           'type': 'LISTEN',
+           'nonce': 'LISTEN_' + _nonce(),
+           'data': {'topics': ['channel-event-by-id.' + trovo.net.channelID]}
+          };
+          _ws.send(JSON.stringify(listen));
+          break;
+         case 'PONG':
+          if (!data.hasOwnProperty('data'))
+           return;
+          if (!data.data.hasOwnProperty('gap'))
+           return;
+          if (_tTimeout !== false)
+          {
+           window.clearTimeout(_tTimeout);
+           _tTimeout = false;
+          }
+          if (_tPing !== 0)
+          {
+           window.clearInterval(_tPing);
+           _tPing = 0;
+          }
+          _lPing = Math.floor(data.data.gap * 1000);
+          _lTimeout = _lPing + 5000;
+          _tPing = window.setInterval(_wsPing, _lPing);
+          _tTimeout = window.setTimeout(_wsTimeout, _lTimeout);
+          break;
+         case 'MESSAGE':
+          if (!data.hasOwnProperty('data'))
+           return;
+          if (!data.data.hasOwnProperty('message'))
+           return;
+          const jData = JSON.parse(data.data.message);
+          if (!jData.hasOwnProperty('type'))
+           return;
+          switch (jData.type)
+          {
+           case 'chat_deletion':
+            _chatDeletion(jData);
+            break;
+           case 'clear':
+            _chatClear(jData);
+            break;
+           case 'banned_userv2':
+            await _userBanned(jData);
+            break;
+           case 'pin':
+            _messagePin(jData);
+            break;
+           case 'unpin':
+            await _messageUnpin(jData);
+            break;
+          }
+          break;
+        }
+       }
+
+       function _chatDeletion(jData)
+       {
+        if (!jData.hasOwnProperty('msgIDs') || !Array.isArray(jData.msgIDs))
+         return;
+        for (let i = 0; i < jData.msgIDs.length; i++)
+        {
+         for (const uID in _msgHistory)
+         {
+          if (!_msgHistory.hasOwnProperty(uID))
+           continue;
+          if (!_msgHistory[uID].has(jData.msgIDs[i]))
+           continue;
+          _msgHistory[uID].delete(jData.msgIDs[i]);
+          break;
+         }
+         const mID = 'trovo:' + jData.msgIDs[i];
+         display.eraseMsg(mID);
+        }
+       }
+
+       function _chatClear(jData)
+       {
+        if (!jData.hasOwnProperty('action') || jData.action !== 'clear')
+         return;
+        _msgHistory = {};
+        if (cfg.event.twitch.hasOwnProperty('clear') && cfg.event.twitch.clear)
+         display.eraseAll();
+       }
+
+       async function _userBanned(jData)
+       {
+        if (!jData.hasOwnProperty('contents'))
+         return;
+        if (!jData.contents.hasOwnProperty('banned'))
+         return;
+        if (!jData.contents.banned.hasOwnProperty('content_params'))
+         return;
+        if (!jData.contents.banned.content_params.hasOwnProperty('banDuration'))
+         return;
+        if (jData.contents.banned.content_params.banDuration === 0)
+         await _parse.event.ban(jData);
+        else
+         await _parse.event.timeout(jData);
+       }
+
+       function _messagePin(jData)
+       {
+        if (!jData.hasOwnProperty('pinInfo'))
+         return;
+        if (!jData.pinInfo.hasOwnProperty('pinTS'))
+         return;
+        let foundChat = false;
+        for (let i = 0; i < _pollHistory.length; i++)
+        {
+         if (!_pollHistory[i].chat)
+          continue;
+         if (!!_pollHistory[i].begin)
+          continue;
+         if (!!_pollHistory[i].end)
+          continue;
+         if (_pollHistory[i].chat.send_time === jData.pinInfo.pinTS)
+         {
+          _pollHistory[i].begin = jData;
+          foundChat = _pollHistory[i].chat;
+          break;
+         }
+        }
+        if (!foundChat)
+        {
+         _pollHistory.push({begin: jData, chat: false, end: false});
+         return;
+        }
+        if (document.visibilityState === 'hidden')
+         return;
+        _parse.event.poll.begin(jData);
+       }
+
+       async function _messageUnpin(jData)
+       {
+        if (!jData.hasOwnProperty('pinID'))
+         return;
+        let foundPoll = false;
+        for (let i = 0; i < _pollHistory.length; i++)
+        {
+         if (!_pollHistory[i].chat)
+          continue;
+         if (!_pollHistory[i].begin)
+          continue;
+         if (!!_pollHistory[i].end)
+          continue;
+         if (!_pollHistory[i].begin.hasOwnProperty('pinInfo'))
+          continue;
+         if (!_pollHistory[i].begin.pinInfo.hasOwnProperty('pinID'))
+          continue;
+         if (_pollHistory[i].begin.pinInfo.pinID === jData.pinID)
+         {
+          _pollHistory[i].end = jData;
+          foundPoll = _pollHistory[i];
+          break;
+         }
+        }
+        if (!foundPoll)
+         return;
+        if (document.visibilityState === 'hidden')
+         return;
+        const rData = await _getEmoteReactions(trovo.net.channelID, jData.pinID);
+        if (!rData)
+         return;
+        await _parse.event.poll.end(foundPoll.begin, rData);
+       }
+
+       return $c_wsMessage;
+      }();
+
+      function _wsPing()
+      {
+       if (_ws === null)
+        return;
+       if (_ws.readyState !== 1)
+        return;
+       const p = {
+        'type': 'PING',
+        'nonce': 'PING_' + _nonce()
+       };
+       _ws.send(JSON.stringify(p));
+      }
+
+      function _wsTimeout()
+      {
+       notice.error(notice.Type.TROVO_PUBSUB);
+       notice.active &= ~notice.Connection.TROVO_PUBSUB;
+       notice.resetHide();
+       _lPing = 50000;
+       _lTimeout = 55000;
+       if (_tTimeout !== false)
+       {
+        window.clearTimeout(_tTimeout);
+        _tTimeout = false;
+       }
+       if (_tPing !== 0)
+       {
+        window.clearInterval(_tPing);
+        _tPing = 0;
+       }
+       if (_ws === null)
+        return;
+       _ws.onopen = null;
+       _ws.onmessage = null;
+       _ws.onclose = null;
+       _ws.close();
+       _ws = null;
+       if (trovo.net.dead === true)
+        return;
+       trovo.net.socket();
+      }
+
+      function _nonce()
+      {
+       return (shared.rnd(0xF0000000) + 0x10000000).toString(16);
+      }
+
+      return $c_pubSub;
+     }();
+
+     async function _getPubSubToken()
+     {
+      const d = [
+       {
+        operationName: 'pubsub_PubSubTokenService_GetToken',
+        variables: {},
+        extensions: {singleReq: true}
+       }
+      ];
+      const b = JSON.stringify(d);
+      const h = trovo.net.oAuth.headers('text/plain', 'OAuth');
+      const r = await shared.httpRequest('POST', cURLs.api.trovo.gql, h, b, false);
+      if (!r.success)
+       return false;
+      const j = r.json;
+      if (j === null)
+       return false;
+      if (!Array.isArray(j))
+       return false;
+      if (j.length !== 1)
+       return false;
+      if (!j[0].hasOwnProperty('data'))
+       return false;
+      if (!j[0].data.hasOwnProperty('pubsub_PubSubTokenService_GetToken'))
+       return false;
+      if (!j[0].data.pubsub_PubSubTokenService_GetToken.hasOwnProperty('token') || j[0].data.pubsub_PubSubTokenService_GetToken.token === null)
+       return false;
+      return j[0].data.pubsub_PubSubTokenService_GetToken.token;
+     }
+
+     async function _getEmoteReactions(chID, msgID)
+     {
+      const d = [
+       {
+        operationName: 'msgchat_ChatroomMngService_BatchGetMsgEmoteReactions',
+        variables: {
+         params: {
+          channelID: chID,
+          msgIDLists: [msgID],
+          sdkAppid: 0
+         }
+        },
+        extensions: {singleReq: true}
+       }
+      ];
+      const b = JSON.stringify(d);
+      const h = trovo.net.oAuth.headers('text/plain', 'OAuth');
+      const r = await shared.httpRequest('POST', cURLs.api.trovo.gql, h, b, false);
+      if (!r.success)
+       return false;
+      const j = r.json;
+      if (j === null)
+       return false;
+      if (!Array.isArray(j) || j.length !== 1)
+       return false;
+      if (!j[0].hasOwnProperty('data'))
+       return false;
+      if (!j[0].data.hasOwnProperty('msgchat_ChatroomMngService_BatchGetMsgEmoteReactions'))
+       return false;
+      if (!j[0].data.msgchat_ChatroomMngService_BatchGetMsgEmoteReactions.hasOwnProperty('emoteReactions'))
+       return false;
+      if (!j[0].data.msgchat_ChatroomMngService_BatchGetMsgEmoteReactions.emoteReactions.hasOwnProperty('' + msgID))
+       return false;
+      if (!j[0].data.msgchat_ChatroomMngService_BatchGetMsgEmoteReactions.emoteReactions['' + msgID].hasOwnProperty('emoteReactions'))
+       return false;
+      return j[0].data.msgchat_ChatroomMngService_BatchGetMsgEmoteReactions.emoteReactions['' + msgID].emoteReactions;
+     }
+
+     async function $userID(u)
+     {
+      const b = {user: [u]};
+      const d = JSON.stringify(b);
+      const r = await shared.httpRequest('POST', cURLs.api.trovo.users.id, trovo.net.oAuth.headers(true), d);
+      if (!r.success)
+       return false;
+      const j = r.json;
+      if (j === null)
+       return false;
+      if (!j.hasOwnProperty('users'))
+       return false;
+      if (j.users.length !== 1)
+       return false;
+      if (!j.users[0].hasOwnProperty('user_id'))
+       return false;
+      if (!j.users[0].hasOwnProperty('username'))
+       return false;
+      if (!j.users[0].hasOwnProperty('nickname'))
+       return false;
+      if (!j.users[0].hasOwnProperty('channel_id'))
+       return false;
+      return {
+       id: j.users[0].user_id,
+       slug: j.users[0].username,
+       name: j.users[0].nickname,
+       chID: j.users[0].channel_id
+      };
+     }
+
+     async function $userInfo(u, isID = false)
+     {
+      const b = {};
+      if (isID)
+       b.channel_id = u;
+      else
+       b.username = u;
+      const d = JSON.stringify(b);
+      const r = await shared.httpRequest('POST', cURLs.api.trovo.users.info, trovo.net.oAuth.headers(true), d);
+      if (!r.success)
+       return false;
+      const j = r.json;
+      if (j === null)
+       return false;
+      if (!j.hasOwnProperty('username'))
+       return false;
+      return j;
+     }
+
+     async function _loadEmote_channel(chID)
+     {
+      if (!service.emotes.hasOwnProperty('trovo'))
+       service.emotes.trovo = {};
+      const r = await _findEmote(chID, service.emotes.trovo);
+      if (r === false)
+       return false;
+      if (service.cList.length === 0)
+       service.cList = r;
+      else
+      {
+       for (const n in service.emotes.trovo)
+       {
+        if (!service.emotes.trovo[n].hasOwnProperty('scope'))
+         continue;
+        if (service.emotes.trovo[n].scope !== cSources.scope.channel)
+         continue;
+        for (let c = service.cList.length - 1; c >= 0; c--)
+        {
+         if (service.cList[c].url !== service.emotes.trovo[n].url)
+          continue;
+         service.cList.splice(c, 1);
+         break;
+        }
+       }
+       for (let i = 0, l = r.length; i < l; i++)
+       {
+        if (!service.cList.includes(r[i]))
+         service.cList.push(r[i]);
+       }
+      }
+      service.syncList();
+      return true;
+     }
+
+     const $oAuth = function()
+     {
+      const _pathRefresh = '.refresh';
+
+      async function $init()
+      {
+       if (cfg.trovo.hasOwnProperty('oauth_refresh') && cfg.trovo.oauth_refresh === null)
+       {
+        loginTL.cfgHash = false;
+        loginTL.inUse = false;
+        _populateAuth();
+        return;
+       }
+       if (cfg.trovo.hasOwnProperty('oauth') && cfg.trovo.oauth !== null && cfg.trovo.oauth !== false && cfg.trovo.oauth !== 'OAUTH_ID')
+       {
+        loginTL.inUse = false;
+        loginTL.cfgHash = shared.hashCode(cfg.trovo.oauth);
+        await _genAccess(cfg.trovo.oauth);
+        return;
+       }
+       if (cfg.trovo.hasOwnProperty('oauth_refresh') && cfg.trovo.oauth_refresh !== null && cfg.trovo.oauth_refresh !== false && cfg.trovo.oauth_refresh !== 'OAUTH_REFRESH')
+       {
+        loginTL.inUse = false;
+        let sRef = cfg.trovo.oauth_refresh;
+        loginTL.cfgHash = shared.hashCode(sRef);
+        const lsRef = shared.storage.getItem(loginTL.path() + _pathRefresh);
+        if (lsRef !== null)
+         sRef = lsRef;
+        const sRet = await _genRefresh(sRef);
+        if (sRet !== false)
+         shared.storage.setItem(loginTL.path() + _pathRefresh, sRet);
+        else
+         shared.storage.removeItem(loginTL.path() + _pathRefresh);
+        return;
+       }
+       loginTL.inUse = true;
+       loginTL.cfgHash = false;
+       const h = shared.getHashParams();
+       if (h.hasOwnProperty('service') && h.service === 'trovo' && h.hasOwnProperty('oauth_refresh'))
+       {
+        const sHRet = await _genRefresh(h.oauth_refresh);
+        if (sHRet !== false)
+         shared.storage.setItem(loginTL.path() + _pathRefresh, sHRet);
+        else
+         shared.storage.removeItem(loginTL.path() + _pathRefresh);
+        return;
+       }
+       const lsRefresh = shared.storage.getItem(loginTL.path() + _pathRefresh);
+       if (lsRefresh === null)
+       {
+        _populateAuth();
+        return;
+       }
+       const sLRet = await _genRefresh(lsRefresh);
+       if (sLRet !== false)
+        shared.storage.setItem(loginTL.path() + _pathRefresh, sLRet);
+       else
+        shared.storage.removeItem(loginTL.path() + _pathRefresh);
+      }
+
+      async function _genAccess(a)
+      {
+       const oV = await _validate(a);
+       if (oV === false)
+       {
+        _populateAuth();
+        return false;
+       }
+       _populateAuth(a, false, oV);
+       await _updateChannelID();
+       return a;
+      }
+
+      async function _genRefresh(r)
+      {
+       const oR = await _refresh(r);
+       if (oR === false)
+       {
+        _populateAuth();
+        return false;
+       }
+       const a = oR.access_token;
+       const r2 = oR.refresh_token;
+       const oV = await _validate(a);
+       if (oV === false)
+       {
+        _populateAuth();
+        return false;
+       }
+       _populateAuth(a, r2, oV);
+       await _updateChannelID();
+       return r2;
+      }
+
+      function _populateAuth(a = null, r = null, j = null)
+      {
+       if (a === null || r === null || j === null)
+       {
+        trovo.net.oAuth.auth.client_id = false;
+        trovo.net.oAuth.auth.channel = false;
+        trovo.net.oAuth.auth.scope = [];
+        trovo.net.oAuth.auth.access_token = false;
+        trovo.net.oAuth.auth.refresh_token = false;
+        trovo.net.oAuth.auth.expires = 0;
+        trovo.net.channelID = 0;
+        return;
+       }
+       trovo.net.oAuth.auth.client_id = j.client_ID;
+       trovo.net.oAuth.auth.channel = j.nick_name;
+       trovo.net.oAuth.auth.scope = j.scopes;
+       trovo.net.oAuth.auth.access_token = a;
+       trovo.net.oAuth.auth.refresh_token = r;
+       trovo.net.oAuth.auth.expires = j.expire_ts;
+       if (trovo.net.oAuth.hasChannel)
+        trovo.net.channelID = 0;
+       else
+        trovo.net.channelID = j.uid;
+      }
+
+      async function _updateChannelID()
+      {
+       if (!trovo.net.oAuth.hasChannel)
+        return;
+       const uInfo = await trovo.net.userID(cfg.trovo.channel);
+       if (!uInfo || !uInfo.hasOwnProperty('chID'))
+       {
+        notice.error(notice.Type.TROVO_NAME);
+        notice.active &= ~notice.Connection.TROVO_CHAT;
+        notice.resetHide();
+        return;
+       }
+       trovo.net.channelID = uInfo.chID;
+      }
+
+      async function _refresh(t)
+      {
+       const url = cURLs.api.rr.refresh.tl;
+       let b = 'refresh=' + encodeURIComponent(t);
+       if (cfg.trovo.share)
+        b += '&share=1';
+       const r = await shared.httpRequest('POST', url, {}, b, false);
+       if (!r.success)
+       {
+        if (r.code === 401)
+        {
+         notice.error(notice.Type.TROVO_TOKEN);
+         trovo.net.oAuth.clear();
+        }
+        const eJ = r.json;
+        if (eJ !== null && eJ.hasOwnProperty('message') && eJ.message === 'Invalid refresh token')
+        {
+         notice.error(notice.Type.TROVO_TOKEN);
+         trovo.net.oAuth.clear();
+        }
+        return false;
+       }
+       const j = r.json;
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('access_token'))
+        return false;
+       if (!j.hasOwnProperty('refresh_token'))
+        return false;
+       return j;
+      }
+
+      async function _validate(t)
+      {
+       const url = cURLs.api.trovo.validate;
+       const h = {
+        'Accept': 'application/json',
+        'Client-Id': oauthClient.tl,
+        'Authorization': 'OAuth ' + t
+       };
+       const r = await shared.httpRequest('GET', url, h, null, false);
+       if (!r.success)
+       {
+        if (r.code === 401)
+        {
+         notice.error(notice.Type.TROVO_TOKEN);
+         trovo.net.oAuth.clear();
+        }
+        return false;
+       }
+       const j = r.json;
+       if (j === null)
+        return false;
+       if (!j.hasOwnProperty('uid'))
+        return false;
+       if (!j.hasOwnProperty('client_ID'))
+        return false;
+       if (!j.hasOwnProperty('nick_name'))
+        return false;
+       if (!j.hasOwnProperty('scopes'))
+        return false;
+       if (!j.hasOwnProperty('expire_ts'))
+        return false;
+       return j;
+      }
+
+      async function $update()
+      {
+       if (trovo.net.oAuth.auth.expires > 0)
+       {
+        const nowTime = Date.now();
+        const exTime = trovo.net.oAuth.auth.expires * 1000 - 15 * 60 * 1000;
+        if (nowTime < exTime)
+         return;
+       }
+       const r = await _refresh(trovo.net.oAuth.auth.refresh_token);
+       if (r === false)
+       {
+        _populateAuth();
+        return;
+       }
+       const sAccess = r.access_token;
+       const sRefresh = r.refresh_token;
+       const v = await _validate(sAccess);
+       if (v === false)
+       {
+        _populateAuth();
+        return;
+       }
+       _populateAuth(sAccess, sRefresh, v);
+       await _updateChannelID();
+       if (sRefresh !== trovo.net.oAuth.auth.refresh_token)
+        shared.storage.setItem(loginTL.path() + _pathRefresh, sRefresh);
+      }
+
+      async function $reinit()
+      {
+       if (!trovo.net.oAuth.hasRefresh)
+        return false;
+       trovo.net.oAuth.auth.expires = 0;
+       await trovo.net.oAuth.update();
+       if (trovo.net.oAuth.hasLogin)
+        return true;
+       trovo.net.oAuth.clear();
+       return false;
+      }
+
+      function $clear()
+      {
+       _populateAuth();
+       shared.storage.removeItem(loginTL.path() + _pathRefresh);
+      }
+
+      function _cfgVals()
+      {
+       let r = 0;
+       const lsRefresh = shared.storage.getItem(loginTL.path() + _pathRefresh);
+       if (lsRefresh !== null)
+        r |= shared.cfgVal.REFRESH_TOKEN;
+       if (trovo.net.oAuth.auth.refresh_token !== false)
+        r |= shared.cfgVal.REFRESH_TOKEN;
+       if (trovo.net.oAuth.auth.access_token !== false)
+        r |= shared.cfgVal.ACCESS_TOKEN;
+       if (cfg.trovo.hasOwnProperty('channel') && cfg.trovo.channel !== null && cfg.trovo.channel !== false && cfg.trovo.channel !== 'CHANNEL_NAME')
+        r |= shared.cfgVal.CHANNEL;
+       return r;
+      }
+
+      function $headers(post = false, type = 'Bearer')
+      {
+       const h = {
+        'Accept': 'application/json',
+        'Authorization': type + ' ' + trovo.net.oAuth.auth.access_token,
+        'Client-Id': trovo.net.oAuth.auth.client_id
+       };
+       if (post === true)
+        h['Content-Type'] = 'application/json';
+       else if (!!post)
+        h['Content-Type'] = post;
+       return h;
+      }
+
+      return {
+       init: $init,
+       update: $update,
+       reinit: $reinit,
+       clear: $clear,
+       get hasRefresh() {return (_cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN;},
+       get hasLogin() {return (_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;},
+       get hasChannel() {return (_cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL;},
+       headers: $headers,
+       auth: {
+        client_id: false,
+        channel: false,
+        scope: [],
+        access_token: false,
+        refresh_token: false,
+        time: 0,
+        expires: 0
+       }
+      };
+     }();
+
+     return {
+      channelID: 0,
+      fList: {},
+      dead: false,
+      socket: $socket,
+      userID: $userID,
+      userInfo: $userInfo,
+      oAuth: $oAuth
+     };
+    }();
+
+    const _parse = function()
+    {
+     function $parseUser(cmd)
+     {
+      const ret = {
+       id: 0,
+       _slug: false,
+       _name: false,
+       ascii: false
+      };
+      if (cmd.hasOwnProperty('sender_id'))
+       ret.id = cmd.sender_id;
+      if (cmd.hasOwnProperty('user_name'))
+       ret._slug = cmd.user_name;
+      if (cmd.hasOwnProperty('nick_name'))
+       ret._name = cmd.nick_name;
+      const gReg = new RegExp(service.parse.uReg, 'g');
+      if (!!ret._name && ret._name === ret._name.replaceAll(gReg, ''))
+       ret.ascii = ret._name;
+      if (!ret.ascii && !!ret._slug)
+       ret.ascii = ret._slug;
+      if (!ret.ascii)
+       ret.ascii = anonName;
+      return ret;
+     }
+
+     const $content = function()
+     {
+      function $emoji(cmd, dup = null)
+      {
+       if (!cmd.hasOwnProperty('content'))
+        return [];
+       let msg = cmd.content;
+       if (cmd.hasOwnProperty('content_data') && cmd.content_data.hasOwnProperty('user_custom_gift_info') && !!cmd.content_data.user_custom_gift_info.msg)
+        msg = cmd.content_data.user_custom_gift_info.msg;
+       if (cmd.hasOwnProperty('content_data') && cmd.content_data.hasOwnProperty('at') && Array.isArray(cmd.content_data.at) && cmd.content_data.at.length > 0)
+       {
+        for (let i = 0; i < cmd.content_data.at.length; i++)
+        {
+         if (!cmd.content_data.at[i].hasOwnProperty('name'))
+          continue;
+         const f = cmd.content_data.at[i].name;
+         const r = '_'.repeat(f.length);
+         msg = msg.replaceAll('@' + f, '@' + r);
+        }
+       }
+       return service.parse.content.emoji(msg, dup);
+      }
+
+      async function $trovo(cmd, dup = null)
+      {
+       if (!cmd.hasOwnProperty('content_data'))
+        return [];
+       if (!cmd.content_data.normal_emote_enabled || !Array.isArray(cmd.content_data.normal_emote_enabled))
+        return [];
+       if (dup === null)
+        dup = cfg.display.duplicates;
+       const eL = {};
+       for (let i = 0, n = cmd.content_data.normal_emote_enabled.length; i < n; i++)
+       {
+        if (!cmd.content_data.normal_emote_enabled[i].hasOwnProperty('id'))
+         continue;
+        const eID = cmd.content_data.normal_emote_enabled[i].id;
+        let sc = cSources.scope.global;
+        let u = false;
+        if (cmd.content_data.normal_emote_enabled[i].hasOwnProperty('uid'))
+        {
+         sc = cSources.scope.channel;
+         const chR = {};
+         await _findEmote(cmd.content_data.normal_emote_enabled[i].uid, chR);
+         if (chR.hasOwnProperty(eID))
+          u = chR[eID].url;
+        }
+        else if (service.emotes.trovo.hasOwnProperty(eID))
+         u = service.emotes.trovo[eID].url;
+        if (!u)
+         continue;
+        eL[eID] = {svc: cSources.service.trovo, url: u, scope: sc};
+       }
+       const aS = cmd.content.split(':');
+       if (aS.length < 2)
+        return [];
+       const ret = [];
+       let p = aS[0].length;
+       const mCt = {};
+       for (let i = 1; i < aS.length; i++)
+       {
+        const cP = p;
+        p += 1 + aS[i].length;
+        if (aS[i].indexOf(' ') === -1)
+         continue;
+        let matched = false;
+        for (const eN in eL)
+        {
+         if (!eL.hasOwnProperty(eN))
+          continue;
+         if (aS[i].length < eN.length + 1)
+          continue;
+         if (aS[i].slice(0, eN.length + 1) !== eN + ' ')
+          continue;
+         matched = eN;
+         break;
+        }
+        if (!matched)
+         continue;
+        if (!mCt.hasOwnProperty(matched))
+         mCt[matched] = 0;
+        mCt[matched]++;
+        if (dup === false && mCt[matched] > 1)
+         continue;
+        if (dup !== true && mCt[matched] > dup)
+         continue;
+        ret.push({svc: eL[matched].svc, url: eL[matched].url, str: matched, pos: cP, scope: eL[matched].scope});
+       }
+       return ret;
+      }
+
+      function $spells(c)
+      {
+       const p = [];
+       if (!service.emotes.hasOwnProperty('spells'))
+        return p;
+       if (!service.emotes.spells.hasOwnProperty(c.id))
+        return p;
+       let useU = false;
+       if (c.raw.hasOwnProperty('content_data') && c.raw.contentdata.hasOwnProperty('user_custom_gift_info'))
+       {
+        let u = false;
+        if (c.raw.content_data.user_custom_gift_info.hasOwnProperty('webpUrl'))
+         u = c.raw.content_data.user_custom_gift_info.webpUrl;
+        else if (c.raw.content_data.user_custom_gift_info.hasOwnProperty('gifUrl'))
+         u = c.raw.content_data.user_custom_gift_info.gifUrl;
+        if (!!u)
+         useU = u;
+       }
+       const sp = service.emotes.spells[c.id];
+       if (!useU)
+        useU = sp.url;
+       const el = {
+        svc: cSources.service.cheer,
+        url: useU,
+        str: sp.name,
+        scope: null
+       };
+       const sz = shared.ec.get(useU);
+       if (sz !== null)
+       {
+        el.width = sz.width;
+        el.height = sz.height;
+       }
+       for (let i = 0; i < c.qty; i++)
+       {
+        p.push(el);
+       }
+       return p;
+      }
+
+      return {
+       emoji: $emoji,
+       trovo: $trovo,
+       spells: $spells
+      };
+     }();
+
+     const $line = function()
+     {
+      async function $c_line(cmd)
+      {
+       const u = _parse.user(cmd);
+       if (service.parse.ignored(u))
+        return;
+       const lvChk = new _level(cmd);
+       if (await _parseCommand(cmd, lvChk))
+        return;
+       const p = _handleDuplicates(await _eListFromCmd(cmd, null));
+       if (p.length === 0)
+        return;
+       if (!(await lvChk.check(cfg.display.access)))
+        return;
+       display.emote.addToShowList(p);
+       display.emote.showEmotes();
+      }
+
+      async function _parseCommand(cmd, lvChk)
+      {
+       const m = cmd.content.toLowerCase();
+       const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+       let mID = false;
+       if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('id'))
+        mID = 'trovo:' + cmd.tags.id;
+       return service.parse.line.parseCommand(m, lvChk, a, mID);
+      }
+
+      return $c_line;
+     }();
+
+     const $event = function()
+     {
+      const $cheer = function()
+      {
+       function $command(c, kC)
+       {
+        if (service.parse.ignored(c.from))
+         return;
+        let p = _parse.content.spells(c);
+        if (p.length === 0)
+         p = false;
+        display.kappa.show(p, kC, {[cVARs.evt.user]: c.from.ascii, [cVARs.evt.spell]: c.name, [cVARs.evt.amount]: c.qty});
+       }
+
+       async function $chat(c, name)
+       {
+        if (service.parse.ignored(c.from))
+         return;
+        let p = [];
+        const q = _handleDuplicates(await _eListFromCmd(c.raw));
+        const freeEmotes = !cfg.event.trovo.cheer || !cfg.event.trovo.cheer[name] || !cfg.event.trovo.cheer[name].useMsg;
+        const showKappa = !!cfg.event.trovo.cheer && !!cfg.event.trovo.cheer[name] && !!cfg.event.trovo.cheer[name].styles;
+        if (freeEmotes || !showKappa)
+        {
+         if (q.length > 0)
+         {
+          if ((cfg.display.access & trovo.Access.CHEERER) !== 0)
+          {
+           display.emote.addToShowList(q);
+           display.emote.showEmotes();
+          }
+         }
+        }
+        if (!showKappa)
+         return;
+        if (!freeEmotes && q.length > 0)
+         p.push(...q);
+        if (p.length === 0)
+         p = false;
+        display.kappa.show(p, cfg.event.trovo.cheer[name].styles, {[cVARs.evt.user]: c.from.ascii, [cVARs.evt.spell]: c.name});
+       }
+
+       async function $spell(c)
+       {
+        if (service.parse.ignored(c.from))
+         return;
+        let p = _parse.content.spells(c);
+        const q = [];
+        for (let i = 0; i < c.raw.length; i++)
+        {
+         q.push(..._handleDuplicates(await _eListFromCmd(c.raw[i])));
+        }
+        const freeEmotes = !cfg.event.trovo.cheer || !cfg.event.trovo.cheer.spells || !cfg.event.trovo.cheer.spells.useMsg;
+        const showKappa = !!cfg.event.trovo.cheer && !!cfg.event.trovo.cheer.spells && !!cfg.event.trovo.cheer.spells.elixir;
+        if (freeEmotes)
+        {
+         if ((cfg.display.access & trovo.Access.CHEERER) !== 0)
+         {
+          let did = false;
+          if (!showKappa && p.length > 0)
+          {
+           display.emote.addToShowList(p);
+           did = true;
+          }
+          if (q.length > 0)
+          {
+           display.emote.addToShowList(q);
+           did = true;
+          }
+          if (did)
+           display.emote.showEmotes();
+         }
+        }
+        if (!showKappa)
+         return;
+        if (!freeEmotes && q.length > 0)
+         p.push(...q);
+        if (p.length === 0)
+         p = false;
+        const r = shared.findInMaybeRange(cfg.event.trovo.cheer.spells.elixir, c.value * c.qty);
+        if (r === false)
+        {
+         if (p !== false)
+         {
+          if ((cfg.display.access & trovo.Access.CHEERER) !== 0)
+          {
+           display.emote.addToShowList(p);
+           display.emote.showEmotes();
+          }
+         }
+         return;
+        }
+        display.kappa.show(p, r, {[cVARs.evt.user]: c.from.ascii, [cVARs.evt.spell]: c.name, [cVARs.evt.amount]: c.qty});
+       }
+
+       function $custom(c, name, coin)
+       {
+        if (service.parse.ignored(c.from))
+         return;
+        let p = _parse.content.spells(c);
+        const grp = (coin === 'elixir') ? 'cheer' : 'redeem';
+        const showKappa = !!cfg.event.trovo[grp] && !!cfg.event.trovo[grp][name] && !!cfg.event.trovo[grp][name][coin];
+        if (!showKappa)
+        {
+         if (p.length > 0)
+         {
+          if ((cfg.display.access & trovo.Access.CHEERER) !== 0)
+          {
+           display.emote.addToShowList(p);
+           display.emote.showEmotes();
+          }
+         }
+         return;
+        }
+        if (p.length === 0)
+         p = false;
+        const r = shared.findInMaybeRange(cfg.event.trovo[grp][name][coin], c.value * c.qty);
+        if (r === false)
+        {
+         if (p !== false)
+         {
+          if ((cfg.display.access & trovo.Access.CHEERER) !== 0)
+          {
+           display.emote.addToShowList(p);
+           display.emote.showEmotes();
+          }
+         }
+         return;
+        }
+        display.kappa.show(p, r, {[cVARs.evt.user]: c.from.ascii, [cVARs.evt.spell]: c.name, [cVARs.evt.amount]: c.qty});
+       }
+
+       return {
+        command: $command,
+        chat: $chat,
+        spell: $spell,
+        custom: $custom
+       };
+      }();
+
+      async function $raid(cmd)
+      {
+       if (!cfg.event.trovo.raid)
+        return;
+       if (!cfg.event.trovo.raid.raiders)
+        return;
+       if (!cmd.hasOwnProperty('content_data'))
+        return;
+       if (!cmd.content_data.hasOwnProperty('raiderNum'))
+        return;
+       const c = cmd.content_data.raiderNum;
+       const r = shared.findInMaybeRange(cfg.event.trovo.raid.raiders, c);
+       if (r === false)
+        return;
+       const u = _parse.user(cmd);
+       if (service.parse.ignored(u))
+        return;
+       if (!cfg.event.trovo.raid.originEmotes || u.id === 0)
+       {
+        display.kappa.show(false, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: c});
+        return;
+       }
+       const e = await _findEmote(u.id);
+       display.kappa.show(e, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: c});
+      }
+
+      const $sub = function()
+      {
+       function $first(cmd)
+       {
+        const u = _parse.user(cmd);
+        if (service.parse.ignored(u))
+         return;
+        if (!cmd.hasOwnProperty('sub_tier'))
+         return;
+        if (cmd.sub_tier !== '1' && cmd.sub_tier !== '2' && cmd.sub_tier !== '3')
+         return;
+        const tier = 't' + cmd.sub_tier;
+        if (!cfg.event.trovo.sub[tier].first)
+         return;
+        display.kappa.show(false, cfg.event.trovo.sub[tier].first, {[cVARs.evt.user]: u.ascii});
+       }
+
+       function $resub(cmd)
+       {
+        const u = _parse.user(cmd);
+        if (service.parse.ignored(u))
+         return;
+        if (!cmd.hasOwnProperty('sub_lv'))
+         return;
+        if (cmd.sub_lv.length < 2 || cmd.sub_lv.slice(0, 1) !== 'L')
+         return;
+        if (!cmd.hasOwnProperty('sub_tier'))
+         return;
+        if (cmd.sub_tier !== '1' && cmd.sub_tier !== '2' && cmd.sub_tier !== '3')
+         return;
+        const lv = parseInt(cmd.sub_lv.slice(1), 10);
+        const tier = 't' + cmd.sub_tier;
+        if (!cfg.event.trovo.sub[tier].resub)
+         return;
+        const rs = shared.findInMaybeRange(cfg.event.trovo.sub[tier].resub, lv);
+        if (rs === false)
+         return;
+        display.kappa.show(false, rs, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: lv});
+       }
+
+       function $gift(cmds)
+       {
+        const cmd = cmds[0];
+        const uFrom = _parse.user(cmd.gift);
+        const uTo = _parse.user(cmd.sub);
+        if (service.parse.ignored(uFrom))
+         return;
+        if (!cmd.sub.hasOwnProperty('sub_tier'))
+         return;
+        if (cmd.sub.sub_tier !== '1' && cmd.sub.sub_tier !== '2' && cmd.sub.sub_tier !== '3')
+         return;
+        const tier = 't' + cmd.sub.sub_tier;
+        if (!cfg.event.trovo.sub[tier].gift)
+         return;
+        display.kappa.show(false, cfg.event.trovo.sub[tier].gift, {[cVARs.evt.sender]: uFrom.ascii, [cVARs.evt.user]: uTo.ascii});
+       }
+
+       function $giftbomb(cmds)
+       {
+        const recipients = Object.keys(cmds);
+        const uFrom = _parse.user(cmds[recipients[0]][0].gift);
+        if (service.parse.ignored(uFrom))
+         return;
+        let tier = false;
+        for (let t = 0; t < recipients.length; t++)
+        {
+         for (let i = 0; i < cmds[recipients[t]].length; i++)
+         {
+          const cmd = cmds[recipients[t]][i];
+          if (!cmd.sub.hasOwnProperty('sub_tier'))
+           continue;
+          if (cmd.sub.sub_tier !== '1' && cmd.sub.sub_tier !== '2' && cmd.sub.sub_tier !== '3')
+           continue;
+          if (tier === false)
+          {
+           tier = cmd.sub.sub_tier;
+           break;
+          }
+         }
+         if (!!tier)
+          break;
+        }
+        if (!tier)
+         return;
+        tier = 't' + tier;
+        const uTo = [];
+        for (let i = 0; i < recipients.length; i++)
+        {
+         const u = _parse.user(cmds[recipients[i]][0].sub);
+         if (u.id === 0)
+          continue;
+         if (uTo.includes(u.ascii))
+          continue;
+         uTo.push(u.ascii);
+        }
+        const mpmgc = uTo.length;
+        if (!cfg.event.trovo.sub[tier].giftbomb)
+        {
+         if (!cfg.event.trovo.sub[tier].gift)
+          return;
+         for (let i = 0; i < mpmgc; i++)
+         {
+          display.kappa.show(false, cfg.event.trovo.sub[tier].gift, {[cVARs.evt.sender]: uFrom.ascii, [cVARs.evt.user]: uTo[i].ascii});
+         }
+         return;
+        }
+        const gpb = shared.findInMaybeRange(cfg.event.trovo.sub[tier].giftbomb, mpmgc);
+        if (gpb === false)
+         return;
+        display.kappa.show(false, gpb, {[cVARs.evt.sender]: uFrom.ascii, [cVARs.evt.amount]: mpmgc});
+       }
+
+       return {
+        first: $first,
+        resub: $resub,
+        gift: $gift,
+        giftbomb: $giftbomb
+       };
+      }();
+
+      function $follow(cmd)
+      {
+       if (!cfg.event.trovo.follow)
+        return;
+       const u = _parse.user(cmd);
+       if (service.parse.ignored(u))
+        return;
+       display.kappa.show(false, cfg.event.trovo.follow, {[cVARs.evt.user]: u.ascii});
+      }
+
+      const $poll = function()
+      {
+       function $begin(evBegin)
+       {
+        if (!cfg.event.trovo.poll)
+         return;
+        if (!cfg.event.trovo.poll.begin)
+         return;
+        if (!evBegin.pinInfo.hasOwnProperty('content'))
+         return;
+        const pts = evBegin.pinInfo.content.split('\n');
+        if (pts.length < 4)
+         return;
+        display.kappa.show(false, cfg.event.trovo.poll.begin, {[cVARs.evt.title]: pts[0]});
+       }
+
+       function $end(evBegin, evReact)
+       {
+        if (!cfg.event.trovo.poll)
+         return;
+        if (!cfg.event.trovo.poll.end)
+         return;
+        if (!evBegin.pinInfo.hasOwnProperty('content'))
+         return;
+        const pts = evBegin.pinInfo.content.split('\n');
+        if (pts.length < 4)
+         return;
+        const votes = [];
+        let vPoll = 0;
+        for (let i = 1; i < pts.length - 1; i++)
+        {
+         const vID = 'Vote' + pts[i].slice(0, 1).toUpperCase();
+         const vText = pts[i].slice(2);
+         let vCt = -1;
+         for (let j = 0; j < evReact.length; j++)
+         {
+          if (!evReact[j].hasOwnProperty('emoteConf'))
+           continue;
+          if (!evReact[j].emoteConf.hasOwnProperty('emoteID'))
+           continue;
+          if (evReact[j].emoteConf.emoteID !== vID)
+           continue;
+          vCt = evReact[j].total;
+          break;
+         }
+         if (vCt === -1)
+          continue;
+         votes.push({text: vText, count: vCt});
+         vPoll = Math.max(vPoll, vCt);
+        }
+        const rPoll = [];
+        for (let i = 0; i < votes.length; i++)
+        {
+         if (votes[i].count === vPoll)
+          rPoll.push(votes[i].text);
+        }
+        let sPoll = 'None';
+        if (rPoll.length > 0)
+         sPoll = rPoll.join(' + ');
+        display.kappa.show(false, cfg.event.trovo.poll.end, {[cVARs.evt.title]: pts[0], [cVARs.evt.result]: sPoll});
+       }
+
+       return {
+        begin: $begin,
+        end: $end
+       };
+      }();
+
+      const $ban = function()
+      {
+       const _banHist = [];
+
+       async function $c_ban(cmd)
+       {
+        if (!cfg.event.trovo.ban)
+         return;
+        if (!cmd.hasOwnProperty('target_uids') || !Array.isArray(cmd.target_uids) || cmd.target_uids.length !== 1)
+         return;
+        const bannedID = cmd.target_uids[0];
+        if (_banHist.includes(bannedID))
+         return;
+        _banHist.push(bannedID);
+        if (document.visibilityState === 'hidden')
+         return;
+        if (!cmd.hasOwnProperty('contents') || !cmd.contents.hasOwnProperty('mod') || !cmd.contents.mod.hasOwnProperty('content_params') || !cmd.contents.mod.content_params.hasOwnProperty('userNickName'))
+         return;
+        const uInf = await trovo.net.userInfo(bannedID, true);
+        if (!uInf)
+         return;
+        const u = {
+         id: bannedID,
+         _slug: uInf.username,
+         _name: cmd.contents.mod.content_params.userNickName,
+         ascii: false
+        };
+        const gReg = new RegExp(service.parse.uReg, 'g');
+        if (!!u._name && u._name === u._name.replaceAll(gReg, ''))
+         u.ascii = u._name;
+        if (!u.ascii && !!u._slug)
+         u.ascii = u._slug;
+        if (!u.ascii)
+         u.ascii = anonName;
+        if (service.parse.ignored(u))
+         return;
+        display.kappa.show(false, cfg.event.trovo.ban, {[cVARs.evt.user]: u.ascii});
+       }
+
+       return $c_ban;
+      }();
+
+      async function $timeout(cmd)
+      {
+       if (!cfg.event.trovo.timeout)
+        return;
+       if (document.visibilityState === 'hidden')
+        return;
+       if (!cmd.hasOwnProperty('target_uids') || !Array.isArray(cmd.target_uids) || cmd.target_uids.length !== 1)
+        return;
+       const bannedID = cmd.target_uids[0];
+       if (!cmd.hasOwnProperty('contents') || !cmd.contents.hasOwnProperty('mod') || !cmd.contents.mod.hasOwnProperty('content_params') || !cmd.contents.mod.content_params.hasOwnProperty('userNickName'))
+        return;
+       const uInf = await trovo.net.userInfo(bannedID, true);
+       if (!uInf)
+        return;
+       const u = {
+        id: bannedID,
+        _slug: uInf.username,
+        _name: cmd.contents.mod.content_params.userNickName,
+        ascii: false
+       };
+       const gReg = new RegExp(service.parse.uReg, 'g');
+       if (!!u._name && u._name === u._name.replaceAll(gReg, ''))
+        u.ascii = u._name;
+       if (!u.ascii && !!u._slug)
+        u.ascii = u._slug;
+       if (!u.ascii)
+        u.ascii = anonName;
+       if (service.parse.ignored(u))
+        return;
+       const dDur = cmd.contents.banned.content_params.banDuration;
+       const r = shared.findInMaybeRange(cfg.event.trovo.timeout, dDur);
+       if (r === false)
+        return;
+       display.kappa.show(false, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: dDur});
+      }
+
+      return {
+       cheer: $cheer,
+       raid: $raid,
+       sub: $sub,
+       follow: $follow,
+       poll: $poll,
+       ban: $ban,
+       timeout: $timeout
+      };
+     }();
+
+     class _level
+     {
+      constructor(cmd)
+      {
+       this.r = trovo.Access.STRANGER;
+       if (!cmd.hasOwnProperty('roles'))
+        return;
+       if (cmd.roles.includes('streamer'))
+        this.r |= trovo.Access.BROADCASTER;
+       if (cmd.roles.includes('mod') || cmd.roles.includes('supermod') || cmd.roles.includes('editor'))
+        this.r |= trovo.Access.MODERATOR;
+       if (cmd.roles.includes('VIP'))
+        this.r |= trovo.Access.VIP;
+       if (cmd.roles.includes('follower'))
+        this.r |= trovo.Access.FOLLOWER;
+       if (!cmd.roles.includes('subscriber'))
+        return;
+       if (!cmd.hasOwnProperty('sub_tier'))
+       {
+        this.r |= trovo.Access.SUBSCRIBER_T1;
+        return;
+       }
+       if (cmd.sub_tier === '3')
+       {
+        this.r |= trovo.Access.SUBSCRIBER_T3;
+        return;
+       }
+       if (cmd.sub_tier === '2')
+       {
+        this.r |= trovo.Access.SUBSCRIBER_T2;
+        return;
+       }
+       this.r |= trovo.Access.SUBSCRIBER_T1;
+      }
+
+      check(rq)
+      {
+       return (this.r & rq) !== 0;
+      }
+     }
+
+     function _handleDuplicates(a)
+     {
+      const lA = a.length;
+      if (lA < 1)
+       return a;
+      const r = [];
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.url)
+        r.push(a[i]);
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].scope === cSources.scope.user)
+       {
+        if (service.parse.notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.trovo && a[i].scope === cSources.scope.channel)
+       {
+        if (service.parse.notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
+      {
+       for (let i = 0; i < lA; i++)
+       {
+        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (service.parse.notDupe(a[i], r))
+          r.push(a[i]);
+        }
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.trovo && a[i].scope === cSources.scope.global)
+       {
+        if (service.parse.notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      for (let p = 0; p < cfg.display.extended.priority.length; p++)
+      {
+       for (let i = 0; i < lA; i++)
+       {
+        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
+        {
+         if (service.parse.notDupe(a[i], r))
+          r.push(a[i]);
+        }
+       }
+      }
+      for (let i = 0; i < lA; i++)
+      {
+       if (a[i].svc === cSources.service.emoji)
+       {
+        if (service.parse.notDupe(a[i], r))
+         r.push(a[i]);
+       }
+      }
+      return r;
+     }
+
+     async function _eListFromCmd(cmd, dup = null)
+     {
+      const r = [];
+      const u = _parse.user(cmd);
+      if (service.parse.ignored(u))
+       return r;
+      r.push(...await _parse.content.trovo(cmd, dup));
+      if (cfg.display.useEmoji)
+       r.push(..._parse.content.emoji(cmd, dup));
+      if (cfg.ignore.emotes !== false && cfg.ignore.emotes.length > 0)
+      {
+       for (let i = r.length - 1; i >= 0; i--)
+       {
+        const m = r[i].str;
+        if (cfg.ignore.emotes.includes(m))
+         r.splice(i, 1);
+       }
+      }
+      const t = Date.now();
+      for (let i = 0, l = r.length; i < l; i++)
+      {
+       r[i].timestamp = t;
+       if (r[i].hasOwnProperty('width') || r[i].hasOwnProperty('height'))
+        continue;
+       if (!r[i].hasOwnProperty('url'))
+        continue;
+       const sz = shared.ec.get(r[i].url);
+       if (sz === null)
+        continue;
+       r[i].width = sz.width;
+       r[i].height = sz.height;
+      }
+      if (cmd.hasOwnProperty('message_id'))
+      {
+       for (let i = 0, l = r.length; i < l; i++)
+       {
+        r[i].origin = 'trovo:' + cmd.message_id;
+       }
+      }
+      return r;
+     }
+
+     return {
+      user: $parseUser,
+      content: $content,
+      line: $line,
+      event: $event
+     };
+    }();
+
+    const _findEmote = function()
+    {
+     const _rCH = 300000;
+     const _chList = {};
+
+     async function $c_findEmote(chID, n = false, retry = true)
+     {
+      if (n === false && _chList.hasOwnProperty(chID))
+      {
+       const tDif = Date.now() - _chList[chID].t;
+       if (tDif < _rCH)
+        return _chList[chID].value;
+      }
+      const h = trovo.net.oAuth.headers(true);
+      const d = {
+       'emote_type': 1,
+       'channel_id': [chID]
+      };
+      const b = JSON.stringify(d);
+      const r = await shared.httpRequest('POST', cURLs.api.trovo.emotes, h, b);
+      if (!r.success)
+      {
+       if (r.code === 401)
+       {
+        if (retry && await trovo.net.oAuth.reinit())
+         return _findEmote(chID, n, false);
+        notice.error(notice.Type.TROVO_TOKEN);
+        if (!loginTL.inUse)
+         trovo.net.oAuth.clear();
+       }
+       return [];
+      }
+      const j = r.json;
+      if (j === null)
+       return [];
+      if (!j.hasOwnProperty('channels'))
+       return [];
+      if (!j.channels.hasOwnProperty('customizedEmotes'))
+       return [];
+      if (!j.channels.customizedEmotes.hasOwnProperty('channel') || !Array.isArray(j.channels.customizedEmotes.channel))
+       return [];
+      if (j.channels.customizedEmotes.channel.length !== 1)
+       return [];
+      if (!j.channels.customizedEmotes.channel[0].hasOwnProperty('emotes') || !Array.isArray(j.channels.customizedEmotes.channel[0].emotes))
+       return [];
+      const ret = [];
+      for (let i = 0, l = j.channels.customizedEmotes.channel[0].emotes.length; i < l; i++)
+      {
+       if (!j.channels.customizedEmotes.channel[0].emotes[i].hasOwnProperty('name'))
+        continue;
+       if (!j.channels.customizedEmotes.channel[0].emotes[i].hasOwnProperty('status') || j.channels.customizedEmotes.channel[0].emotes[i].status !== 'CustomEmoteStatusEnable')
+        continue;
+       if (cfg.ignore.emotes !== false && cfg.ignore.emotes.includes(j.channels.customizedEmotes.channel[0].emotes[i].name))
+        continue;
+       let u = false;
+       if (j.channels.customizedEmotes.channel[0].emotes[i].hasOwnProperty('webp'))
+        u = j.channels.customizedEmotes.channel[0].emotes[i].webp;
+       else if (j.channels.customizedEmotes.channel[0].emotes[i].hasOwnProperty('gifp'))
+        u = j.channels.customizedEmotes.channel[0].emotes[i].gifp;
+       else if (j.channels.customizedEmotes.channel[0].emotes[i].hasOwnProperty('url'))
+        u = j.channels.customizedEmotes.channel[0].emotes[i].url;
+       if (!u)
+        continue;
+       if (n !== false)
+       {
+        n[j.channels.customizedEmotes.channel[0].emotes[i].name] = {
+         scope: cSources.scope.channel,
+         url: u
+        };
+       }
+       ret.push({url: u});
+      }
+      _chList[chID] = {t: Date.now(), value: ret};
+      if (ret.length === 0)
+       return false;
+      return ret;
+     }
+
+     return $c_findEmote;
+    }();
+
+    async function $global(retry = true)
+    {
+     if (!service.emotes.hasOwnProperty('trovo'))
+      service.emotes.trovo = {};
+     const h = trovo.net.oAuth.headers(true);
+     const d = {'emote_type': 2};
+     const b = JSON.stringify(d);
+     const r = await shared.httpRequest('POST', cURLs.api.trovo.emotes, h, b);
+     if (!r.success)
+     {
+      if (r.code === 401)
+      {
+       if (retry && await trovo.net.oAuth.reinit())
+        return trovo.global(false);
+       notice.error(notice.Type.TROVO_TOKEN);
+       if (!loginTL.inUse)
+        trovo.net.oAuth.clear();
+      }
+      return false;
+     }
+     const j = r.json;
+     if (j === null)
+      return false;
+     if (!j.hasOwnProperty('channels'))
+      return false;
+     if (j.channels.hasOwnProperty('globalEmotes') && Array.isArray(j.channels.globalEmotes))
+     {
+      for (let i = 0, l = j.channels.globalEmotes.length; i < l; i++)
+      {
+       if (!j.channels.globalEmotes[i].hasOwnProperty('name'))
+        continue;
+       if (!j.channels.globalEmotes[i].hasOwnProperty('status') || j.channels.globalEmotes[i].status !== '1')
+        continue;
+       let u = false;
+       if (j.channels.globalEmotes[i].hasOwnProperty('webp') && j.channels.globalEmotes[i].webp !== '')
+        u = j.channels.globalEmotes[i].webp;
+       else if (j.channels.globalEmotes[i].hasOwnProperty('gifp') && j.channels.globalEmotes[i].gifp !== '')
+        u = j.channels.globalEmotes[i].gifp;
+       else if (j.channels.globalEmotes[i].hasOwnProperty('url') && j.channels.globalEmotes[i].url !== '')
+        u = j.channels.globalEmotes[i].url;
+       if (!u)
+        continue;
+       if (cfg.ignore.emotes !== false && cfg.ignore.emotes.includes(j.channels.globalEmotes[i].name))
+        continue;
+       service.emotes.trovo[j.channels.globalEmotes[i].name] = {
+        scope: cSources.scope.global,
+        url: u
+       };
+      }
+     }
+     if (j.channels.hasOwnProperty('eventEmotes') && Array.isArray(j.channels.eventEmotes))
+     {
+      for (let i = 0, l = j.channels.eventEmotes.length; i < l; i++)
+      {
+       if (!j.channels.eventEmotes[i].hasOwnProperty('name'))
+        continue;
+       if (!j.channels.eventEmotes[i].hasOwnProperty('status') || j.channels.eventEmotes[i].status !== '1')
+        continue;
+       let u = false;
+       if (j.channels.eventEmotes[i].hasOwnProperty('webp') && j.channels.eventEmotes[i].webp !== '')
+        u = j.channels.eventEmotes[i].webp;
+       else if (j.channels.eventEmotes[i].hasOwnProperty('gifp') && j.channels.eventEmotes[i].gifp !== '')
+        u = j.channels.eventEmotes[i].gifp;
+       else if (j.channels.eventEmotes[i].hasOwnProperty('url') && j.channels.eventEmotes[i].url !== '')
+        u = j.channels.eventEmotes[i].url;
+       if (!u)
+        continue;
+       if (cfg.ignore.emotes !== false && cfg.ignore.emotes.includes(j.channels.eventEmotes[i].name))
+        continue;
+       service.emotes.trovo[j.channels.eventEmotes[i].name] = {
+        scope: cSources.scope.global,
+        url: u
+       };
+      }
+     }
+     return Object.keys(service.emotes.trovo).length > 0;
+    }
+
+    const $channelSpells = function()
+    {
+     async function $c_channelSpells()
+     {
+      if (!service.emotes.hasOwnProperty('spells'))
+       service.emotes.spells = {};
+      const d = [
+       {
+        operationName: 'commerce_ShopService_GetGiftShop',
+        variables: {
+         params: {
+          channelID: trovo.net.channelID,
+          channelOnly: false,
+          includeOffShelf: true,
+          customGift: true
+         }
+        },
+        extensions: {}
+       }
+      ];
+      const b = JSON.stringify(d);
+      const h = trovo.net.oAuth.headers('text/plain', 'OAuth');
+      const r = await shared.httpRequest('POST', cURLs.api.trovo.gql, h, b, false);
+      if (!r.success)
+       return;
+      const j = r.json;
+      if (j === null)
+       return;
+      if (!Array.isArray(j))
+       return;
+      if (j.length !== 1)
+       return;
+      if (!j[0].hasOwnProperty('data'))
+       return;
+      if (!j[0].data.hasOwnProperty('commerce_ShopService_GetGiftShop'))
+       return;
+      const jShop = j[0].data.commerce_ShopService_GetGiftShop;
+      const tabs = _parseTabs(jShop);
+      const entries = [];
+      entries.push(..._parseGeneral(jShop, tabs));
+      entries.push(..._parseCustom(jShop));
+      if (entries.length === 0)
+       return;
+      for (let i = 0; i < entries.length; i++)
+      {
+       service.emotes.spells[entries[i].id] = {name: entries[i].name, tab: entries[i].tab, url: entries[i].pic};
+      }
+     }
+
+     function _parseTabs(jShop)
+     {
+      if (!jShop.hasOwnProperty('tabInfos') || !Array.isArray(jShop.tabInfos))
+       return {1: 'spells', 2: 'chat', 3: 'custom', 5: 'ace', 6: 'shop'};
+      const ret = {};
+      for (let i = 0; i < jShop.tabInfos.length; i++)
+      {
+       if (!jShop.tabInfos[i].hasOwnProperty('giftTabID'))
+        continue;
+       if (!jShop.tabInfos[i].hasOwnProperty('giftTabName'))
+        continue;
+       ret[jShop.tabInfos[i].giftTabID] = jShop.tabInfos[i].giftTabName.toLowerCase();
+      }
+      return ret;
+     }
+
+     function _parseGeneral(jShop, tabNames)
+     {
+      if (!jShop.hasOwnProperty('shopItemInfo'))
+       return [];
+      if (!Array.isArray(jShop.shopItemInfo))
+       return [];
+      if (jShop.shopItemInfo.length === 0)
+       return [];
+      const ret = [];
+      for (let i = 0; i < jShop.shopItemInfo.length; i++)
+      {
+       const jItem = jShop.shopItemInfo[i];
+       if (!jItem.hasOwnProperty('giftInfo'))
+        continue;
+       if (!jItem.giftInfo.hasOwnProperty('giftID'))
+        continue;
+       if (!jItem.giftInfo.hasOwnProperty('name'))
+        continue;
+       if (!jItem.hasOwnProperty('extInfo'))
+        continue;
+       if (!jItem.extInfo.hasOwnProperty('giftTabID'))
+        continue;
+       let tabType = 'spells';
+       if (tabNames.hasOwnProperty(jItem.extInfo.giftTabID))
+        tabType = tabNames[jItem.extInfo.giftTabID];
+       const entry = {
+        id: jItem.giftInfo.giftID,
+        name: jItem.giftInfo.name,
+        tab: tabType,
+        pic: false
+       };
+       if (!!jItem.extInfo.effectsApng)
+        entry.pic = jItem.extInfo.effectsApng;
+       else if (!!jItem.extInfo.effects)
+        entry.pic = jItem.extInfo.effects;
+       else if (!!jItem.extInfo.effectsGif)
+        entry.pic = jItem.extInfo.effectsGif;
+       else if (!!jItem.giftInfo.icon)
+        entry.pic = jItem.giftInfo.icon;
+       if (!entry.pic)
+        continue;
+       ret.push(entry);
+      }
+      return ret;
+     }
+
+     function _parseCustom(jShop)
+     {
+      if (!jShop.hasOwnProperty('customGifts'))
+       return [];
+      if (!Array.isArray(jShop.customGifts))
+       return [];
+      if (jShop.customGifts.length === 0)
+       return [];
+      const ret = [];
+      for (let i = 0; i < jShop.customGifts.length; i++)
+      {
+       const jItem = jShop.customGifts[i];
+       if (!jItem.hasOwnProperty('giftID'))
+        continue;
+       if (!jItem.hasOwnProperty('name'))
+        continue;
+       const entry = {
+        id: jItem.giftID,
+        name: jItem.name,
+        tab: 'custom',
+        pic: false
+       };
+       if (!!jItem.effectsApng)
+        entry.pic = jItem.effectsApng;
+       else if (!!jItem.effects)
+        entry.pic = jItem.effects;
+       else if (!!jItem.effectsGif)
+        entry.pic = jItem.effectsGif;
+       else if (!!jItem.icon)
+        entry.pic = jItem.icon;
+       if (!entry.pic)
+        continue;
+       ret.push(entry);
+      }
+      return ret;
+     }
+
+     return $c_channelSpells;
+    }();
+
+    return {
+     net: $net,
+     global: $global,
+     channelSpells: $channelSpells,
+     Access: Object.freeze({
+      STRANGER: 0x001,
+      FOLLOWER: 0x002,
+      CHEERER: 0x004,
+      SUBSCRIBER_T1: 0x010,
+      SUBSCRIBER_T2: 0x020,
+      SUBSCRIBER_T3: 0x040,
+      VIP: 0x100,
+      MODERATOR: 0x400,
+      BROADCASTER: 0x800
+     })
+    };
+   }();
+
    const service = function()
    {
     const $parse = function()
@@ -18076,7 +20917,7 @@
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead && trovo.net.dead)
        return;
       const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
@@ -18093,7 +20934,7 @@
       }
       if (_ws === null)
        return;
-      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead && trovo.net.dead)
       {
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -18247,7 +21088,7 @@
       _ws.onclose = null;
       _ws.close();
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead && trovo.net.dead)
        return;
       streamlabs.socket();
      }
@@ -18361,7 +21202,7 @@
       _ws.onmessage = null;
       _ws.onclose = null;
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead && trovo.net.dead)
        return;
       const wsWait = Math.floor(wsRetryBase ** (1 + _wsRetry) * 1000);
       if (_wsRetry < 2)
@@ -18378,7 +21219,7 @@
       }
       if (_ws === null)
        return;
-      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead && trovo.net.dead)
       {
        _ws.onopen = null;
        _ws.onmessage = null;
@@ -18524,7 +21365,7 @@
       _ws.onclose = null;
       _ws.close();
       _ws = null;
-      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead)
+      if (twitch.net.dead && youtube.net.dead && kick.net.dead && lfg.net.dead && trovo.net.dead)
        return;
       streamelements.socket();
      }
@@ -22267,7 +25108,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginT.begin();');
      cmdLogin.innerHTML = 'Twitch<br><span>Log In</span>';
-     if (auto && (youtube.net.oAuth.hasLogin || kick.net.oAuth.hasLogin || lfg.net.oAuth.hasLogin))
+     if (auto && (youtube.net.oAuth.hasLogin || kick.net.oAuth.hasLogin || lfg.net.oAuth.hasLogin || trovo.net.oAuth.hasLogin))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
      shared.hueSync();
@@ -22494,7 +25335,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginYT.begin();');
      cmdLogin.innerHTML = 'YouTube<br><span>Log In</span>';
-     if (auto && (twitch.net.oAuth.hasLogin || kick.net.oAuth.hasLogin || lfg.net.oAuth.hasLogin))
+     if (auto && (twitch.net.oAuth.hasLogin || kick.net.oAuth.hasLogin || lfg.net.oAuth.hasLogin || trovo.net.oAuth.hasLogin))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
      shared.hueSync();
@@ -22713,7 +25554,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginK.begin();');
      cmdLogin.innerHTML = 'Kick<br><span>Log In</span>';
-     if (auto && (youtube.net.oAuth.hasLogin || twitch.net.oAuth.hasLogin || lfg.net.oAuth.hasLogin))
+     if (auto && (youtube.net.oAuth.hasLogin || twitch.net.oAuth.hasLogin || lfg.net.oAuth.hasLogin || trovo.net.oAuth.hasLogin))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
      shared.hueSync();
@@ -22880,7 +25721,7 @@
      _tL = window.setTimeout(_fadeOutLogin, _visTime);
      cmdLogin.setAttribute('onclick', 'loginL.begin();');
      cmdLogin.innerHTML = 'LFG<br><span>Log In</span>';
-     if (auto && (youtube.net.oAuth.hasLogin || twitch.net.oAuth.hasLogin || kick.net.oAuth.hasLogin))
+     if (auto && (youtube.net.oAuth.hasLogin || twitch.net.oAuth.hasLogin || kick.net.oAuth.hasLogin || trovo.net.oAuth.hasLogin))
       cmdLogin.classList.add('hidden');
      document.body.appendChild(cmdLogin);
      shared.hueSync();
@@ -22993,6 +25834,224 @@
     };
    }();
 
+   const loginTL = function()
+   {
+    let _tL = false;
+    const _visTime = 5000;
+    const _idLogin = 'cmdTLLogin';
+    const _idLogout = 'cmdTLLogout';
+
+    function _activeScope()
+    {
+     const r = [];
+     r.push(cScopes.trovo.chat);
+     return r;
+    }
+
+    function _uScope()
+    {
+     return encodeURIComponent(_activeScope().join(' '));
+    }
+
+    function $path()
+    {
+     if (loginTL.cfgHash !== false)
+      return 'trovo.' + loginTL.cfgHash;
+     return shared.cfgHash + '.trovo';
+    }
+
+    function $use()
+    {
+     if (loginTL.inUse === false)
+      return false;
+     if (trovo.net.oAuth.hasLogin)
+     {
+      loginTL.showOut();
+      return false;
+     }
+     loginTL.showIn(true);
+     return true;
+    }
+
+    function $begin()
+    {
+     trovo.net.oAuth.clear();
+     let loc = window.location.toString();
+     if (window.location.hash.length > 1)
+      loc = loc.slice(0, -1 * window.location.hash.length);
+     const o = encodeURIComponent(window.btoa(loc));
+     const c = encodeURIComponent(oauthClient.tl);
+     const r = encodeURIComponent(cURLs.html.rr.auth.tl);
+     const u = cURLs.html.trovo.replaceAll(cVARs.url.clientID, c).replaceAll(cVARs.url.uri, r).replaceAll(cVARs.url.scope, _uScope()).replaceAll(cVARs.url.origin, o);
+     if (u.length < 1500)
+     {
+      window.location = u;
+      return;
+     }
+     const f = document.createElement('form');
+     f.setAttribute('method', 'POST');
+     f.setAttribute('action', cURLs.html.rr.redir);
+     const ft = document.createElement('input');
+     ft.setAttribute('type', 'hidden');
+     ft.setAttribute('name', 't');
+     ft.setAttribute('value', 'code');
+     f.appendChild(ft);
+     const fv = document.createElement('input');
+     fv.setAttribute('type', 'hidden');
+     fv.setAttribute('name', 'v');
+     fv.setAttribute('value', 'trovo');
+     f.appendChild(fv);
+     const fc = document.createElement('input');
+     fc.setAttribute('type', 'hidden');
+     fc.setAttribute('name', 'c');
+     fc.setAttribute('value', oauthClient.tl);
+     f.appendChild(fc);
+     const fr = document.createElement('input');
+     fr.setAttribute('type', 'hidden');
+     fr.setAttribute('name', 'r');
+     fr.setAttribute('value', cURLs.html.rr.auth.tl);
+     f.appendChild(fr);
+     const fs = document.createElement('input');
+     fs.setAttribute('type', 'hidden');
+     fs.setAttribute('name', 's');
+     fs.setAttribute('value', _activeScope().join(' '));
+     f.appendChild(fs);
+     const fu = document.createElement('input');
+     fu.setAttribute('type', 'hidden');
+     fu.setAttribute('name', 'u');
+     fu.setAttribute('value', loc);
+     f.appendChild(fu);
+     document.body.appendChild(f);
+     f.submit();
+    }
+
+    function $showIn(auto = false)
+    {
+     if (document.getElementById(_idLogout))
+      document.body.removeChild(document.getElementById(_idLogout));
+     trovo.net.oAuth.clear();
+     const cmdLogin = document.createElement('button');
+     cmdLogin.setAttribute('id', _idLogin);
+     cmdLogin.setAttribute('type', 'button');
+     cmdLogin.classList.add('trovo');
+     cmdLogin.classList.add('auth');
+     cmdLogin.classList.add('unauthorized');
+     document.addEventListener('mouseover', _fadeInLogin);
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+     cmdLogin.setAttribute('onclick', 'loginTL.begin();');
+     cmdLogin.innerHTML = 'Trovo<br><span>Log In</span>';
+     if (auto && (youtube.net.oAuth.hasLogin || kick.net.oAuth.hasLogin || twitch.net.oAuth.hasLogin))
+      cmdLogin.classList.add('hidden');
+     document.body.appendChild(cmdLogin);
+     shared.hueSync();
+    }
+
+    function _fadeInLogin()
+    {
+     if (document.getElementById(_idLogin) && document.getElementById(_idLogin).classList.contains('hidden'))
+     {
+      document.getElementById(_idLogin).classList.remove('hidden');
+      shared.hueSync();
+     }
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogin, _visTime);
+    }
+
+    function _fadeOutLogin()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById(_idLogin))
+      document.getElementById(_idLogin).classList.add('hidden');
+    }
+
+    function $showOut(v = false)
+    {
+     if (document.getElementById(_idLogout))
+      document.body.removeChild(document.getElementById(_idLogout));
+     const cmdLogout = document.createElement('button');
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     cmdLogout.setAttribute('id', _idLogout);
+     cmdLogout.setAttribute('type', 'button');
+     cmdLogout.classList.add('trovo');
+     cmdLogout.classList.add('auth');
+     document.addEventListener('mousemove', _fadeInLogout);
+     if (v)
+     {
+      cmdLogout.classList.add('unauthorized');
+      cmdLogout.setAttribute('onclick', 'loginTL.begin();');
+      cmdLogout.innerHTML = 'Trovo<br><span>Re-Auth</span>';
+      _tL = window.setTimeout(_fadeOutLogout, _visTime);
+     }
+     else
+     {
+      cmdLogout.classList.add('authorized');
+      cmdLogout.setAttribute('onclick', 'loginTL.logOut();');
+      cmdLogout.innerHTML = 'Trovo<br><span>Log Out</span>';
+      cmdLogout.classList.add('hidden');
+     }
+     document.body.appendChild(cmdLogout);
+     shared.hueSync();
+    }
+
+    function $logOut()
+    {
+     trovo.net.oAuth.clear();
+     if (window.location.hash.length < 2)
+      window.location.reload();
+     else
+      window.location = window.location.href.slice(0, -1 * window.location.hash.length);
+    }
+
+    function _fadeInLogout()
+    {
+     if (document.getElementById(_idLogout) && document.getElementById(_idLogout).classList.contains('hidden'))
+     {
+      document.getElementById(_idLogout).classList.remove('hidden');
+      shared.hueSync();
+     }
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     _tL = window.setTimeout(_fadeOutLogout, _visTime);
+    }
+
+    function _fadeOutLogout()
+    {
+     if (_tL !== false)
+     {
+      window.clearTimeout(_tL);
+      _tL = false;
+     }
+     if (document.getElementById(_idLogout))
+      document.getElementById(_idLogout).classList.add('hidden');
+    }
+
+    return {
+     inUse: false,
+     use: $use,
+     begin: $begin,
+     showIn: $showIn,
+     showOut: $showOut,
+     logOut: $logOut,
+     path: $path,
+     cfgHash: false
+    };
+   }();
+
    const startup = function()
    {
     async function $c_startup()
@@ -23006,6 +26065,7 @@
      await youtube.net.oAuth.init();
      await kick.net.oAuth.init();
      lfg.net.oAuth.init();
+     await trovo.net.oAuth.init();
      await streamelements.oAuth.init();
      shared.mspf.init();
      if (cfg.display.hasOwnProperty('hue') && cfg.display.hue === 'rave' && !_hasRaveToggle())
@@ -23022,19 +26082,22 @@
      loginYT.use();
      loginK.use();
      loginL.use();
+     loginTL.use();
      const bT = twitch.net.oAuth.hasLogin;
      const bYT = youtube.net.oAuth.hasLogin;
      const bK = kick.net.oAuth.hasLogin;
      const bL = lfg.net.oAuth.hasLogin;
+     const bTL = trovo.net.oAuth.hasLogin;
      const scks = [];
-     if (bT | bYT | bK | bL)
+     if (bT | bYT | bK | bL | bTL)
       scks.push(_emoji());
-     if (bT | bYT | bK)
+     if (bT | bYT | bK | bTL)
      {
       scks.push(_streamlabs());
       scks.push(_streamelements());
-      scks.push(_7tv());
      }
+     if (bT | bYT | bK)
+      scks.push(_7tv());
      if (bT | bYT)
      {
       scks.push(_ffz());
@@ -23060,6 +26123,10 @@
       svcs.push(_lfg());
      else
       lfg.net.dead = true;
+     if (bTL)
+      svcs.push(_trovo());
+     else
+      trovo.net.dead = true;
      if (svcs.length === 0)
       return;
      const rets = await Promise.allSettled(svcs);
@@ -23086,6 +26153,12 @@
       const rL = rets.shift();
       if (rL.status !== 'fulfilled' || rL.value === false)
        lfg.net.dead = true;
+     }
+     if (bTL)
+     {
+      const rTL = rets.shift();
+      if (rTL.status !== 'fulfilled' || rTL.value === false)
+       trovo.net.dead = true;
      }
     }
 
@@ -23575,6 +26648,7 @@
       await _handleT(k);
       await _handleY(k);
       await _handleK(k);
+      await _handleTL(k);
       await _handleSEO(k);
       await _handleSET(k);
       await _handleSL(k);
@@ -23700,6 +26774,37 @@
        return;
       }
       cfg.kick.oauth_refresh = r;
+     }
+
+     async function _handleTL(k)
+     {
+      if (!cfg.trovo.oauth_refresh)
+       return;
+      if (cfg.trovo.oauth_refresh.slice(0, _preKey.length) !== _preKey)
+       return;
+      if (cfg.trovo.oauth_refresh.indexOf(_preIV) === -1)
+      {
+       cfg.trovo.oauth_refresh = null;
+       notice.error(notice.Type.TROVO_DECRYPT, notice.DecryptType.IV_MISSING);
+       return;
+      }
+      const p = cfg.trovo.oauth_refresh.slice(_preKey.length).split(_preIV, 2);
+      const d = _b64AB(p[0]);
+      const iv = _b64AB(p[1]);
+      if (d === false || iv === false || iv.byteLength * 8 !== _lIV)
+      {
+       cfg.trovo.oauth_refresh = null;
+       notice.error(notice.Type.TROVO_DECRYPT, notice.DecryptType.B64_INVALID);
+       return;
+      }
+      const r = await _decryptData(k, d, iv);
+      if (r === false)
+      {
+       cfg.trovo.oauth_refresh = null;
+       notice.error(notice.Type.TROVO_DECRYPT, notice.DecryptType.DATA_INVALID);
+       return;
+      }
+      cfg.trovo.oauth_refresh = r;
      }
 
      async function _handleSEO(k)
@@ -23887,6 +26992,17 @@
      await lfg.net.socket();
      if (cfg.event.lfg.hypetrain.begin !== false || cfg.event.lfg.hypetrain.end !== false)
       lfg.net.hypetrains();
+     return true;
+    }
+
+    async function _trovo()
+    {
+     if (!trovo.net.oAuth.hasLogin)
+      return false;
+     if (await trovo.global() === false)
+      return false;
+     await trovo.channelSpells();
+     trovo.net.socket();
      return true;
     }
 
@@ -24200,6 +27316,9 @@
 
       if (cfg.hasOwnProperty('lfg') && cfg.lfg.hasOwnProperty('channel') && cfg.lfg.channel === null)
        h = h.replaceAll('/* {INSERT:LFG_OFF} *\/', 'display: none;');
+
+      if (cfg.hasOwnProperty('trovo') && cfg.trovo.hasOwnProperty('oauth_refresh') && cfg.trovo.oauth_refresh === null)
+       h = h.replaceAll('/* {INSERT:TROVO_OFF} *\/', 'display: none;');
 
       return h;
      }
@@ -25026,6 +28145,19 @@
     color: #000000;
     font-size: 14px;
    }
+   #notices .sTrovo
+   {
+    background-color: #32c27c;
+   }
+   #notices .sTrovo:after
+   {
+    position: absolute;
+    top: 0;
+    left: 4px;
+    content: 'TL';
+    color: #000000;
+    font-size: 14px;
+   }
    #notices .tStreamElements
    {
     background-color: #0000FF;
@@ -25159,6 +28291,21 @@
     background-color: #FF0000;
    }
 
+   button.trovo
+   {
+    /* {INSERT:TROVO_OFF} */
+    background-color: #32C27C;
+    color: #FFFFFF;
+   }
+   button.trovo:focus, button.trovo:hover
+   {
+    background-color: #1AAB77;
+   }
+   button.trovo:active
+   {
+    background-color: #1A805B;
+   }
+
    button.auth
    {
     transition: opacity 0.5s;
@@ -25190,6 +28337,10 @@
    button.auth.lfg
    {
     top: 7.25em;
+   }
+   button.auth.trovo
+   {
+    top: 9.5em;
    }
    button.auth::before
    {
