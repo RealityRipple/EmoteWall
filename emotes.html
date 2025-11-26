@@ -90,7 +90,8 @@
     trovo: {
      oauth_refresh: 'OAUTH_REFRESH',
      share: false,
-     bundle_time: 2000
+     bundle_time: 2000,
+     feedback: true
     },
     streamlabs: {
      token: 'JWT_TOKEN', //Requires socket.token
@@ -16623,10 +16624,11 @@
             case 0:
              _chat(data.data.chats[i]);
              break;
-            case 5:
             case 6:
             case 7:
             case 8:
+             service.feedback('tl', 'chat_spell', [{key: 'jData', value: data.data.chats[i]}]);
+            case 5:
             case 5009:
              await _spells(data.data.chats[i]);
              break;
@@ -18090,6 +18092,10 @@
         return p;
        if (!service.emotes.spells.hasOwnProperty(c.id))
         return p;
+       if (c.id === 524000005)
+        service.feedback('tl', 'gif_spell', [{key: 'cmd', value: c}]);
+       if (c.id === 520030007)
+        service.feedback('tl', 'room_spell', [{key: 'cmd', value: c}]);
        let useU = false;
        if (c.raw.hasOwnProperty('content_data') && c.raw.contentdata.hasOwnProperty('user_custom_gift_info'))
        {
@@ -20757,6 +20763,10 @@
         break;
        case 'lfg':
         if (!cfg.lfg.feedback)
+         return;
+        break;
+       case 'tl':
+        if (!cfg.trovo.feedback)
          return;
         break;
        case 'sl':
