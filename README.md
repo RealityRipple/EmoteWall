@@ -1,5 +1,5 @@
 # RealityRipple's Home-Made Emote Wall
-A home-made emote wall for Twitch.TV, Kick, YouTube, and LFG Livestreams, supporting animated Twitch emotes, BetterTTV, FrankerFaceZ, 7TV, and Emojis! Kappagen command and event triggers are also available, with advanced configuration capabilities.
+A home-made emote wall for Twitch.TV, Kick, YouTube, LFG, and Trovo Livestreams, supporting animated Twitch emotes, BetterTTV, FrankerFaceZ, 7TV, and Emojis! Kappagen command and event triggers are also available, with advanced configuration capabilities.
 
 #### Supports
  * Chromium-based browsers
@@ -39,7 +39,7 @@ Priority for emotes with identical names (case-sensitive) uses this exact order:
  4) Global Emotes
  5) Emojis
 
-The order between services can be re-arranged in the configuration, but first-party (Twitch, YouTube, Kick, or LFG) is always first.  
+The order between services can be re-arranged in the configuration, but first-party (Twitch, YouTube, Kick, LFG, or Trovo) is always first.  
 
 This priority order is slightly different from most extensions, and prioritizes the ability to override global emotes with channel-themed ones, as well as allowing third-party User emotes to override any others, except cheers.
 
@@ -113,6 +113,11 @@ The Kick API is being actively developed and improved, but some issues haven't b
 
 > #### [WebSockets](https://github.com/KickEngineering/KickDevDocs/issues/20)
 > Events currently are sent only over WebHooks from server to server. A redirection system using a dummy Twitch account currently works around this lack of server-to-client WebSocket support.
+
+### Trovo API
+The Trovo API suffers from inaccuracies and missing features, most of which have been mitigated or accounted for. However, there are a few requests which required a more complex approach than I would have liked. In particular, the list of spells, the reactions to polls, and the EventSub system all require GQL requests, which do not have CORS headers. My only workable solution was to set up a proxy for these requests on my own server. This proxy means that some major functionality of the Emote Wall on Trovo is reliant on my own server being up.  
+
+Additionally, some specific events, namely Super Cap, Colorful Chat, Spell Chat, GIF Spells, and "Streamer's" Spell (the one that uses the streamer's profile image and display name) are not yet tested and may have issues or might be missing features. I have included an internal feedback reporting system for these specific events, which is temporarily enabled by default.
 
 ### OBS
 This emote wall may do better if the browser source has a frame rate limit of 30 or 60. If you use your GPU while streaming, you may wish to disable Browser Source Hardware Acceleration. It may also work better using a smaller screen resolution (such as 720p on a 1080p screen) and then stretching the browser source to fit to the screen using the OBS Transform feature.
