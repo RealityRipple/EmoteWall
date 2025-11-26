@@ -1438,7 +1438,8 @@
        yt: 'https://ew.realityripple.com/yt/auth',
        k: 'https://ew.realityripple.com/k/auth',
        se: 'https://ew.realityripple.com/se/auth'
-      })
+      }),
+      feedback: 'https://ew.realityripple.com/feedback'
      })
     }),
     cdn: Object.freeze({
@@ -17895,9 +17896,51 @@
      service.cSafe = JSON.parse(JSON.stringify(service.cList));
     }
 
+    async function $feedback(svc, evt, params)
+    {
+     if (!cfg.feedback)
+     {
+      switch (svc)
+      {
+       case 't':
+        if (!cfg.twitch.feedback)
+         return;
+        break;
+       case 'yt':
+        if (!cfg.youtube.feedback)
+         return;
+        break;
+       case 'k':
+        if (!cfg.kick.feedback)
+         return;
+        break;
+       case 'lfg':
+        if (!cfg.lfg.feedback)
+         return;
+        break;
+       case 'sl':
+        if (!cfg.streamlabs.feedback)
+         return;
+        break;
+       case 'se':
+        if (!cfg.streamelements.feedback)
+         return;
+        break;
+       case 'ew':
+       case 'rr':
+        return;
+      }
+     }
+     let b = 'svc=' + encodeURIComponent(svc);
+     b += '&evt=' + encodeURIComponent(evt);
+     b += '&params=' + encodeURIComponent(JSON.stringify(params));
+     await shared.httpRequest('POST', cURLs.api.rr.feedback, {}, b, false, false);
+    }
+
     return {
      parse: $parse,
      syncList: $syncList,
+     feedback: $feedback,
      emotes: {},
      cList: [],
      cSafe: []
