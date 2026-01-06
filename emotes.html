@@ -5689,28 +5689,7 @@
      {
       if (ms < shared.mspf.value)
        return _fPause();
-      return new Promise(
-       function(resolve)
-       {
-        let n = 0;
-        function _next(ts)
-        {
-         if (n === 0)
-         {
-          n = ts;
-          window.requestAnimationFrame(_next);
-          return;
-         }
-         else if (ts - n < ms)
-         {
-          window.requestAnimationFrame(_next);
-          return;
-         }
-         resolve(true);
-        }
-        window.requestAnimationFrame(_next);
-       }
-      );
+      return new Promise(function(resolve){window.setTimeout(resolve, ms);});
      }
 
      function _fPause(frames = 1)
