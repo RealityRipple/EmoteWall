@@ -1946,6 +1946,9 @@ Configuration Information
     - [ ] If `false`, no users will be ignored.
     - [ ] If an array of strings, these user names will not be able to make emotes show up.
 
+  * `bots`  
+    *A boolean value to ignore channel bots, as indicated by badges (Twitch, FFZ, BTTV).*  
+
   * `emotes`  
     *Emotes which should be ignored.*  
     This value can be `false` or an array:

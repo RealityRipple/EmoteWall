@@ -492,6 +492,7 @@
     commands: [],
     ignore: {
      users: false,
+     bots: true,
      emotes: false
     }
    };
@@ -1504,7 +1505,8 @@
       room: Object.freeze({
        twitch: 'https://api.frankerfacez.com/v1/room/id/' + cVARs.url.channelID,
        youtube: 'https://api.frankerfacez.com/v1/room/yt/' + cVARs.url.channelID
-      })
+      }),
+      badges: 'https://api.frankerfacez.com/v1/badges'
      }),
      bttv: Object.freeze({
       emotes: Object.freeze({
@@ -7908,7 +7910,8 @@
        id: 0,
        _slug: false,
        _name: false,
-       ascii: false
+       ascii: false,
+       bot: false
       };
       if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('user-id'))
        ret.id = cmd.tags['user-id'];
@@ -7945,6 +7948,19 @@
        ret.ascii = ret._slug;
       if (!ret.ascii)
        ret.ascii = anonName;
+      if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('badges') && typeof cmd.tags.badges === 'string')
+      {
+       const aB = cmd.tags.badges.split(',');
+       for (let i = 0, l = aB.length; i < l; i++)
+       {
+        if (aB[i].split('/')[0] !== 'bot-badge')
+         continue;
+        ret.bot = true;
+        break;
+       }
+      }
+      if (!!ret._slug && (thirdparty.ffz.bots.includes(ret._slug) || thirdparty.bttv.bots.includes(ret._slug)))
+       ret.bot = true;
       return ret;
      }
 
@@ -11114,6 +11130,8 @@
        ret.ascii = ret._name;
       if (!ret.ascii)
        ret.ascii = anonName;
+      if (!!ret._name && (thirdparty.ffz.bots.includes(ret._name) || thirdparty.bttv.bots.includes(ret._name)))
+       ret.bot = true;
       return ret;
      }
 
@@ -13842,6 +13860,8 @@
        ret.ascii = ret._slug;
       if (!ret.ascii)
        ret.ascii = anonName;
+      if (!!ret._slug && (thirdparty.ffz.bots.includes(ret._slug) || thirdparty.bttv.bots.includes(ret._slug)))
+       ret.bot = true;
       return ret;
      }
 
@@ -15807,7 +15827,8 @@
         id: 0,
         _slug: false,
         _name: false,
-        ascii: false
+        ascii: false,
+        bot: false
        };
        if (recipient)
        {
@@ -18038,7 +18059,8 @@
        id: 0,
        _slug: false,
        _name: false,
-       ascii: false
+       ascii: false,
+       bot: false
       };
       if (cmd.hasOwnProperty('sender_id'))
        ret.id = cmd.sender_id;
@@ -20558,6 +20580,8 @@
 
      function $ignored(u)
      {
+      if (cfg.ignore.bots && u.bot)
+       return true;
       if (!cfg.ignore.users)
        return false;
       if (!!u._slug && cfg.ignore.users.includes(u._slug))
@@ -21782,6 +21806,8 @@
 
     const $ffz = function()
     {
+     let _botBadge = false;
+
      function _readFFZ_URL(entry)
      {
       const g = entry.animated ?? entry.urls ?? false;
@@ -21921,6 +21947,10 @@
       const j = r.json;
       if (j === null)
        return false;
+      if (_botBadge === false || thirdparty.ffz.bots.length === 0)
+       await _badges();
+      if (j.hasOwnProperty('room') && j.room.hasOwnProperty('user_badges'))
+       _addBots(j.room.user_badges);
       if (!j.hasOwnProperty('sets'))
        return false;
       const ret = [];
@@ -22007,10 +22037,53 @@
       }
      }
 
+     async function _badges()
+     {
+      thirdparty.ffz.bots = [];
+      _botBadge = false;
+      const url = cURLs.api.ffz.badges;
+      const r = await shared.httpRequest('GET', url);
+      if (!r.success)
+       return;
+      const j = r.json;
+      if (j === null)
+       return;
+      if (!j.hasOwnProperty('badges') || !Array.isArray(j.badges))
+       return;
+      if (!j.hasOwnProperty('users'))
+       return;
+      for (let i = 0; i < j.badges.length; i++)
+      {
+       if (!j.badges[i].hasOwnProperty('id'))
+        continue;
+       if (!j.badges[i].hasOwnProperty('name'))
+        continue;
+       if (j.badges[i].name !== 'bot')
+        continue;
+       _botBadge = '' + j.badges[i].id;
+       break;
+      }
+      _addBots(j.users);
+     }
+
+     function _addBots(list)
+     {
+      if (_botBadge === false)
+       return;
+      if (!list.hasOwnProperty(_botBadge))
+       return;
+      if (!Array.isArray(list[_botBadge]))
+       return;
+      if (list[_botBadge].length === 0)
+       return;
+      thirdparty.ffz.bots.push(...list[_botBadge]);
+     }
+
      return {
       global: $global,
       channel: $channel,
       channelEx: $channelEx,
+      bots: [],
       Modifier: Object.freeze({
        HIDDEN: 0x01
       })
@@ -22128,6 +22201,13 @@
       const j = r.json;
       if (j === null)
        return false;
+      if (j.hasOwnProperty('bots'))
+      {
+       if (Array.isArray(j.bots) && j.bots.length > 0)
+        thirdparty.bttv.bots = j.bots;
+       else
+        thirdparty.bttv.bots = [];
+      }
       const ret = [];
       if (j.hasOwnProperty('channelEmotes'))
       {
@@ -22387,7 +22467,8 @@
       channel: $channel,
       channelEx: $channelEx,
       socket: $socket,
-      reload: $reloadB
+      reload: $reloadB,
+      bots: []
      };
     }();
 
