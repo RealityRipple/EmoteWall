@@ -8061,6 +8061,8 @@
        const p = [];
        if (!service.emotes.hasOwnProperty('cheer'))
         return p;
+       if (!cmd.hasOwnProperty('tags'))
+        return p;
        if (cmd.tags.bits < 1)
         return p;
        const msg = cmd.params[1].split(' ');
@@ -8450,7 +8452,7 @@
        if (!_aTagged.hasOwnProperty(uTagged))
         return false;
        const uID = _aTagged[uTagged];
-       if (!cfg.event.twitch.tag.onReply && cmd.tags.hasOwnProperty('reply-parent-user-id') && uID === cmd.tags['reply-parent-user-id'])
+       if (!cfg.event.twitch.tag.onReply && cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('reply-parent-user-id') && uID === cmd.tags['reply-parent-user-id'])
         return false;
        let rq = cfg.display.kappa.access;
        if (cfg.event.twitch.tag.hasOwnProperty('access') && cfg.event.twitch.tag.access >= 0)
@@ -8580,6 +8582,8 @@
         if (subPlan === false)
          return;
         if (!cfg.event.twitch.sub[subPlan])
+         return;
+        if (!cmd.hasOwnProperty('tags'))
          return;
         if (!cmd.tags.hasOwnProperty('msg-id'))
          return;
@@ -8788,6 +8792,8 @@
        const u = _parseUser(cmd);
        if (service.parse.ignored(u))
         return;
+       if (!cmd.hasOwnProperty('tags'))
+        return;
        if (!cmd.tags.hasOwnProperty('msg-param-threshold'))
         return;
        const c = cmd.tags['msg-param-threshold'];
@@ -8820,6 +8826,8 @@
       {
        if (!cfg.event.twitch.ban)
         return;
+       if (!cmd.hasOwnProperty('tags'))
+        return;
        const ln = cmd.params[1];
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(ln))
         return;
@@ -8836,6 +8844,8 @@
       async function $timeout(cmd)
       {
        if (!cfg.event.twitch.timeout)
+        return;
+       if (!cmd.hasOwnProperty('tags'))
         return;
        const ln = cmd.params[1];
        if (cfg.ignore.users !== false && cfg.ignore.users.includes(ln))
@@ -9416,11 +9426,11 @@
       check(rq)
       {
        let r = twitch.Access.STRANGER;
-       if (this.cmd.tags.hasOwnProperty('mod') && this.cmd.tags.mod === '1')
+       if (this.cmd.hasOwnProperty('tags') && this.cmd.tags.hasOwnProperty('mod') && this.cmd.tags.mod === '1')
         r |= twitch.Access.MODERATOR;
-       if (this.cmd.tags.hasOwnProperty('vip') && this.cmd.tags.vip === '1')
+       if (this.cmd.hasOwnProperty('tags') && this.cmd.tags.hasOwnProperty('vip') && this.cmd.tags.vip === '1')
         r |= twitch.Access.VIP;
-       if (this.cmd.tags.hasOwnProperty('badges'))
+       if (this.cmd.hasOwnProperty('tags') && this.cmd.tags.hasOwnProperty('badges'))
        {
         const badges = this.cmd.tags.badges.split(',');
         for (let i = 0, l = badges.length; i < l; i++)
@@ -9458,7 +9468,7 @@
          }
         }
        }
-       if (this.cmd.tags.hasOwnProperty('bits') && this.cmd.tags.bits > 0)
+       if (this.cmd.hasOwnProperty('tags') && this.cmd.tags.hasOwnProperty('bits') && this.cmd.tags.bits > 0)
         r |= twitch.Access.CHEERER;
        const accessSub = twitch.Access.SUBSCRIBER_T1 | twitch.Access.SUBSCRIBER_T2 | twitch.Access.SUBSCRIBER_T3;
        if ((r & twitch.Access.BROADCASTER) === twitch.Access.BROADCASTER && (r & accessSub) !== 0)
@@ -9466,6 +9476,8 @@
        if ((r & rq) !== 0)
         return true;
        if ((rq & twitch.Access.FOLLOWER) === 0)
+        return false;
+       if (!this.cmd.hasOwnProperty('tags'))
         return false;
        /* api-heavy, only check if follower access is allowed and there's a chance it matters */
        const uID = this.cmd.tags['user-id'];
@@ -9612,7 +9624,7 @@
       const u = _parseUser(cmd);
       if (service.parse.ignored(u))
        return r;
-      if (andCheers && cmd.tags.hasOwnProperty('bits') && cmd.tags.bits > 0)
+      if (andCheers && cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('bits') && cmd.tags.bits > 0)
        r.push(..._parse.content.bits(cmd));
       r.push(..._parse.content.twitch(cmd, dup));
       if (cfg.display.useEmoji)
@@ -9685,7 +9697,7 @@
        r[i].width = sz.width;
        r[i].height = sz.height;
       }
-      if (cmd.tags.hasOwnProperty('id'))
+      if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('id'))
       {
        for (let i = 0, l = r.length; i < l; i++)
        {
