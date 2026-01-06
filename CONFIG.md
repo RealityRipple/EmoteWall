@@ -1949,6 +1949,28 @@ Configuration Information
   * `bots`  
     *A boolean value to ignore channel bots, as indicated by badges (Twitch, FFZ, BTTV).*  
 
+  * `foreign`  
+    *Ignore emotes that aren't local to your channel(s).*  
+    This value can be a boolean or array:
+    - [ ] If `false`, emotes foreign won't be blocked.
+    - [ ] If `true`, only local emotes will be allowed.
+    - [ ] If an array containing the string `'cheer'`, local emotes and non-channel cheers (bits, Super Stickers, Kicks, coins, and spells) will also be allowed.
+    - [ ] If an array containing the string `'team'`, local emotes and channel emotes from Twitch team members will be allowed.  
+    Local emotes include:
+    - Service channel emotes for your channel.
+    - Third-party channel emotes for your channel.
+    - Custom bit cheers and custom spells.  
+    Foreign emotes include:
+    - Global service emotes.
+    - Service channel emotes for other channels (unless `'team'` is set).
+    - Global third-party emotes.
+    - Third-party channel emotes for other channels.
+    - Emoji.  
+    Special cases:
+    - Cheers of bits, Super Stickers, Kicks, coins, and spells that are not custom to the channel can be allowed using the `'cheer'` value.
+    - Service channel emotes for team members can be allowed using the `'team'` value.
+    - Holiday hats are not disabled by this preference.
+
   * `emotes`  
     *Emotes which should be ignored.*  
     This value can be `false` or an array:
