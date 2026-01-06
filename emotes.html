@@ -331,6 +331,10 @@
        chosen_emote: false,
        modified_emote: false
       },
+      streak: {
+       streams: 10,
+       useMsg: true
+      },
       timeout: false,
       ban: false
      },
@@ -7355,6 +7359,12 @@
          case 'bitsbadgetier':
           _parse.event.badge(cmd);
           break;
+         case 'viewermilestone':
+          if (cmd.tags.hasOwnProperty('msg-param-category') && cmd.tags['msg-param-category'] === 'watch-streak')
+          {
+           _parse.event.streak(cmd);
+           break;
+          }
          default:
           if (cmd.params.length > 1)
            _parse.line(cmd);
@@ -9334,6 +9344,45 @@
        };
       }();
 
+      async function $streak(cmd)
+      {
+       if (!service.emotes.hasOwnProperty('streak'))
+        return;
+       if (!cfg.event.twitch.streak)
+        return;
+       if (!cfg.event.twitch.streak.streams)
+        return;
+       const u = _parseUser(cmd);
+       if (service.parse.ignored(u))
+        return;
+       if (!cmd.hasOwnProperty('tags'))
+        return;
+       if (!cmd.tags.hasOwnProperty('msg-param-value'))
+        return;
+       const mpv = cmd.tags['msg-param-value'];
+       if (mpv < 2)
+        return;
+       let p = false;
+       if (cfg.event.twitch.streak.useMsg)
+       {
+        const a = _eListFromCmd(cmd);
+        p.push(...a);
+       }
+       else
+        await _parse.line(cmd, false);
+       p = _handleDuplicates(p);
+       if (p.length === 0)
+        p = false;
+       const r = shared.findInMaybeRange(cfg.event.twitch.streak.streams, mpv);
+       if (r === false)
+       {
+        display.emote.addToShowList(p);
+        display.emote.showEmotes();
+        return;
+       }
+       display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: mpv});
+      }
+
       return {
        cheer: $cheer,
        raid: $raid,
@@ -9351,7 +9400,8 @@
        poll: $poll,
        prediction: $prediction,
        charity: $charity,
-       goal: $goal
+       goal: $goal,
+       streak: $streak
       };
      }();
 
