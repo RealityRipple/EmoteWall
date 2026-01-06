@@ -1105,6 +1105,26 @@ Configuration Information
         - [ ] If `false`, no kappagen will occur.
         - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
 
+    * `streak`
+      *Settings related to kappagens on a watch streak event.*
+
+      * `streams`
+        *Minimum number of streams in the streak for a kappagen.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on all streaks.
+        - [ ] If `false`, no kappagen will occur on streaks.
+        - [ ]  If Integer, the value is the minimum concurrent streams required for a streak to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur on streak.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-10'` or `'25-49'`, or an open-maximum range such as `'75+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `useMsg`
+        - [ ] If `true`, any emotes in watch streak messages will also be included in the kappagen.
+        - [ ] If `false`, any emotes in watch streak messages will show up like normal emotes.
+
     * `timeout`  
       *Minimum time for a kappagen when a user is timed out.*  
       This value can be a boolean, integer, or array:
@@ -1925,6 +1945,31 @@ Configuration Information
     This value can be `false` or an array:
     - [ ] If `false`, no users will be ignored.
     - [ ] If an array of strings, these user names will not be able to make emotes show up.
+
+  * `bots`  
+    *A boolean value to ignore channel bots, as indicated by badges (Twitch, FFZ, BTTV).*  
+
+  * `foreign`  
+    *Ignore emotes that aren't local to your channel(s).*  
+    This value can be a boolean or array:
+    - [ ] If `false`, emotes foreign won't be blocked.
+    - [ ] If `true`, only local emotes will be allowed.
+    - [ ] If an array containing the string `'cheer'`, local emotes and non-channel cheers (bits, Super Stickers, Kicks, coins, and spells) will also be allowed.
+    - [ ] If an array containing the string `'team'`, local emotes and channel emotes from Twitch team members will be allowed.  
+    Local emotes include:
+    - Service channel emotes for your channel.
+    - Third-party channel emotes for your channel.
+    - Custom bit cheers and custom spells.  
+    Foreign emotes include:
+    - Global service emotes.
+    - Service channel emotes for other channels (unless `'team'` is set).
+    - Global third-party emotes.
+    - Third-party channel emotes for other channels.
+    - Emoji.  
+    Special cases:
+    - Cheers of bits, Super Stickers, Kicks, coins, and spells that are not custom to the channel can be allowed using the `'cheer'` value.
+    - Service channel emotes for team members can be allowed using the `'team'` value.
+    - Holiday hats are not disabled by this preference.
 
   * `emotes`  
     *Emotes which should be ignored.*  
