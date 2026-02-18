@@ -8449,7 +8449,7 @@
         return;
        if (await _parseCommand(cmd, lvChk))
         return;
-       const p = _handleDuplicates(_eListFromCmd(cmd, null, andCheers));
+       const p = service.parse.overlapPriority(_eListFromCmd(cmd, null, andCheers), cSources.service.twitch);
        if (p.length === 0)
         return;
        if (!(await lvChk.check(cfg.display.access)))
@@ -8481,7 +8481,7 @@
          return false;
         if (!cfg.event.twitch.powerup.emote)
          return false;
-        const a = _handleDuplicates(_eListFromCmd(cmd, true));
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
         if (a.length === 0)
          return false;
         const u = _parseUser(cmd);
@@ -8505,7 +8505,7 @@
         if (!cmd.tags.hasOwnProperty('animation-id'))
          return false;
         const u = _parseUser(cmd);
-        const a = _handleDuplicates(_eListFromCmd(cmd, true));
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
         const animID = cmd.tags['animation-id'];
         switch (animID)
         {
@@ -8541,7 +8541,7 @@
         return false;
        if (!cmd.tags.hasOwnProperty('msg-id') || cmd.tags['msg-id'] !== 'highlighted-message')
         return false;
-       const p = _handleDuplicates(_eListFromCmd(cmd));
+       const p = service.parse.overlapPriority(_eListFromCmd(cmd), cSources.service.twitch);
        if (p.length === 0)
         return false;
        display.kappa.show(p, cfg.event.twitch.redeem.highlight);
@@ -8614,7 +8614,7 @@
       function _parseCommand(cmd, lvChk)
       {
        const m = cmd.params[1].toLowerCase();
-       const a = _handleDuplicates(_eListFromCmd(cmd, true));
+       const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
        let mID = false;
        if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('id'))
         mID = 'twitch:' + cmd.tags.id;
@@ -8655,7 +8655,7 @@
         p.push(...b);
         await _parse.line(cmd, false);
        }
-       p = _handleDuplicates(p);
+       p = service.parse.overlapPriority(p, cSources.service.twitch);
        if (p.length === 0)
         return false;
        const r = shared.findInMaybeRange(cfg.event.twitch.cheer.bits, cmd.tags.bits);
@@ -8749,7 +8749,7 @@
         if (cmd.params.length > 1)
         {
          if (cfg.event.twitch.sub.useMsg)
-          a = _eListFromCmd(cmd, true);
+          a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
          else
           await _parse.line(cmd);
         }
@@ -9014,7 +9014,7 @@
          display.kappa.show(false, kC);
          return;
         }
-        const a = _handleDuplicates(_eListFromCmd(cmd, true));
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
         display.kappa.show(a, kC);
         return;
        }
@@ -9509,12 +9509,11 @@
        let p = false;
        if (cfg.event.twitch.streak.useMsg)
        {
-        const a = _eListFromCmd(cmd);
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd), cSources.service.twitch);
         p.push(...a);
        }
        else
         await _parse.line(cmd, false);
-       p = _handleDuplicates(p);
        if (p.length === 0)
         p = false;
        const r = shared.findInMaybeRange(cfg.event.twitch.streak.streams, mpv);
@@ -9674,82 +9673,6 @@
         arr.push(v);
        return arr;
       }
-     }
-
-     function _handleDuplicates(a)
-     {
-      const lA = a.length;
-      if (lA < 1)
-       return a;
-      const r = [];
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.url)
-        r.push(a[i]);
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.cheer)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].scope === cSources.scope.user)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.channel)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.global)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.emoji)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      return r;
      }
 
      function _eListFromCmd(cmd, dup = null, andCheers = true)
@@ -11545,7 +11468,7 @@
        const lvChk = new _level(cmd);
        if (await _parseCommand(cmd, lvChk))
         return;
-       const p = _handleDuplicates(_eListFromCmd(cmd));
+       const p = service.parse.overlapPriority(_eListFromCmd(cmd), cSources.service.youtube);
        if (p.length === 0)
         return;
        if (!(await lvChk.check(cfg.display.access)))
@@ -11557,7 +11480,7 @@
       function _parseCommand(cmd, lvChk)
       {
        const m = _getMessage(cmd).toLowerCase();
-       const a = _handleDuplicates(_eListFromCmd(cmd, true));
+       const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.youtube);
        let mID = false;
        if (cmd.hasOwnProperty('id'))
         mID = 'youtube:' + cmd.id;
@@ -11606,12 +11529,11 @@
         {
          if (cfg.event.youtube.superchat.useMsg)
          {
-          const a = _eListFromCmd(cmd);
+          const a = service.parse.overlapPriority(_eListFromCmd(cmd), cSources.service.youtube);
           p.push(...a);
          }
          else
           await _parse.line(cmd);
-         p = _handleDuplicates(p);
         }
         if (p.length === 0)
          p = false;
@@ -11720,7 +11642,7 @@
         if (cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('userComment') && cmd.snippet.memberMilestoneChatDetails.userComment !== '')
         {
          if (cfg.event.youtube.member.useMsg)
-          a = _eListFromCmd(cmd, true);
+          a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.youtube);
          else
           await _parse.line(cmd);
         }
@@ -11862,82 +11784,6 @@
        const chID = this.cmd._channel;
        return youtube.net.subscribers.checkUser(chID, u.id);
       }
-     }
-
-     function _handleDuplicates(a)
-     {
-      const lA = a.length;
-      if (lA < 1)
-       return a;
-      const r = [];
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.url)
-        r.push(a[i]);
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.cheer)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].scope === cSources.scope.user)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.youtube && a[i].scope === cSources.scope.channel)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.youtube && a[i].scope === cSources.scope.global)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.emoji)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      return r;
      }
 
      function _eListFromCmd(cmd, dup = null)
@@ -14268,7 +14114,7 @@
        const lvChk = new _level(cmd);
        if (await _parseCommand(cmd, attrContent, lvChk))
         return;
-       const p = _handleDuplicates(_eListFromCmd(cmd, attrContent, null, andCheers));
+       const p = service.parse.overlapPriority(_eListFromCmd(cmd, attrContent, null, andCheers), cSources.service.kick);
        if (p.length === 0)
         return;
        if (!(await lvChk.check(cfg.display.access)))
@@ -14280,7 +14126,7 @@
       function _parseCommand(cmd, attrContent, lvChk)
       {
        const m = cmd[attrContent].toLowerCase();
-       const a = _handleDuplicates(_eListFromCmd(cmd, attrContent, true));
+       const a = service.parse.overlapPriority(_eListFromCmd(cmd, attrContent, true), cSources.service.kick);
        let mID = false;
        if (cmd.hasOwnProperty('id'))
         mID = 'kick:' + cmd.id;
@@ -14319,7 +14165,7 @@
         p.push(...b);
         await _parse.line(cmd, 'message', false);
        }
-       p = _handleDuplicates(p);
+       p = service.parse.overlapPriority(p, cSources.service.kick);
        if (p.length === 0)
         return false;
        const r = shared.findInMaybeRange(cfg.event.kick.cheer.kicks, cmd.gift.amount);
@@ -14459,7 +14305,7 @@
          display.kappa.show(false, kC);
          return;
         }
-        const a = _handleDuplicates(_eListFromCmd(cmd, 'user_input', true));
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd, 'user_input', true), cSources.service.kick);
         display.kappa.show(a, kC);
         return;
        }
@@ -14659,82 +14505,6 @@
        kick.net.fList[u.id] = {value: false, t: Date.now()};
        return false;
       }
-     }
-
-     function _handleDuplicates(a)
-     {
-      const lA = a.length;
-      if (lA < 1)
-       return a;
-      const r = [];
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.url)
-        r.push(a[i]);
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.cheer)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].scope === cSources.scope.user)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.kick && a[i].scope === cSources.scope.channel)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.kick && a[i].scope === cSources.scope.global)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.emoji)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      return r;
      }
 
      function _eListFromCmd(cmd, attrContent = 'content', dup = null, andCheers = true)
@@ -16129,7 +15899,7 @@
        const lvChk = new _level(cmd);
        if (await _parseCommand(cmd, attrContent, lvChk))
         return;
-       const p = _handleDuplicates(_eListFromCmd(cmd, attrContent, null, andCheers));
+       const p = service.parse.overlapPriority(_eListFromCmd(cmd, attrContent, null, andCheers), cSources.service.lfg);
        if (p.length === 0)
         return;
        if (!(await lvChk.check(cfg.display.access)))
@@ -16141,7 +15911,7 @@
       function _parseCommand(cmd, attrContent, lvChk)
       {
        const m = cmd[attrContent].toLowerCase();
-       const a = _handleDuplicates(_eListFromCmd(cmd, attrContent, true));
+       const a = service.parse.overlapPriority(_eListFromCmd(cmd, attrContent, true), cSources.service.lfg);
        let mID = false;
        if (cmd.hasOwnProperty('id'))
         mID = 'lfg:' + cmd.id;
@@ -16180,7 +15950,7 @@
         p.push(...b);
         await _parse.line(cmd, 'message', false);
        }
-       p = _handleDuplicates(p);
+       p = service.parse.overlapPriority(p, cSources.service.lfg);
        if (p.length === 0)
         return false;
        const r = shared.findInMaybeRange(cfg.event.lfg.cheer.coins, cmd.tip);
@@ -16421,82 +16191,6 @@
         return 0;
        return lfg.Access.SUBSCRIBER;
       }
-     }
-
-     function _handleDuplicates(a)
-     {
-      const lA = a.length;
-      if (lA < 1)
-       return a;
-      const r = [];
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.url)
-        r.push(a[i]);
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.cheer)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].scope === cSources.scope.user)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.lfg && a[i].scope === cSources.scope.channel)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.lfg && a[i].scope === cSources.scope.global)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.emoji)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      return r;
      }
 
      function _eListFromCmd(cmd, attrContent = 'content', dup = null, andCheers = true)
@@ -18384,7 +18078,7 @@
        const lvChk = new _level(cmd);
        if (await _parseCommand(cmd, lvChk))
         return;
-       const p = _handleDuplicates(await _eListFromCmd(cmd, null));
+       const p = service.parse.overlapPriority(await _eListFromCmd(cmd, null), cSources.service.trovo, true);
        if (p.length === 0)
         return;
        if (!(await lvChk.check(cfg.display.access)))
@@ -18396,7 +18090,7 @@
       async function _parseCommand(cmd, lvChk)
       {
        const m = cmd.content.toLowerCase();
-       const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+       const a = service.parse.overlapPriority(await _eListFromCmd(cmd, true), cSources.service.trovo, true);
        let mID = false;
        if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('id'))
         mID = 'trovo:' + cmd.tags.id;
@@ -18425,7 +18119,7 @@
         if (service.parse.ignored(c.from))
          return;
         let p = [];
-        const q = _handleDuplicates(await _eListFromCmd(c.raw));
+        const q = service.parse.overlapPriority(await _eListFromCmd(c.raw), cSources.service.trovo, true);
         const freeEmotes = !cfg.event.trovo.cheer || !cfg.event.trovo.cheer[name] || !cfg.event.trovo.cheer[name].useMsg;
         const showKappa = !!cfg.event.trovo.cheer && !!cfg.event.trovo.cheer[name] && !!cfg.event.trovo.cheer[name].styles;
         if (freeEmotes || !showKappa)
@@ -18456,7 +18150,7 @@
         const q = [];
         for (let i = 0; i < c.raw.length; i++)
         {
-         q.push(..._handleDuplicates(await _eListFromCmd(c.raw[i])));
+         q.push(...service.parse.overlapPriority(await _eListFromCmd(c.raw[i]), cSources.service.trovo, true));
         }
         const freeEmotes = !cfg.event.trovo.cheer || !cfg.event.trovo.cheer.spells || !cfg.event.trovo.cheer.spells.useMsg;
         const showKappa = !!cfg.event.trovo.cheer && !!cfg.event.trovo.cheer.spells && !!cfg.event.trovo.cheer.spells.elixir;
@@ -18900,74 +18594,6 @@
       {
        return (this.r & rq) !== 0;
       }
-     }
-
-     function _handleDuplicates(a)
-     {
-      const lA = a.length;
-      if (lA < 1)
-       return a;
-      const r = [];
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.url)
-        r.push(a[i]);
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].scope === cSources.scope.user)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.trovo && a[i].scope === cSources.scope.channel)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.trovo && a[i].scope === cSources.scope.global)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.emoji)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      return r;
      }
 
      async function _eListFromCmd(cmd, dup = null)
@@ -20876,10 +20502,10 @@
       return r;
      }
 
-     function $handleDuplicates(a)
+     function $overlapPriority(a, svc = cSources.service.twitch, noCheer = false)
      {
       if (!a)
-       return false;
+       return [];
       const lA = a.length;
       if (lA < 1)
        return a;
@@ -20889,12 +20515,15 @@
        if (a[i].svc === cSources.service.url)
         r.push(a[i]);
       }
-      for (let i = 0; i < lA; i++)
+      if (!noCheer)
       {
-       if (a[i].svc === cSources.service.cheer)
+       for (let i = 0; i < lA; i++)
        {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
+        if (a[i].svc === cSources.service.cheer)
+        {
+         if (service.parse.notDupe(a[i], r))
+          r.push(a[i]);
+        }
        }
       }
       for (let i = 0; i < lA; i++)
@@ -20907,7 +20536,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.channel)
+       if (a[i].svc === svc && a[i].scope === cSources.scope.channel)
        {
         if (service.parse.notDupe(a[i], r))
          r.push(a[i]);
@@ -20926,7 +20555,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.global)
+       if (a[i].svc === svc && a[i].scope === cSources.scope.global)
        {
         if (service.parse.notDupe(a[i], r))
          r.push(a[i]);
@@ -20976,7 +20605,7 @@
       line: $line,
       ignored: $ignored,
       eListFromMsg: $eListFromMsg,
-      handleDuplicates: $handleDuplicates,
+      overlapPriority: $overlapPriority,
       notDupe: $notDupe,
       clearCooldowns: $clearCooldowns,
       uReg: /[^A-Za-z0-9_]/
@@ -21059,8 +20688,8 @@
       let p = false;
       if (cfg.event.tip.useMsgEmotes && m !== false)
       {
-       p = service.parse.eListFromMsg(n, m);
-       p = service.parse.handleDuplicates(p);
+       const a = service.parse.overlapPriority(service.parse.eListFromMsg(n, m));
+       p.push(...a);
       }
       if (p === false && cfg.event.tip.useProfileImage && n !== false)
       {
@@ -21384,8 +21013,8 @@
      let p = false;
      if (cfg.event.tip.useMsgEmotes && dMsg !== false)
      {
-      p = service.parse.eListFromMsg(dName, dMsg);
-      p = service.parse.handleDuplicates(p);
+      const a = service.parse.overlapPriority(service.parse.eListFromMsg(dName, dMsg));
+      p.push(...a);
      }
      if (p === false && cfg.event.tip.useProfileImage && dName !== false)
      {
