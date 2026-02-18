@@ -9506,7 +9506,7 @@
        const mpv = cmd.tags['msg-param-value'];
        if (mpv < 2)
         return;
-       let p = false;
+       const p = [];
        if (cfg.event.twitch.streak.useMsg)
        {
         const a = service.parse.overlapPriority(_eListFromCmd(cmd), cSources.service.twitch);
@@ -9514,8 +9514,6 @@
        }
        else
         await _parse.line(cmd, false);
-       if (p.length === 0)
-        p = false;
        const r = shared.findInMaybeRange(cfg.event.twitch.streak.streams, mpv);
        if (r === false)
        {
@@ -11524,7 +11522,7 @@
         const lv = cmd.snippet.superChatDetails.tier;
         if (lv < 1)
          return false;
-        let p = [];
+        const p = [];
         if (cmd.snippet.superChatDetails.hasOwnProperty('userComment') && cmd.snippet.superChatDetails.userComment !== null)
         {
          if (cfg.event.youtube.superchat.useMsg)
@@ -11535,12 +11533,10 @@
          else
           await _parse.line(cmd);
         }
-        if (p.length === 0)
-         p = false;
         const r = shared.findInMaybeRange(cfg.event.youtube.superchat.level, lv);
         if (r === false)
         {
-         if (p !== false)
+         if (p.length > 0)
          {
           display.emote.addToShowList(p);
           display.emote.showEmotes();
@@ -11577,12 +11573,10 @@
         const lv = cmd.snippet.superStickerDetails.tier;
         if (lv < 1)
          return false;
-        let p = [];
+        const p = [];
         const sId = cmd.snippet.superStickerDetails.superStickerMetadata.stickerId;
         if (_eStickers.hasOwnProperty(sId))
          p.push(_eStickers[sId]);
-        if (p.length === 0)
-         p = false;
         const r = shared.findInMaybeRange(cfg.event.youtube.supersticker, lv);
         if (r === false)
          return true;
@@ -18108,9 +18102,7 @@
        {
         if (service.parse.ignored(c.from))
          return;
-        let p = _parse.content.spells(c);
-        if (p.length === 0)
-         p = false;
+        const p = _parse.content.spells(c);
         display.kappa.show(p, kC, {[cVARs.evt.user]: c.from.ascii, [cVARs.evt.spell]: c.name, [cVARs.evt.amount]: c.qty});
        }
 
@@ -18118,7 +18110,7 @@
        {
         if (service.parse.ignored(c.from))
          return;
-        let p = [];
+        const p = [];
         const q = service.parse.overlapPriority(await _eListFromCmd(c.raw), cSources.service.trovo, true);
         const freeEmotes = !cfg.event.trovo.cheer || !cfg.event.trovo.cheer[name] || !cfg.event.trovo.cheer[name].useMsg;
         const showKappa = !!cfg.event.trovo.cheer && !!cfg.event.trovo.cheer[name] && !!cfg.event.trovo.cheer[name].styles;
@@ -18137,8 +18129,6 @@
          return;
         if (!freeEmotes && q.length > 0)
          p.push(...q);
-        if (p.length === 0)
-         p = false;
         display.kappa.show(p, cfg.event.trovo.cheer[name].styles, {[cVARs.evt.user]: c.from.ascii, [cVARs.evt.spell]: c.name});
        }
 
@@ -18146,7 +18136,7 @@
        {
         if (service.parse.ignored(c.from))
          return;
-        let p = _parse.content.spells(c);
+        const p = _parse.content.spells(c);
         const q = [];
         for (let i = 0; i < c.raw.length; i++)
         {
@@ -18177,12 +18167,10 @@
          return;
         if (!freeEmotes && q.length > 0)
          p.push(...q);
-        if (p.length === 0)
-         p = false;
         const r = shared.findInMaybeRange(cfg.event.trovo.cheer.spells.elixir, c.value * c.qty);
         if (r === false)
         {
-         if (p !== false)
+         if (p.length > 0)
          {
           if ((cfg.display.access & trovo.Access.CHEERER) !== 0)
           {
@@ -18199,7 +18187,7 @@
        {
         if (service.parse.ignored(c.from))
          return;
-        let p = _parse.content.spells(c);
+        const p = _parse.content.spells(c);
         const grp = (coin === 'elixir') ? 'cheer' : 'redeem';
         const showKappa = !!cfg.event.trovo[grp] && !!cfg.event.trovo[grp][name] && !!cfg.event.trovo[grp][name][coin];
         if (!showKappa)
@@ -18214,12 +18202,10 @@
          }
          return;
         }
-        if (p.length === 0)
-         p = false;
         const r = shared.findInMaybeRange(cfg.event.trovo[grp][name][coin], c.value * c.qty);
         if (r === false)
         {
-         if (p !== false)
+         if (p.length > 0)
          {
           if ((cfg.display.access & trovo.Access.CHEERER) !== 0)
           {
@@ -20425,7 +20411,7 @@
      function $eListFromMsg(user, msg)
      {
       if (cfg.ignore.users !== false && cfg.ignore.users.includes(user))
-       return false;
+       return [];
       const r = [];
       const chID = 'twitch:' + twitch.net.channelID;
       r.push(..._parseTwitch(msg));
@@ -20497,8 +20483,6 @@
        r[i].width = sz.width;
        r[i].height = sz.height;
       }
-      if (r.length === 0)
-       return false;
       return r;
      }
 
@@ -20685,13 +20669,13 @@
       const r = shared.findInMaybeRange(cfg.event.tip.streamlabs.donation, v);
       if (r === false)
        continue;
-      let p = false;
+      const p = [];
       if (cfg.event.tip.useMsgEmotes && m !== false)
       {
        const a = service.parse.overlapPriority(service.parse.eListFromMsg(n, m));
        p.push(...a);
       }
-      if (p === false && cfg.event.tip.useProfileImage && n !== false)
+      if (p.length === 0 && cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
        if (!service.parse.uReg.test(n))
@@ -20699,9 +20683,7 @@
        if (u !== false)
        {
         if (u.hasOwnProperty('profile_image_url'))
-         p = [
-          {url: u.profile_image_url}
-         ];
+         p.push({url: u.profile_image_url});
        }
       }
       let s = Number.parseFloat(a * cfg.streamlabs.dispMul);
@@ -20727,7 +20709,7 @@
       const r = shared.findInMaybeRange(cfg.event.tip.streamlabs.pledge, v);
       if (r === false)
        continue;
-      let p = false;
+      const p = [];
       if (cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
@@ -20736,9 +20718,7 @@
        if (u !== false)
        {
         if (u.hasOwnProperty('profile_image_url'))
-         p = [
-          {url: u.profile_image_url}
-         ];
+         p.push({url: u.profile_image_url});
        }
       }
       let s = Number.parseFloat(a * cfg.streamlabs.dispMul);
@@ -21010,13 +20990,13 @@
      const r = shared.findInMaybeRange(cfg.event.tip.streamelements, v);
      if (r === false)
       return;
-     let p = false;
+     const p = [];
      if (cfg.event.tip.useMsgEmotes && dMsg !== false)
      {
       const a = service.parse.overlapPriority(service.parse.eListFromMsg(dName, dMsg));
       p.push(...a);
      }
-     if (p === false && cfg.event.tip.useProfileImage && dName !== false)
+     if (p.length === 0 && cfg.event.tip.useProfileImage && dName !== false)
      {
       let u = false;
       if (!service.parse.uReg.test(dName))
@@ -21024,9 +21004,7 @@
       if (u !== false)
       {
        if (u.hasOwnProperty('profile_image_url'))
-        p = [
-         {url: u.profile_image_url}
-        ];
+        p.push({url: u.profile_image_url});
       }
      }
      let s = Number.parseFloat(dAmt * cfg.streamelements.dispMul);
