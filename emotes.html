@@ -8199,7 +8199,9 @@
         return p;
        if (!cmd.hasOwnProperty('tags'))
         return p;
-       if (cmd.tags.bits < 1)
+       if (!cmd.tags.hasOwnProperty('bits'))
+        return p;
+       if (parseInt(cmd.tags.bits, 10) < 1)
         return p;
        const msg = cmd.params[1].split(' ');
        for (let m = 0, l = msg.length; m < l; m++)
@@ -8641,7 +8643,8 @@
         return false;
        if (!cmd.tags.hasOwnProperty('bits'))
         return false;
-       if (cmd.tags.bits < 1)
+       const iBits = parseInt(cmd.tags.bits, 10);
+       if (iBits < 1)
         return false;
        let p = [];
        if (cfg.event.twitch.cheer.useMsg)
@@ -8658,14 +8661,14 @@
        p = service.parse.overlapPriority(p, cSources.service.twitch);
        if (p.length === 0)
         return false;
-       const r = shared.findInMaybeRange(cfg.event.twitch.cheer.bits, cmd.tags.bits);
+       const r = shared.findInMaybeRange(cfg.event.twitch.cheer.bits, iBits);
        if (r === false)
        {
         display.emote.addToShowList(p);
         display.emote.showEmotes();
         return true;
        }
-       display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: cmd.tags.bits});
+       display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: iBits});
        return true;
       }
 
@@ -8679,7 +8682,7 @@
         return;
        if (!cmd.tags.hasOwnProperty('msg-param-viewerCount'))
         return;
-       const c = cmd.tags['msg-param-viewerCount'];
+       const c = parseInt(cmd.tags['msg-param-viewerCount'], 10);
        const r = shared.findInMaybeRange(cfg.event.twitch.raid.raiders, c);
        if (r === false)
         return;
@@ -8993,7 +8996,7 @@
         if (r.hasOwnProperty('display_name'))
          dn = r.display_name;
        }
-       const dDur = cmd.tags['ban-duration'];
+       const dDur = parseInt(cmd.tags['ban-duration'], 10);
        const r = shared.findInMaybeRange(cfg.event.twitch.timeout, dDur);
        if (r === false)
         return;
@@ -9503,7 +9506,7 @@
         return;
        if (!cmd.tags.hasOwnProperty('msg-param-value'))
         return;
-       const mpv = cmd.tags['msg-param-value'];
+       const mpv = parseInt(cmd.tags['msg-param-value'], 10);
        if (mpv < 2)
         return;
        const p = [];
@@ -9602,7 +9605,7 @@
          }
         }
        }
-       if (this.cmd.hasOwnProperty('tags') && this.cmd.tags.hasOwnProperty('bits') && this.cmd.tags.bits > 0)
+       if (this.cmd.hasOwnProperty('tags') && this.cmd.tags.hasOwnProperty('bits') && parseInt(this.cmd.tags.bits, 10) > 0)
         r |= twitch.Access.CHEERER;
        const accessSub = twitch.Access.SUBSCRIBER_T1 | twitch.Access.SUBSCRIBER_T2 | twitch.Access.SUBSCRIBER_T3;
        if ((r & twitch.Access.BROADCASTER) === twitch.Access.BROADCASTER && (r & accessSub) !== 0)
@@ -9682,7 +9685,7 @@
       const u = _parseUser(cmd);
       if (service.parse.ignored(u))
        return r;
-      if (andCheers && cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('bits') && cmd.tags.bits > 0)
+      if (andCheers && cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('bits') && parseInt(cmd.tags.bits, 10) > 0)
        r.push(..._parse.content.bits(cmd));
       r.push(..._parse.content.twitch(cmd, dup));
       if (cfg.display.useEmoji)
