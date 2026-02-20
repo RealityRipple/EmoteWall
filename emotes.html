@@ -1453,7 +1453,8 @@
        get: 'https://api.twitch.tv/helix/eventsub/subscriptions',
        delete: 'https://api.twitch.tv/helix/eventsub/subscriptions?id=' + cVARs.url.eventID
       }),
-      validate: 'https://id.twitch.tv/oauth2/validate'
+      validate: 'https://id.twitch.tv/oauth2/validate',
+      proxyBase: '^https://api\.twitch\.tv/helix/'
      }),
      youtube: Object.freeze({
       broadcasts: 'https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status&broadcastStatus=all&broadcastType=all&maxResults=50',
@@ -1545,6 +1546,9 @@
        tl: 'https://ew.realityripple.com/tl/auth',
        se: 'https://ew.realityripple.com/se/auth'
       }),
+      proxy: {
+       twitch: 'https://ew.realityripple.com/t/helix/'
+      },
       feedback: 'https://ew.realityripple.com/feedback'
      })
     }),
@@ -6305,7 +6309,9 @@
      {
       if (!service.emotes.hasOwnProperty('cheer'))
        service.emotes.cheer = {};
-      const url = cURLs.api.twitch.bits.cheermotes.replaceAll(cVARs.url.channelID, chID);
+      let url = cURLs.api.twitch.bits.cheermotes.replaceAll(cVARs.url.channelID, chID);
+      if (twitch.net.oAuth.usesChannel)
+       url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
       const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
       if (!r.success)
        return false;
@@ -6939,6 +6945,8 @@
 
       async function _getList()
       {
+       if (twitch.net.oAuth.usesChannel)
+        return [];
        const r = await shared.httpRequest('GET', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers());
        if (!r.success)
         return [];
@@ -7026,6 +7034,8 @@
 
       async function $subscribe(type, version = '1')
       {
+       if (twitch.net.oAuth.usesChannel)
+        return false;
        const d = {
         'type': type,
         'version': version,
@@ -7054,6 +7064,8 @@
 
       async function _unsubscribe(id)
       {
+       if (twitch.net.oAuth.usesChannel)
+        return false;
        const r = await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll(cVARs.url.eventID, id), twitch.net.oAuth.headers(), null, false);
        if (!r.success)
         return false;
@@ -7102,6 +7114,7 @@
       let _firstRS = true;
       let _ws = null;
       let _msgHistory = {};
+      const _sAnon = 'justinfan';
       const _lPing = 30000;
       const _lTimeout = 35000;
       const _lExpire = 5000;
@@ -7129,8 +7142,15 @@
        _ws.onopen = null;
        _tExpire = window.setTimeout(_wsExpire, _lExpire);
        _ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
-       _ws.send('PASS oauth:' + twitch.net.oAuth.auth.access_token);
-       _ws.send('NICK ' + twitch.net.oAuth.auth.channel);
+       if (twitch.net.oAuth.usesChannel)
+       {
+        _ws.send('NICK ' + _sAnon + shared.rnd(100000));
+       }
+       else
+       {
+        _ws.send('PASS oauth:' + twitch.net.oAuth.auth.access_token);
+        _ws.send('NICK ' + twitch.net.oAuth.auth.channel);
+       }
        _ws.send('JOIN #' + twitch.net.oAuth.auth.channel);
       }
 
@@ -7298,6 +7318,8 @@
         _ws.onclose = null;
         _ws.close();
         _ws = null;
+        if (twitch.net.oAuth.usesChannel)
+         return;
         if (await twitch.net.oAuth.reinit())
         {
          window.setTimeout(twitch.net.irc, 1000);
@@ -7349,7 +7371,8 @@
          thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
         if (cfg.display.extended.useBTTV)
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
-        _eventSub(twitch.net.channelID);
+        if (!twitch.net.oAuth.usesChannel)
+         _eventSub(twitch.net.channelID);
        }
 
        function _USERNOTICE(cmd)
@@ -7580,6 +7603,8 @@
       let url = cURLs.api.twitch.users.name.replaceAll(cVARs.url.user, u);
       if (isID)
        url = cURLs.api.twitch.users.id.replaceAll(cVARs.url.userID, u);
+      if (twitch.net.oAuth.usesChannel)
+       url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
       const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
       if (!r.success)
        return false;
@@ -7612,7 +7637,9 @@
 
       async function _getChannelTeams(chID)
       {
-       const url = cURLs.api.twitch.teams.channel.replaceAll(cVARs.url.channelID, chID);
+       let url = cURLs.api.twitch.teams.channel.replaceAll(cVARs.url.channelID, chID);
+       if (twitch.net.oAuth.usesChannel)
+        url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
        const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
        if (!r.success)
         return [];
@@ -7643,7 +7670,9 @@
 
       async function _getTeam(tID)
       {
-       const url = cURLs.api.twitch.teams.team.replaceAll(cVARs.url.teamID, tID);
+       let url = cURLs.api.twitch.teams.team.replaceAll(cVARs.url.teamID, tID);
+       if (twitch.net.oAuth.usesChannel)
+        url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
        const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
        if (!r.success)
         return [];
@@ -7690,7 +7719,9 @@
 
      async function _getChannelTitleTags(chID)
      {
-      const url = cURLs.api.twitch.channels.root.replaceAll(cVARs.url.channelID, chID);
+      let url = cURLs.api.twitch.channels.root.replaceAll(cVARs.url.channelID, chID);
+      if (twitch.net.oAuth.usesChannel)
+       url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
       const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
       if (!r.success)
        return;
@@ -7747,7 +7778,7 @@
 
       async function $init()
       {
-       if (cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null)
+       if ((cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null) || (cfg.twitch.hasOwnProperty('channel') && cfg.twitch.channel === null))
        {
         loginT.cfgHash = false;
         loginT.inUse = false;
@@ -7774,6 +7805,14 @@
          shared.storage.setItem(loginT.path() + _pathRefresh, sRet);
         else
          shared.storage.removeItem(loginT.path() + _pathRefresh);
+        return;
+       }
+       if (cfg.twitch.hasOwnProperty('channel') && cfg.twitch.channel !== null && cfg.twitch.channel !== false && cfg.twitch.channel !== 'CHANNEL_NAME')
+       {
+        loginT.cfgHash = false;
+        loginT.inUse = false;
+        shared.storage.removeItem(loginT.path() + _pathRefresh);
+        _populateNoAuth(cfg.twitch.channel);
         return;
        }
        loginT.inUse = true;
@@ -7852,6 +7891,20 @@
        twitch.net.oAuth.auth.access_token = a;
        twitch.net.oAuth.auth.refresh_token = r;
        twitch.net.oAuth.auth.expires = j.expires_in;
+      }
+
+      function _populateNoAuth(c = null)
+      {
+       twitch.net.oAuth.auth.time = Date.now();
+       if (c === null)
+        twitch.net.oAuth.auth.channel = false;
+       else
+        twitch.net.oAuth.auth.channel = c;
+       twitch.net.oAuth.auth.client_id = false;
+       twitch.net.oAuth.auth.scope = [];
+       twitch.net.oAuth.auth.access_token = false;
+       twitch.net.oAuth.auth.refresh_token = false;
+       twitch.net.oAuth.auth.expires = 0;
       }
 
       async function _refresh(t, retry = false)
@@ -7971,17 +8024,20 @@
         r |= shared.cfgVal.REFRESH_TOKEN;
        if (twitch.net.oAuth.auth.access_token !== false)
         r |= shared.cfgVal.ACCESS_TOKEN;
+       if (cfg.twitch.hasOwnProperty('channel') && cfg.twitch.channel !== null && cfg.twitch.channel !== false && cfg.twitch.channel !== 'CHANNEL_NAME')
+        r |= shared.cfgVal.CHANNEL;
        return r;
       }
 
       function $headers(post = false)
       {
-       const h = {
-        'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
-        'Client-Id': twitch.net.oAuth.auth.client_id
-       };
+       const h = {};
        if (post)
         h['Content-Type'] = 'application/json';
+       if (twitch.net.oAuth.usesChannel || !twitch.net.oAuth.auth.access_token)
+        return h;
+       h['Authorization'] = 'Bearer ' + twitch.net.oAuth.auth.access_token;
+       h['Client-Id'] = twitch.net.oAuth.auth.client_id;
        return h;
       }
 
@@ -7991,7 +8047,18 @@
        reinit: $reinit,
        clear: $clear,
        get hasRefresh() {return (_cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN;},
-       get hasLogin() {return (_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;},
+       get hasLogin()
+       {
+        if ((_cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL)
+         return true;
+        return (_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
+       },
+       get usesChannel()
+       {
+        if ((_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN)
+         return false;
+        return (_cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL;
+       },
        headers: $headers,
        auth: {
         client_id: false,
@@ -9630,6 +9697,8 @@
         if (tDif < this.rFH)
          return twitch.net.fList[uID].value;
        }
+       if (twitch.net.oAuth.usesChannel)
+        return false;
        const url = cURLs.api.twitch.channels.followers.replaceAll(cVARs.url.userID, uID).replaceAll(cVARs.url.channelID, rID);
        const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
        if (!r.success)
@@ -9789,7 +9858,9 @@
        if (tDif < _rCH)
         return _chList[chID].value;
       }
-      const url = cURLs.api.twitch.chat.emotes.root.replaceAll(cVARs.url.channelID, chID);
+      let url = cURLs.api.twitch.chat.emotes.root.replaceAll(cVARs.url.channelID, chID);
+      if (twitch.net.oAuth.usesChannel)
+       url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
       const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
       if (!r.success)
       {
@@ -9890,7 +9961,9 @@
     {
      if (!service.emotes.hasOwnProperty('twitch'))
       service.emotes.twitch = {};
-     const url = cURLs.api.twitch.chat.emotes.global;
+     let url = cURLs.api.twitch.chat.emotes.global;
+     if (twitch.net.oAuth.usesChannel)
+      url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
      const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
      if (!r.success)
      {
@@ -27242,7 +27315,7 @@
       if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === false)
        h = h.replaceAll('/* {INSERT:NOTICE_OFF} *\/', 'display: none;');
 
-      if (cfg.hasOwnProperty('twitch') && cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null)
+      if (cfg.hasOwnProperty('twitch') && ((cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null) || (cfg.twitch.hasOwnProperty('channel') && cfg.twitch.channel === null)))
        h = h.replaceAll('/* {INSERT:TWITCH_OFF} *\/', 'display: none;');
 
       if (cfg.hasOwnProperty('youtube') && cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null)
