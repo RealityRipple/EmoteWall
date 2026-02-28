@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v1.8.1
+    * v1.8.2
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -1453,7 +1453,8 @@
        get: 'https://api.twitch.tv/helix/eventsub/subscriptions',
        delete: 'https://api.twitch.tv/helix/eventsub/subscriptions?id=' + cVARs.url.eventID
       }),
-      validate: 'https://id.twitch.tv/oauth2/validate'
+      validate: 'https://id.twitch.tv/oauth2/validate',
+      proxyBase: '^https://api\.twitch\.tv/helix/'
      }),
      youtube: Object.freeze({
       broadcasts: 'https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status&broadcastStatus=all&broadcastType=all&maxResults=50',
@@ -1501,7 +1502,6 @@
        id: 'https://open-api.trovo.live/openplatform/getusers',
        info: 'https://open-api.trovo.live/openplatform/channels/id'
       }),
-      gql: 'https://ew.realityripple.com/tl/gql',
       validate: 'https://open-api.trovo.live/openplatform/validate'
      }),
      ffz: Object.freeze({
@@ -1545,6 +1545,10 @@
        tl: 'https://ew.realityripple.com/tl/auth',
        se: 'https://ew.realityripple.com/se/auth'
       }),
+      proxy: {
+       twitch: 'https://ew.realityripple.com/t/helix/',
+       trovo: 'https://ew.realityripple.com/tl/gql'
+      },
       feedback: 'https://ew.realityripple.com/feedback'
      })
     }),
@@ -6305,7 +6309,9 @@
      {
       if (!service.emotes.hasOwnProperty('cheer'))
        service.emotes.cheer = {};
-      const url = cURLs.api.twitch.bits.cheermotes.replaceAll(cVARs.url.channelID, chID);
+      let url = cURLs.api.twitch.bits.cheermotes.replaceAll(cVARs.url.channelID, chID);
+      if (twitch.net.oAuth.usesChannel)
+       url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
       const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
       if (!r.success)
        return false;
@@ -6939,6 +6945,8 @@
 
       async function _getList()
       {
+       if (twitch.net.oAuth.usesChannel)
+        return [];
        const r = await shared.httpRequest('GET', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers());
        if (!r.success)
         return [];
@@ -7026,6 +7034,8 @@
 
       async function $subscribe(type, version = '1')
       {
+       if (twitch.net.oAuth.usesChannel)
+        return false;
        const d = {
         'type': type,
         'version': version,
@@ -7054,6 +7064,8 @@
 
       async function _unsubscribe(id)
       {
+       if (twitch.net.oAuth.usesChannel)
+        return false;
        const r = await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll(cVARs.url.eventID, id), twitch.net.oAuth.headers(), null, false);
        if (!r.success)
         return false;
@@ -7102,6 +7114,7 @@
       let _firstRS = true;
       let _ws = null;
       let _msgHistory = {};
+      const _sAnon = 'justinfan';
       const _lPing = 30000;
       const _lTimeout = 35000;
       const _lExpire = 5000;
@@ -7129,8 +7142,15 @@
        _ws.onopen = null;
        _tExpire = window.setTimeout(_wsExpire, _lExpire);
        _ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
-       _ws.send('PASS oauth:' + twitch.net.oAuth.auth.access_token);
-       _ws.send('NICK ' + twitch.net.oAuth.auth.channel);
+       if (twitch.net.oAuth.usesChannel)
+       {
+        _ws.send('NICK ' + _sAnon + shared.rnd(100000));
+       }
+       else
+       {
+        _ws.send('PASS oauth:' + twitch.net.oAuth.auth.access_token);
+        _ws.send('NICK ' + twitch.net.oAuth.auth.channel);
+       }
        _ws.send('JOIN #' + twitch.net.oAuth.auth.channel);
       }
 
@@ -7298,6 +7318,8 @@
         _ws.onclose = null;
         _ws.close();
         _ws = null;
+        if (twitch.net.oAuth.usesChannel)
+         return;
         if (await twitch.net.oAuth.reinit())
         {
          window.setTimeout(twitch.net.irc, 1000);
@@ -7349,7 +7371,8 @@
          thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
         if (cfg.display.extended.useBTTV)
          thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
-        _eventSub(twitch.net.channelID);
+        if (!twitch.net.oAuth.usesChannel)
+         _eventSub(twitch.net.channelID);
        }
 
        function _USERNOTICE(cmd)
@@ -7580,6 +7603,8 @@
       let url = cURLs.api.twitch.users.name.replaceAll(cVARs.url.user, u);
       if (isID)
        url = cURLs.api.twitch.users.id.replaceAll(cVARs.url.userID, u);
+      if (twitch.net.oAuth.usesChannel)
+       url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
       const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
       if (!r.success)
        return false;
@@ -7612,7 +7637,9 @@
 
       async function _getChannelTeams(chID)
       {
-       const url = cURLs.api.twitch.teams.channel.replaceAll(cVARs.url.channelID, chID);
+       let url = cURLs.api.twitch.teams.channel.replaceAll(cVARs.url.channelID, chID);
+       if (twitch.net.oAuth.usesChannel)
+        url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
        const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
        if (!r.success)
         return [];
@@ -7643,7 +7670,9 @@
 
       async function _getTeam(tID)
       {
-       const url = cURLs.api.twitch.teams.team.replaceAll(cVARs.url.teamID, tID);
+       let url = cURLs.api.twitch.teams.team.replaceAll(cVARs.url.teamID, tID);
+       if (twitch.net.oAuth.usesChannel)
+        url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
        const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
        if (!r.success)
         return [];
@@ -7690,7 +7719,9 @@
 
      async function _getChannelTitleTags(chID)
      {
-      const url = cURLs.api.twitch.channels.root.replaceAll(cVARs.url.channelID, chID);
+      let url = cURLs.api.twitch.channels.root.replaceAll(cVARs.url.channelID, chID);
+      if (twitch.net.oAuth.usesChannel)
+       url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
       const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
       if (!r.success)
        return;
@@ -7747,7 +7778,7 @@
 
       async function $init()
       {
-       if (cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null)
+       if ((cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null) || (cfg.twitch.hasOwnProperty('channel') && cfg.twitch.channel === null))
        {
         loginT.cfgHash = false;
         loginT.inUse = false;
@@ -7774,6 +7805,14 @@
          shared.storage.setItem(loginT.path() + _pathRefresh, sRet);
         else
          shared.storage.removeItem(loginT.path() + _pathRefresh);
+        return;
+       }
+       if (cfg.twitch.hasOwnProperty('channel') && cfg.twitch.channel !== null && cfg.twitch.channel !== false && cfg.twitch.channel !== 'CHANNEL_NAME')
+       {
+        loginT.cfgHash = false;
+        loginT.inUse = false;
+        shared.storage.removeItem(loginT.path() + _pathRefresh);
+        _populateNoAuth(cfg.twitch.channel);
         return;
        }
        loginT.inUse = true;
@@ -7852,6 +7891,20 @@
        twitch.net.oAuth.auth.access_token = a;
        twitch.net.oAuth.auth.refresh_token = r;
        twitch.net.oAuth.auth.expires = j.expires_in;
+      }
+
+      function _populateNoAuth(c = null)
+      {
+       twitch.net.oAuth.auth.time = Date.now();
+       if (c === null)
+        twitch.net.oAuth.auth.channel = false;
+       else
+        twitch.net.oAuth.auth.channel = c;
+       twitch.net.oAuth.auth.client_id = false;
+       twitch.net.oAuth.auth.scope = [];
+       twitch.net.oAuth.auth.access_token = false;
+       twitch.net.oAuth.auth.refresh_token = false;
+       twitch.net.oAuth.auth.expires = 0;
       }
 
       async function _refresh(t, retry = false)
@@ -7971,17 +8024,20 @@
         r |= shared.cfgVal.REFRESH_TOKEN;
        if (twitch.net.oAuth.auth.access_token !== false)
         r |= shared.cfgVal.ACCESS_TOKEN;
+       if (cfg.twitch.hasOwnProperty('channel') && cfg.twitch.channel !== null && cfg.twitch.channel !== false && cfg.twitch.channel !== 'CHANNEL_NAME')
+        r |= shared.cfgVal.CHANNEL;
        return r;
       }
 
       function $headers(post = false)
       {
-       const h = {
-        'Authorization': 'Bearer ' + twitch.net.oAuth.auth.access_token,
-        'Client-Id': twitch.net.oAuth.auth.client_id
-       };
+       const h = {};
        if (post)
         h['Content-Type'] = 'application/json';
+       if (twitch.net.oAuth.usesChannel || !twitch.net.oAuth.auth.access_token)
+        return h;
+       h['Authorization'] = 'Bearer ' + twitch.net.oAuth.auth.access_token;
+       h['Client-Id'] = twitch.net.oAuth.auth.client_id;
        return h;
       }
 
@@ -7991,7 +8047,18 @@
        reinit: $reinit,
        clear: $clear,
        get hasRefresh() {return (_cfgVals() & shared.cfgVal.REFRESH_TOKEN) === shared.cfgVal.REFRESH_TOKEN;},
-       get hasLogin() {return (_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;},
+       get hasLogin()
+       {
+        if ((_cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL)
+         return true;
+        return (_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN;
+       },
+       get usesChannel()
+       {
+        if ((_cfgVals() & shared.cfgVal.ACCESS_TOKEN) === shared.cfgVal.ACCESS_TOKEN)
+         return false;
+        return (_cfgVals() & shared.cfgVal.CHANNEL) === shared.cfgVal.CHANNEL;
+       },
        headers: $headers,
        auth: {
         client_id: false,
@@ -8199,7 +8266,9 @@
         return p;
        if (!cmd.hasOwnProperty('tags'))
         return p;
-       if (cmd.tags.bits < 1)
+       if (!cmd.tags.hasOwnProperty('bits'))
+        return p;
+       if (parseInt(cmd.tags.bits, 10) < 1)
         return p;
        const msg = cmd.params[1].split(' ');
        for (let m = 0, l = msg.length; m < l; m++)
@@ -8449,7 +8518,7 @@
         return;
        if (await _parseCommand(cmd, lvChk))
         return;
-       const p = _handleDuplicates(_eListFromCmd(cmd, null, andCheers));
+       const p = service.parse.overlapPriority(_eListFromCmd(cmd, null, andCheers), cSources.service.twitch);
        if (p.length === 0)
         return;
        if (!(await lvChk.check(cfg.display.access)))
@@ -8481,7 +8550,7 @@
          return false;
         if (!cfg.event.twitch.powerup.emote)
          return false;
-        const a = _handleDuplicates(_eListFromCmd(cmd, true));
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
         if (a.length === 0)
          return false;
         const u = _parseUser(cmd);
@@ -8505,7 +8574,7 @@
         if (!cmd.tags.hasOwnProperty('animation-id'))
          return false;
         const u = _parseUser(cmd);
-        const a = _handleDuplicates(_eListFromCmd(cmd, true));
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
         const animID = cmd.tags['animation-id'];
         switch (animID)
         {
@@ -8541,7 +8610,7 @@
         return false;
        if (!cmd.tags.hasOwnProperty('msg-id') || cmd.tags['msg-id'] !== 'highlighted-message')
         return false;
-       const p = _handleDuplicates(_eListFromCmd(cmd));
+       const p = service.parse.overlapPriority(_eListFromCmd(cmd), cSources.service.twitch);
        if (p.length === 0)
         return false;
        display.kappa.show(p, cfg.event.twitch.redeem.highlight);
@@ -8614,7 +8683,7 @@
       function _parseCommand(cmd, lvChk)
       {
        const m = cmd.params[1].toLowerCase();
-       const a = _handleDuplicates(_eListFromCmd(cmd, true));
+       const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
        let mID = false;
        if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('id'))
         mID = 'twitch:' + cmd.tags.id;
@@ -8641,7 +8710,8 @@
         return false;
        if (!cmd.tags.hasOwnProperty('bits'))
         return false;
-       if (cmd.tags.bits < 1)
+       const iBits = parseInt(cmd.tags.bits, 10);
+       if (iBits < 1)
         return false;
        let p = [];
        if (cfg.event.twitch.cheer.useMsg)
@@ -8655,17 +8725,17 @@
         p.push(...b);
         await _parse.line(cmd, false);
        }
-       p = _handleDuplicates(p);
+       p = service.parse.overlapPriority(p, cSources.service.twitch);
        if (p.length === 0)
         return false;
-       const r = shared.findInMaybeRange(cfg.event.twitch.cheer.bits, cmd.tags.bits);
+       const r = shared.findInMaybeRange(cfg.event.twitch.cheer.bits, iBits);
        if (r === false)
        {
         display.emote.addToShowList(p);
         display.emote.showEmotes();
         return true;
        }
-       display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: cmd.tags.bits});
+       display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: iBits});
        return true;
       }
 
@@ -8679,7 +8749,7 @@
         return;
        if (!cmd.tags.hasOwnProperty('msg-param-viewerCount'))
         return;
-       const c = cmd.tags['msg-param-viewerCount'];
+       const c = parseInt(cmd.tags['msg-param-viewerCount'], 10);
        const r = shared.findInMaybeRange(cfg.event.twitch.raid.raiders, c);
        if (r === false)
         return;
@@ -8749,7 +8819,7 @@
         if (cmd.params.length > 1)
         {
          if (cfg.event.twitch.sub.useMsg)
-          a = _eListFromCmd(cmd, true);
+          a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
          else
           await _parse.line(cmd);
         }
@@ -8993,7 +9063,7 @@
         if (r.hasOwnProperty('display_name'))
          dn = r.display_name;
        }
-       const dDur = cmd.tags['ban-duration'];
+       const dDur = parseInt(cmd.tags['ban-duration'], 10);
        const r = shared.findInMaybeRange(cfg.event.twitch.timeout, dDur);
        if (r === false)
         return;
@@ -9014,7 +9084,7 @@
          display.kappa.show(false, kC);
          return;
         }
-        const a = _handleDuplicates(_eListFromCmd(cmd, true));
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
         display.kappa.show(a, kC);
         return;
        }
@@ -9503,25 +9573,25 @@
         return;
        if (!cmd.tags.hasOwnProperty('msg-param-value'))
         return;
-       const mpv = cmd.tags['msg-param-value'];
+       const mpv = parseInt(cmd.tags['msg-param-value'], 10);
        if (mpv < 2)
         return;
-       let p = false;
+       const p = [];
        if (cfg.event.twitch.streak.useMsg)
        {
-        const a = _eListFromCmd(cmd);
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd), cSources.service.twitch);
         p.push(...a);
        }
        else
         await _parse.line(cmd, false);
-       p = _handleDuplicates(p);
-       if (p.length === 0)
-        p = false;
        const r = shared.findInMaybeRange(cfg.event.twitch.streak.streams, mpv);
        if (r === false)
        {
-        display.emote.addToShowList(p);
-        display.emote.showEmotes();
+        if (p.length > 0)
+        {
+         display.emote.addToShowList(p);
+         display.emote.showEmotes();
+        }
         return;
        }
        display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: mpv});
@@ -9602,7 +9672,7 @@
          }
         }
        }
-       if (this.cmd.hasOwnProperty('tags') && this.cmd.tags.hasOwnProperty('bits') && this.cmd.tags.bits > 0)
+       if (this.cmd.hasOwnProperty('tags') && this.cmd.tags.hasOwnProperty('bits') && parseInt(this.cmd.tags.bits, 10) > 0)
         r |= twitch.Access.CHEERER;
        const accessSub = twitch.Access.SUBSCRIBER_T1 | twitch.Access.SUBSCRIBER_T2 | twitch.Access.SUBSCRIBER_T3;
        if ((r & twitch.Access.BROADCASTER) === twitch.Access.BROADCASTER && (r & accessSub) !== 0)
@@ -9627,6 +9697,8 @@
         if (tDif < this.rFH)
          return twitch.net.fList[uID].value;
        }
+       if (twitch.net.oAuth.usesChannel)
+        return false;
        const url = cURLs.api.twitch.channels.followers.replaceAll(cVARs.url.userID, uID).replaceAll(cVARs.url.channelID, rID);
        const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
        if (!r.success)
@@ -9676,89 +9748,13 @@
       }
      }
 
-     function _handleDuplicates(a)
-     {
-      const lA = a.length;
-      if (lA < 1)
-       return a;
-      const r = [];
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.url)
-        r.push(a[i]);
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.cheer)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].scope === cSources.scope.user)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.channel)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.global)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.emoji)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      return r;
-     }
-
      function _eListFromCmd(cmd, dup = null, andCheers = true)
      {
       const r = [];
       const u = _parseUser(cmd);
       if (service.parse.ignored(u))
        return r;
-      if (andCheers && cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('bits') && cmd.tags.bits > 0)
+      if (andCheers && cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('bits') && parseInt(cmd.tags.bits, 10) > 0)
        r.push(..._parse.content.bits(cmd));
       r.push(..._parse.content.twitch(cmd, dup));
       if (cfg.display.useEmoji)
@@ -9862,7 +9858,9 @@
        if (tDif < _rCH)
         return _chList[chID].value;
       }
-      const url = cURLs.api.twitch.chat.emotes.root.replaceAll(cVARs.url.channelID, chID);
+      let url = cURLs.api.twitch.chat.emotes.root.replaceAll(cVARs.url.channelID, chID);
+      if (twitch.net.oAuth.usesChannel)
+       url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
       const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
       if (!r.success)
       {
@@ -9963,7 +9961,9 @@
     {
      if (!service.emotes.hasOwnProperty('twitch'))
       service.emotes.twitch = {};
-     const url = cURLs.api.twitch.chat.emotes.global;
+     let url = cURLs.api.twitch.chat.emotes.global;
+     if (twitch.net.oAuth.usesChannel)
+      url = url.replace(cURLs.api.twitch.proxyBase, cURLs.api.rr.proxy.twitch);
      const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
      if (!r.success)
      {
@@ -11222,7 +11222,8 @@
       const ret = {
        id: 0,
        _name: false,
-       ascii: false
+       ascii: false,
+       bot: false
       };
       if (cmd.hasOwnProperty('authorDetails'))
       {
@@ -11544,7 +11545,7 @@
        const lvChk = new _level(cmd);
        if (await _parseCommand(cmd, lvChk))
         return;
-       const p = _handleDuplicates(_eListFromCmd(cmd));
+       const p = service.parse.overlapPriority(_eListFromCmd(cmd), cSources.service.youtube);
        if (p.length === 0)
         return;
        if (!(await lvChk.check(cfg.display.access)))
@@ -11556,7 +11557,7 @@
       function _parseCommand(cmd, lvChk)
       {
        const m = _getMessage(cmd).toLowerCase();
-       const a = _handleDuplicates(_eListFromCmd(cmd, true));
+       const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.youtube);
        let mID = false;
        if (cmd.hasOwnProperty('id'))
         mID = 'youtube:' + cmd.id;
@@ -11600,24 +11601,21 @@
         const lv = cmd.snippet.superChatDetails.tier;
         if (lv < 1)
          return false;
-        let p = [];
+        const p = [];
         if (cmd.snippet.superChatDetails.hasOwnProperty('userComment') && cmd.snippet.superChatDetails.userComment !== null)
         {
          if (cfg.event.youtube.superchat.useMsg)
          {
-          const a = _eListFromCmd(cmd);
+          const a = service.parse.overlapPriority(_eListFromCmd(cmd), cSources.service.youtube);
           p.push(...a);
          }
          else
           await _parse.line(cmd);
-         p = _handleDuplicates(p);
         }
-        if (p.length === 0)
-         p = false;
         const r = shared.findInMaybeRange(cfg.event.youtube.superchat.level, lv);
         if (r === false)
         {
-         if (p !== false)
+         if (p.length > 0)
          {
           display.emote.addToShowList(p);
           display.emote.showEmotes();
@@ -11654,12 +11652,10 @@
         const lv = cmd.snippet.superStickerDetails.tier;
         if (lv < 1)
          return false;
-        let p = [];
+        const p = [];
         const sId = cmd.snippet.superStickerDetails.superStickerMetadata.stickerId;
         if (_eStickers.hasOwnProperty(sId))
          p.push(_eStickers[sId]);
-        if (p.length === 0)
-         p = false;
         const r = shared.findInMaybeRange(cfg.event.youtube.supersticker, lv);
         if (r === false)
          return true;
@@ -11719,7 +11715,7 @@
         if (cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('userComment') && cmd.snippet.memberMilestoneChatDetails.userComment !== '')
         {
          if (cfg.event.youtube.member.useMsg)
-          a = _eListFromCmd(cmd, true);
+          a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.youtube);
          else
           await _parse.line(cmd);
         }
@@ -11861,82 +11857,6 @@
        const chID = this.cmd._channel;
        return youtube.net.subscribers.checkUser(chID, u.id);
       }
-     }
-
-     function _handleDuplicates(a)
-     {
-      const lA = a.length;
-      if (lA < 1)
-       return a;
-      const r = [];
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.url)
-        r.push(a[i]);
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.cheer)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].scope === cSources.scope.user)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.youtube && a[i].scope === cSources.scope.channel)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.youtube && a[i].scope === cSources.scope.global)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.emoji)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      return r;
      }
 
      function _eListFromCmd(cmd, dup = null)
@@ -13967,7 +13887,8 @@
        id: 0,
        _slug: false,
        _name: false,
-       ascii: false
+       ascii: false,
+       bot: false
       };
       if (cmd.hasOwnProperty(prop))
       {
@@ -14266,7 +14187,7 @@
        const lvChk = new _level(cmd);
        if (await _parseCommand(cmd, attrContent, lvChk))
         return;
-       const p = _handleDuplicates(_eListFromCmd(cmd, attrContent, null, andCheers));
+       const p = service.parse.overlapPriority(_eListFromCmd(cmd, attrContent, null, andCheers), cSources.service.kick);
        if (p.length === 0)
         return;
        if (!(await lvChk.check(cfg.display.access)))
@@ -14278,7 +14199,7 @@
       function _parseCommand(cmd, attrContent, lvChk)
       {
        const m = cmd[attrContent].toLowerCase();
-       const a = _handleDuplicates(_eListFromCmd(cmd, attrContent, true));
+       const a = service.parse.overlapPriority(_eListFromCmd(cmd, attrContent, true), cSources.service.kick);
        let mID = false;
        if (cmd.hasOwnProperty('id'))
         mID = 'kick:' + cmd.id;
@@ -14317,7 +14238,7 @@
         p.push(...b);
         await _parse.line(cmd, 'message', false);
        }
-       p = _handleDuplicates(p);
+       p = service.parse.overlapPriority(p, cSources.service.kick);
        if (p.length === 0)
         return false;
        const r = shared.findInMaybeRange(cfg.event.kick.cheer.kicks, cmd.gift.amount);
@@ -14457,7 +14378,7 @@
          display.kappa.show(false, kC);
          return;
         }
-        const a = _handleDuplicates(_eListFromCmd(cmd, 'user_input', true));
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd, 'user_input', true), cSources.service.kick);
         display.kappa.show(a, kC);
         return;
        }
@@ -14657,82 +14578,6 @@
        kick.net.fList[u.id] = {value: false, t: Date.now()};
        return false;
       }
-     }
-
-     function _handleDuplicates(a)
-     {
-      const lA = a.length;
-      if (lA < 1)
-       return a;
-      const r = [];
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.url)
-        r.push(a[i]);
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.cheer)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].scope === cSources.scope.user)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.kick && a[i].scope === cSources.scope.channel)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.kick && a[i].scope === cSources.scope.global)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.emoji)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      return r;
      }
 
      function _eListFromCmd(cmd, attrContent = 'content', dup = null, andCheers = true)
@@ -14957,7 +14802,8 @@
       _slug: false,
       _name: false,
       ascii: false,
-      follower: false
+      follower: false,
+      bot: false
      };
      if (j.hasOwnProperty('id') && j.id !== null)
       ret.id = j.id;
@@ -16126,7 +15972,7 @@
        const lvChk = new _level(cmd);
        if (await _parseCommand(cmd, attrContent, lvChk))
         return;
-       const p = _handleDuplicates(_eListFromCmd(cmd, attrContent, null, andCheers));
+       const p = service.parse.overlapPriority(_eListFromCmd(cmd, attrContent, null, andCheers), cSources.service.lfg);
        if (p.length === 0)
         return;
        if (!(await lvChk.check(cfg.display.access)))
@@ -16138,7 +15984,7 @@
       function _parseCommand(cmd, attrContent, lvChk)
       {
        const m = cmd[attrContent].toLowerCase();
-       const a = _handleDuplicates(_eListFromCmd(cmd, attrContent, true));
+       const a = service.parse.overlapPriority(_eListFromCmd(cmd, attrContent, true), cSources.service.lfg);
        let mID = false;
        if (cmd.hasOwnProperty('id'))
         mID = 'lfg:' + cmd.id;
@@ -16177,7 +16023,7 @@
         p.push(...b);
         await _parse.line(cmd, 'message', false);
        }
-       p = _handleDuplicates(p);
+       p = service.parse.overlapPriority(p, cSources.service.lfg);
        if (p.length === 0)
         return false;
        const r = shared.findInMaybeRange(cfg.event.lfg.cheer.coins, cmd.tip);
@@ -16418,82 +16264,6 @@
         return 0;
        return lfg.Access.SUBSCRIBER;
       }
-     }
-
-     function _handleDuplicates(a)
-     {
-      const lA = a.length;
-      if (lA < 1)
-       return a;
-      const r = [];
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.url)
-        r.push(a[i]);
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.cheer)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].scope === cSources.scope.user)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.lfg && a[i].scope === cSources.scope.channel)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.lfg && a[i].scope === cSources.scope.global)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.emoji)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      return r;
      }
 
      function _eListFromCmd(cmd, attrContent = 'content', dup = null, andCheers = true)
@@ -17738,7 +17508,7 @@
       ];
       const b = JSON.stringify(d);
       const h = trovo.net.oAuth.headers('text/plain', 'OAuth');
-      const r = await shared.httpRequest('POST', cURLs.api.trovo.gql, h, b, false);
+      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b, false);
       if (!r.success)
        return false;
       const j = r.json;
@@ -17774,7 +17544,7 @@
       ];
       const b = JSON.stringify(d);
       const h = trovo.net.oAuth.headers('text/plain', 'OAuth');
-      const r = await shared.httpRequest('POST', cURLs.api.trovo.gql, h, b, false);
+      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b, false);
       if (!r.success)
        return false;
       const j = r.json;
@@ -18381,7 +18151,7 @@
        const lvChk = new _level(cmd);
        if (await _parseCommand(cmd, lvChk))
         return;
-       const p = _handleDuplicates(await _eListFromCmd(cmd, null));
+       const p = service.parse.overlapPriority(await _eListFromCmd(cmd, null), cSources.service.trovo, true);
        if (p.length === 0)
         return;
        if (!(await lvChk.check(cfg.display.access)))
@@ -18393,7 +18163,7 @@
       async function _parseCommand(cmd, lvChk)
       {
        const m = cmd.content.toLowerCase();
-       const a = _handleDuplicates(await _eListFromCmd(cmd, true));
+       const a = service.parse.overlapPriority(await _eListFromCmd(cmd, true), cSources.service.trovo, true);
        let mID = false;
        if (cmd.hasOwnProperty('tags') && cmd.tags.hasOwnProperty('id'))
         mID = 'trovo:' + cmd.tags.id;
@@ -18411,9 +18181,7 @@
        {
         if (service.parse.ignored(c.from))
          return;
-        let p = _parse.content.spells(c);
-        if (p.length === 0)
-         p = false;
+        const p = _parse.content.spells(c);
         display.kappa.show(p, kC, {[cVARs.evt.user]: c.from.ascii, [cVARs.evt.spell]: c.name, [cVARs.evt.amount]: c.qty});
        }
 
@@ -18421,8 +18189,8 @@
        {
         if (service.parse.ignored(c.from))
          return;
-        let p = [];
-        const q = _handleDuplicates(await _eListFromCmd(c.raw));
+        const p = [];
+        const q = service.parse.overlapPriority(await _eListFromCmd(c.raw), cSources.service.trovo, true);
         const freeEmotes = !cfg.event.trovo.cheer || !cfg.event.trovo.cheer[name] || !cfg.event.trovo.cheer[name].useMsg;
         const showKappa = !!cfg.event.trovo.cheer && !!cfg.event.trovo.cheer[name] && !!cfg.event.trovo.cheer[name].styles;
         if (freeEmotes || !showKappa)
@@ -18440,8 +18208,6 @@
          return;
         if (!freeEmotes && q.length > 0)
          p.push(...q);
-        if (p.length === 0)
-         p = false;
         display.kappa.show(p, cfg.event.trovo.cheer[name].styles, {[cVARs.evt.user]: c.from.ascii, [cVARs.evt.spell]: c.name});
        }
 
@@ -18449,11 +18215,11 @@
        {
         if (service.parse.ignored(c.from))
          return;
-        let p = _parse.content.spells(c);
+        const p = _parse.content.spells(c);
         const q = [];
         for (let i = 0; i < c.raw.length; i++)
         {
-         q.push(..._handleDuplicates(await _eListFromCmd(c.raw[i])));
+         q.push(...service.parse.overlapPriority(await _eListFromCmd(c.raw[i]), cSources.service.trovo, true));
         }
         const freeEmotes = !cfg.event.trovo.cheer || !cfg.event.trovo.cheer.spells || !cfg.event.trovo.cheer.spells.useMsg;
         const showKappa = !!cfg.event.trovo.cheer && !!cfg.event.trovo.cheer.spells && !!cfg.event.trovo.cheer.spells.elixir;
@@ -18480,12 +18246,10 @@
          return;
         if (!freeEmotes && q.length > 0)
          p.push(...q);
-        if (p.length === 0)
-         p = false;
         const r = shared.findInMaybeRange(cfg.event.trovo.cheer.spells.elixir, c.value * c.qty);
         if (r === false)
         {
-         if (p !== false)
+         if (p.length > 0)
          {
           if ((cfg.display.access & trovo.Access.CHEERER) !== 0)
           {
@@ -18502,7 +18266,7 @@
        {
         if (service.parse.ignored(c.from))
          return;
-        let p = _parse.content.spells(c);
+        const p = _parse.content.spells(c);
         const grp = (coin === 'elixir') ? 'cheer' : 'redeem';
         const showKappa = !!cfg.event.trovo[grp] && !!cfg.event.trovo[grp][name] && !!cfg.event.trovo[grp][name][coin];
         if (!showKappa)
@@ -18517,12 +18281,10 @@
          }
          return;
         }
-        if (p.length === 0)
-         p = false;
         const r = shared.findInMaybeRange(cfg.event.trovo[grp][name][coin], c.value * c.qty);
         if (r === false)
         {
-         if (p !== false)
+         if (p.length > 0)
          {
           if ((cfg.display.access & trovo.Access.CHEERER) !== 0)
           {
@@ -18792,7 +18554,8 @@
          id: bannedID,
          _slug: uInf.username,
          _name: cmd.contents.mod.content_params.userNickName,
-         ascii: false
+         ascii: false,
+         bot: false
         };
         const gReg = new RegExp(service.parse.uReg, 'g');
         if (!!u._name && u._name === u._name.replaceAll(gReg, ''))
@@ -18827,7 +18590,8 @@
         id: bannedID,
         _slug: uInf.username,
         _name: cmd.contents.mod.content_params.userNickName,
-        ascii: false
+        ascii: false,
+        bot: false
        };
        const gReg = new RegExp(service.parse.uReg, 'g');
        if (!!u._name && u._name === u._name.replaceAll(gReg, ''))
@@ -18895,74 +18659,6 @@
       {
        return (this.r & rq) !== 0;
       }
-     }
-
-     function _handleDuplicates(a)
-     {
-      const lA = a.length;
-      if (lA < 1)
-       return a;
-      const r = [];
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.url)
-        r.push(a[i]);
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].scope === cSources.scope.user)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.trovo && a[i].scope === cSources.scope.channel)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.channel && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.trovo && a[i].scope === cSources.scope.global)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      for (let p = 0; p < cfg.display.extended.priority.length; p++)
-      {
-       for (let i = 0; i < lA; i++)
-       {
-        if (a[i].scope === cSources.scope.global && a[i].svc === cSources.service[cfg.display.extended.priority[p]])
-        {
-         if (service.parse.notDupe(a[i], r))
-          r.push(a[i]);
-        }
-       }
-      }
-      for (let i = 0; i < lA; i++)
-      {
-       if (a[i].svc === cSources.service.emoji)
-       {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
-       }
-      }
-      return r;
      }
 
      async function _eListFromCmd(cmd, dup = null)
@@ -19199,7 +18895,7 @@
       ];
       const b = JSON.stringify(d);
       const h = trovo.net.oAuth.headers('text/plain', 'OAuth');
-      const r = await shared.httpRequest('POST', cURLs.api.trovo.gql, h, b, false);
+      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b, false);
       if (!r.success)
        return;
       const j = r.json;
@@ -19564,7 +19260,8 @@
           {
            p += m[j].length + 1;
           }
-          ret.push({svc: cSources.service.ffz, url: service.emotes.ffz[m[i]].url, str: m[i], pos: p, scope: service.emotes.ffz[m[i]].scope, width: service.emotes.ffz[m[i]].width, height: service.emotes.ffz[m[i]].height});
+          const lcl = service.emotes.ffz.hasOwnProperty(m[i]) && service.emotes.ffz[m[i]].scope === cSources.scope.channel;
+          ret.push({svc: cSources.service.ffz, url: service.emotes.ffz[m[i]].url, str: m[i], pos: p, scope: service.emotes.ffz[m[i]].scope, width: service.emotes.ffz[m[i]].width, height: service.emotes.ffz[m[i]].height, local: lcl});
          }
          return ret;
         }
@@ -19614,10 +19311,11 @@
            if (l[j].pos < p)
             f = j;
           }
+          const lcl = service.emotes.zwe.ffz.hasOwnProperty(m[i]) && service.emotes.zwe.ffz[m[i]].scope === cSources.scope.channel;
           if (f === -1)
           {
            if (pass === 1)
-            l.push({svc: cSources.service.ffz, url: service.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.ffz[m[i]].scope, width: service.emotes.zwe.ffz[m[i]].width, height: service.emotes.zwe.ffz[m[i]].height});
+            l.push({svc: cSources.service.ffz, url: service.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.ffz[m[i]].scope, width: service.emotes.zwe.ffz[m[i]].width, height: service.emotes.zwe.ffz[m[i]].height, local: lcl});
           }
           else
           {
@@ -19671,13 +19369,13 @@
            if (t.length > 0)
            {
             if (pass === 1)
-             l.push({svc: cSources.service.ffz, url: service.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.ffz[m[i]].scope, width: service.emotes.zwe.ffz[m[i]].width, height: service.emotes.zwe.ffz[m[i]].height});
+             l.push({svc: cSources.service.ffz, url: service.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.ffz[m[i]].scope, width: service.emotes.zwe.ffz[m[i]].width, height: service.emotes.zwe.ffz[m[i]].height, local: lcl});
            }
            else if (pass === 2)
            {
             if (!l[f].hasOwnProperty('zwe'))
              l[f].zwe = [];
-            l[f].zwe.push({svc: cSources.service.ffz, url: service.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.ffz[m[i]].scope, width: service.emotes.zwe.ffz[m[i]].width, height: service.emotes.zwe.ffz[m[i]].height});
+            l[f].zwe.push({svc: cSources.service.ffz, url: service.emotes.zwe.ffz[m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.ffz[m[i]].scope, width: service.emotes.zwe.ffz[m[i]].width, height: service.emotes.zwe.ffz[m[i]].height, local: lcl});
             l[f].zwe.sort(_posSort);
             for (let j = 0, o = l.length; j < o; j++)
             {
@@ -19725,7 +19423,7 @@
            {
             p += m[j].length + 1;
            }
-           ret.push({svc: cSources.service.ffz, url: service.emotes.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.ffzU[usr][m[i]].scope, width: service.emotes.ffzU[usr][m[i]].width, height: service.emotes.ffzU[usr][m[i]].height});
+           ret.push({svc: cSources.service.ffz, url: service.emotes.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.ffzU[usr][m[i]].scope, width: service.emotes.ffzU[usr][m[i]].width, height: service.emotes.ffzU[usr][m[i]].height, local: false});
           }
           return ret;
          }
@@ -19778,7 +19476,7 @@
            if (f === -1)
            {
             if (pass === 1)
-             l.push({svc: cSources.service.ffz, url: service.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.ffzU[usr][m[i]].scope, width: service.emotes.zwe.ffzU[usr][m[i]].width, height: service.emotes.zwe.ffzU[usr][m[i]].height});
+             l.push({svc: cSources.service.ffz, url: service.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.ffzU[usr][m[i]].scope, width: service.emotes.zwe.ffzU[usr][m[i]].width, height: service.emotes.zwe.ffzU[usr][m[i]].height, local: false});
            }
            else
            {
@@ -19838,7 +19536,7 @@
             {
              if (!l[f].hasOwnProperty('zwe'))
               l[f].zwe = [];
-             l[f].zwe.push({svc: cSources.service.ffz, url: service.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.ffzU[usr][m[i]].scope, width: service.emotes.zwe.ffzU[usr][m[i]].width, height: service.emotes.zwe.ffzU[usr][m[i]].height});
+             l[f].zwe.push({svc: cSources.service.ffz, url: service.emotes.zwe.ffzU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.ffzU[usr][m[i]].scope, width: service.emotes.zwe.ffzU[usr][m[i]].width, height: service.emotes.zwe.ffzU[usr][m[i]].height, local: false});
              l[f].zwe.sort(_posSort);
              for (let j = 0, o = l.length; j < o; j++)
              {
@@ -19904,7 +19602,8 @@
           {
            p += m[j].length + 1;
           }
-          ret.push({svc: cSources.service.bttv, url: service.emotes.bttv[m[i]].url, str: m[i], pos: p, scope: service.emotes.bttv[m[i]].scope, width: service.emotes.bttv[m[i]].width, height: service.emotes.bttv[m[i]].height});
+          const lcl = service.emotes.bttv.hasOwnProperty(m[i]) && service.emotes.bttv[m[i]].scope === cSources.scope.channel;
+          ret.push({svc: cSources.service.bttv, url: service.emotes.bttv[m[i]].url, str: m[i], pos: p, scope: service.emotes.bttv[m[i]].scope, width: service.emotes.bttv[m[i]].width, height: service.emotes.bttv[m[i]].height, local: lcl});
          }
          return ret;
         }
@@ -19954,10 +19653,11 @@
            if (l[j].pos < p)
             f = j;
           }
+          const lcl = service.emotes.zwe.bttv.hasOwnProperty(m[i]) && service.emotes.zwe.bttv[m[i]].scope === cSources.scope.channel;
           if (f === -1)
           {
            if (pass === 1)
-            l.push({svc: cSources.service.bttv, url: service.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttv[m[i]].scope, width: service.emotes.zwe.bttv[m[i]].width, height: service.emotes.zwe.bttv[m[i]].height});
+            l.push({svc: cSources.service.bttv, url: service.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttv[m[i]].scope, width: service.emotes.zwe.bttv[m[i]].width, height: service.emotes.zwe.bttv[m[i]].height, local: lcl});
           }
           else
           {
@@ -20011,13 +19711,13 @@
            if (t.length > 0)
            {
             if (pass === 1)
-             l.push({svc: cSources.service.bttv, url: service.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttv[m[i]].scope, width: service.emotes.zwe.bttv[m[i]].width, height: service.emotes.zwe.bttv[m[i]].height});
+             l.push({svc: cSources.service.bttv, url: service.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttv[m[i]].scope, width: service.emotes.zwe.bttv[m[i]].width, height: service.emotes.zwe.bttv[m[i]].height, local: lcl});
            }
            else if (pass === 2)
            {
             if (!l[f].hasOwnProperty('zwe'))
              l[f].zwe = [];
-            l[f].zwe.push({svc: cSources.service.bttv, url: service.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttv[m[i]].scope, width: service.emotes.zwe.bttv[m[i]].width, height: service.emotes.zwe.bttv[m[i]].height});
+            l[f].zwe.push({svc: cSources.service.bttv, url: service.emotes.zwe.bttv[m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttv[m[i]].scope, width: service.emotes.zwe.bttv[m[i]].width, height: service.emotes.zwe.bttv[m[i]].height, local: lcl});
             l[f].zwe.sort(_posSort);
             for (let j = 0, o = l.length; j < o; j++)
             {
@@ -20065,7 +19765,7 @@
            {
             p += m[j].length + 1;
            }
-           ret.push({svc: cSources.service.bttv, url: service.emotes.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.bttvU[usr][m[i]].scope, width: service.emotes.bttvU[usr][m[i]].width, height: service.emotes.bttvU[usr][m[i]].height});
+           ret.push({svc: cSources.service.bttv, url: service.emotes.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.bttvU[usr][m[i]].scope, width: service.emotes.bttvU[usr][m[i]].width, height: service.emotes.bttvU[usr][m[i]].height, local: false});
           }
           return ret;
          }
@@ -20118,7 +19818,7 @@
            if (f === -1)
            {
             if (pass === 1)
-             l.push({svc: cSources.service.bttv, url: service.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttvU[usr][m[i]].scope, width: service.emotes.zwe.bttvU[usr][m[i]].width, height: service.emotes.zwe.bttvU[usr][m[i]].height});
+             l.push({svc: cSources.service.bttv, url: service.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttvU[usr][m[i]].scope, width: service.emotes.zwe.bttvU[usr][m[i]].width, height: service.emotes.zwe.bttvU[usr][m[i]].height, local: false});
            }
            else
            {
@@ -20172,13 +19872,13 @@
             if (t.length > 0)
             {
              if (pass === 1)
-              l.push({svc: cSources.service.bttv, url: service.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttvU[usr][m[i]].scope, width: service.emotes.zwe.bttvU[usr][m[i]].width, height: service.emotes.zwe.bttvU[usr][m[i]].height});
+              l.push({svc: cSources.service.bttv, url: service.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttvU[usr][m[i]].scope, width: service.emotes.zwe.bttvU[usr][m[i]].width, height: service.emotes.zwe.bttvU[usr][m[i]].height, local: false});
             }
             else if (pass === 2)
             {
              if (!l[f].hasOwnProperty('zwe'))
               l[f].zwe = [];
-             l[f].zwe.push({svc: cSources.service.bttv, url: service.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttvU[usr][m[i]].scope, width: service.emotes.zwe.bttvU[usr][m[i]].width, height: service.emotes.zwe.bttvU[usr][m[i]].height});
+             l[f].zwe.push({svc: cSources.service.bttv, url: service.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttvU[usr][m[i]].scope, width: service.emotes.zwe.bttvU[usr][m[i]].width, height: service.emotes.zwe.bttvU[usr][m[i]].height, local: false});
              l[f].zwe.sort(_posSort);
              for (let j = 0, o = l.length; j < o; j++)
              {
@@ -20244,7 +19944,8 @@
           {
            p += m[j].length + 1;
           }
-          ret.push({svc: cSources.service['7tv'], url: service.emotes['7tv'][m[i]].url, str: m[i], pos: p, scope: service.emotes['7tv'][m[i]].scope, width: service.emotes['7tv'][m[i]].width, height: service.emotes['7tv'][m[i]].height});
+          const lcl = service.emotes['7tv'].hasOwnProperty(m[i]) && service.emotes['7tv'][m[i]].scope === cSources.scope.channel;
+          ret.push({svc: cSources.service['7tv'], url: service.emotes['7tv'][m[i]].url, str: m[i], pos: p, scope: service.emotes['7tv'][m[i]].scope, width: service.emotes['7tv'][m[i]].width, height: service.emotes['7tv'][m[i]].height, local: lcl});
          }
          return ret;
         }
@@ -20294,10 +19995,11 @@
            if (l[j].pos < p)
             f = j;
           }
+          const lcl = service.emotes.zwe['7tv'].hasOwnProperty(m[i]) && service.emotes.zwe['7tv'][m[i]].scope === cSources.scope.channel;
           if (f === -1)
           {
            if (pass === 1)
-            l.push({svc: cSources.service['7tv'], url: service.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe['7tv'][m[i]].scope, width: service.emotes.zwe['7tv'][m[i]].width, height: service.emotes.zwe['7tv'][m[i]].height});
+            l.push({svc: cSources.service['7tv'], url: service.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe['7tv'][m[i]].scope, width: service.emotes.zwe['7tv'][m[i]].width, height: service.emotes.zwe['7tv'][m[i]].height, local: lcl});
           }
           else
           {
@@ -20351,13 +20053,13 @@
            if (t.length > 0)
            {
             if (pass === 1)
-             l.push({svc: cSources.service['7tv'], url: service.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe['7tv'][m[i]].scope, width: service.emotes.zwe['7tv'][m[i]].width, height: service.emotes.zwe['7tv'][m[i]].height});
+             l.push({svc: cSources.service['7tv'], url: service.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe['7tv'][m[i]].scope, width: service.emotes.zwe['7tv'][m[i]].width, height: service.emotes.zwe['7tv'][m[i]].height, local: lcl});
            }
            else if (pass === 2)
            {
             if (!l[f].hasOwnProperty('zwe'))
              l[f].zwe = [];
-            l[f].zwe.push({svc: cSources.service['7tv'], url: service.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe['7tv'][m[i]].scope, width: service.emotes.zwe['7tv'][m[i]].width, height: service.emotes.zwe['7tv'][m[i]].height});
+            l[f].zwe.push({svc: cSources.service['7tv'], url: service.emotes.zwe['7tv'][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe['7tv'][m[i]].scope, width: service.emotes.zwe['7tv'][m[i]].width, height: service.emotes.zwe['7tv'][m[i]].height, local: lcl});
             l[f].zwe.sort(_posSort);
             for (let j = 0, o = l.length; j < o; j++)
             {
@@ -20405,7 +20107,7 @@
            {
             p += m[j].length + 1;
            }
-           ret.push({svc: cSources.service['7tv'], url: service.emotes['7tvU'][usr][m[i]].url, str: m[i], pos: p, scope: service.emotes['7tvU'][usr][m[i]].scope, width: service.emotes['7tvU'][usr][m[i]].width, height: service.emotes['7tvU'][usr][m[i]].height});
+           ret.push({svc: cSources.service['7tv'], url: service.emotes['7tvU'][usr][m[i]].url, str: m[i], pos: p, scope: service.emotes['7tvU'][usr][m[i]].scope, width: service.emotes['7tvU'][usr][m[i]].width, height: service.emotes['7tvU'][usr][m[i]].height, local: false});
           }
           return ret;
          }
@@ -20458,7 +20160,7 @@
            if (f === -1)
            {
             if (pass === 1)
-             l.push({svc: cSources.service['7tv'], url: service.emotes.zwe['7tvU'][usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe['7tvU'][usr][m[i]].scope, width: service.emotes.zwe['7tvU'][usr][m[i]].width, height: service.emotes.zwe['7tvU'][usr][m[i]].height});
+             l.push({svc: cSources.service['7tv'], url: service.emotes.zwe['7tvU'][usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe['7tvU'][usr][m[i]].scope, width: service.emotes.zwe['7tvU'][usr][m[i]].width, height: service.emotes.zwe['7tvU'][usr][m[i]].height, local: false});
            }
            else
            {
@@ -20512,13 +20214,13 @@
             if (t.length > 0)
             {
              if (pass === 1)
-              l.push({svc: cSources.service['7tv'], url: service.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttvU[usr][m[i]].scope, width: service.emotes.zwe.bttvU[usr][m[i]].width, height: service.emotes.zwe.bttvU[usr][m[i]].height});
+              l.push({svc: cSources.service['7tv'], url: service.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttvU[usr][m[i]].scope, width: service.emotes.zwe.bttvU[usr][m[i]].width, height: service.emotes.zwe.bttvU[usr][m[i]].height, local: false});
             }
             else if (pass === 2)
             {
              if (!l[f].hasOwnProperty('zwe'))
               l[f].zwe = [];
-             l[f].zwe.push({svc: cSources.service['7tv'], url: service.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttvU[usr][m[i]].scope, width: service.emotes.zwe.bttvU[usr][m[i]].width, height: service.emotes.zwe.bttvU[usr][m[i]].height});
+             l[f].zwe.push({svc: cSources.service['7tv'], url: service.emotes.zwe.bttvU[usr][m[i]].url, str: m[i], pos: p, scope: service.emotes.zwe.bttvU[usr][m[i]].scope, width: service.emotes.zwe.bttvU[usr][m[i]].width, height: service.emotes.zwe.bttvU[usr][m[i]].height, local: false});
              l[f].zwe.sort(_posSort);
              for (let j = 0, o = l.length; j < o; j++)
              {
@@ -20794,7 +20496,7 @@
      function $eListFromMsg(user, msg)
      {
       if (cfg.ignore.users !== false && cfg.ignore.users.includes(user))
-       return false;
+       return [];
       const r = [];
       const chID = 'twitch:' + twitch.net.channelID;
       r.push(..._parseTwitch(msg));
@@ -20866,15 +20568,13 @@
        r[i].width = sz.width;
        r[i].height = sz.height;
       }
-      if (r.length === 0)
-       return false;
       return r;
      }
 
-     function $handleDuplicates(a)
+     function $overlapPriority(a, svc = cSources.service.twitch, noCheer = false)
      {
       if (!a)
-       return false;
+       return [];
       const lA = a.length;
       if (lA < 1)
        return a;
@@ -20884,12 +20584,15 @@
        if (a[i].svc === cSources.service.url)
         r.push(a[i]);
       }
-      for (let i = 0; i < lA; i++)
+      if (!noCheer)
       {
-       if (a[i].svc === cSources.service.cheer)
+       for (let i = 0; i < lA; i++)
        {
-        if (service.parse.notDupe(a[i], r))
-         r.push(a[i]);
+        if (a[i].svc === cSources.service.cheer)
+        {
+         if (service.parse.notDupe(a[i], r))
+          r.push(a[i]);
+        }
        }
       }
       for (let i = 0; i < lA; i++)
@@ -20902,7 +20605,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.channel)
+       if (a[i].svc === svc && a[i].scope === cSources.scope.channel)
        {
         if (service.parse.notDupe(a[i], r))
          r.push(a[i]);
@@ -20921,7 +20624,7 @@
       }
       for (let i = 0; i < lA; i++)
       {
-       if (a[i].svc === cSources.service.twitch && a[i].scope === cSources.scope.global)
+       if (a[i].svc === svc && a[i].scope === cSources.scope.global)
        {
         if (service.parse.notDupe(a[i], r))
          r.push(a[i]);
@@ -20971,7 +20674,7 @@
       line: $line,
       ignored: $ignored,
       eListFromMsg: $eListFromMsg,
-      handleDuplicates: $handleDuplicates,
+      overlapPriority: $overlapPriority,
       notDupe: $notDupe,
       clearCooldowns: $clearCooldowns,
       uReg: /[^A-Za-z0-9_]/
@@ -21051,13 +20754,13 @@
       const r = shared.findInMaybeRange(cfg.event.tip.streamlabs.donation, v);
       if (r === false)
        continue;
-      let p = false;
+      const p = [];
       if (cfg.event.tip.useMsgEmotes && m !== false)
       {
-       p = service.parse.eListFromMsg(n, m);
-       p = service.parse.handleDuplicates(p);
+       const a = service.parse.overlapPriority(service.parse.eListFromMsg(n, m));
+       p.push(...a);
       }
-      if (p === false && cfg.event.tip.useProfileImage && n !== false)
+      if (p.length === 0 && cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
        if (!service.parse.uReg.test(n))
@@ -21065,9 +20768,7 @@
        if (u !== false)
        {
         if (u.hasOwnProperty('profile_image_url'))
-         p = [
-          {url: u.profile_image_url}
-         ];
+         p.push({url: u.profile_image_url});
        }
       }
       let s = Number.parseFloat(a * cfg.streamlabs.dispMul);
@@ -21093,7 +20794,7 @@
       const r = shared.findInMaybeRange(cfg.event.tip.streamlabs.pledge, v);
       if (r === false)
        continue;
-      let p = false;
+      const p = [];
       if (cfg.event.tip.useProfileImage && n !== false)
       {
        let u = false;
@@ -21102,9 +20803,7 @@
        if (u !== false)
        {
         if (u.hasOwnProperty('profile_image_url'))
-         p = [
-          {url: u.profile_image_url}
-         ];
+         p.push({url: u.profile_image_url});
        }
       }
       let s = Number.parseFloat(a * cfg.streamlabs.dispMul);
@@ -21279,6 +20978,8 @@
           let n = false;
           if (o[1].message[i].hasOwnProperty('name'))
            n = o[1].message[i].name;
+          if (!n)
+           n = anonName;
           let m = false;
           if (o[1].message[i].hasOwnProperty('message') && o[1].message[i].message !== null && o[1].message[i].message !== '')
            m = o[1].message[i].message;
@@ -21297,6 +20998,8 @@
           let n = false;
           if (o[1].message[i].hasOwnProperty('name'))
            n = o[1].message[i].name;
+          if (!n)
+           n = anonName;
           rP.push({amt: o[1].message[i].amount, name: n});
          }
          if (rP.length > 0)
@@ -21372,13 +21075,13 @@
      const r = shared.findInMaybeRange(cfg.event.tip.streamelements, v);
      if (r === false)
       return;
-     let p = false;
+     const p = [];
      if (cfg.event.tip.useMsgEmotes && dMsg !== false)
      {
-      p = service.parse.eListFromMsg(dName, dMsg);
-      p = service.parse.handleDuplicates(p);
+      const a = service.parse.overlapPriority(service.parse.eListFromMsg(dName, dMsg));
+      p.push(...a);
      }
-     if (p === false && cfg.event.tip.useProfileImage && dName !== false)
+     if (p.length === 0 && cfg.event.tip.useProfileImage && dName !== false)
      {
       let u = false;
       if (!service.parse.uReg.test(dName))
@@ -21386,9 +21089,7 @@
       if (u !== false)
       {
        if (u.hasOwnProperty('profile_image_url'))
-        p = [
-         {url: u.profile_image_url}
-        ];
+        p.push({url: u.profile_image_url});
       }
      }
      let s = Number.parseFloat(dAmt * cfg.streamelements.dispMul);
@@ -21571,6 +21272,8 @@
         let n = false;
         if (o[1].data.hasOwnProperty('name'))
          n = o[1].data.name;
+        if (!n)
+         n = anonName;
         let m = false;
         if (o[1].data.hasOwnProperty('message'))
          m = o[1].data.message;
@@ -27612,7 +27315,7 @@
       if (cfg.display.hasOwnProperty('statuses') && cfg.display.statuses === false)
        h = h.replaceAll('/* {INSERT:NOTICE_OFF} *\/', 'display: none;');
 
-      if (cfg.hasOwnProperty('twitch') && cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null)
+      if (cfg.hasOwnProperty('twitch') && ((cfg.twitch.hasOwnProperty('oauth_refresh') && cfg.twitch.oauth_refresh === null) || (cfg.twitch.hasOwnProperty('channel') && cfg.twitch.channel === null)))
        h = h.replaceAll('/* {INSERT:TWITCH_OFF} *\/', 'display: none;');
 
       if (cfg.hasOwnProperty('youtube') && cfg.youtube.hasOwnProperty('oauth_refresh') && cfg.youtube.oauth_refresh === null)

@@ -27,6 +27,11 @@ Configuration Information
      - [ ] If both `oauth` and `oauth_refresh` are `false` (or missing), the Twitch interactive login process will be enabled.
      - [ ] If `oauth_refresh` is `null`, Twitch support will be effectively disabled.
 
+  * `channel`  
+    *The name of the channel to join.*  
+    By default, this value is not required.  
+    If you do not wish to use any authentication method, this allows you to join a channel by name alone, but without point redeem or power-up events, Follower events, shoutouts, charity donations, hype train events, polls, predictions, or goals.
+
   * `share`  
     *Share your Twitch channel on the Emote Wall home page!*
 
@@ -118,11 +123,6 @@ Configuration Information
 * `kick`  
   *Settings related to the Kick login process.*
 
-  * `channel`  
-    *The name of the channel to join.*  
-    By default, this value is not required.  
-    If you do not wish to use any authentication method, this allows you to join a channel by name alone, but without Follower event support.
-
   * `oauth`   
     *The OAuth ID value is used in lieu of a password to access the Kick API.*  
     By default, this value is not required.  
@@ -143,6 +143,11 @@ Configuration Information
 
      - [ ] If `channel`, `oauth` and `oauth_refresh` are all `false` (or missing), the Kick interactive login process will be enabled.
      - [ ] If `oauth_refresh` is `null`, Kick support will be effectively disabled.
+
+  * `channel`  
+    *The name of the channel to join.*  
+    By default, this value is not required.  
+    If you do not wish to use any authentication method, this allows you to join a channel by name alone, but without Follower event support.
 
   * `share`  
     *Share your Twitch channel on the Emote Wall home page!*
