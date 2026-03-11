@@ -7248,7 +7248,7 @@
            await _ROOMSTATE(cmd);
            break;
           case 'USERNOTICE':
-           _USERNOTICE(cmd);
+           await _USERNOTICE(cmd);
            break;
           case 'CLEARMSG':
            _CLEARMSG(cmd);
@@ -7290,7 +7290,7 @@
          cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
         if (await _parse.event.cheer(cmd))
          return;
-        _parse.line(cmd);
+        await _parse.line(cmd);
        }
 
        async function _NOTICE(cmd)
@@ -7375,7 +7375,7 @@
          _eventSub(twitch.net.channelID);
        }
 
-       function _USERNOTICE(cmd)
+       async function _USERNOTICE(cmd)
        {
         if (document.visibilityState === 'hidden')
          return;
@@ -7390,7 +7390,7 @@
         switch (cmd.tags['msg-id'])
         {
          case 'raid':
-          _parse.event.raid(cmd);
+          await _parse.event.raid(cmd);
           break;
          case 'sub':
          case 'resub':
@@ -7398,7 +7398,7 @@
          case 'submysterygift':
          case 'giftpaidupgrade':
          case 'primepaidupgrade':
-          _parse.event.sub(cmd);
+          await _parse.event.sub(cmd);
           break;
          case 'bitsbadgetier':
           _parse.event.badge(cmd);
@@ -7406,12 +7406,12 @@
          case 'viewermilestone':
           if (cmd.tags.hasOwnProperty('msg-param-category') && cmd.tags['msg-param-category'] === 'watch-streak')
           {
-           _parse.event.streak(cmd);
+           await _parse.event.streak(cmd);
            break;
           }
          default:
           if (cmd.params.length > 1)
-           _parse.line(cmd);
+           await _parse.line(cmd);
           break;
         }
        }
