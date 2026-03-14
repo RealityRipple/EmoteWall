@@ -1725,6 +1725,22 @@
      const tWarn = 20;
      switch (w)
      {
+      case notice.Type.GLOBAL_RES:
+       _setNotice(w, [_nC.t.w, _nC.s.g], 'Low Resolution Hint:<br>&ensp;Change the Emote Wall\'s Width and Height using the Source Properties.<br>&ensp;Using the same resolution as your Canvas will provide the best quality.', tWarn);
+       window.addEventListener(
+        'resize',
+        function()
+        {
+         if (window.innerWidth === 800 && window.innerHeight === 600)
+         {
+          _setNotice(w, [_nC.t.w, _nC.s.g], 'Oh, so you <i>want</i> 800&#xD7;600. That\'s fine, too.', 5);
+          shared.storage.setItem('emotewall.ignore_lowres', '1');
+         }
+         else
+          _clearNoticeBegin(w);
+        }
+       );
+       break;
       case notice.Type.TWITCH_EVENTSUB:
        _setNotice(w, [_nC.t.w, _nC.s.t], 'Too Many Instances<br>Please use existing (reference) copies wherever possible.', tWarn);
        break;
@@ -2264,6 +2280,7 @@
       GLOBAL_CFG: Symbol(0x0000),
       GLOBAL_NET: Symbol(0x0001),
       GLOBAL_OBS: Symbol(0x0007),
+      GLOBAL_RES: Symbol(0x0008),
       GLOBAL_DECRYPT: Symbol(0x000D),
       TWITCH_IRC: Symbol(0x0011),
       TWITCH_EVENTSUB: Symbol(0x0021),
@@ -24256,6 +24273,13 @@
       shared.storage.setItem('emotewall.obs_notfound', '1');
       notice.error(notice.Type.GLOBAL_OBS);
      }
+     if (window.innerWidth === 800 && window.innerHeight === 600)
+     {
+      if (!shared.storage.getItem('emotewall.ignore_lowres'))
+       notice.warning(notice.Type.GLOBAL_RES);
+     }
+     else
+      shared.storage.removeItem('emotewall.ignore_lowres');
      loginT.use();
      loginYT.use();
      loginK.use();
