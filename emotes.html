@@ -9634,6 +9634,8 @@
        }
        if (twitch.net.oAuth.usesChannel)
         return false;
+       if (!twitch.net.oAuth.auth.scope.includes(cScopes.twitch.followers))
+        return false;
        const url = cURLs.api.twitch.channels.followers.replaceAll(cVARs.url.userID, uID).replaceAll(cVARs.url.channelID, rID);
        const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
        if (!r.success)
