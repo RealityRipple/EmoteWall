@@ -8156,7 +8156,7 @@
         return [];
        if (cmd.params.length < 2)
         return [];
-       const m = cmd.params[1];
+       const m = Array.from(cmd.params[1]);
        const e = cmd.tags.emotes.split('/');
        if (dup === null)
         dup = cfg.display.duplicates;
@@ -8168,7 +8168,7 @@
         const eVals = e[i].slice(e[i].indexOf(':') + 1).split(',');
         const eStart = parseInt(eVals[0].split('-')[0], 10);
         const eEnd = parseInt(eVals[0].split('-')[1], 10);
-        const sName = m.slice(eStart, eEnd + 1);
+        const sName = m.slice(eStart, eEnd + 1).join('');
         let sc = cSources.scope.channel;
         let lcl = false;
         if (service.emotes.twitch.hasOwnProperty(sName))
