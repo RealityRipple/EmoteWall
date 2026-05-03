@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v1.8.4
+    * v1.8.5
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -8156,7 +8156,7 @@
         return [];
        if (cmd.params.length < 2)
         return [];
-       const m = cmd.params[1];
+       const m = Array.from(cmd.params[1]);
        const e = cmd.tags.emotes.split('/');
        if (dup === null)
         dup = cfg.display.duplicates;
@@ -8168,7 +8168,7 @@
         const eVals = e[i].slice(e[i].indexOf(':') + 1).split(',');
         const eStart = parseInt(eVals[0].split('-')[0], 10);
         const eEnd = parseInt(eVals[0].split('-')[1], 10);
-        const sName = m.slice(eStart, eEnd + 1);
+        const sName = m.slice(eStart, eEnd + 1).join('');
         let sc = cSources.scope.channel;
         let lcl = false;
         if (service.emotes.twitch.hasOwnProperty(sName))
@@ -8479,24 +8479,45 @@
         return false;
        }
 
-       function _gigantified(cmd)
+       const _gigantified = function()
        {
-        if (!cfg.event.twitch.powerup)
-         return false;
-        if (!cfg.event.twitch.powerup.emote)
-         return false;
-        const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
-        if (a.length === 0)
-         return false;
-        const u = _parseUser(cmd);
-        const g = a.pop();
-        display.kappa.show([g], cfg.event.twitch.powerup.emote, {[cVARs.evt.user]: u.ascii});
-        if (a.length === 0)
+        function $c_gigantified(cmd)
+        {
+         if (!cfg.event.twitch.powerup)
+          return false;
+         if (!cfg.event.twitch.powerup.emote)
+          return false;
+         const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
+         const iG = _posEmbiggened(a);
+         if (iG < 0)
+          return false;
+         const u = _parseUser(cmd);
+         const g = a.splice(iG, 1)[0];
+         display.kappa.show([g], cfg.event.twitch.powerup.emote, {[cVARs.evt.user]: u.ascii});
+         if (a.length === 0)
+          return true;
+         display.emote.addToShowList(a);
+         display.emote.showEmotes();
          return true;
-        display.emote.addToShowList(a);
-        display.emote.showEmotes();
-        return true;
-       }
+        }
+
+        function _posEmbiggened(a)
+        {
+         const aL = a.length;
+         if (aL < 2)
+          return aL - 1;
+         let lastE = 0;
+         for (let i = 1; i < aL; i++)
+         {
+          if (a[i].pos <= a[lastE].pos)
+           continue;
+          lastE = i;
+         }
+         return lastE;
+        }
+
+        return $c_gigantified;
+       }();
 
        function _animated(cmd)
        {
@@ -9633,6 +9654,8 @@
          return twitch.net.fList[uID].value;
        }
        if (twitch.net.oAuth.usesChannel)
+        return false;
+       if (!twitch.net.oAuth.auth.scope.includes(cScopes.twitch.followers))
         return false;
        const url = cURLs.api.twitch.channels.followers.replaceAll(cVARs.url.userID, uID).replaceAll(cVARs.url.channelID, rID);
        const r = await shared.httpRequest('GET', url, twitch.net.oAuth.headers());
