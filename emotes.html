@@ -1564,6 +1564,7 @@
      read: 'chat:read',
      followers: 'moderator:read:followers',
      shoutouts: 'moderator:read:shoutouts',
+     bits: 'bits:read',
      redemptions: 'channel:read:redemptions',
      hypetrains: 'channel:read:hype_train',
      polls: 'channel:read:polls',
@@ -6509,6 +6510,9 @@
           case twitch.net.eventSubCtl.sub.auto_redeem:
            _channel_points_auto_redeem(r.payload.event);
            return;
+          case twitch.net.eventSubCtl.sub.power_up:
+           _bits_power_up(r.payload.event);
+           return;
           case twitch.net.eventSubCtl.sub.follow:
            _follow(r.payload.event);
            break;
@@ -6570,9 +6574,13 @@
          const lnID = ev.reward.id;
          if (!_rList.hasOwnProperty(lnID))
          {
-          _rList[lnID] = {name: n, cmds: []};
+          _rList[lnID] = {name: n, cmds: [], cost: 'points'};
           return;
          }
+         if (!_rList[lnID].cost)
+          _rList[lnID].cost = 'points';
+         if (_rList[lnID].cost !== 'points')
+          return;
          if (_rList[lnID].name === false)
           _rList[lnID].name = n;
          while (_rList[lnID].cmds.length > 0)
@@ -6598,6 +6606,43 @@
           case 'chosen_modified_sub_emote_unlock':
            _parse.event.modified_emote(ev);
            break;
+         }
+        }
+
+        function _bits_power_up(ev)
+        {
+         let ln = false;
+         if (ev.user_login)
+          ln = ev.user_login;
+         if (!!ln && cfg.ignore.users !== false && cfg.ignore.users.includes(ln))
+          return;
+         if (!ev.custom_power_up)
+          return;
+         if (!ev.custom_power_up.hasOwnProperty('title'))
+          return;
+         const n = ev.custom_power_up.title;
+         if (!ev.hasOwnProperty('user_input') || ev.user_input === '')
+         {
+          _parse.event.power_up(n, false);
+          return;
+         }
+         if (!ev.custom_power_up.hasOwnProperty('id'))
+          return;
+         const lnID = ev.custom_power_up.id;
+         if (!_rList.hasOwnProperty(lnID))
+         {
+          _rList[lnID] = {name: n, cmds: [], cost: 'bits'};
+          return;
+         }
+         if (!_rList[lnID].cost)
+          _rList[lnID].cost = 'bits';
+         if (_rList[lnID].cost !== 'bits')
+          return;
+         if (_rList[lnID].name === false)
+          _rList[lnID].name = n;
+         while (_rList[lnID].cmds.length > 0)
+         {
+          _parse.event.power_up(n, _rList[lnID].cmds.shift());
          }
         }
 
@@ -6783,6 +6828,7 @@
         {id: twitch.net.eventSubCtl.sub.follow, v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']},
         {id: twitch.net.eventSubCtl.sub.redeem, scope: [cScopes.twitch.redemptions], cfg: false},
         {id: twitch.net.eventSubCtl.sub.auto_redeem, v: '2', scope: [cScopes.twitch.redemptions], cfg: ['event.twitch.redeem.random_emote', 'event.twitch.redeem.chosen_emote', 'event.twitch.redeem.modified_emote']},
+        {id: twitch.net.eventSubCtl.sub.power_up, scope: [cScopes.twitch.bits], cfg: false},
         {id: twitch.net.eventSubCtl.sub.shoutout.create, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']},
         {id: twitch.net.eventSubCtl.sub.shoutout.receive, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']},
         {id: twitch.net.eventSubCtl.sub.hypetrain.begin, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
@@ -6856,6 +6902,19 @@
         for (const k of cfg.commands)
         {
          if (!k.hasOwnProperty('redeem') || !Array.isArray(k.redeem) || k.redeem.length === 0)
+          continue;
+         found = true;
+         break;
+        }
+        if (found === false)
+         return false;
+       }
+       else if (sub.id === twitch.net.eventSubCtl.sub.power_up)
+       {
+        let found = false;
+        for (const k of cfg.commands)
+        {
+         if (!k.hasOwnProperty('powerup') || !Array.isArray(k.powerup) || k.powerup.length === 0)
           continue;
          found = true;
          break;
@@ -7017,6 +7076,7 @@
         follow: 'channel.follow',
         redeem: 'channel.channel_points_custom_reward_redemption.add',
         auto_redeem: 'channel.channel_points_automatic_reward_redemption.add',
+        power_up: 'channel.custom_power_up_redemption.add',
         shoutout: Object.freeze({
          create: 'channel.shoutout.create',
          receive: 'channel.shoutout.receive'
@@ -8582,15 +8642,25 @@
        const lnID = cmd.tags['custom-reward-id'];
        if (!_rList.hasOwnProperty(lnID))
        {
-        _rList[lnID] = {name: false, cmds: [cmd]};
+        _rList[lnID] = {name: false, cmds: [cmd], cost: false};
         return true;
        }
        _rList[lnID].cmds.push(cmd);
        if (_rList[lnID].name === false)
         return true;
+       if (_rList[lnID].cost === false)
+        return true;
        while (_rList[lnID].cmds.length > 0)
        {
-        _parse.event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift());
+        switch (_rList[lnID].cost)
+        {
+         case 'points':
+          _parse.event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift());
+          break;
+         case 'bits':
+          _parse.event.power_up(_rList[lnID].name, _rList[lnID].cmds.shift());
+          break;
+        }
        }
        return true;
       }
@@ -9154,6 +9224,26 @@
        display.kappa.show(p, cfg.event.twitch.redeem.modified_emote);
       }
 
+      function $power_up(title, cmd)
+      {
+       for (const k of cfg.commands)
+       {
+        if (!k.hasOwnProperty('powerup'))
+         continue;
+        if (!k.powerup.includes(title))
+         continue;
+        const kC = k.styles;
+        if (cmd === false)
+        {
+         display.kappa.show(false, kC);
+         return;
+        }
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
+        display.kappa.show(a, kC);
+        return;
+       }
+      }
+
       function $follow(ev)
       {
        if (!cfg.event.twitch.follow)
@@ -9564,6 +9654,7 @@
        random_emote: $random_emote,
        chosen_emote: $chosen_emote,
        modified_emote: $modified_emote,
+       power_up: $power_up,
        follow: $follow,
        shoutout: $shoutout,
        train: $train,
@@ -23354,6 +23445,13 @@
       if (!k.hasOwnProperty('redeem') || !Array.isArray(k.redeem) || k.redeem.length === 0)
        continue;
       r.push(cScopes.twitch.redemptions);
+      break;
+     }
+     for (const k of cfg.commands)
+     {
+      if (!k.hasOwnProperty('powerup') || !Array.isArray(k.powerup) || k.powerup.length === 0)
+       continue;
+      r.push(cScopes.twitch.bits);
       break;
      }
      let needF = false;
