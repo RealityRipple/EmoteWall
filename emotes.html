@@ -22662,36 +22662,27 @@
     {
      const _stack = {};
      const _lQueue = 250;
-     let _tQueue = false;
 
      function $c_httpRequest(type, url, hdrs = {}, body = null, nocache = true, ret = true)
      {
-      const p = new Promise(
-       function(resolve)
+      const h = _host(url);
+      if (!_stack.hasOwnProperty(h))
+       _stack[h] = {queries: Promise.resolve(), time: 0};
+      const req = _stack[h].queries.then(
+       async function()
        {
-        const h = _host(url);
-        if (!_stack.hasOwnProperty(h))
-         _stack[h] = {queries: [], time: 0};
-        const r = {
-         req: [type, url, hdrs, body, nocache, ret],
-         ret: resolve
-        };
-        _stack[h].queries.push(r);
-        if (_tQueue !== false)
-         return;
         const dif = Date.now() - _stack[h].time;
         if (dif < _lQueue)
         {
-         _tQueue = window.setTimeout(_tick, _lQueue - dif);
+         const tWait = Math.ceil(Math.max(_lQueue - dif, shared.mspf.value));
+         await new Promise(function(resolve){window.setTimeout(resolve, tWait);});
         }
-        else
-        {
-         _tQueue = true;
-         shared.doNextFrame(_tick);
-        }
+        _stack[h].time = Date.now();
+        return _req(type, url, hdrs, body, nocache, ret);
        }
       );
-      return p;
+      _stack[h].queries = req.then(function(){});
+      return req;
      }
 
      function _host(u)
@@ -22767,58 +22758,6 @@
        }
       );
       return p;
-     }
-
-     async function _tick()
-     {
-      _tQueue = true;
-      _cleanup();
-      const hList = Object.keys(_stack);
-      const reqs = [];
-      const rets = [];
-      for (let i = 0; i < hList.length; i++)
-      {
-       const h = hList[i];
-       if (_stack[h].queries.length === 0)
-        continue;
-       const dif = Date.now() - _stack[h].time;
-       if (dif < _lQueue)
-        continue;
-       _stack[h].time = Date.now();
-       const r = _stack[h].queries.shift();
-       reqs.push(_req(...r.req));
-       rets.push(r.ret);
-      }
-      if (reqs.length > 0)
-      {
-       const ret = await Promise.allSettled(reqs);
-       for (let i = 0; i < ret.length; i++)
-       {
-        _stack[hList[i]].time = Date.now();
-        if (ret[i].status !== 'fulfilled')
-        {
-         rets[i]({code: 0, data: '', get success(){return false;}, get json(){return null;}});
-         continue;
-        }
-        rets[i](ret[i].value);
-       }
-      }
-      _cleanup();
-      if (Object.keys(_stack).length === 0)
-       _tQueue = false;
-      else
-       _tQueue = window.setTimeout(_tick, _lQueue);
-     }
-
-     function _cleanup()
-     {
-      const hList = Object.keys(_stack);
-      for (let i = 0; i < hList.length; i++)
-      {
-       const h = hList[i];
-       if (_stack[h].queries.length === 0)
-        delete _stack[h];
-      }
      }
 
      return $c_httpRequest;
