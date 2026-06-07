@@ -22732,6 +22732,7 @@
            return;
           x.ontimeout = null;
           x.onreadystatechange = null;
+          x.onerror = null;
           resolve(Math.floor(x.status / 100) === 2);
           return;
          }
@@ -22739,6 +22740,7 @@
           return;
          x.ontimeout = null;
          x.onreadystatechange = null;
+         x.onerror = null;
          const h = _parseHeaders(x.getAllResponseHeaders());
          resolve({code: x.status, data: x.responseText, headers: h, get success(){return Math.floor(this.code / 100) === 2;}, get json(){try {return JSON.parse(this.data);} catch {return null;}}});
         };
@@ -22746,10 +22748,21 @@
         {
          x.ontimeout = null;
          x.onreadystatechange = null;
+         x.onerror = null;
          if (ret === false)
           resolve(false);
          else
           resolve({code: 408, data: shared.errTimeout, get success(){return false;}, get json(){return null;}});
+        };
+        x.onerror = function()
+        {
+         x.ontimeout = null;
+         x.onreadystatechange = null;
+         x.onerror = null;
+         if (ret === false)
+          resolve(false);
+         else
+          resolve({code: 0, data: '', get success(){return false;}, get json(){return null;}});
         };
         if (body === null)
          x.send();
