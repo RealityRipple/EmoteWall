@@ -6941,7 +6941,7 @@
       {
        if (twitch.net.oAuth.usesChannel)
         return [];
-       const r = await shared.httpRequest('GET', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers());
+       const r = await shared.httpRequest('GET', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers(), null, {'queue': false});
        if (!r.success)
         return [];
        const j = r.json;
@@ -7044,7 +7044,7 @@
          d.condition.moderator_user_id = twitch.net.eventSubCtl.channelID;
          break;
        }
-       const r = await shared.httpRequest('POST', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers(true), JSON.stringify(d), false);
+       const r = await shared.httpRequest('POST', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers(true), JSON.stringify(d), {'queue': false});
        if (r.success)
         return true;
        if (r.code === 429)
@@ -7060,7 +7060,7 @@
       {
        if (twitch.net.oAuth.usesChannel)
         return false;
-       const r = await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll(cVARs.url.eventID, id), twitch.net.oAuth.headers(), null, false);
+       const r = await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll(cVARs.url.eventID, id), twitch.net.oAuth.headers(), null, {'queue': false});
        if (!r.success)
         return false;
        return true;
@@ -7936,7 +7936,7 @@
        let b = 'refresh=' + encodeURIComponent(t);
        if (cfg.twitch.share)
         b += '&share=1';
-       const r = await shared.httpRequest('POST', url, {}, b, false);
+       const r = await shared.httpRequest('POST', url, {}, b);
        if (!r.success)
        {
         switch (r.code)
@@ -7967,7 +7967,7 @@
       {
        const url = cURLs.api.twitch.validate;
        const h = {'Authorization': 'Bearer ' + t};
-       const r = await shared.httpRequest('GET', url, h, null, false);
+       const r = await shared.httpRequest('GET', url, h);
        if (!r.success)
        {
         if (r.code === 401)
@@ -10995,7 +10995,7 @@
       async function _ping(file)
       {
        const tStart = Date.now();
-       const r = await shared.httpRequest('HEAD', file, {}, null, true, false);
+       const r = await shared.httpRequest('HEAD', file, {}, null, {'return': false});
        if (!r)
         return false;
        return (Date.now() - tStart);
@@ -11123,7 +11123,7 @@
        let b = 'refresh=' + encodeURIComponent(t);
        if (cfg.youtube.share)
         b += '&share=1';
-       const r = await shared.httpRequest('POST', url, {}, b, false);
+       const r = await shared.httpRequest('POST', url, {}, b);
        if (!r.success)
        {
         switch (r.code)
@@ -11163,7 +11163,7 @@
       async function _validate(t)
       {
        const url = cURLs.api.youtube.tokeninfo.replaceAll(cVARs.url.token, encodeURIComponent(t));
-       const r = await shared.httpRequest('GET', url, {}, null, false);
+       const r = await shared.httpRequest('GET', url);
        if (!r.success)
        {
         if (r.code === 0 && r.data === '')
@@ -12155,7 +12155,7 @@
     async function $stickers()
     {
      const url = cURLs.api.youtube.livechat.superstickers;
-     const r = await shared.httpRequest('GET', url, {}, null, false);
+     const r = await shared.httpRequest('GET', url, {}, null, {'cache': true});
      if (!r.success)
       return false;
      const j = r.json;
@@ -12945,7 +12945,7 @@
 
        async function _getList()
        {
-        const r = await shared.httpRequest('GET', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers());
+        const r = await shared.httpRequest('GET', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers(), null, {'queue': false});
         if (!r.success)
          return [];
         const j = r.json;
@@ -13021,7 +13021,7 @@
          'events': [{'name': type, 'version': version}],
          'method': 'webhook'
         };
-        const r = await shared.httpRequest('POST', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers(true), JSON.stringify(d), false);
+        const r = await shared.httpRequest('POST', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers(true), JSON.stringify(d), {'queue': false});
         if (r.success)
          return true;
         return false;
@@ -13029,7 +13029,7 @@
 
        async function _unsubscribe(id)
        {
-        const r = await shared.httpRequest('DELETE', cURLs.api.kick.eventSub.delete.replaceAll(cVARs.url.eventID, id), kick.net.oAuth.headers(), null, false);
+        const r = await shared.httpRequest('DELETE', cURLs.api.kick.eventSub.delete.replaceAll(cVARs.url.eventID, id), kick.net.oAuth.headers(), null, {'queue': false});
         if (!r.success)
          return false;
         return true;
@@ -13760,7 +13760,7 @@
        let b = 'refresh=' + encodeURIComponent(t);
        if (cfg.kick.share)
         b += '&share=1';
-       const r = await shared.httpRequest('POST', url, {}, b, false);
+       const r = await shared.httpRequest('POST', url, {}, b);
        if (!r.success)
        {
         switch (r.code)
@@ -13791,7 +13791,7 @@
       {
        const url = cURLs.api.kick.channels.oauth;
        const h = {'Authorization': 'Bearer ' + t};
-       const r = await shared.httpRequest('GET', url, h, null, false);
+       const r = await shared.httpRequest('GET', url, h);
        if (!r.success)
        {
         if (r.code === 401)
@@ -16007,7 +16007,7 @@
       ];
       const b = JSON.stringify(d);
       const h = trovo.net.oAuth.headers('text/plain', 'OAuth');
-      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b, false);
+      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b, {'cache': true});
       if (!r.success)
        return false;
       const j = r.json;
@@ -16043,7 +16043,7 @@
       ];
       const b = JSON.stringify(d);
       const h = trovo.net.oAuth.headers('text/plain', 'OAuth');
-      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b, false);
+      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b);
       if (!r.success)
        return false;
       const j = r.json;
@@ -16288,7 +16288,7 @@
        let b = 'refresh=' + encodeURIComponent(t);
        if (cfg.trovo.share)
         b += '&share=1';
-       const r = await shared.httpRequest('POST', url, {}, b, false);
+       const r = await shared.httpRequest('POST', url, {}, b);
        if (!r.success)
        {
         if (r.code === 401)
@@ -16322,7 +16322,7 @@
         'Client-Id': oauthClient.tl,
         'Authorization': 'OAuth ' + t
        };
-       const r = await shared.httpRequest('GET', url, h, null, false);
+       const r = await shared.httpRequest('GET', url, h);
        if (!r.success)
        {
         if (r.code === 401)
@@ -17394,7 +17394,7 @@
       ];
       const b = JSON.stringify(d);
       const h = trovo.net.oAuth.headers('text/plain', 'OAuth');
-      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b, false);
+      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b);
       if (!r.success)
        return;
       const j = r.json;
@@ -19223,7 +19223,7 @@
      let b = 'svc=' + encodeURIComponent(svc);
      b += '&evt=' + encodeURIComponent(evt);
      b += '&params=' + encodeURIComponent(JSON.stringify(params));
-     await shared.httpRequest('POST', cURLs.api.rr.feedback, {}, b, false, false);
+     await shared.httpRequest('POST', cURLs.api.rr.feedback, {}, b, {'return': false});
     }
 
     return {
@@ -19951,7 +19951,7 @@
      {
       const url = cURLs.api.rr.refresh.se;
       const b = 'refresh=' + encodeURIComponent(t);
-      const r = await shared.httpRequest('POST', url, {}, b, false);
+      const r = await shared.httpRequest('POST', url, {}, b);
       if (!r.success)
       {
        switch (r.code)
@@ -19982,7 +19982,7 @@
      {
       const url = cURLs.api.streamelements.validate;
       const h = {'Authorization': 'Bearer ' + t};
-      const r = await shared.httpRequest('GET', url, h, null, false);
+      const r = await shared.httpRequest('GET', url, h);
       if (!r.success)
        return false;
       const j = r.json;
@@ -21924,7 +21924,7 @@
     async function $emoji(set)
     {
      const unqSkip = ['00a9', '00ae', '2122', '24c2'];
-     const fRet = await shared.httpRequest('GET', cURLs.cdn.emoji.fonts, {}, null, false);
+     const fRet = await shared.httpRequest('GET', cURLs.cdn.emoji.fonts, {}, null, {'cache': true});
      if (!fRet.success)
       thirdparty.emoji_fonts = ['twemoji', 'openmoji', 'noto', 'blob', 'facebook', 'apple', 'joypixels', 'tossface', 'whatsapp', 'oneui'];
      else
@@ -21937,7 +21937,7 @@
       set = false;
      else if (!thirdparty.emoji_fonts.includes(set))
       set = thirdparty.emoji_fonts[0];
-     const r = await shared.httpRequest('GET', cURLs.cdn.emoji.list, {}, null, false);
+     const r = await shared.httpRequest('GET', cURLs.cdn.emoji.list, {}, null, {'cache': true});
      if (!r.success)
       return;
      const j = r.json;
@@ -22691,8 +22691,10 @@
      const _stack = {};
      const _lQueue = 250;
 
-     function $c_httpRequest(type, url, hdrs = {}, body = null, nocache = true, ret = true)
+     function $c_httpRequest(type, url, hdrs = {}, body = null, prefs = {})
      {
+      if (prefs.hasOwnProperty('queue') && !prefs.queue)
+       return _req(type, url, hdrs, body, prefs);
       const h = _host(url);
       if (!_stack.hasOwnProperty(h))
        _stack[h] = {queries: Promise.resolve(), time: 0};
@@ -22706,7 +22708,7 @@
          await new Promise(function(resolve){window.setTimeout(resolve, tWait);});
         }
         _stack[h].time = Date.now();
-        return _req(type, url, hdrs, body, nocache, ret);
+        return _req(type, url, hdrs, body, prefs);
        }
       );
       _stack[h].queries = req.then(function(){});
@@ -22728,13 +22730,13 @@
       }
      }
 
-     function _req(type, url, hdrs = {}, body = null, nocache = true, ret = true)
+     function _req(type, url, hdrs = {}, body = null, prefs = {})
      {
       const p = new Promise(
        function(resolve)
        {
         const x = new XMLHttpRequest();
-        if (nocache)
+        if (type === 'GET' && !prefs.cache)
         {
          if (url.includes('?'))
           url += '&';
@@ -22754,7 +22756,7 @@
         }
         x.onreadystatechange = function()
         {
-         if (ret === false)
+         if (prefs.hasOwnProperty('return') && !prefs.return)
          {
           if (x.readyState < 2)
            return;
@@ -22777,7 +22779,7 @@
          x.ontimeout = null;
          x.onreadystatechange = null;
          x.onerror = null;
-         if (ret === false)
+         if (prefs.hasOwnProperty('return') && !prefs.return)
           resolve(false);
          else
           resolve({code: 408, data: shared.errTimeout, get success(){return false;}, get json(){return null;}});
@@ -22787,7 +22789,7 @@
          x.ontimeout = null;
          x.onreadystatechange = null;
          x.onerror = null;
-         if (ret === false)
+         if (prefs.hasOwnProperty('return') && !prefs.return)
           resolve(false);
          else
           resolve({code: 0, data: '', get success(){return false;}, get json(){return null;}});
