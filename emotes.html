@@ -7343,31 +7343,8 @@
          _tExpire = false;
         }
         _firstRS = false;
-        if (!newID)
-         return;
-        await _loadEmote_channel(twitch.net.channelID);
-        await _loadCheer_channel(twitch.net.channelID);
-        await _localTeams(twitch.net.channelID);
-        if (!!cfg.event.twitch.tag && !!cfg.event.twitch.tag.styles)
-         await _getChannelTitleTags(twitch.net.channelID);
-        if (cfg.display.extended.useFFZ)
-         thirdparty.ffz.channel('twitch', twitch.net.channelID);
-        if (cfg.display.extended.useBTTV)
-        {
-         thirdparty.bttv.channel('twitch', twitch.net.channelID);
-         thirdparty.bttv.socket.join('twitch', twitch.net.channelID);
-        }
-        if (cfg.display.extended.use7TV)
-        {
-         thirdparty['7tv'].channel('twitch', twitch.net.channelID);
-         await thirdparty['7tv'].socketEx.join('twitch', twitch.net.channelID);
-        }
-        if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
-         thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
-        if (cfg.display.extended.useBTTV)
-         thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
-        if (!twitch.net.oAuth.usesChannel)
-         _eventSub(twitch.net.channelID);
+        if (newID)
+         _loadChannelData(twitch.net.channelID);
        }
 
        async function _USERNOTICE(cmd)
@@ -7767,6 +7744,50 @@
       }
      }
 
+     const _loadChannelData = function()
+     {
+      async function $c_loadChannelData(chID)
+      {
+       const oCh = [];
+       oCh.push(_loadEmote_channel(chID));
+       oCh.push(_loadCheer_channel(chID));
+       oCh.push(_localTeams(chID));
+       if (!!cfg.event.twitch.tag && !!cfg.event.twitch.tag.styles)
+        oCh.push(_getChannelTitleTags(chID));
+       await Promise.allSettled(oCh);
+       if (!twitch.net.oAuth.usesChannel)
+        _eventSub(chID);
+       const o3P = [];
+       if (cfg.display.extended.useFFZ)
+        o3P.push(thirdparty.ffz.channel('twitch', chID));
+       if (cfg.display.extended.useBTTV)
+        o3P.push(_bttvData(chID));
+       if (cfg.display.extended.use7TV)
+        o3P.push(_7tvData(chID));
+       if (o3P.length === 0)
+        return;
+       await Promise.allSettled(o3P);
+       if (cfg.display.extended.useBTTV)
+        thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
+       if (cfg.display.extended.useFFZ || cfg.display.extended.use7TV)
+        thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
+      }
+
+      async function _bttvData(chID)
+      {
+       await thirdparty.bttv.channel('twitch', chID);
+       thirdparty.bttv.socket.join('twitch', chID);
+      }
+
+      async function _7tvData(chID)
+      {
+       await thirdparty['7tv'].channel('twitch', chID);
+       await thirdparty['7tv'].socketEx.join('twitch', chID);
+      }
+
+      return $c_loadChannelData;
+     }();
+
      const $oAuth = function()
      {
       const _pathRefresh = '.refresh';
@@ -7886,6 +7907,13 @@
        twitch.net.oAuth.auth.access_token = a;
        twitch.net.oAuth.auth.refresh_token = r;
        twitch.net.oAuth.auth.expires = j.expires_in;
+       if (j.hasOwnProperty('user_id'))
+       {
+        const newID = twitch.net.channelID !== j.user_id;
+        twitch.net.channelID = j.user_id;
+        if (newID)
+         _loadChannelData(twitch.net.channelID);
+       }
       }
 
       function _populateNoAuth(c = null)
