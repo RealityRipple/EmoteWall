@@ -6822,6 +6822,10 @@
 
      const $eventSubCtl = function()
      {
+      const _gcPause = 3000;
+      const _gcList = [];
+      let _tGC = false;
+
       async function $init()
       {
        const aSubs = [
@@ -6842,6 +6846,11 @@
         {id: twitch.net.eventSubCtl.sub.charity, scope: [cScopes.twitch.charity], cfg: ['event.twitch.charity']},
         {id: twitch.net.eventSubCtl.sub.tag, scope: false, cfg: ['event.twitch.tag.styles']}
        ];
+       if (_tGC !== false)
+       {
+        window.clearTimeout(_tGC);
+        _tGC = false;
+       }
        const aActive = await _cleanAndRecover();
        let didSomething = aActive.length > 0;
        const toHandle = [];
@@ -6863,6 +6872,8 @@
          }
         }
        }
+       if (_tGC === false && _gcList.length > 0)
+        _tGC = window.setTimeout(_gcSubs, _gcPause);
        return didSomething;
       }
 
@@ -6958,6 +6969,11 @@
 
       async function $erase()
       {
+       if (_tGC !== false)
+       {
+        window.clearTimeout(_tGC);
+        _tGC = false;
+       }
        const d = await _getList();
        if (d.length === 0)
         return;
@@ -6982,7 +6998,6 @@
        if (d.length === 0)
         return [];
        const rList = [];
-       const unList = [];
        for (let i = 0, l = d.length; i < l; i++)
        {
         if (!d[i].hasOwnProperty('id'))
@@ -7017,12 +7032,11 @@
          case 'websocket_internal_error':
          case 'websocket_network_timeout':
          case 'websocket_network_error':
-          unList.push(_unsubscribe(d[i].id));
+          if (!_gcList.includes(d[i].id))
+           _gcList.push(d[i].id);
           break;
         }
        }
-       if (unList.length > 0)
-        await Promise.allSettled(unList);
        return rList;
       }
 
@@ -7030,6 +7044,11 @@
       {
        if (twitch.net.oAuth.usesChannel)
         return false;
+       if (_tGC !== false)
+       {
+        window.clearTimeout(_tGC);
+        _tGC = false;
+       }
        const d = {
         'type': type,
         'version': version,
@@ -7045,6 +7064,8 @@
          break;
        }
        const r = await shared.httpRequest('POST', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers(true), JSON.stringify(d), {'queue': false});
+       if (_tGC === false && _gcList.length > 0)
+        _tGC = window.setTimeout(_gcSubs, _gcPause);
        if (r.success)
         return true;
        if (r.code === 429)
@@ -7054,6 +7075,20 @@
          notice.warning(notice.Type.TWITCH_EVENTSUB);
        }
        return false;
+      }
+
+      async function _gcSubs()
+      {
+       if (_tGC === false)
+        return;
+       _tGC = false;
+       const unList = [];
+       while (_gcList.length > 0)
+       {
+        unList.push(_unsubscribe(_gcList.shift()));
+       }
+       if (unList.length > 0)
+        await Promise.allSettled(unList);
       }
 
       async function _unsubscribe(id)
@@ -12869,11 +12904,20 @@
 
       const _eventSubCtl = function()
       {
+       const _gcPause = 3000;
+       const _gcList = [];
+       let _tGC = false;
+
        async function $init()
        {
         const aSubs = [
          {id: _eventSubCtl.sub.follow, scope: [cScopes.kick.events], cfg: ['event.kick.follow']}
         ];
+        if (_tGC !== false)
+        {
+         window.clearTimeout(_tGC);
+         _tGC = false;
+        }
         const aActive = await _cleanAndRecover();
         let didSomething = aActive.length > 0;
         const toHandle = [];
@@ -12895,6 +12939,8 @@
           }
          }
         }
+        if (_tGC === false && _gcList.length > 0)
+         _tGC = window.setTimeout(_gcSubs, _gcPause);
         return didSomething;
        }
 
@@ -12958,6 +13004,11 @@
 
        async function $erase()
        {
+        if (_tGC !== false)
+        {
+         window.clearTimeout(_tGC);
+         _tGC = false;
+        }
         const d = await _getList();
         if (d.length < 1)
          return;
@@ -13005,7 +13056,8 @@
           continue;
          if ((Date.now() - new Date(d[i].updated_at).getTime()) / 1000 / 60 / 60 > 24)
          {
-          await _unsubscribe(d[i].id);
+          if (!_gcList.includes(d[i].id))
+           _gcList.push(d[i].id);
           continue;
          }
          _evIDs[d[i].id] = d[i].event;
@@ -13016,15 +13068,36 @@
 
        async function $subscribe(type, version = 1)
        {
+        if (_tGC !== false)
+        {
+         window.clearTimeout(_tGC);
+         _tGC = false;
+        }
         const d = {
          'broadcaster_user_id': kick.net.channelID,
          'events': [{'name': type, 'version': version}],
          'method': 'webhook'
         };
         const r = await shared.httpRequest('POST', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers(true), JSON.stringify(d), {'queue': false});
+        if (_tGC === false && _gcList.length > 0)
+         _tGC = window.setTimeout(_gcSubs, _gcPause);
         if (r.success)
          return true;
         return false;
+       }
+
+       async function _gcSubs()
+       {
+        if (_tGC === false)
+         return;
+        _tGC = false;
+        const unList = [];
+        while (_gcList.length > 0)
+        {
+         unList.push(_unsubscribe(_gcList.shift()));
+        }
+        if (unList.length > 0)
+         await Promise.allSettled(unList);
        }
 
        async function _unsubscribe(id)
