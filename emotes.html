@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v1.8.5
+    * v1.8.6
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -1564,6 +1564,7 @@
      read: 'chat:read',
      followers: 'moderator:read:followers',
      shoutouts: 'moderator:read:shoutouts',
+     bits: 'bits:read',
      redemptions: 'channel:read:redemptions',
      hypetrains: 'channel:read:hype_train',
      polls: 'channel:read:polls',
@@ -6509,6 +6510,9 @@
           case twitch.net.eventSubCtl.sub.auto_redeem:
            _channel_points_auto_redeem(r.payload.event);
            return;
+          case twitch.net.eventSubCtl.sub.power_up:
+           _bits_power_up(r.payload.event);
+           return;
           case twitch.net.eventSubCtl.sub.follow:
            _follow(r.payload.event);
            break;
@@ -6570,9 +6574,13 @@
          const lnID = ev.reward.id;
          if (!_rList.hasOwnProperty(lnID))
          {
-          _rList[lnID] = {name: n, cmds: []};
+          _rList[lnID] = {name: n, cmds: [], cost: 'points'};
           return;
          }
+         if (!_rList[lnID].cost)
+          _rList[lnID].cost = 'points';
+         if (_rList[lnID].cost !== 'points')
+          return;
          if (_rList[lnID].name === false)
           _rList[lnID].name = n;
          while (_rList[lnID].cmds.length > 0)
@@ -6598,6 +6606,43 @@
           case 'chosen_modified_sub_emote_unlock':
            _parse.event.modified_emote(ev);
            break;
+         }
+        }
+
+        function _bits_power_up(ev)
+        {
+         let ln = false;
+         if (ev.user_login)
+          ln = ev.user_login;
+         if (!!ln && cfg.ignore.users !== false && cfg.ignore.users.includes(ln))
+          return;
+         if (!ev.custom_power_up)
+          return;
+         if (!ev.custom_power_up.hasOwnProperty('title'))
+          return;
+         const n = ev.custom_power_up.title;
+         if (!ev.hasOwnProperty('user_input') || ev.user_input === '')
+         {
+          _parse.event.power_up(n, false);
+          return;
+         }
+         if (!ev.custom_power_up.hasOwnProperty('id'))
+          return;
+         const lnID = ev.custom_power_up.id;
+         if (!_rList.hasOwnProperty(lnID))
+         {
+          _rList[lnID] = {name: n, cmds: [], cost: 'bits'};
+          return;
+         }
+         if (!_rList[lnID].cost)
+          _rList[lnID].cost = 'bits';
+         if (_rList[lnID].cost !== 'bits')
+          return;
+         if (_rList[lnID].name === false)
+          _rList[lnID].name = n;
+         while (_rList[lnID].cmds.length > 0)
+         {
+          _parse.event.power_up(n, _rList[lnID].cmds.shift());
          }
         }
 
@@ -6777,12 +6822,17 @@
 
      const $eventSubCtl = function()
      {
+      const _gcPause = 3000;
+      const _gcList = [];
+      let _tGC = false;
+
       async function $init()
       {
        const aSubs = [
         {id: twitch.net.eventSubCtl.sub.follow, v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']},
         {id: twitch.net.eventSubCtl.sub.redeem, scope: [cScopes.twitch.redemptions], cfg: false},
         {id: twitch.net.eventSubCtl.sub.auto_redeem, v: '2', scope: [cScopes.twitch.redemptions], cfg: ['event.twitch.redeem.random_emote', 'event.twitch.redeem.chosen_emote', 'event.twitch.redeem.modified_emote']},
+        {id: twitch.net.eventSubCtl.sub.power_up, scope: [cScopes.twitch.bits], cfg: false},
         {id: twitch.net.eventSubCtl.sub.shoutout.create, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']},
         {id: twitch.net.eventSubCtl.sub.shoutout.receive, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']},
         {id: twitch.net.eventSubCtl.sub.hypetrain.begin, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
@@ -6796,6 +6846,11 @@
         {id: twitch.net.eventSubCtl.sub.charity, scope: [cScopes.twitch.charity], cfg: ['event.twitch.charity']},
         {id: twitch.net.eventSubCtl.sub.tag, scope: false, cfg: ['event.twitch.tag.styles']}
        ];
+       if (_tGC !== false)
+       {
+        window.clearTimeout(_tGC);
+        _tGC = false;
+       }
        const aActive = await _cleanAndRecover();
        let didSomething = aActive.length > 0;
        const toHandle = [];
@@ -6817,6 +6872,8 @@
          }
         }
        }
+       if (_tGC === false && _gcList.length > 0)
+        _tGC = window.setTimeout(_gcSubs, _gcPause);
        return didSomething;
       }
 
@@ -6863,6 +6920,19 @@
         if (found === false)
          return false;
        }
+       else if (sub.id === twitch.net.eventSubCtl.sub.power_up)
+       {
+        let found = false;
+        for (const k of cfg.commands)
+        {
+         if (!k.hasOwnProperty('powerup') || !Array.isArray(k.powerup) || k.powerup.length === 0)
+          continue;
+         found = true;
+         break;
+        }
+        if (found === false)
+         return false;
+       }
        if (sub.hasOwnProperty('scope') && sub.scope !== false)
        {
         for (let i = 0, l = sub.scope.length; i < l; i++)
@@ -6882,7 +6952,7 @@
       {
        if (twitch.net.oAuth.usesChannel)
         return [];
-       const r = await shared.httpRequest('GET', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers());
+       const r = await shared.httpRequest('GET', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers(), null, {'queue': false});
        if (!r.success)
         return [];
        const j = r.json;
@@ -6899,6 +6969,11 @@
 
       async function $erase()
       {
+       if (_tGC !== false)
+       {
+        window.clearTimeout(_tGC);
+        _tGC = false;
+       }
        const d = await _getList();
        if (d.length === 0)
         return;
@@ -6923,7 +6998,6 @@
        if (d.length === 0)
         return [];
        const rList = [];
-       const unList = [];
        for (let i = 0, l = d.length; i < l; i++)
        {
         if (!d[i].hasOwnProperty('id'))
@@ -6958,12 +7032,11 @@
          case 'websocket_internal_error':
          case 'websocket_network_timeout':
          case 'websocket_network_error':
-          unList.push(_unsubscribe(d[i].id));
+          if (!_gcList.includes(d[i].id))
+           _gcList.push(d[i].id);
           break;
         }
        }
-       if (unList.length > 0)
-        await Promise.allSettled(unList);
        return rList;
       }
 
@@ -6971,6 +7044,11 @@
       {
        if (twitch.net.oAuth.usesChannel)
         return false;
+       if (_tGC !== false)
+       {
+        window.clearTimeout(_tGC);
+        _tGC = false;
+       }
        const d = {
         'type': type,
         'version': version,
@@ -6985,7 +7063,9 @@
          d.condition.moderator_user_id = twitch.net.eventSubCtl.channelID;
          break;
        }
-       const r = await shared.httpRequest('POST', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers(true), JSON.stringify(d), false);
+       const r = await shared.httpRequest('POST', cURLs.api.twitch.eventSub.get, twitch.net.oAuth.headers(true), JSON.stringify(d), {'queue': false});
+       if (_tGC === false && _gcList.length > 0)
+        _tGC = window.setTimeout(_gcSubs, _gcPause);
        if (r.success)
         return true;
        if (r.code === 429)
@@ -6997,11 +7077,25 @@
        return false;
       }
 
+      async function _gcSubs()
+      {
+       if (_tGC === false)
+        return;
+       _tGC = false;
+       const unList = [];
+       while (_gcList.length > 0)
+       {
+        unList.push(_unsubscribe(_gcList.shift()));
+       }
+       if (unList.length > 0)
+        await Promise.allSettled(unList);
+      }
+
       async function _unsubscribe(id)
       {
        if (twitch.net.oAuth.usesChannel)
         return false;
-       const r = await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll(cVARs.url.eventID, id), twitch.net.oAuth.headers(), null, false);
+       const r = await shared.httpRequest('DELETE', cURLs.api.twitch.eventSub.delete.replaceAll(cVARs.url.eventID, id), twitch.net.oAuth.headers(), null, {'queue': false});
        if (!r.success)
         return false;
        return true;
@@ -7017,6 +7111,7 @@
         follow: 'channel.follow',
         redeem: 'channel.channel_points_custom_reward_redemption.add',
         auto_redeem: 'channel.channel_points_automatic_reward_redemption.add',
+        power_up: 'channel.custom_power_up_redemption.add',
         shoutout: Object.freeze({
          create: 'channel.shoutout.create',
          receive: 'channel.shoutout.receive'
@@ -7283,31 +7378,8 @@
          _tExpire = false;
         }
         _firstRS = false;
-        if (!newID)
-         return;
-        await _loadEmote_channel(twitch.net.channelID);
-        await _loadCheer_channel(twitch.net.channelID);
-        await _localTeams(twitch.net.channelID);
-        if (!!cfg.event.twitch.tag && !!cfg.event.twitch.tag.styles)
-         await _getChannelTitleTags(twitch.net.channelID);
-        if (cfg.display.extended.useFFZ)
-         thirdparty.ffz.channel('twitch', twitch.net.channelID);
-        if (cfg.display.extended.useBTTV)
-        {
-         thirdparty.bttv.channel('twitch', twitch.net.channelID);
-         thirdparty.bttv.socket.join('twitch', twitch.net.channelID);
-        }
-        if (cfg.display.extended.use7TV)
-        {
-         thirdparty['7tv'].channel('twitch', twitch.net.channelID);
-         await thirdparty['7tv'].socketEx.join('twitch', twitch.net.channelID);
-        }
-        if (cfg.display.extended.useFFZ | cfg.display.extended.use7TV)
-         thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
-        if (cfg.display.extended.useBTTV)
-         thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
-        if (!twitch.net.oAuth.usesChannel)
-         _eventSub(twitch.net.channelID);
+        if (newID)
+         _loadChannelData(twitch.net.channelID);
        }
 
        async function _USERNOTICE(cmd)
@@ -7707,6 +7779,50 @@
       }
      }
 
+     const _loadChannelData = function()
+     {
+      async function $c_loadChannelData(chID)
+      {
+       const oCh = [];
+       oCh.push(_loadEmote_channel(chID));
+       oCh.push(_loadCheer_channel(chID));
+       oCh.push(_localTeams(chID));
+       if (!!cfg.event.twitch.tag && !!cfg.event.twitch.tag.styles)
+        oCh.push(_getChannelTitleTags(chID));
+       await Promise.allSettled(oCh);
+       if (!twitch.net.oAuth.usesChannel)
+        _eventSub(chID);
+       const o3P = [];
+       if (cfg.display.extended.useFFZ)
+        o3P.push(thirdparty.ffz.channel('twitch', chID));
+       if (cfg.display.extended.useBTTV)
+        o3P.push(_bttvData(chID));
+       if (cfg.display.extended.use7TV)
+        o3P.push(_7tvData(chID));
+       if (o3P.length === 0)
+        return;
+       await Promise.allSettled(o3P);
+       if (cfg.display.extended.useBTTV)
+        thirdparty.bttv.timer = window.setTimeout(thirdparty.bttv.reload, thirdparty.interval);
+       if (cfg.display.extended.useFFZ || cfg.display.extended.use7TV)
+        thirdparty.timer = window.setTimeout(thirdparty.reload, thirdparty.interval);
+      }
+
+      async function _bttvData(chID)
+      {
+       await thirdparty.bttv.channel('twitch', chID);
+       thirdparty.bttv.socket.join('twitch', chID);
+      }
+
+      async function _7tvData(chID)
+      {
+       await thirdparty['7tv'].channel('twitch', chID);
+       await thirdparty['7tv'].socketEx.join('twitch', chID);
+      }
+
+      return $c_loadChannelData;
+     }();
+
      const $oAuth = function()
      {
       const _pathRefresh = '.refresh';
@@ -7826,6 +7942,13 @@
        twitch.net.oAuth.auth.access_token = a;
        twitch.net.oAuth.auth.refresh_token = r;
        twitch.net.oAuth.auth.expires = j.expires_in;
+       if (j.hasOwnProperty('user_id'))
+       {
+        const newID = twitch.net.channelID !== j.user_id;
+        twitch.net.channelID = j.user_id;
+        if (newID)
+         _loadChannelData(twitch.net.channelID);
+       }
       }
 
       function _populateNoAuth(c = null)
@@ -7848,7 +7971,7 @@
        let b = 'refresh=' + encodeURIComponent(t);
        if (cfg.twitch.share)
         b += '&share=1';
-       const r = await shared.httpRequest('POST', url, {}, b, false);
+       const r = await shared.httpRequest('POST', url, {}, b);
        if (!r.success)
        {
         switch (r.code)
@@ -7879,7 +8002,7 @@
       {
        const url = cURLs.api.twitch.validate;
        const h = {'Authorization': 'Bearer ' + t};
-       const r = await shared.httpRequest('GET', url, h, null, false);
+       const r = await shared.httpRequest('GET', url, h);
        if (!r.success)
        {
         if (r.code === 401)
@@ -8582,15 +8705,25 @@
        const lnID = cmd.tags['custom-reward-id'];
        if (!_rList.hasOwnProperty(lnID))
        {
-        _rList[lnID] = {name: false, cmds: [cmd]};
+        _rList[lnID] = {name: false, cmds: [cmd], cost: false};
         return true;
        }
        _rList[lnID].cmds.push(cmd);
        if (_rList[lnID].name === false)
         return true;
+       if (_rList[lnID].cost === false)
+        return true;
        while (_rList[lnID].cmds.length > 0)
        {
-        _parse.event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift());
+        switch (_rList[lnID].cost)
+        {
+         case 'points':
+          _parse.event.redeem(_rList[lnID].name, _rList[lnID].cmds.shift());
+          break;
+         case 'bits':
+          _parse.event.power_up(_rList[lnID].name, _rList[lnID].cmds.shift());
+          break;
+        }
        }
        return true;
       }
@@ -9154,6 +9287,26 @@
        display.kappa.show(p, cfg.event.twitch.redeem.modified_emote);
       }
 
+      function $power_up(title, cmd)
+      {
+       for (const k of cfg.commands)
+       {
+        if (!k.hasOwnProperty('powerup'))
+         continue;
+        if (!k.powerup.includes(title))
+         continue;
+        const kC = k.styles;
+        if (cmd === false)
+        {
+         display.kappa.show(false, kC);
+         return;
+        }
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd, true), cSources.service.twitch);
+        display.kappa.show(a, kC);
+        return;
+       }
+      }
+
       function $follow(ev)
       {
        if (!cfg.event.twitch.follow)
@@ -9564,6 +9717,7 @@
        random_emote: $random_emote,
        chosen_emote: $chosen_emote,
        modified_emote: $modified_emote,
+       power_up: $power_up,
        follow: $follow,
        shoutout: $shoutout,
        train: $train,
@@ -10876,7 +11030,7 @@
       async function _ping(file)
       {
        const tStart = Date.now();
-       const r = await shared.httpRequest('HEAD', file, {}, null, true, false);
+       const r = await shared.httpRequest('HEAD', file, {}, null, {'return': false});
        if (!r)
         return false;
        return (Date.now() - tStart);
@@ -11004,7 +11158,7 @@
        let b = 'refresh=' + encodeURIComponent(t);
        if (cfg.youtube.share)
         b += '&share=1';
-       const r = await shared.httpRequest('POST', url, {}, b, false);
+       const r = await shared.httpRequest('POST', url, {}, b);
        if (!r.success)
        {
         switch (r.code)
@@ -11044,7 +11198,7 @@
       async function _validate(t)
       {
        const url = cURLs.api.youtube.tokeninfo.replaceAll(cVARs.url.token, encodeURIComponent(t));
-       const r = await shared.httpRequest('GET', url, {}, null, false);
+       const r = await shared.httpRequest('GET', url);
        if (!r.success)
        {
         if (r.code === 0 && r.data === '')
@@ -12036,7 +12190,7 @@
     async function $stickers()
     {
      const url = cURLs.api.youtube.livechat.superstickers;
-     const r = await shared.httpRequest('GET', url, {}, null, false);
+     const r = await shared.httpRequest('GET', url, {}, null, {'cache': true});
      if (!r.success)
       return false;
      const j = r.json;
@@ -12750,11 +12904,20 @@
 
       const _eventSubCtl = function()
       {
+       const _gcPause = 3000;
+       const _gcList = [];
+       let _tGC = false;
+
        async function $init()
        {
         const aSubs = [
          {id: _eventSubCtl.sub.follow, scope: [cScopes.kick.events], cfg: ['event.kick.follow']}
         ];
+        if (_tGC !== false)
+        {
+         window.clearTimeout(_tGC);
+         _tGC = false;
+        }
         const aActive = await _cleanAndRecover();
         let didSomething = aActive.length > 0;
         const toHandle = [];
@@ -12776,6 +12939,8 @@
           }
          }
         }
+        if (_tGC === false && _gcList.length > 0)
+         _tGC = window.setTimeout(_gcSubs, _gcPause);
         return didSomething;
        }
 
@@ -12826,7 +12991,7 @@
 
        async function _getList()
        {
-        const r = await shared.httpRequest('GET', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers());
+        const r = await shared.httpRequest('GET', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers(), null, {'queue': false});
         if (!r.success)
          return [];
         const j = r.json;
@@ -12839,6 +13004,11 @@
 
        async function $erase()
        {
+        if (_tGC !== false)
+        {
+         window.clearTimeout(_tGC);
+         _tGC = false;
+        }
         const d = await _getList();
         if (d.length < 1)
          return;
@@ -12886,7 +13056,8 @@
           continue;
          if ((Date.now() - new Date(d[i].updated_at).getTime()) / 1000 / 60 / 60 > 24)
          {
-          await _unsubscribe(d[i].id);
+          if (!_gcList.includes(d[i].id))
+           _gcList.push(d[i].id);
           continue;
          }
          _evIDs[d[i].id] = d[i].event;
@@ -12897,20 +13068,41 @@
 
        async function $subscribe(type, version = 1)
        {
+        if (_tGC !== false)
+        {
+         window.clearTimeout(_tGC);
+         _tGC = false;
+        }
         const d = {
          'broadcaster_user_id': kick.net.channelID,
          'events': [{'name': type, 'version': version}],
          'method': 'webhook'
         };
-        const r = await shared.httpRequest('POST', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers(true), JSON.stringify(d), false);
+        const r = await shared.httpRequest('POST', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers(true), JSON.stringify(d), {'queue': false});
+        if (_tGC === false && _gcList.length > 0)
+         _tGC = window.setTimeout(_gcSubs, _gcPause);
         if (r.success)
          return true;
         return false;
        }
 
+       async function _gcSubs()
+       {
+        if (_tGC === false)
+         return;
+        _tGC = false;
+        const unList = [];
+        while (_gcList.length > 0)
+        {
+         unList.push(_unsubscribe(_gcList.shift()));
+        }
+        if (unList.length > 0)
+         await Promise.allSettled(unList);
+       }
+
        async function _unsubscribe(id)
        {
-        const r = await shared.httpRequest('DELETE', cURLs.api.kick.eventSub.delete.replaceAll(cVARs.url.eventID, id), kick.net.oAuth.headers(), null, false);
+        const r = await shared.httpRequest('DELETE', cURLs.api.kick.eventSub.delete.replaceAll(cVARs.url.eventID, id), kick.net.oAuth.headers(), null, {'queue': false});
         if (!r.success)
          return false;
         return true;
@@ -13641,7 +13833,7 @@
        let b = 'refresh=' + encodeURIComponent(t);
        if (cfg.kick.share)
         b += '&share=1';
-       const r = await shared.httpRequest('POST', url, {}, b, false);
+       const r = await shared.httpRequest('POST', url, {}, b);
        if (!r.success)
        {
         switch (r.code)
@@ -13672,7 +13864,7 @@
       {
        const url = cURLs.api.kick.channels.oauth;
        const h = {'Authorization': 'Bearer ' + t};
-       const r = await shared.httpRequest('GET', url, h, null, false);
+       const r = await shared.httpRequest('GET', url, h);
        if (!r.success)
        {
         if (r.code === 401)
@@ -15888,7 +16080,7 @@
       ];
       const b = JSON.stringify(d);
       const h = trovo.net.oAuth.headers('text/plain', 'OAuth');
-      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b, false);
+      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b, {'cache': true});
       if (!r.success)
        return false;
       const j = r.json;
@@ -15924,7 +16116,7 @@
       ];
       const b = JSON.stringify(d);
       const h = trovo.net.oAuth.headers('text/plain', 'OAuth');
-      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b, false);
+      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b);
       if (!r.success)
        return false;
       const j = r.json;
@@ -16169,7 +16361,7 @@
        let b = 'refresh=' + encodeURIComponent(t);
        if (cfg.trovo.share)
         b += '&share=1';
-       const r = await shared.httpRequest('POST', url, {}, b, false);
+       const r = await shared.httpRequest('POST', url, {}, b);
        if (!r.success)
        {
         if (r.code === 401)
@@ -16203,7 +16395,7 @@
         'Client-Id': oauthClient.tl,
         'Authorization': 'OAuth ' + t
        };
-       const r = await shared.httpRequest('GET', url, h, null, false);
+       const r = await shared.httpRequest('GET', url, h);
        if (!r.success)
        {
         if (r.code === 401)
@@ -17275,7 +17467,7 @@
       ];
       const b = JSON.stringify(d);
       const h = trovo.net.oAuth.headers('text/plain', 'OAuth');
-      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b, false);
+      const r = await shared.httpRequest('POST', cURLs.api.rr.proxy.trovo, h, b);
       if (!r.success)
        return;
       const j = r.json;
@@ -18692,7 +18884,8 @@
         if (foundCmd.length < msg.length)
          a = eA;
         _aLast[h] = kNow;
-        display.kappa.show(a);
+        const p = _findUser(msg, foundCmd, cfg.display.kappa);
+        display.kappa.show(a, false, p);
         return true;
        }
 
@@ -18801,9 +18994,46 @@
         if (foundKCmd.length < msg.length)
          a = eA;
         _aLast[Symbol.for(JSON.stringify(k))] = kNow;
-        display.kappa.show(a, kC);
+        const p = _findUser(msg, foundKCmd, k);
+        display.kappa.show(a, kC, p);
         r.ret = true;
         return r;
+       }
+
+       function _findUser(msg, foundCmd, k)
+       {
+        if (foundCmd.length < msg.length)
+        {
+         const subMsg = msg.slice(foundCmd.length + 1).split(' ');
+         for (let i = 0; i < subMsg.length; i++)
+         {
+          if (subMsg[i].slice(0, 1) !== '@')
+           continue;
+          const uName = subMsg[i].slice(1);
+          if (uName.length < 4)
+           continue;
+          if (uName.length > 25)
+           continue;
+          if (service.parse.uReg.test(uName))
+           continue;
+          return {[cVARs.evt.user]: uName};
+         }
+        }
+        if (!k.hasOwnProperty('styles'))
+         return false;
+        if (!k.styles.hasOwnProperty('Text'))
+         return false;
+        if (!k.styles['Text'].hasOwnProperty('message'))
+         return false;
+        if (!Array.isArray(k.styles['Text'].message))
+         return false;
+        for (let i = 0; i < k.styles['Text'].message.length; i++)
+        {
+         if (!k.styles['Text'].message[i].includes(cVARs.evt.user))
+          continue;
+         return {[cVARs.evt.user]: anonName};
+        }
+        return false;
        }
 
        return $c_parseCommand;
@@ -19104,7 +19334,7 @@
      let b = 'svc=' + encodeURIComponent(svc);
      b += '&evt=' + encodeURIComponent(evt);
      b += '&params=' + encodeURIComponent(JSON.stringify(params));
-     await shared.httpRequest('POST', cURLs.api.rr.feedback, {}, b, false, false);
+     await shared.httpRequest('POST', cURLs.api.rr.feedback, {}, b, {'return': false});
     }
 
     return {
@@ -19832,7 +20062,7 @@
      {
       const url = cURLs.api.rr.refresh.se;
       const b = 'refresh=' + encodeURIComponent(t);
-      const r = await shared.httpRequest('POST', url, {}, b, false);
+      const r = await shared.httpRequest('POST', url, {}, b);
       if (!r.success)
       {
        switch (r.code)
@@ -19863,7 +20093,7 @@
      {
       const url = cURLs.api.streamelements.validate;
       const h = {'Authorization': 'Bearer ' + t};
-      const r = await shared.httpRequest('GET', url, h, null, false);
+      const r = await shared.httpRequest('GET', url, h);
       if (!r.success)
        return false;
       const j = r.json;
@@ -21805,7 +22035,7 @@
     async function $emoji(set)
     {
      const unqSkip = ['00a9', '00ae', '2122', '24c2'];
-     const fRet = await shared.httpRequest('GET', cURLs.cdn.emoji.fonts, {}, null, false);
+     const fRet = await shared.httpRequest('GET', cURLs.cdn.emoji.fonts, {}, null, {'cache': true});
      if (!fRet.success)
       thirdparty.emoji_fonts = ['twemoji', 'openmoji', 'noto', 'blob', 'facebook', 'apple', 'joypixels', 'tossface', 'whatsapp', 'oneui'];
      else
@@ -21818,7 +22048,7 @@
       set = false;
      else if (!thirdparty.emoji_fonts.includes(set))
       set = thirdparty.emoji_fonts[0];
-     const r = await shared.httpRequest('GET', cURLs.cdn.emoji.list, {}, null, false);
+     const r = await shared.httpRequest('GET', cURLs.cdn.emoji.list, {}, null, {'cache': true});
      if (!r.success)
       return;
      const j = r.json;
@@ -22571,36 +22801,29 @@
     {
      const _stack = {};
      const _lQueue = 250;
-     let _tQueue = false;
 
-     function $c_httpRequest(type, url, hdrs = {}, body = null, nocache = true, ret = true)
+     function $c_httpRequest(type, url, hdrs = {}, body = null, prefs = {})
      {
-      const p = new Promise(
-       function(resolve)
+      if (prefs.hasOwnProperty('queue') && !prefs.queue)
+       return _req(type, url, hdrs, body, prefs);
+      const h = _host(url);
+      if (!_stack.hasOwnProperty(h))
+       _stack[h] = {queries: Promise.resolve(), time: 0};
+      const req = _stack[h].queries.then(
+       async function()
        {
-        const h = _host(url);
-        if (!_stack.hasOwnProperty(h))
-         _stack[h] = {queries: [], time: 0};
-        const r = {
-         req: [type, url, hdrs, body, nocache, ret],
-         ret: resolve
-        };
-        _stack[h].queries.push(r);
-        if (_tQueue !== false)
-         return;
         const dif = Date.now() - _stack[h].time;
         if (dif < _lQueue)
         {
-         _tQueue = window.setTimeout(_tick, _lQueue - dif);
+         const tWait = Math.ceil(Math.max(_lQueue - dif, shared.mspf.value));
+         await new Promise(function(resolve){window.setTimeout(resolve, tWait);});
         }
-        else
-        {
-         _tQueue = true;
-         shared.doNextFrame(_tick);
-        }
+        _stack[h].time = Date.now();
+        return _req(type, url, hdrs, body, prefs);
        }
       );
-      return p;
+      _stack[h].queries = req.then(function(){});
+      return req;
      }
 
      function _host(u)
@@ -22618,13 +22841,13 @@
       }
      }
 
-     function _req(type, url, hdrs = {}, body = null, nocache = true, ret = true)
+     function _req(type, url, hdrs = {}, body = null, prefs = {})
      {
       const p = new Promise(
        function(resolve)
        {
         const x = new XMLHttpRequest();
-        if (nocache)
+        if (type === 'GET' && !prefs.cache)
         {
          if (url.includes('?'))
           url += '&';
@@ -22644,12 +22867,13 @@
         }
         x.onreadystatechange = function()
         {
-         if (ret === false)
+         if (prefs.hasOwnProperty('return') && !prefs.return)
          {
           if (x.readyState < 2)
            return;
           x.ontimeout = null;
           x.onreadystatechange = null;
+          x.onerror = null;
           resolve(Math.floor(x.status / 100) === 2);
           return;
          }
@@ -22657,6 +22881,7 @@
           return;
          x.ontimeout = null;
          x.onreadystatechange = null;
+         x.onerror = null;
          const h = _parseHeaders(x.getAllResponseHeaders());
          resolve({code: x.status, data: x.responseText, headers: h, get success(){return Math.floor(this.code / 100) === 2;}, get json(){try {return JSON.parse(this.data);} catch {return null;}}});
         };
@@ -22664,10 +22889,21 @@
         {
          x.ontimeout = null;
          x.onreadystatechange = null;
-         if (ret === false)
+         x.onerror = null;
+         if (prefs.hasOwnProperty('return') && !prefs.return)
           resolve(false);
          else
           resolve({code: 408, data: shared.errTimeout, get success(){return false;}, get json(){return null;}});
+        };
+        x.onerror = function()
+        {
+         x.ontimeout = null;
+         x.onreadystatechange = null;
+         x.onerror = null;
+         if (prefs.hasOwnProperty('return') && !prefs.return)
+          resolve(false);
+         else
+          resolve({code: 0, data: '', get success(){return false;}, get json(){return null;}});
         };
         if (body === null)
          x.send();
@@ -22676,58 +22912,6 @@
        }
       );
       return p;
-     }
-
-     async function _tick()
-     {
-      _tQueue = true;
-      _cleanup();
-      const hList = Object.keys(_stack);
-      const reqs = [];
-      const rets = [];
-      for (let i = 0; i < hList.length; i++)
-      {
-       const h = hList[i];
-       if (_stack[h].queries.length === 0)
-        continue;
-       const dif = Date.now() - _stack[h].time;
-       if (dif < _lQueue)
-        continue;
-       _stack[h].time = Date.now();
-       const r = _stack[h].queries.shift();
-       reqs.push(_req(...r.req));
-       rets.push(r.ret);
-      }
-      if (reqs.length > 0)
-      {
-       const ret = await Promise.allSettled(reqs);
-       for (let i = 0; i < ret.length; i++)
-       {
-        _stack[hList[i]].time = Date.now();
-        if (ret[i].status !== 'fulfilled')
-        {
-         rets[i]({code: 0, data: '', get success(){return false;}, get json(){return null;}});
-         continue;
-        }
-        rets[i](ret[i].value);
-       }
-      }
-      _cleanup();
-      if (Object.keys(_stack).length === 0)
-       _tQueue = false;
-      else
-       _tQueue = window.setTimeout(_tick, _lQueue);
-     }
-
-     function _cleanup()
-     {
-      const hList = Object.keys(_stack);
-      for (let i = 0; i < hList.length; i++)
-      {
-       const h = hList[i];
-       if (_stack[h].queries.length === 0)
-        delete _stack[h];
-      }
      }
 
      return $c_httpRequest;
@@ -23354,6 +23538,13 @@
       if (!k.hasOwnProperty('redeem') || !Array.isArray(k.redeem) || k.redeem.length === 0)
        continue;
       r.push(cScopes.twitch.redemptions);
+      break;
+     }
+     for (const k of cfg.commands)
+     {
+      if (!k.hasOwnProperty('powerup') || !Array.isArray(k.powerup) || k.powerup.length === 0)
+       continue;
+      r.push(cScopes.twitch.bits);
       break;
      }
      let needF = false;

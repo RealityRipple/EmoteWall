@@ -1758,6 +1758,10 @@ Configuration Information
     *An array of style-specific channel point reward names which can be used to force-trigger this kappagen.*  
     Requires `channel:read:redemptions` scope.
 
+  * `powerup`  
+    *An array of style-specific Custom Power-up names which can be used to force-trigger this kappagen.*  
+    Requires `bits:read` scope.
+
   * `erase`  
     *If this property exists, the command will erase the screen rather than showing a kappagen.*  
     Any `styles`, `rave`, `raveon`, or `raveoff` properties will be ignored, regardless of the value of `erase`.
