@@ -18884,7 +18884,8 @@
         if (foundCmd.length < msg.length)
          a = eA;
         _aLast[h] = kNow;
-        display.kappa.show(a);
+        const p = _findUser(msg, foundCmd, cfg.display.kappa);
+        display.kappa.show(a, false, p);
         return true;
        }
 
@@ -18993,9 +18994,46 @@
         if (foundKCmd.length < msg.length)
          a = eA;
         _aLast[Symbol.for(JSON.stringify(k))] = kNow;
-        display.kappa.show(a, kC);
+        const p = _findUser(msg, foundKCmd, k);
+        display.kappa.show(a, kC, p);
         r.ret = true;
         return r;
+       }
+
+       function _findUser(msg, foundCmd, k)
+       {
+        if (foundCmd.length < msg.length)
+        {
+         const subMsg = msg.slice(foundCmd.length + 1).split(' ');
+         for (let i = 0; i < subMsg.length; i++)
+         {
+          if (subMsg[i].slice(0, 1) !== '@')
+           continue;
+          const uName = subMsg[i].slice(1);
+          if (uName.length < 4)
+           continue;
+          if (uName.length > 25)
+           continue;
+          if (service.parse.uReg.test(uName))
+           continue;
+          return {[cVARs.evt.user]: uName};
+         }
+        }
+        if (!k.hasOwnProperty('styles'))
+         return false;
+        if (!k.styles.hasOwnProperty('Text'))
+         return false;
+        if (!k.styles['Text'].hasOwnProperty('message'))
+         return false;
+        if (!Array.isArray(k.styles['Text'].message))
+         return false;
+        for (let i = 0; i < k.styles['Text'].message.length; i++)
+        {
+         if (!k.styles['Text'].message[i].includes(cVARs.evt.user))
+          continue;
+         return {[cVARs.evt.user]: anonName};
+        }
+        return false;
        }
 
        return $c_parseCommand;
