@@ -331,6 +331,10 @@
        streams: 10,
        useMsg: true
       },
+      modiversary: {
+       months: 6,
+       useMsg: true
+      },
       timeout: false,
       ban: false
      },
@@ -7410,6 +7414,9 @@
          case 'bitsbadgetier':
           _parse.event.badge(cmd);
           break;
+         case 'modiversary':
+          await _parse.event.modiversary(cmd);
+          break;
          case 'viewermilestone':
           if (cmd.tags.hasOwnProperty('msg-param-category') && cmd.tags['msg-param-category'] === 'watch-streak')
           {
@@ -9706,6 +9713,43 @@
        display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: mpv});
       }
 
+      async function $modiversary(cmd)
+      {
+       if (!cfg.event.twitch.modiversary)
+        return;
+       if (!cfg.event.twitch.modiversary.months)
+        return;
+       const u = _parseUser(cmd);
+       if (service.parse.ignored(u))
+        return;
+       if (!cmd.hasOwnProperty('tags'))
+        return;
+       if (!cmd.tags.hasOwnProperty('msg-param-months'))
+        return;
+       const mpm = parseInt(cmd.tags['msg-param-months'], 10);
+       if (mpm < 1)
+        return;
+       const p = [];
+       if (cfg.event.twitch.modiversary.useMsg)
+       {
+        const a = service.parse.overlapPriority(_eListFromCmd(cmd), cSources.service.twitch);
+        p.push(...a);
+       }
+       else
+        await _parse.line(cmd, false);
+       const r = shared.findInMaybeRange(cfg.event.twitch.modiversary.months, mpm);
+       if (r === false)
+       {
+        if (p.length > 0)
+        {
+         display.emote.addToShowList(p);
+         display.emote.showEmotes();
+        }
+        return;
+       }
+       display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: mpm});
+      }
+
       return {
        cheer: $cheer,
        raid: $raid,
@@ -9725,7 +9769,8 @@
        prediction: $prediction,
        charity: $charity,
        goal: $goal,
-       streak: $streak
+       streak: $streak,
+       modiversary: $modiversary
       };
      }();
 

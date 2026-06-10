@@ -1119,6 +1119,26 @@ Configuration Information
         - [ ] If `true`, any emotes in watch streak messages will also be included in the kappagen.
         - [ ] If `false`, any emotes in watch streak messages will show up like normal emotes.
 
+    * `modiversary`
+      *Settings related to kappagens on a modiversary event.*
+
+      * `streams`
+        *Minimum number of months of the modiversary for a kappagen.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on every modiversary.
+        - [ ] If `false`, no kappagen will occur on a mod's modiversary.
+        - [ ]  If Integer, the value is the minimum months required for a modiversary to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur on a modiversary.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-11'` or `'12-23'`, or an open-maximum range such as `'24+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `useMsg`
+        - [ ] If `true`, any emotes in modiversary messages will also be included in the kappagen.
+        - [ ] If `false`, any emotes in modiversary messages will show up like normal emotes.
+
     * `timeout`  
       *Minimum time for a kappagen when a user is timed out.*  
       This value can be a boolean, integer, or array:
