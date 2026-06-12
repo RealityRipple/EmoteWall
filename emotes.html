@@ -7410,25 +7410,25 @@
          case 'raid':
           await _parse.event.raid(cmd);
           break;
+         case 'bitsbadgetier':
+          _parse.event.badge(cmd);
+          break;
          case 'sub':
          case 'resub':
          case 'subgift':
          case 'submysterygift':
          case 'giftpaidupgrade':
          case 'primepaidupgrade':
-          await _parse.event.sub(cmd);
-          break;
-         case 'bitsbadgetier':
-          _parse.event.badge(cmd);
-          break;
+          if (await _parse.event.sub(cmd))
+           break;
          case 'modiversary':
-          await _parse.event.modiversary(cmd);
-          break;
+          if (await _parse.event.modiversary(cmd))
+           break;
          case 'viewermilestone':
           if (cmd.tags.hasOwnProperty('msg-param-category') && cmd.tags['msg-param-category'] === 'watch-streak')
           {
-           await _parse.event.streak(cmd);
-           break;
+           if (await _parse.event.streak(cmd))
+            break;
           }
          default:
           if (cmd.params.length > 1)
@@ -8886,16 +8886,16 @@
        async function $c_sub(cmd)
        {
         if (!cfg.event.twitch.sub)
-         return;
+         return false;
         const subPlan = _parsePlan(cmd);
         if (subPlan === false)
-         return;
+         return false;
         if (!cfg.event.twitch.sub[subPlan])
-         return;
+         return false;
         if (!cmd.hasOwnProperty('tags'))
-         return;
+         return false;
         if (!cmd.tags.hasOwnProperty('msg-id'))
-         return;
+         return false;
         const mID = cmd.tags['msg-id'];
         let mpoi = false;
         if (cmd.tags.hasOwnProperty('msg-param-origin-id'))
@@ -8904,17 +8904,17 @@
         if (mpoi !== false && usesBomb)
         {
          if (_bList.bombs.has(mpoi))
-          return;
+          return true;
          if (mID === 'subgift')
          {
           if (_bList.bulk.has(mpoi))
-           return;
+           return true;
           if (_bList.check.has(mpoi))
           {
            _bList.bulk.add(mpoi);
            _bList.check.delete(mpoi);
            _resetGC();
-           return;
+           return true;
           }
          }
         }
@@ -8937,37 +8937,37 @@
          mpmgc = parseInt(cmd.tags['msg-param-mass-gift-count'], 10);
         const u = _parseUser(cmd);
         if (service.parse.ignored(u))
-         return;
+         return false;
         if (cmd.tags.hasOwnProperty('login') && cfg.ignore.users !== false && cfg.ignore.users.includes(cmd.tags.login))
-         return;
+         return false;
         let mprdn = anonName;
         if (cmd.tags.hasOwnProperty('msg-param-recipient-display-name'))
          mprdn = cmd.tags['msg-param-recipient-display-name'];
         if (mpoi !== false && usesBomb)
         {
          if (_bList.bombs.has(mpoi))
-          return;
+          return true;
          if (mID === 'subgift')
          {
           if (_bList.bulk.has(mpoi))
-           return;
+           return true;
           if (_bList.check.has(mpoi))
           {
            _bList.bulk.add(mpoi);
            _bList.check.delete(mpoi);
            _resetGC();
-           return;
+           return true;
           }
           if (!cmd.tags.hasOwnProperty('msg-param-sender-count') || cmd.tags['msg-param-sender-count'] === '0')
           {
            _bList.check.add(mpoi);
            window.setTimeout(_show, 2000, mID, subPlan, mpoi, mpm, mpcm, mpmgc, u.ascii, mprdn, a);
            _resetGC();
-           return;
+           return true;
           }
          }
         }
-        _show(mID, subPlan, mpoi, mpm, mpcm, mpmgc, u.ascii, mprdn, a);
+        return _show(mID, subPlan, mpoi, mpm, mpcm, mpmgc, u.ascii, mprdn, a);
        }
 
        function _show(id, subPlan, mpoi, mpm, mpcm, mpmgc, dn, mprdn, a)
@@ -8976,62 +8976,62 @@
         if (mpoi !== false && usesBomb)
         {
          if (_bList.bombs.has(mpoi))
-          return;
+          return true;
          if (id === 'subgift' && _bList.bulk.has(mpoi))
          {
           _resetGC();
-          return;
+          return true;
          }
         }
         switch (id)
         {
          case 'sub':
           if (!cfg.event.twitch.sub[subPlan].first)
-           return;
+           return false;
           display.kappa.show(a, cfg.event.twitch.sub[subPlan].first, {[cVARs.evt.user]: dn});
-          break;
+          return true;
          case 'resub':
           if (!cfg.event.twitch.sub[subPlan].resub)
-           return;
+           return false;
           const rs = shared.findInMaybeRange(cfg.event.twitch.sub[subPlan].resub, mpcm);
           if (rs === false)
-           return;
+           return false;
           display.kappa.show(a, rs, {[cVARs.evt.user]: dn, [cVARs.evt.amount]: mpcm});
-          break;
+          return true;
          case 'primepaidupgrade':
           if (!cfg.event.twitch.sub[subPlan].upgrade)
-           return;
+           return false;
           if (!cfg.event.twitch.sub[subPlan].upgrade.prime)
-           return;
+           return false;
           display.kappa.show(a, cfg.event.twitch.sub[subPlan].upgrade.prime, {[cVARs.evt.user]: dn});
-          break;
+          return true;
          case 'giftpaidupgrade':
           if (!cfg.event.twitch.sub[subPlan].upgrade)
-           return;
+           return false;
           if (!cfg.event.twitch.sub[subPlan].upgrade.gift)
-           return;
+           return false;
           display.kappa.show(a, cfg.event.twitch.sub[subPlan].upgrade.gift, {[cVARs.evt.user]: dn});
-          break;
+          return true;
          case 'subgift':
           if (!cfg.event.twitch.sub[subPlan].gift)
-           return;
+           return false;
           if (mpm === 1)
           {
            if (!cfg.event.twitch.sub[subPlan].gift.first)
-            return;
+            return false;
            display.kappa.show(a, cfg.event.twitch.sub[subPlan].gift.first, {[cVARs.evt.sender]: dn, [cVARs.evt.user]: mprdn});
-           return;
+           return true;
           }
           if (!cfg.event.twitch.sub[subPlan].gift.resub)
-           return;
+           return false;
           const gpr = shared.findInMaybeRange(cfg.event.twitch.sub[subPlan].gift.resub, mpm);
           if (gpr === false)
-           return;
+           return false;
           display.kappa.show(a, gpr, {[cVARs.evt.sender]: dn, [cVARs.evt.user]: mprdn, [cVARs.evt.amount]: mpm});
-          break;
+          return true;
          case 'submysterygift':
           if (!usesBomb)
-           return;
+           return true;
           if (mpoi !== false)
           {
            _bList.bombs.add(mpoi);
@@ -9043,9 +9043,9 @@
           }
           const gpb = shared.findInMaybeRange(cfg.event.twitch.sub[subPlan].gift.bomb, mpmgc);
           if (gpb === false)
-           return;
+           return false;
           display.kappa.show(a, gpb, {[cVARs.evt.sender]: dn, [cVARs.evt.amount]: mpmgc});
-          break;
+          return true;
         }
        }
 
@@ -9704,19 +9704,19 @@
       async function $streak(cmd)
       {
        if (!cfg.event.twitch.streak)
-        return;
+        return false;
        if (!cfg.event.twitch.streak.streams)
-        return;
+        return false;
        const u = _parseUser(cmd);
        if (service.parse.ignored(u))
-        return;
+        return false;
        if (!cmd.hasOwnProperty('tags'))
-        return;
+        return false;
        if (!cmd.tags.hasOwnProperty('msg-param-value'))
-        return;
+        return false;
        const mpv = parseInt(cmd.tags['msg-param-value'], 10);
        if (mpv < 2)
-        return;
+        return false;
        const p = [];
        if (cfg.event.twitch.streak.useMsg)
        {
@@ -9733,27 +9733,28 @@
          display.emote.addToShowList(p);
          display.emote.showEmotes();
         }
-        return;
+        return true;
        }
        display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: mpv});
+       return true;
       }
 
       async function $modiversary(cmd)
       {
        if (!cfg.event.twitch.modiversary)
-        return;
+        return false;
        if (!cfg.event.twitch.modiversary.months)
-        return;
+        return false;
        const u = _parseUser(cmd);
        if (service.parse.ignored(u))
-        return;
+        return false;
        if (!cmd.hasOwnProperty('tags'))
-        return;
+        return false;
        if (!cmd.tags.hasOwnProperty('msg-param-months'))
-        return;
+        return false;
        const mpm = parseInt(cmd.tags['msg-param-months'], 10);
        if (mpm < 1)
-        return;
+        return false;
        const p = [];
        if (cfg.event.twitch.modiversary.useMsg)
        {
@@ -9770,9 +9771,10 @@
          display.emote.addToShowList(p);
          display.emote.showEmotes();
         }
-        return;
+        return true;
        }
        display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: mpm});
+       return true;
       }
 
       return {
@@ -10726,7 +10728,9 @@
           _msgHistory[u.id] = new Set();
          _msgHistory[u.id].add(cmd.id);
         }
-        await _parse.event.superchat(cmd);
+        if (await _parse.event.superchat(cmd))
+         return;
+        await _parse.line(cmd);
        }
 
        function _newSponsorEvent(cmd)
@@ -10750,7 +10754,9 @@
          return;
         if (!cmd.snippet.hasOwnProperty('memberMilestoneChatDetails'))
          return;
-        await _parse.event.membership.milestone(cmd);
+        if (await _parse.event.membership.milestone(cmd))
+         return;
+        await _parse.line(cmd);
        }
 
        function _superStickerEvent(cmd)
@@ -11880,10 +11886,10 @@
        async function $milestone(cmd)
        {
         if (!cfg.event.youtube.member)
-         return;
+         return false;
         const u = _parse.user(cmd);
         if (service.parse.ignored(u))
-         return;
+         return false;
         let c = cfg.event.youtube.member;
         if (cmd.snippet.memberMilestoneChatDetails.memberLevelName)
         {
@@ -11892,7 +11898,7 @@
           c = c[l];
         }
         if (!c.hasOwnProperty('milestone'))
-         return;
+         return false;
         let a = [];
         if (cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('userComment') && cmd.snippet.memberMilestoneChatDetails.userComment !== '')
         {
@@ -11902,12 +11908,13 @@
           await _parse.line(cmd);
         }
         if (!cmd.snippet.memberMilestoneChatDetails.hasOwnProperty('memberMonth'))
-         return;
+         return false;
         const mpcm = cmd.snippet.memberMilestoneChatDetails.memberMonth;
         const rs = shared.findInMaybeRange(c.milestone, mpcm);
         if (rs === false)
-         return;
+         return false;
         display.kappa.show(a, rs, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: mpcm});
+        return true;
        }
 
        function $gift(cmd)
@@ -12452,7 +12459,7 @@
         switch (j.event)
         {
          case 'RewardRedeemedEvent':
-          _RewardRedeemedEvent(j);
+          await _RewardRedeemedEvent(j);
           return;
          case 'PredictionCreated':
           _PredictionCreated(j);
@@ -12605,7 +12612,7 @@
          switch (j.event.slice(11))
          {
           case 'ChatMessageEvent':
-           _ChatMessageEvent(jData);
+           await _ChatMessageEvent(jData);
            return;
           case 'UserBannedEvent':
            _UserBannedEvent(jData);
@@ -12631,7 +12638,7 @@
          }
         }
 
-        function _ChatMessageEvent(jData)
+        async function _ChatMessageEvent(jData)
         {
          if (jData.hasOwnProperty('id') && jData.id !== null && jData.hasOwnProperty('sender') && jData.sender !== null && jData.sender.hasOwnProperty('id') && jData.sender.id !== null)
          {
@@ -12641,7 +12648,7 @@
          }
          if (document.visibilityState === 'hidden')
           return;
-         _parse.line(jData);
+         await _parse.line(jData);
         }
 
         function _UserBannedEvent(jData)
@@ -12755,7 +12762,7 @@
         return $c_App_Events;
        }();
 
-       function _RewardRedeemedEvent(j)
+       async function _RewardRedeemedEvent(j)
        {
         const jData = JSON.parse(j.data);
         if (!jData.hasOwnProperty('reward_title'))
@@ -12779,7 +12786,9 @@
          cmd.chatroom_id = jData.channel_id;
         if (jData.hasOwnProperty('user_input'))
          cmd.user_input = jData.user_input;
-        _parse.event.redeem(jData.reward_title, cmd);
+        if (_parse.event.redeem(jData.reward_title, cmd))
+         return;
+        await _parse.line(jData, 'user_input');
        }
 
        function _PredictionCreated(j)
@@ -12829,7 +12838,7 @@
          return;
         if (await _parse.event.cheer(jData))
          return;
-        _parse.line(jData, 'message');
+        await _parse.line(jData, 'message');
        }
 
        return $c_wsMessage;
@@ -14585,7 +14594,7 @@
       {
        const u = _parseUser(cmd);
        if (service.parse.ignored(u))
-        return;
+        return false;
        for (const k of cfg.commands)
        {
         if (!k.hasOwnProperty('redeem'))
@@ -14596,12 +14605,13 @@
         if (cmd === false)
         {
          display.kappa.show(false, kC);
-         return;
+         return true;
         }
         const a = service.parse.overlapPriority(_eListFromCmd(cmd, 'user_input', true), cSources.service.kick);
         display.kappa.show(a, kC);
-        return;
+        return true;
        }
+       return false;
       }
 
       const $poll = function()
