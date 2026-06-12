@@ -6441,6 +6441,12 @@
          _ws.close();
          _ws = null;
         }
+        if (twitch.net.dead === true)
+         return;
+        notice.error(notice.Type.TWITCH_EVENTSUB);
+        notice.active &= ~notice.Connection.TWITCH_EVENTSUB;
+        notice.resetHide();
+        window.setTimeout(_eventSub, 5000);
        }
 
        function _session_reconnect(p)
