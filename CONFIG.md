@@ -924,6 +924,11 @@ Configuration Information
           - [ ] If `false`, no kappagen will occur.
           - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
 
+      * `rave`  
+        *A boolean to start and stop the `'rave'` hue rotation for hype trains.*
+        - [ ] If `true`, emotes will begin hue shifting when a hype train starts, and stop hue shifting when the hype train ends.
+        - [ ] If `false`, hype trains will not alter the hue of emotes.
+
     * `kappatrain`  
       *Settings related to golden kappa trains.*  
       Requires `channel:read:hype_train` scope.
@@ -948,6 +953,11 @@ Configuration Information
           - [ ] If `false`, no kappagen will occur.
           - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
 
+      * `rave`  
+        *A boolean to start and stop the `'rave'` hue rotation for golden kappa trains.*
+        - [ ] If `true`, emotes will begin hue shifting when a golden kappa train starts, and stop hue shifting when the golden kappa train ends.
+        - [ ] If `false`, golden kappa trains will not alter the hue of emotes.
+
     * `treasuretrain`  
       *Settings related to treasure trains.*  
       Requires `channel:read:hype_train` scope.
@@ -971,6 +981,11 @@ Configuration Information
           - [ ] If `true`, a kappagen will occur.
           - [ ] If `false`, no kappagen will occur.
           - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `rave`  
+        *A boolean to start and stop the `'rave'` hue rotation for treasure trains.*
+        - [ ] If `true`, emotes will begin hue shifting when a treasure train starts, and stop hue shifting when the treasure train ends.
+        - [ ] If `false`, treasure trains will not alter the hue of emotes.
 
     * `poll`  
       *Settings related to polls.*  

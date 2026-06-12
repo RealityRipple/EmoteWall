@@ -290,15 +290,18 @@
       },
       hypetrain: {
        begin: false,
-       success: false
+       success: false,
+       rave: false
       },
       kappatrain: {
        begin: false,
-       success: false
+       success: false,
+       rave: false
       },
       treasuretrain: {
        begin: false,
-       success: false
+       success: false,
+       rave: false
       },
       poll: {
        begin: false,
@@ -6712,8 +6715,6 @@
         {
          if (!ev.hasOwnProperty('level'))
           return;
-         if (ev.level < 2)
-          return;
          if (ev.hasOwnProperty('type'))
          {
           switch (ev.type)
@@ -9415,6 +9416,8 @@
         {
          if (!cfg.event.twitch.hypetrain)
           return;
+         if (cfg.event.twitch.hypetrain.rave)
+          document.documentElement.classList.add('rave');
          if (!cfg.event.twitch.hypetrain.begin)
           return;
          display.kappa.show(false, cfg.event.twitch.hypetrain.begin);
@@ -9424,7 +9427,11 @@
         {
          if (!cfg.event.twitch.hypetrain)
           return;
+         if (cfg.event.twitch.hypetrain.rave && document.documentElement.classList.contains('rave'))
+          document.documentElement.classList.remove('rave');
          if (!cfg.event.twitch.hypetrain.success)
+          return;
+         if (ev.level < 2)
           return;
          const rs = shared.findInMaybeRange(cfg.event.twitch.hypetrain.success, ev.level - 1);
          if (rs === false)
@@ -9444,6 +9451,8 @@
         {
          if (!cfg.event.twitch.kappatrain)
           return;
+         if (cfg.event.twitch.kappatrain.rave)
+          document.documentElement.classList.add('rave');
          if (!cfg.event.twitch.kappatrain.begin)
           return;
          display.kappa.show(false, cfg.event.twitch.kappatrain.begin);
@@ -9453,7 +9462,11 @@
         {
          if (!cfg.event.twitch.kappatrain)
           return;
+         if (cfg.event.twitch.kappatrain.rave && document.documentElement.classList.contains('rave'))
+          document.documentElement.classList.remove('rave');
          if (!cfg.event.twitch.kappatrain.success)
+          return;
+         if (ev.level < 2)
           return;
          const rs = shared.findInMaybeRange(cfg.event.twitch.kappatrain.success, ev.level - 1);
          if (rs === false)
@@ -9473,6 +9486,8 @@
         {
          if (!cfg.event.twitch.treasuretrain)
           return;
+         if (cfg.event.twitch.treasuretrain.rave)
+          document.documentElement.classList.add('rave');
          if (!cfg.event.twitch.treasuretrain.begin)
           return;
          display.kappa.show(false, cfg.event.twitch.treasuretrain.begin);
@@ -9482,7 +9497,11 @@
         {
          if (!cfg.event.twitch.treasuretrain)
           return;
+         if (cfg.event.twitch.treasuretrain.rave && document.documentElement.classList.contains('rave'))
+          document.documentElement.classList.remove('rave');
          if (!cfg.event.twitch.treasuretrain.success)
+          return;
+         if (ev.level < 2)
           return;
          const rs = shared.findInMaybeRange(cfg.event.twitch.treasuretrain.success, ev.level - 1);
          if (rs === false)
