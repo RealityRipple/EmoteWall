@@ -354,6 +354,10 @@
        level: 1
       },
       supersticker: 1,
+      poll: {
+       begin: false,
+       end: false
+      },
       timeout: false,
       ban: false
      },
@@ -10492,6 +10496,7 @@
        const _mWait = 4000;
        const _mLimit = 15000 - _mInterval;
        let _tInit = false;
+       let _bActivePoll = false;
 
        async function $start(stream, page = false)
        {
@@ -10638,6 +10643,18 @@
         let nextPage = false;
         if (j.hasOwnProperty('nextPageToken'))
          nextPage = j.nextPageToken;
+        if (j.hasOwnProperty('activePollItem'))
+        {
+         if (!_bActivePoll)
+         {
+          if (!j.hasOwnProperty('items'))
+           j.items = [];
+          j.items.push(j.activePollItem);
+          _bActivePoll = true;
+         }
+        }
+        else
+         _bActivePoll = false;
         if (j.hasOwnProperty('items') && Array.isArray(j.items) && j.items.length > 0)
         {
          for (let i = 0, l = j.items.length; i < l; i++)
@@ -10680,6 +10697,9 @@
             break;
            case 'userBannedEvent':
             _userBannedEvent(cmd);
+            break;
+           case 'pollEvent':
+            _pollDetails(cmd);
             break;
           }
          }
@@ -10822,6 +10842,25 @@
          _parse.event.timeout(cmd);
         else
          _parse.event.ban(cmd);
+       }
+
+       function _pollDetails(cmd)
+       {
+        if (document.visibilityState === 'hidden')
+         return;
+        if (!cmd.snippet.hasOwnProperty('pollDetails'))
+         return;
+        if (!cmd.snippet.pollDetails.hasOwnProperty('status'))
+         return;
+        switch (cmd.snippet.pollDetails.status)
+        {
+         case 'active':
+          _parse.event.poll.begin(cmd);
+          break;
+         case 'closed':
+          _parse.event.poll.end(cmd);
+          break;
+        }
        }
 
        return {
@@ -11949,6 +11988,64 @@
        };
       }();
 
+      const $poll = function()
+      {
+       function $begin(cmd)
+       {
+        if (!cfg.event.youtube.poll)
+         return;
+        if (!cfg.event.youtube.poll.begin)
+         return;
+        if (!cmd.snippet.pollDetails.hasOwnProperty('metadata'))
+         return;
+        if (!cmd.snippet.pollDetails.metadata.hasOwnProperty('questionText'))
+         return;
+        display.kappa.show(false, cfg.event.youtube.poll.begin, {[cVARs.evt.title]: cmd.snippet.pollDetails.metadata.questionText});
+       }
+
+       function $end(cmd)
+       {
+        if (!cfg.event.youtube.poll)
+         return;
+        if (!cfg.event.youtube.poll.end)
+         return;
+        if (!cmd.snippet.pollDetails.hasOwnProperty('metadata'))
+         return;
+        if (!cmd.snippet.pollDetails.metadata.hasOwnProperty('questionText'))
+         return;
+        if (!cmd.snippet.pollDetails.metadata.hasOwnProperty('options'))
+         return;
+        let vPoll = 0;
+        for (let i = 0, l = cmd.snippet.pollDetails.metadata.options.length; i < l; i++)
+        {
+         if (!cmd.snippet.pollDetails.metadata.options[i].hasOwnProperty('optionText'))
+          continue;
+         if (!cmd.snippet.pollDetails.metadata.options[i].hasOwnProperty('tally'))
+          continue;
+         vPoll = Math.max(vPoll, parseInt(cmd.snippet.pollDetails.metadata.options[i].tally, 10));
+        }
+        const rPoll = [];
+        for (let i = 0, l = cmd.snippet.pollDetails.metadata.options.length; i < l; i++)
+        {
+         if (!cmd.snippet.pollDetails.metadata.options[i].hasOwnProperty('optionText'))
+          continue;
+         if (!cmd.snippet.pollDetails.metadata.options[i].hasOwnProperty('tally'))
+          continue;
+         if (parseInt(cmd.snippet.pollDetails.metadata.options[i].tally, 10) === vPoll)
+          rPoll.push(cmd.snippet.pollDetails.metadata.options[i].optionText);
+        }
+        let sPoll = 'None';
+        if (rPoll.length > 0)
+         sPoll = rPoll.join(' + ');
+        display.kappa.show(false, cfg.event.youtube.poll.end, {[cVARs.evt.title]: cmd.snippet.pollDetails.metadata.questionText, [cVARs.evt.result]: sPoll});
+       }
+
+       return {
+        begin: $begin,
+        end: $end
+       };
+      }();
+
       function $ban(cmd)
       {
        if (!cfg.event.youtube.ban)
@@ -11990,6 +12087,7 @@
        superchat: $superchat,
        supersticker: $supersticker,
        membership: $membership,
+       poll: $poll,
        ban: $ban,
        timeout: $timeout
       };
