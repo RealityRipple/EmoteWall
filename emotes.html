@@ -1336,6 +1336,9 @@
    // name used in text kappagens when the user isn't known
    const anonName = 'Anonymous';
 
+   // poll and prediction result used in text kappagens when there are no votes
+   const pollZero = 'None';
+
    //////////////////////////////////////////////////////////////////////////////
    // don't mess with things below this line without knowing what you're doing //
    //////////////////////////////////////////////////////////////////////////////
@@ -9565,19 +9568,22 @@
           continue;
          vPoll = Math.max(vPoll, ev.choices[i].votes);
         }
-        const rPoll = [];
-        for (let i = 0, l = ev.choices.length; i < l; i++)
+        let sPoll = pollZero;
+        if (vPoll > 0)
         {
-         if (!ev.choices[i].hasOwnProperty('title'))
-          continue;
-         if (!ev.choices[i].hasOwnProperty('votes'))
-          continue;
-         if (ev.choices[i].votes === vPoll)
-          rPoll.push(ev.choices[i].title);
+         const rPoll = [];
+         for (let i = 0, l = ev.choices.length; i < l; i++)
+         {
+          if (!ev.choices[i].hasOwnProperty('title'))
+           continue;
+          if (!ev.choices[i].hasOwnProperty('votes'))
+           continue;
+          if (ev.choices[i].votes === vPoll)
+           rPoll.push(ev.choices[i].title);
+         }
+         if (rPoll.length > 0)
+          sPoll = rPoll.join(' + ');
         }
-        let sPoll = 'None';
-        if (rPoll.length > 0)
-         sPoll = rPoll.join(' + ');
         display.kappa.show(false, cfg.event.twitch.poll.end, {[cVARs.evt.title]: ev.title, [cVARs.evt.result]: sPoll});
        }
 
@@ -9612,7 +9618,7 @@
          return;
         if (!ev.hasOwnProperty('outcomes'))
          return;
-        let sPrediction = 'None';
+        let sPrediction = pollZero;
         for (let i = 0, l = ev.outcomes.length; i < l; i++)
         {
          if (!ev.outcomes[i].hasOwnProperty('id'))
@@ -12150,19 +12156,22 @@
           continue;
          vPoll = Math.max(vPoll, parseInt(cmd.snippet.pollDetails.metadata.options[i].tally, 10));
         }
-        const rPoll = [];
-        for (let i = 0, l = cmd.snippet.pollDetails.metadata.options.length; i < l; i++)
+        let sPoll = pollZero;
+        if (vPoll > 0)
         {
-         if (!cmd.snippet.pollDetails.metadata.options[i].hasOwnProperty('optionText'))
-          continue;
-         if (!cmd.snippet.pollDetails.metadata.options[i].hasOwnProperty('tally'))
-          continue;
-         if (parseInt(cmd.snippet.pollDetails.metadata.options[i].tally, 10) === vPoll)
-          rPoll.push(cmd.snippet.pollDetails.metadata.options[i].optionText);
+         const rPoll = [];
+         for (let i = 0, l = cmd.snippet.pollDetails.metadata.options.length; i < l; i++)
+         {
+          if (!cmd.snippet.pollDetails.metadata.options[i].hasOwnProperty('optionText'))
+           continue;
+          if (!cmd.snippet.pollDetails.metadata.options[i].hasOwnProperty('tally'))
+           continue;
+          if (parseInt(cmd.snippet.pollDetails.metadata.options[i].tally, 10) === vPoll)
+           rPoll.push(cmd.snippet.pollDetails.metadata.options[i].optionText);
+         }
+         if (rPoll.length > 0)
+          sPoll = rPoll.join(' + ');
         }
-        let sPoll = 'None';
-        if (rPoll.length > 0)
-         sPoll = rPoll.join(' + ');
         display.kappa.show(false, cfg.event.youtube.poll.end, {[cVARs.evt.title]: cmd.snippet.pollDetails.metadata.questionText, [cVARs.evt.result]: sPoll});
        }
 
@@ -14864,19 +14873,22 @@
           continue;
          vPoll = Math.max(vPoll, ev.options[i].votes);
         }
-        const rPoll = [];
-        for (let i = 0, l = ev.options.length; i < l; i++)
+        let sPoll = pollZero;
+        if (vPoll > 0)
         {
-         if (!ev.options[i].hasOwnProperty('label') || ev.options[i].label === null)
-          continue;
-         if (!ev.options[i].hasOwnProperty('votes') || ev.options[i].votes === null)
-          continue;
-         if (ev.options[i].votes === vPoll)
-          rPoll.push(ev.options[i].label);
+         const rPoll = [];
+         for (let i = 0, l = ev.options.length; i < l; i++)
+         {
+          if (!ev.options[i].hasOwnProperty('label') || ev.options[i].label === null)
+           continue;
+          if (!ev.options[i].hasOwnProperty('votes') || ev.options[i].votes === null)
+           continue;
+          if (ev.options[i].votes === vPoll)
+           rPoll.push(ev.options[i].label);
+         }
+         if (rPoll.length > 0)
+          sPoll = rPoll.join(' + ');
         }
-        let sPoll = 'None';
-        if (rPoll.length > 0)
-         sPoll = rPoll.join(' + ');
         display.kappa.show(false, cfg.event.kick.poll.end, {[cVARs.evt.title]: ev.title, [cVARs.evt.result]: sPoll});
        }
 
@@ -14911,7 +14923,7 @@
          return;
         if (!ev.hasOwnProperty('outcomes'))
          return;
-        let sPrediction = 'None';
+        let sPrediction = pollZero;
         for (let i = 0, l = ev.outcomes.length; i < l; i++)
         {
          if (!ev.outcomes[i].hasOwnProperty('id'))
@@ -17387,15 +17399,18 @@
          votes.push({text: vText, count: vCt});
          vPoll = Math.max(vPoll, vCt);
         }
-        const rPoll = [];
-        for (let i = 0; i < votes.length; i++)
+        let sPoll = pollZero;
+        if (vPoll > 0)
         {
-         if (votes[i].count === vPoll)
-          rPoll.push(votes[i].text);
+         const rPoll = [];
+         for (let i = 0; i < votes.length; i++)
+         {
+          if (votes[i].count === vPoll)
+           rPoll.push(votes[i].text);
+         }
+         if (rPoll.length > 0)
+          sPoll = rPoll.join(' + ');
         }
-        let sPoll = 'None';
-        if (rPoll.length > 0)
-         sPoll = rPoll.join(' + ');
         display.kappa.show(false, cfg.event.trovo.poll.end, {[cVARs.evt.title]: pts[0], [cVARs.evt.result]: sPoll});
        }
 
