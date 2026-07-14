@@ -1442,6 +1442,23 @@ Configuration Information
         - [ ] If `false`, no kappagen will occur.
         - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
 
+    * `goal`  
+      *Settings related to goals.*  
+
+      * `begin`  
+        *A goal begins in your channel.*  
+        This value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+      * `achieved`  
+        *A goal ends in your channel.*  
+        This value can be a boolean or array:
+        - [ ] If `true`, a kappagen will occur.
+        - [ ] If `false`, no kappagen will occur.
+        - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
     * `timeout`  
       *Minimum time for a kappagen when a user is timed out.*  
       This value can be a boolean, integer, or array:

@@ -387,6 +387,10 @@
        begin: false,
        resolved: false
       },
+      goal: {
+       begin: false,
+       achieved: false
+      },
       timeout: false,
       ban: false
      },
@@ -12534,6 +12538,12 @@
          case 'PredictionUpdated':
           _PredictionUpdated(j);
           return;
+         case 'GoalCreatedEvent':
+          _GoalCreatedEvent(j);
+          return;
+         case 'GoalAchievedEvent':
+          _GoalAchievedEvent(j);
+          return;
          case 'GiftedSubscriptionsEvent':
           _GiftedSubscriptionsEvent(j);
           return;
@@ -12886,6 +12896,30 @@
         if (document.visibilityState === 'hidden')
          return;
         _parse.event.prediction.end(jData.prediction);
+       }
+
+       function _GoalCreatedEvent(j)
+       {
+        const jData = JSON.parse(j.data);
+        if (!jData.hasOwnProperty('status'))
+         return;
+        if (jData.status !== 'active')
+         return;
+        if (document.visibilityState === 'hidden')
+         return;
+        _parse.event.goal.begin(jData);
+       }
+
+       function _GoalAchievedEvent(j)
+       {
+        const jData = JSON.parse(j.data);
+        if (!jData.hasOwnProperty('status'))
+         return;
+        if (jData.status === 'achieved')
+         return;
+        if (document.visibilityState === 'hidden')
+         return;
+        _parse.event.goal.end(jData);
        }
 
        function _GiftedSubscriptionsEvent(j)
@@ -14777,6 +14811,85 @@
        };
       }();
 
+      const $goal = function()
+      {
+       function $begin(ev)
+       {
+        if (!cfg.event.kick.goal)
+         return;
+        if (!cfg.event.kick.goal.begin)
+         return;
+        if (!ev.hasOwnProperty('type'))
+         return;
+        if (!ev.hasOwnProperty('target_value'))
+         return;
+        let p = false;
+        if (ev.hasOwnProperty('progress_bar_emoji_id'))
+         p = _emote(ev.progress_bar_emoji_id);
+        display.kappa.show(p, cfg.event.kick.goal.begin, {[cVARs.evt.type]: _type(ev.type), [cVARs.evt.amount]: ev.target_value});
+       }
+
+       function $end(ev)
+       {
+        if (!cfg.event.kick.goal)
+         return;
+        if (!cfg.event.kick.goal.achieved)
+         return;
+        if (!ev.hasOwnProperty('type'))
+         return;
+        if (!ev.hasOwnProperty('current_value'))
+         return;
+        let p = false;
+        if (ev.hasOwnProperty('progress_bar_emoji_id'))
+         p = _emote(ev.progress_bar_emoji_id);
+        display.kappa.show(p, cfg.event.kick.goal.achieved, {[cVARs.evt.type]: _type(ev.type), [cVARs.evt.amount]: ev.current_value});
+       }
+
+       function _type(t)
+       {
+        switch (t)
+        {
+         case 'followers': return 'Follows';
+         case 'subscriptions': return 'Subscriptions';
+        }
+        return t.replaceAll('_', ' ');
+       }
+
+       function _emote(sID)
+       {
+        if (sID.slice(0, 7) !== 'emotes/')
+         return false;
+        const eID = parseInt(sID.slice(7), 10);
+        let sName = false;
+        for (const eName in service.emotes.kick)
+        {
+         if (!service.emotes.kick.hasOwnProperty(eName))
+          continue;
+         if (service.emotes.kick[eName].id !== eID)
+          continue;
+         sName = eName;
+         break;
+        }
+        if (!sName)
+         return false;
+        let sc = cSources.scope.channel;
+        let lcl = false;
+        if (service.emotes.kick[sName].hasOwnProperty('scope'))
+         sc = service.emotes.kick[sName].scope;
+        if (service.emotes.kick[sName].hasOwnProperty('local'))
+         lcl = service.emotes.kick[sName].local;
+        const u = cURLs.cdn.kick.emote.replaceAll(cVARs.url.emoteID, eID);
+        const ret = [];
+        ret.push({svc: cSources.service.kick, url: u, str: sName, pos: 0, scope: sc, local: lcl});
+        return ret;
+       }
+
+       return {
+        begin: $begin,
+        end: $end
+       };
+      }();
+
       return {
        cheer: $cheer,
        raid: $raid,
@@ -14786,7 +14899,8 @@
        timeout: $timeout,
        redeem: $redeem,
        poll: $poll,
-       prediction: $prediction
+       prediction: $prediction,
+       goal: $goal
       };
      }();
 
