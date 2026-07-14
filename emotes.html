@@ -6859,10 +6859,36 @@
        const d = await _getList();
        if (d.length === 0)
         return [];
+       for (let i = 0, l = d.length; i < l; i++)
+       {
+        if (!d[i].hasOwnProperty('id'))
+         continue;
+        if (!d[i].hasOwnProperty('status'))
+         continue;
+        switch (d[i].status)
+        {
+         case 'authorization_revoked':
+         case 'moderator_removed':
+         case 'user_removed':
+         case 'version_removed':
+         case 'websocket_disconnected':
+         case 'websocket_failed_ping_pong':
+         case 'websocket_received_inbound_traffic':
+         case 'websocket_connection_unused':
+         case 'websocket_internal_error':
+         case 'websocket_network_timeout':
+         case 'websocket_network_error':
+          if (!_gcList.includes(d[i].id))
+           _gcList.push(d[i].id);
+          break;
+        }
+       }
        const rList = [];
        for (let i = 0, l = d.length; i < l; i++)
        {
         if (!d[i].hasOwnProperty('id'))
+         continue;
+        if (_gcList.includes(d[i].id))
          continue;
         if (!d[i].hasOwnProperty('status'))
          continue;
@@ -6882,20 +6908,6 @@
           if (d[i].transport.session_id !== twitch.net.eventSubCtl.sessionID)
            continue;
           rList.push(d[i].type);
-          break;
-         case 'authorization_revoked':
-         case 'moderator_removed':
-         case 'user_removed':
-         case 'version_removed':
-         case 'websocket_disconnected':
-         case 'websocket_failed_ping_pong':
-         case 'websocket_received_inbound_traffic':
-         case 'websocket_connection_unused':
-         case 'websocket_internal_error':
-         case 'websocket_network_timeout':
-         case 'websocket_network_error':
-          if (!_gcList.includes(d[i].id))
-           _gcList.push(d[i].id);
           break;
         }
        }
