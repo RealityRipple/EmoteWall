@@ -13294,11 +13294,15 @@
          'method': 'webhook'
         };
         const r = await shared.httpRequest('POST', cURLs.api.kick.eventSub.get, kick.net.oAuth.headers(true), JSON.stringify(d), {'queue': false});
+        if (_gcList.length > 0 && r.success && r.json && r.json.hasOwnProperty('data') && Array.isArray(r.json.data) && r.json.data.length === 1 && r.json.data[0].hasOwnProperty('subscription_id'))
+        {
+         const idx = _gcList.indexOf(r.json.data[0].subscription_id);
+         if (idx > -1)
+          _gcList.splice(idx, 1);
+        }
         if (_tGC === false && _gcList.length > 0)
          _tGC = window.setTimeout(_gcSubs, _gcPause);
-        if (r.success)
-         return true;
-        return false;
+        return r.success;
        }
 
        async function _gcSubs()
