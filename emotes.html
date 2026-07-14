@@ -6691,22 +6691,22 @@
       async function $init()
       {
        const aSubs = [
-        {id: twitch.net.eventSubCtl.sub.follow, v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']},
-        {id: twitch.net.eventSubCtl.sub.redeem, scope: [cScopes.twitch.redemptions], cfg: false},
-        {id: twitch.net.eventSubCtl.sub.auto_redeem, v: '2', scope: [cScopes.twitch.redemptions], cfg: ['event.twitch.redeem.random_emote', 'event.twitch.redeem.chosen_emote', 'event.twitch.redeem.modified_emote']},
-        {id: twitch.net.eventSubCtl.sub.power_up, scope: [cScopes.twitch.bits], cfg: false},
-        {id: twitch.net.eventSubCtl.sub.shoutout.create, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']},
-        {id: twitch.net.eventSubCtl.sub.shoutout.receive, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']},
-        {id: twitch.net.eventSubCtl.sub.hypetrain.begin, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
-        {id: twitch.net.eventSubCtl.sub.hypetrain.end, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.success']},
-        {id: twitch.net.eventSubCtl.sub.poll.begin, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.begin']},
-        {id: twitch.net.eventSubCtl.sub.poll.end, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.end']},
-        {id: twitch.net.eventSubCtl.sub.prediction.begin, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.begin']},
-        {id: twitch.net.eventSubCtl.sub.prediction.end, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.resolved']},
-        {id: twitch.net.eventSubCtl.sub.goal.begin, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.begin']},
-        {id: twitch.net.eventSubCtl.sub.goal.end, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.achieved']},
-        {id: twitch.net.eventSubCtl.sub.charity, scope: [cScopes.twitch.charity], cfg: ['event.twitch.charity']},
-        {id: twitch.net.eventSubCtl.sub.tag, scope: false, cfg: ['event.twitch.tag.styles']}
+        {type: twitch.net.eventSubCtl.sub.follow, v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']},
+        {type: twitch.net.eventSubCtl.sub.redeem, scope: [cScopes.twitch.redemptions], cfg: false},
+        {type: twitch.net.eventSubCtl.sub.auto_redeem, v: '2', scope: [cScopes.twitch.redemptions], cfg: ['event.twitch.redeem.random_emote', 'event.twitch.redeem.chosen_emote', 'event.twitch.redeem.modified_emote']},
+        {type: twitch.net.eventSubCtl.sub.power_up, scope: [cScopes.twitch.bits], cfg: false},
+        {type: twitch.net.eventSubCtl.sub.shoutout.create, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']},
+        {type: twitch.net.eventSubCtl.sub.shoutout.receive, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']},
+        {type: twitch.net.eventSubCtl.sub.hypetrain.begin, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
+        {type: twitch.net.eventSubCtl.sub.hypetrain.end, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.success']},
+        {type: twitch.net.eventSubCtl.sub.poll.begin, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.begin']},
+        {type: twitch.net.eventSubCtl.sub.poll.end, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.end']},
+        {type: twitch.net.eventSubCtl.sub.prediction.begin, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.begin']},
+        {type: twitch.net.eventSubCtl.sub.prediction.end, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.resolved']},
+        {type: twitch.net.eventSubCtl.sub.goal.begin, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.begin']},
+        {type: twitch.net.eventSubCtl.sub.goal.end, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.achieved']},
+        {type: twitch.net.eventSubCtl.sub.charity, scope: [cScopes.twitch.charity], cfg: ['event.twitch.charity']},
+        {type: twitch.net.eventSubCtl.sub.tag, scope: false, cfg: ['event.twitch.tag.styles']}
        ];
        if (_tGC !== false)
        {
@@ -6769,7 +6769,7 @@
         if (found === false)
          return false;
        }
-       else if (sub.id === twitch.net.eventSubCtl.sub.redeem)
+       else if (sub.type === twitch.net.eventSubCtl.sub.redeem)
        {
         let found = false;
         for (const k of cfg.commands)
@@ -6782,7 +6782,7 @@
         if (found === false)
          return false;
        }
-       else if (sub.id === twitch.net.eventSubCtl.sub.power_up)
+       else if (sub.type === twitch.net.eventSubCtl.sub.power_up)
        {
         let found = false;
         for (const k of cfg.commands)
@@ -6803,11 +6803,11 @@
           return false;
         }
        }
-       if (aActive.includes(sub.id))
+       if (aActive.includes(sub.type))
         return true;
        if (!sub.hasOwnProperty('v'))
-        return twitch.net.eventSubCtl.subscribe(sub.id);
-       return twitch.net.eventSubCtl.subscribe(sub.id, sub.v);
+        return twitch.net.eventSubCtl.subscribe(sub.type);
+       return twitch.net.eventSubCtl.subscribe(sub.type, sub.v);
       }
 
       async function _getList()
