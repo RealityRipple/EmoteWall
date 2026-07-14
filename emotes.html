@@ -13224,8 +13224,6 @@
         const d = await _getList();
         if (d.length < 1)
          return [];
-        _evIDs = {};
-        const rList = [];
         for (let i = 0, l = d.length; i < l; i++)
         {
          if (!d[i].hasOwnProperty('id'))
@@ -13238,20 +13236,39 @@
           continue;
          if (d[i].app_id !== oauthClient.k)
           continue;
-         if (!d[i].hasOwnProperty('event'))
-          continue;
          if (!d[i].hasOwnProperty('broadcaster_user_id'))
           continue;
          if (d[i].broadcaster_user_id !== kick.net.oAuth.auth.uid)
           continue;
          if (!d[i].hasOwnProperty('updated_at'))
           continue;
-         if ((Date.now() - new Date(d[i].updated_at).getTime()) / 1000 / 60 / 60 > 24)
-         {
-          if (!_gcList.includes(d[i].id))
-           _gcList.push(d[i].id);
+         if ((Date.now() - new Date(d[i].updated_at).getTime()) / 1000 / 60 / 60 < 24)
           continue;
-         }
+         if (!_gcList.includes(d[i].id))
+          _gcList.push(d[i].id);
+        }
+        _evIDs = {};
+        const rList = [];
+        for (let i = 0, l = d.length; i < l; i++)
+        {
+         if (!d[i].hasOwnProperty('id'))
+          continue;
+         if (_gcList.includes(d[i].id))
+          continue;
+         if (!d[i].hasOwnProperty('method'))
+          continue;
+         if (d[i].method !== 'webhook')
+          continue;
+         if (!d[i].hasOwnProperty('app_id'))
+          continue;
+         if (d[i].app_id !== oauthClient.k)
+          continue;
+         if (!d[i].hasOwnProperty('broadcaster_user_id'))
+          continue;
+         if (d[i].broadcaster_user_id !== kick.net.oAuth.auth.uid)
+          continue;
+         if (!d[i].hasOwnProperty('event'))
+          continue;
          _evIDs[d[i].id] = d[i].event;
          rList.push(d[i].event);
         }
