@@ -354,6 +354,12 @@
        level: 1
       },
       supersticker: 1,
+      cheer: {
+       jewels: 10
+      },
+      combo: {
+       gifts: 2
+      },
       poll: {
        begin: false,
        end: false
@@ -1355,6 +1361,7 @@
      result: '%RESULT%',
      sender: '%SENDER%',
      sticker: '%STICKER%',
+     combos: '%COMBOS%',
      spell: '%SPELL%',
      title: '%TITLE%',
      type: '%TYPE%',
@@ -10701,6 +10708,9 @@
            case 'pollEvent':
             _pollDetails(cmd);
             break;
+           case 'giftEvent':
+            _giftEvent(cmd);
+            break;
           }
          }
         }
@@ -10861,6 +10871,26 @@
           _parse.event.poll.end(cmd);
           break;
         }
+       }
+
+       function _giftEvent(cmd)
+       {
+        if (document.visibilityState === 'hidden')
+         return;
+        if (!cmd.hasOwnProperty('authorDetails'))
+         return;
+        if (!cmd.snippet.hasOwnProperty('giftEventDetails'))
+         return;
+        if (!cmd.snippet.giftEventDetails.hasOwnProperty('giftMetadata'))
+         return;
+        const u = _parse.user(cmd);
+        if (cmd.hasOwnProperty('id') && u.id !== 0)
+        {
+         if (!_msgHistory.hasOwnProperty(u.id))
+          _msgHistory[u.id] = new Set();
+         _msgHistory[u.id].add(cmd.id);
+        }
+        _parse.event.cheer(cmd);
        }
 
        return {
@@ -11796,6 +11826,102 @@
 
      const $event = function()
      {
+      const $cheer = function()
+      {
+       const _comboTime = 5000;
+       const _comboList = {};
+
+       function $c_cheer(cmd)
+       {
+        const meta = cmd.snippet.giftEventDetails.giftMetadata;
+        if (!meta.hasOwnProperty('jewelsAmount'))
+         return;
+        if (meta.jewelsAmount < 1)
+         return;
+        if (!meta.hasOwnProperty('giftUrl'))
+         return;
+        if (!meta.hasOwnProperty('giftName'))
+         return;
+        const u = _parse.user(cmd);
+        if (service.parse.ignored(u))
+        {
+         if (_comboList.hasOwnProperty(meta.giftName))
+         {
+          if (_comboList[meta.giftName].tmr !== false)
+           window.clearTimeout(_comboList[meta.giftName].tmr);
+          _comboList[meta.giftName].tmr = window.setTimeout(_combo, _comboTime, meta.giftName);
+         }
+         return;
+        }
+        if (!_comboList.hasOwnProperty(meta.giftName))
+         _comboList[meta.giftName] = {tmr: false, qty: 0, emote: {url: meta.giftUrl, jewels: meta.jewelsAmount}, users: []};
+        _comboList[meta.giftName].qty++;
+        _comboList[meta.giftName].users.push(u.ascii);
+        if (_comboList[meta.giftName].tmr !== false)
+         window.clearTimeout(_comboList[meta.giftName].tmr);
+        _comboList[meta.giftName].tmr = window.setTimeout(_combo, _comboTime, meta.giftName);
+       }
+
+       function _combo(giftName)
+       {
+        if (!_comboList.hasOwnProperty(giftName))
+         return;
+        if (!_comboList[giftName].tmr)
+        {
+         delete _comboList[giftName];
+         return;
+        }
+        _comboList[giftName].tmr = false;
+        if (_comboList[giftName].qty === 0)
+        {
+         delete _comboList[giftName];
+         return;
+        }
+        const emotes = [];
+        emotes.push({svc: cSources.service.cheer, url: _comboList[giftName].emote.url, str: giftName, pos: 0, scope: cSources.scope.global, local: false});
+        const jewels = _comboList[giftName].emote.jewels * _comboList[giftName].qty;
+        if (_comboList[giftName].qty === 1 || !cfg.event.youtube.combo || !cfg.event.youtube.combo.gifts)
+        {
+         if (!cfg.event.youtube.cheer)
+         {
+          delete _comboList[giftName];
+          return;
+         }
+         if (!cfg.event.youtube.cheer.jewels)
+         {
+          delete _comboList[giftName];
+          return;
+         }
+         const rO = shared.findInMaybeRange(cfg.event.youtube.cheer.jewels, jewels);
+         if (rO === false)
+         {
+          display.emote.addToShowList(emotes);
+          display.emote.showEmotes();
+          delete _comboList[giftName];
+          return;
+         }
+         for (let i = 0; i < _comboList[giftName].users.length; i++)
+         {
+          display.kappa.show(emotes, rO, {[cVARs.evt.user]: _comboList[giftName].users[i], [cVARs.evt.sticker]: giftName, [cVARs.evt.amount]: jewels});
+         }
+         delete _comboList[giftName];
+         return;
+        }
+        const r = shared.findInMaybeRange(cfg.event.youtube.combo.gifts, _comboList[giftName].qty);
+        if (r === false)
+        {
+         display.emote.addToShowList(emotes);
+         display.emote.showEmotes();
+         delete _comboList[giftName];
+         return;
+        }
+        display.kappa.show(emotes, r, {[cVARs.evt.sticker]: giftName, [cVARs.evt.combos]: _comboList[giftName].qty, [cVARs.evt.amount]: jewels});
+        delete _comboList[giftName];
+       }
+
+       return $c_cheer;
+      }();
+
       function $subscribe(cmd)
       {
        if (!cfg.event.youtube.sub)
@@ -12083,6 +12209,7 @@
       }
 
       return {
+       cheer: $cheer,
        subscribe: $subscribe,
        superchat: $superchat,
        supersticker: $supersticker,

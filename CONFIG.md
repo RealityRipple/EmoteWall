@@ -1261,6 +1261,38 @@ Configuration Information
         - [ ] If `false`, no kappagen will occur.
         - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
 
+    * `cheer`
+      *Settings related to kappagens on a gift event.*
+
+      * `jewels`
+        *Minimum number of jewels for a kappagen.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on all gifts.
+        - [ ] If `false`, no kappagen will occur on gifts.
+        - [ ]  If Integer, the value is the minimum jewels required for a gift to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur on gift.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'10'`, `'50-199'` or `'200-999'`, or an open-maximum range such as `'1000+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
+    * `combos`
+      *Settings related to kappagens on a gift combo event.*
+
+      * `gifts`
+        *Minimum combo of gifts for a kappagen.*  
+        This value can be a boolean, integer, or array:
+        - [ ] If `true`, a kappagen will occur on all combos.
+        - [ ] If `false`, no kappagen will occur on combos.
+        - [ ]  If Integer, the value is the minimum combos required for a combo to trigger a kappagen.
+          - [ ] If `0`, no kappagen will occur on combo.
+        - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-19'` or `'20-99'`, or an open-maximum range such as `'100+'`.  
+        Each value can be a boolean or array:
+          - [ ] If `true`, a kappagen will occur.
+          - [ ] If `false`, no kappagen will occur.
+          - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
     * `poll`  
       *Settings related to polls.*
 
