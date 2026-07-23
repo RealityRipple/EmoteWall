@@ -6296,6 +6296,8 @@
          _ws.close();
          _ws = null;
         }
+        if (haveSubs === null)
+         return;
         if (twitch.net.dead === true)
          return;
         notice.error(notice.Type.TWITCH_EVENTSUB);
@@ -6685,62 +6687,82 @@
 
      const $eventSubCtl = function()
      {
+      const _aSubs = [];
       const _gcPause = 3000;
       const _gcList = [];
       let _tGC = false;
 
+      function _genSubList()
+      {
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.follow, v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.redeem, scope: [cScopes.twitch.redemptions], cfg: false});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.auto_redeem, v: '2', scope: [cScopes.twitch.redemptions], cfg: ['event.twitch.redeem.random_emote', 'event.twitch.redeem.chosen_emote', 'event.twitch.redeem.modified_emote']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.power_up, scope: [cScopes.twitch.bits], cfg: false});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.shoutout.create, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.shoutout.receive, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.hypetrain.begin, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.hypetrain.end, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.success']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.poll.begin, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.begin']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.poll.end, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.end']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.prediction.begin, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.begin']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.prediction.end, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.resolved']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.goal.begin, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.begin']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.goal.end, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.achieved']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.charity, scope: [cScopes.twitch.charity], cfg: ['event.twitch.charity']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.tag, scope: false, cfg: ['event.twitch.tag.styles']});
+      }
+
       async function $init()
       {
-       const aSubs = [
-        {type: twitch.net.eventSubCtl.sub.follow, v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']},
-        {type: twitch.net.eventSubCtl.sub.redeem, scope: [cScopes.twitch.redemptions], cfg: false},
-        {type: twitch.net.eventSubCtl.sub.auto_redeem, v: '2', scope: [cScopes.twitch.redemptions], cfg: ['event.twitch.redeem.random_emote', 'event.twitch.redeem.chosen_emote', 'event.twitch.redeem.modified_emote']},
-        {type: twitch.net.eventSubCtl.sub.power_up, scope: [cScopes.twitch.bits], cfg: false},
-        {type: twitch.net.eventSubCtl.sub.shoutout.create, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']},
-        {type: twitch.net.eventSubCtl.sub.shoutout.receive, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']},
-        {type: twitch.net.eventSubCtl.sub.hypetrain.begin, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
-        {type: twitch.net.eventSubCtl.sub.hypetrain.end, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.success']},
-        {type: twitch.net.eventSubCtl.sub.poll.begin, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.begin']},
-        {type: twitch.net.eventSubCtl.sub.poll.end, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.end']},
-        {type: twitch.net.eventSubCtl.sub.prediction.begin, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.begin']},
-        {type: twitch.net.eventSubCtl.sub.prediction.end, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.resolved']},
-        {type: twitch.net.eventSubCtl.sub.goal.begin, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.begin']},
-        {type: twitch.net.eventSubCtl.sub.goal.end, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.achieved']},
-        {type: twitch.net.eventSubCtl.sub.charity, scope: [cScopes.twitch.charity], cfg: ['event.twitch.charity']},
-        {type: twitch.net.eventSubCtl.sub.tag, scope: false, cfg: ['event.twitch.tag.styles']}
-       ];
+       if (_aSubs.length === 0)
+        _genSubList();
        if (_tGC !== false)
        {
         window.clearTimeout(_tGC);
         _tGC = false;
        }
        const aActive = await _cleanAndRecover();
-       let didSomething = aActive.length > 0;
+       let iActive = aActive.length;
        const toHandle = [];
-       for (let i = 0, l = aSubs.length; i < l; i++)
+       for (let i = 0, l = _aSubs.length; i < l; i++)
        {
-        toHandle.push(_handleSub(aSubs[i], aActive));
+        if (!_enabledSub(_aSubs[i]))
+         continue;
+        toHandle.push(_handleSub(_aSubs[i], aActive));
        }
-       if (toHandle.length > 0)
+       const iExpect = toHandle.length;
+       if (iExpect > 0)
        {
         const handled = await Promise.allSettled(toHandle);
         for (let i = 0, l = handled.length; i < l; i++)
         {
          if (handled[i].status !== 'fulfilled')
           continue;
-         if (handled[i].value !== false)
-         {
-          didSomething = true;
-          break;
-         }
+         if (handled[i].value === false)
+          continue;
+         iActive++;
         }
        }
        if (_tGC === false && _gcList.length > 0)
         _tGC = window.setTimeout(_gcSubs, _gcPause);
-       return didSomething;
+       if (iExpect === 0)
+        return null;
+       return iExpect === iActive;
       }
 
-      function _handleSub(sub, aActive)
+      function $required()
+      {
+       if (_aSubs.length === 0)
+        _genSubList();
+       for (let i = 0, l = _aSubs.length; i < l; i++)
+       {
+        if (_enabledSub(_aSubs[i]))
+         return true;
+       }
+       return false;
+      }
+
+      function _enabledSub(sub)
       {
        if (sub.hasOwnProperty('cfg') && sub.cfg !== false)
        {
@@ -6804,6 +6826,11 @@
           return false;
         }
        }
+       return true;
+      }
+
+      function _handleSub(sub, aActive)
+      {
        if (aActive.includes(sub.type))
         return true;
        if (!sub.hasOwnProperty('v'))
@@ -6984,6 +7011,7 @@
 
       return {
        init: $init,
+       required: $required,
        subscribe: $subscribe,
        erase: $erase,
        channelID: 0,
@@ -7676,7 +7704,7 @@
        if (!!cfg.event.twitch.tag && !!cfg.event.twitch.tag.styles)
         oCh.push(_getChannelTitleTags(chID));
        await Promise.allSettled(oCh);
-       if (!twitch.net.oAuth.usesChannel)
+       if (!twitch.net.oAuth.usesChannel && twitch.net.eventSubCtl.required())
         _eventSub(chID);
        const o3P = [];
        if (cfg.display.extended.useFFZ)
@@ -13191,32 +13219,35 @@
          _tGC = false;
         }
         const aActive = await _cleanAndRecover();
-        let didSomething = aActive.length > 0;
+        let iActive = aActive.length;
         const toHandle = [];
         for (let i = 0, l = aSubs.length; i < l; i++)
         {
+         if (!_enabledSub(aSubs[i]))
+          continue;
          toHandle.push(_handleSub(aSubs[i], aActive));
         }
-        if (toHandle.length > 0)
+        const iExpect = toHandle.length;
+        if (iExpect > 0)
         {
          const handled = await Promise.allSettled(toHandle);
          for (let i = 0, l = handled.length; i < l; i++)
          {
           if (handled[i].status !== 'fulfilled')
            continue;
-          if (handled[i].value !== false)
-          {
-           didSomething = true;
-           break;
-          }
+          if (handled[i].value === false)
+           continue;
+          iActive++;
          }
         }
         if (_tGC === false && _gcList.length > 0)
          _tGC = window.setTimeout(_gcSubs, _gcPause);
-        return didSomething;
+        if (iExpect === 0)
+         return null;
+        return iExpect === iActive;
        }
 
-       function _handleSub(sub, aActive)
+       function _enabledSub(sub)
        {
         if (sub.hasOwnProperty('cfg') && sub.cfg !== false)
         {
@@ -13254,6 +13285,11 @@
            return false;
          }
         }
+        return true;
+       }
+
+       function _handleSub(sub, aActive)
+       {
         if (aActive.includes(sub.type))
          return true;
         if (!sub.hasOwnProperty('v'))
