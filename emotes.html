@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v1.9
+    * v1.9.1
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -274,6 +274,7 @@
         resub: true
        }
       },
+      gif: false,
       cheer: {
        useMsg: true,
        bits: 50
@@ -5679,7 +5680,7 @@
          idx = e.zwe[i].pos;
        }
       }
-      e.zwe.push({svc: service.emotes.zwe.bttv, scope: cSources.scope.global, pos: idx + 1, str: bttvHoliday[hID].code, url: cURLs.cdn.bttv.emote.replaceAll(cVARs.url.emoteID, hID), width: bttvHoliday[hID].width, height: bttvHoliday[hID].height});
+      e.zwe.push({svc: service.emotes.zwe.bttv, scope: cSources.scope.global, pos: idx + 1, str: bttvHoliday[hID].code, url: cURLs.cdn.bttv.emote.replaceAll(cVARs.url.emoteID, hID), width: bttvHoliday[hID].width, height: bttvHoliday[hID].height, local: true});
      }
      return e;
     }
@@ -6295,6 +6296,8 @@
          _ws.close();
          _ws = null;
         }
+        if (haveSubs === null)
+         return;
         if (twitch.net.dead === true)
          return;
         notice.error(notice.Type.TWITCH_EVENTSUB);
@@ -6684,62 +6687,82 @@
 
      const $eventSubCtl = function()
      {
+      const _aSubs = [];
       const _gcPause = 3000;
       const _gcList = [];
       let _tGC = false;
 
+      function _genSubList()
+      {
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.follow, v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.redeem, scope: [cScopes.twitch.redemptions], cfg: false});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.auto_redeem, v: '2', scope: [cScopes.twitch.redemptions], cfg: ['event.twitch.redeem.random_emote', 'event.twitch.redeem.chosen_emote', 'event.twitch.redeem.modified_emote']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.power_up, scope: [cScopes.twitch.bits], cfg: false});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.shoutout.create, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.shoutout.receive, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.hypetrain.begin, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.hypetrain.end, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.success']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.poll.begin, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.begin']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.poll.end, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.end']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.prediction.begin, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.begin']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.prediction.end, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.resolved']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.goal.begin, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.begin']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.goal.end, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.achieved']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.charity, scope: [cScopes.twitch.charity], cfg: ['event.twitch.charity']});
+       _aSubs.push({type: twitch.net.eventSubCtl.sub.tag, scope: false, cfg: ['event.twitch.tag.styles']});
+      }
+
       async function $init()
       {
-       const aSubs = [
-        {type: twitch.net.eventSubCtl.sub.follow, v: '2', scope: [cScopes.twitch.followers], cfg: ['event.twitch.follow']},
-        {type: twitch.net.eventSubCtl.sub.redeem, scope: [cScopes.twitch.redemptions], cfg: false},
-        {type: twitch.net.eventSubCtl.sub.auto_redeem, v: '2', scope: [cScopes.twitch.redemptions], cfg: ['event.twitch.redeem.random_emote', 'event.twitch.redeem.chosen_emote', 'event.twitch.redeem.modified_emote']},
-        {type: twitch.net.eventSubCtl.sub.power_up, scope: [cScopes.twitch.bits], cfg: false},
-        {type: twitch.net.eventSubCtl.sub.shoutout.create, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.create.styles']},
-        {type: twitch.net.eventSubCtl.sub.shoutout.receive, scope: [cScopes.twitch.shoutouts], cfg: ['event.twitch.shoutout.receive.styles']},
-        {type: twitch.net.eventSubCtl.sub.hypetrain.begin, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.begin']},
-        {type: twitch.net.eventSubCtl.sub.hypetrain.end, v: '2', scope: [cScopes.twitch.hypetrains], cfg: ['event.twitch.hypetrain.success']},
-        {type: twitch.net.eventSubCtl.sub.poll.begin, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.begin']},
-        {type: twitch.net.eventSubCtl.sub.poll.end, scope: [cScopes.twitch.polls], cfg: ['event.twitch.poll.end']},
-        {type: twitch.net.eventSubCtl.sub.prediction.begin, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.begin']},
-        {type: twitch.net.eventSubCtl.sub.prediction.end, scope: [cScopes.twitch.predictions], cfg: ['event.twitch.prediction.resolved']},
-        {type: twitch.net.eventSubCtl.sub.goal.begin, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.begin']},
-        {type: twitch.net.eventSubCtl.sub.goal.end, scope: [cScopes.twitch.goals], cfg: ['event.twitch.goal.achieved']},
-        {type: twitch.net.eventSubCtl.sub.charity, scope: [cScopes.twitch.charity], cfg: ['event.twitch.charity']},
-        {type: twitch.net.eventSubCtl.sub.tag, scope: false, cfg: ['event.twitch.tag.styles']}
-       ];
+       if (_aSubs.length === 0)
+        _genSubList();
        if (_tGC !== false)
        {
         window.clearTimeout(_tGC);
         _tGC = false;
        }
        const aActive = await _cleanAndRecover();
-       let didSomething = aActive.length > 0;
+       let iActive = aActive.length;
        const toHandle = [];
-       for (let i = 0, l = aSubs.length; i < l; i++)
+       for (let i = 0, l = _aSubs.length; i < l; i++)
        {
-        toHandle.push(_handleSub(aSubs[i], aActive));
+        if (!_enabledSub(_aSubs[i]))
+         continue;
+        toHandle.push(_handleSub(_aSubs[i], aActive));
        }
-       if (toHandle.length > 0)
+       const iExpect = toHandle.length;
+       if (iExpect > 0)
        {
         const handled = await Promise.allSettled(toHandle);
         for (let i = 0, l = handled.length; i < l; i++)
         {
          if (handled[i].status !== 'fulfilled')
           continue;
-         if (handled[i].value !== false)
-         {
-          didSomething = true;
-          break;
-         }
+         if (handled[i].value === false)
+          continue;
+         iActive++;
         }
        }
        if (_tGC === false && _gcList.length > 0)
         _tGC = window.setTimeout(_gcSubs, _gcPause);
-       return didSomething;
+       if (iExpect === 0)
+        return null;
+       return iExpect === iActive;
       }
 
-      function _handleSub(sub, aActive)
+      function $required()
+      {
+       if (_aSubs.length === 0)
+        _genSubList();
+       for (let i = 0, l = _aSubs.length; i < l; i++)
+       {
+        if (_enabledSub(_aSubs[i]))
+         return true;
+       }
+       return false;
+      }
+
+      function _enabledSub(sub)
       {
        if (sub.hasOwnProperty('cfg') && sub.cfg !== false)
        {
@@ -6803,6 +6826,11 @@
           return false;
         }
        }
+       return true;
+      }
+
+      function _handleSub(sub, aActive)
+      {
        if (aActive.includes(sub.type))
         return true;
        if (!sub.hasOwnProperty('v'))
@@ -6983,6 +7011,7 @@
 
       return {
        init: $init,
+       required: $required,
        subscribe: $subscribe,
        erase: $erase,
        channelID: 0,
@@ -7199,6 +7228,8 @@
         if (cmd.params.length > 1)
          cmd.params[1] = cmd.params[1].replace(/(?<!\u{e0002})\u{e0002}(?!\u{e0002})/gu, '\u200d');
         if (await _parse.event.cheer(cmd))
+         return;
+        if (await _parse.event.gif(cmd))
          return;
         await _parse.line(cmd);
        }
@@ -7673,7 +7704,7 @@
        if (!!cfg.event.twitch.tag && !!cfg.event.twitch.tag.styles)
         oCh.push(_getChannelTitleTags(chID));
        await Promise.allSettled(oCh);
-       if (!twitch.net.oAuth.usesChannel)
+       if (!twitch.net.oAuth.usesChannel && twitch.net.eventSubCtl.required())
         _eventSub(chID);
        const o3P = [];
        if (cfg.display.extended.useFFZ)
@@ -8242,6 +8273,53 @@
        return p;
       }
 
+      function $gif(cmd, dup = null)
+      {
+       if (!cmd.hasOwnProperty('tags'))
+        return [];
+       if (!cmd.tags.hasOwnProperty('gifs'))
+        return [];
+       if (cmd.tags.gifs === '')
+        return [];
+       if (cmd.params.length < 2)
+        return [];
+       const m = Array.from(cmd.params[1]);
+       const e = cmd.tags.gifs.split(',');
+       if (dup === null)
+        dup = cfg.display.duplicates;
+       const imgs = {};
+       for (let i = 0, n = e.length; i < n; i++)
+       {
+        const ePts = e[i].split('|', 3);
+        const eID = ePts[1];
+        const u = ePts[2];
+        const eVals = ePts[0].split('-', 2);
+        const eStart = parseInt(eVals[0], 10);
+        const eEnd = parseInt(eVals[1], 10);
+        const sName = m.slice(eStart, eEnd + 1).join('');
+        if (!imgs.hasOwnProperty(eID))
+         imgs[eID] = {name: sName, url: u, ranges: []};
+        imgs[eID].ranges.push(eStart);
+       }
+       const ret = [];
+       for (let i = 0, n = imgs.length; i < n; i++)
+       {
+        let l = imgs[i].ranges.length;
+        if (dup === false)
+         l = 1;
+        else if (dup !== true)
+         l = Math.min(l, dup);
+        const sc = cSources.scope.global;
+        const lcl = false;
+        for (let c = 0; c < l; c++)
+        {
+         const p = imgs[i].ranges[c];
+         ret.push({svc: cSources.service.twitch, url: u, str: sName, pos: p, scope: cSources.scope.global, local: false});
+        }
+       }
+       return ret;
+      }
+
       const $3rdparty = function()
       {
        const $ffz = function()
@@ -8435,6 +8513,7 @@
        emoji: $emoji,
        twitch: $twitch,
        bits: $bits,
+       gif: $gif,
        '3rdparty': $3rdparty
       };
      }();
@@ -8708,6 +8787,24 @@
         return true;
        }
        display.kappa.show(p, r, {[cVARs.evt.user]: u.ascii, [cVARs.evt.amount]: iBits});
+       return true;
+      }
+
+      async function $gif(cmd)
+      {
+       if (!cfg.event.twitch.gif)
+        return false;
+       const u = _parseUser(cmd);
+       if (service.parse.ignored(u))
+        return false;
+       if (!cmd.hasOwnProperty('tags'))
+        return false;
+       if (!cmd.tags.hasOwnProperty('gif'))
+        return false;
+       let p = _parse.content.gif(cmd);
+       if (p.length === 0)
+        return false;
+       display.kappa.show(p, cfg.event.twitch.gif, {[cVARs.evt.user]: u.ascii});
        return true;
       }
 
@@ -9086,6 +9183,7 @@
         str: ev.reward.emote.name,
         pos: 0,
         scope: cSources.scope.channel,
+        local: true,
         timestamp: Date.now(),
         origin: 'twitch:' + ev.id
        });
@@ -9122,6 +9220,7 @@
         str: ev.reward.emote.name,
         pos: 0,
         scope: cSources.scope.channel,
+        local: true,
         timestamp: Date.now(),
         origin: 'twitch:' + ev.id
        });
@@ -9158,6 +9257,7 @@
         str: ev.reward.emote.name,
         pos: 0,
         scope: cSources.scope.channel,
+        local: true,
         timestamp: Date.now(),
         origin: 'twitch:' + ev.id
        });
@@ -9651,6 +9751,7 @@
 
       return {
        cheer: $cheer,
+       gif: $gif,
        raid: $raid,
        sub: $sub,
        badge: $badge,
@@ -12377,6 +12478,7 @@
       _eStickers[jNames[i]] = {
        svc: cSources.service.cheer,
        scope: cSources.scope.global,
+       local: false,
        url: eCDN.replaceAll(cVARs.url.stickerID, j.list[jNames[i]]),
        id: j.list[jNames[i]]
       };
@@ -13117,32 +13219,35 @@
          _tGC = false;
         }
         const aActive = await _cleanAndRecover();
-        let didSomething = aActive.length > 0;
+        let iActive = aActive.length;
         const toHandle = [];
         for (let i = 0, l = aSubs.length; i < l; i++)
         {
+         if (!_enabledSub(aSubs[i]))
+          continue;
          toHandle.push(_handleSub(aSubs[i], aActive));
         }
-        if (toHandle.length > 0)
+        const iExpect = toHandle.length;
+        if (iExpect > 0)
         {
          const handled = await Promise.allSettled(toHandle);
          for (let i = 0, l = handled.length; i < l; i++)
          {
           if (handled[i].status !== 'fulfilled')
            continue;
-          if (handled[i].value !== false)
-          {
-           didSomething = true;
-           break;
-          }
+          if (handled[i].value === false)
+           continue;
+          iActive++;
          }
         }
         if (_tGC === false && _gcList.length > 0)
          _tGC = window.setTimeout(_gcSubs, _gcPause);
-        return didSomething;
+        if (iExpect === 0)
+         return null;
+        return iExpect === iActive;
        }
 
-       function _handleSub(sub, aActive)
+       function _enabledSub(sub)
        {
         if (sub.hasOwnProperty('cfg') && sub.cfg !== false)
         {
@@ -13180,6 +13285,11 @@
            return false;
          }
         }
+        return true;
+       }
+
+       function _handleSub(sub, aActive)
+       {
         if (aActive.includes(sub.type))
          return true;
         if (!sub.hasOwnProperty('v'))

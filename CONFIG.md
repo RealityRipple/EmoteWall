@@ -822,6 +822,13 @@ Configuration Information
             - [ ] If `false`, no kappagen will occur.
             - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
 
+    * `gif`  
+      *Kappagen on a Tier 2/Tier 3 GIF event.*  
+      This value can be a boolean or array:
+      - [ ] If `true`, a kappagen will occur on all GIF messages.
+      - [ ] If `false`, no kappagen will occur on GIF messages.
+      - [ ] If an array of kappa styles, a kappagen of one of the listed styles will occur.
+
     * `cheer`
       *Settings related to kappagens on a cheer event.*
 
@@ -1220,8 +1227,8 @@ Configuration Information
       This value can be a boolean, integer, or array:
       - [ ] If `true`, a kappagen will occur on all super stickers.
       - [ ] If `false`, no kappagen will occur on super stickers.
-      - [ ]  If Integer, the value is the minimum tier required for a super chat to trigger a kappagen.
-        - [ ] If `0`, no kappagen will occur on super chat.
+      - [ ]  If Integer, the value is the minimum tier required for a super sticker to trigger a kappagen.
+        - [ ] If `0`, no kappagen will occur on super sticker.
       - [ ] If Array, each key of the array should be a string containing a range of integers, such as `'1'`, `'2-4'` or `'5-8'`, or an open-maximum range such as `'9+'`.  
       Each value can be a boolean or array:
         - [ ] If `true`, a kappagen will occur.
