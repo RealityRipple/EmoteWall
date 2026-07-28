@@ -18809,37 +18809,44 @@
 
      async function $channelEx(svcName, chID, listedOnly)
      {
-      const url = cURLs.api['7tv'].users[svcName].replaceAll(cVARs.url.channelID, chID);
+      const usrUrl = cURLs.api['7tv'].users[svcName].replaceAll(cVARs.url.channelID, chID);
+      const usrR = await shared.httpRequest('GET', usrUrl);
+      if (!usrR.success)
+       return false;
+      const usrJ = usrR.json;
+      if (usrJ === null)
+       return false;
+      if (!usrJ.hasOwnProperty('emote_set_id') || usrJ.emote_set_id === null)
+       return false;
+      const url = cURLs.api['7tv'].emotes.set.replaceAll(cVARs.url.setID, usrJ.emote_set_id);
       const r = await shared.httpRequest('GET', url);
       if (!r.success)
        return false;
       const j = r.json;
       if (j === null)
        return false;
-      if (!j.hasOwnProperty('emote_set') || j.emote_set === null)
+      if (!j.hasOwnProperty('emotes') || j.emotes === null)
        return false;
-      if (!j.emote_set.hasOwnProperty('emotes') || j.emote_set.emotes === null)
-       return false;
-      if (!Array.isArray(j.emote_set.emotes))
+      if (!Array.isArray(j.emotes))
        return false;
       const ret = [];
-      for (let i = 0, l = j.emote_set.emotes.length; i < l; i++)
+      for (let i = 0, l = j.emotes.length; i < l; i++)
       {
-       if (!j.emote_set.emotes[i].hasOwnProperty('data') || j.emote_set.emotes[i].data === null)
+       if (!j.emotes[i].hasOwnProperty('data') || j.emotes[i].data === null)
         continue;
-       if (listedOnly && j.emote_set.emotes[i].data.hasOwnProperty('listed') && j.emote_set.emotes[i].data.listed !== true)
+       if (listedOnly && j.emotes[i].data.hasOwnProperty('listed') && j.emotes[i].data.listed !== true)
         continue;
-       if (!j.emote_set.emotes[i].data.hasOwnProperty('id') || j.emote_set.emotes[i].data.id === null)
+       if (!j.emotes[i].data.hasOwnProperty('id') || j.emotes[i].data.id === null)
         continue;
-       if (!j.emote_set.emotes[i].hasOwnProperty('name') || j.emote_set.emotes[i].name === null)
+       if (!j.emotes[i].hasOwnProperty('name') || j.emotes[i].name === null)
         continue;
-       const jInf = _read7tv_URL(j.emote_set.emotes[i].data);
+       const jInf = _read7tv_URL(j.emotes[i].data);
        if (jInf === false)
         continue;
        let vis = 0;
-       if (j.emote_set.emotes[i].data.hasOwnProperty('flags') && j.emote_set.emotes[i].data.flags !== null)
-        vis = j.emote_set.emotes[i].data.flags;
-       ret.push({name: j.emote_set.emotes[i].name, id: j.emote_set.emotes[i].data.id, url: jInf.url, vis: vis, width: jInf.width, height: jInf.height});
+       if (j.emotes[i].data.hasOwnProperty('flags') && j.emotes[i].data.flags !== null)
+        vis = j.emotes[i].data.flags;
+       ret.push({name: j.emotes[i].name, id: j.emotes[i].data.id, url: jInf.url, vis: vis, width: jInf.width, height: jInf.height});
       }
       return ret;
      }
