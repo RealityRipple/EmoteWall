@@ -14377,6 +14377,18 @@
         ret._slug = data.slug;
        if (data.hasOwnProperty('username') && data.username !== null)
         ret._name = data.username;
+       if (data.hasOwnProperty('identity') && data.identity !== null && data.identity.hasOwnProperty('badges') && data.identity.badges !== null && Array.isArray(data.identity.badges))
+       {
+        for (let i = 0; i < data.identity.badges.length; i++)
+        {
+         if (!data.identity.badges[i].hasOwnProperty('type'))
+          continue;
+         if (data.identity.badges[i].type !== 'bot')
+          continue;
+         ret.bot = true;
+         break;
+        }
+       }
       }
       const gReg = new RegExp(service.parse.uReg, 'g');
       if (!!ret._name && ret._name === ret._name.replaceAll(gReg, ''))
