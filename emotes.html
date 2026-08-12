@@ -8,7 +8,7 @@
    /* RealityRipple's Home-Made Emote Wall
     * ====================================
     *
-    * v1.9.1.1r2
+    * v1.9.1.2
     *
     *  <https://realityripple.com/Tools/Twitch/EmoteWall/>
     *
@@ -6373,13 +6373,13 @@
          {
           case twitch.net.eventSubCtl.sub.redeem:
            _channel_points_redeem(r.payload.event);
-           return;
+           break;
           case twitch.net.eventSubCtl.sub.auto_redeem:
            _channel_points_auto_redeem(r.payload.event);
-           return;
+           break;
           case twitch.net.eventSubCtl.sub.power_up:
            _bits_power_up(r.payload.event);
-           return;
+           break;
           case twitch.net.eventSubCtl.sub.follow:
            _follow(r.payload.event);
            break;
@@ -6391,7 +6391,7 @@
            break;
           case twitch.net.eventSubCtl.sub.hypetrain.begin:
            _train_begin(r.payload.event);
-           return;
+           break;
           case twitch.net.eventSubCtl.sub.hypetrain.end:
            _train_end(r.payload.event);
            break;
@@ -6722,7 +6722,7 @@
         _tGC = false;
        }
        const aActive = await _cleanAndRecover();
-       let iActive = aActive.length;
+       let iActive = 0;
        const toHandle = [];
        for (let i = 0, l = _aSubs.length; i < l; i++)
        {
@@ -13219,7 +13219,7 @@
          _tGC = false;
         }
         const aActive = await _cleanAndRecover();
-        let iActive = aActive.length;
+        let iActive = 0;
         const toHandle = [];
         for (let i = 0, l = aSubs.length; i < l; i++)
         {
@@ -14377,6 +14377,18 @@
         ret._slug = data.slug;
        if (data.hasOwnProperty('username') && data.username !== null)
         ret._name = data.username;
+       if (data.hasOwnProperty('identity') && data.identity !== null && data.identity.hasOwnProperty('badges') && data.identity.badges !== null && Array.isArray(data.identity.badges))
+       {
+        for (let i = 0; i < data.identity.badges.length; i++)
+        {
+         if (!data.identity.badges[i].hasOwnProperty('type'))
+          continue;
+         if (data.identity.badges[i].type !== 'bot')
+          continue;
+         ret.bot = true;
+         break;
+        }
+       }
       }
       const gReg = new RegExp(service.parse.uReg, 'g');
       if (!!ret._name && ret._name === ret._name.replaceAll(gReg, ''))
@@ -15370,9 +15382,9 @@
      if (j.hasOwnProperty('id') && j.id !== null)
       ret.id = j.id;
      if (j.hasOwnProperty('slug') && j.slug !== null)
-      ret.slug = j.slug;
+      ret._slug = j.slug;
      if (j.hasOwnProperty('username') && j.username !== null)
-      ret.name = j.username;
+      ret._name = j.username;
      if (j.hasOwnProperty('following_since') && j.following_since !== null)
       ret.follower = j.following_since;
      const gReg = new RegExp(service.parse.uReg, 'g');
