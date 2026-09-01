@@ -1615,17 +1615,17 @@ Configuration Information
     Local emotes include:
     - Service channel emotes for your channel.
     - Third-party channel emotes for your channel.
-    - Custom bit cheers and custom spells.  
+    - Custom bit cheers.  
     Foreign emotes include:
     - Global service emotes.
     - Service channel emotes for other channels (unless `'team'` is set).
     - Global third-party emotes.
     - Third-party channel emotes for other channels.
-    - Emoji.  
     Special cases:
-    - Cheers of bits, Super Stickers, Kicks, coins, and spells that are not custom to the channel can be allowed using the `'cheer'` value.
+    - Cheers of bits, jewels, Super Stickers, and Kicks that are not custom to the channel can be allowed using the `'cheer'` value.
     - Service channel emotes for team members can be allowed using the `'team'` value.
     - Holiday hats are not disabled by this preference.
+    - Emoji are not disabled by this preference.  
 
   * `emotes`  
     *Emotes which should be ignored.*  
