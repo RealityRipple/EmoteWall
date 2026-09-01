@@ -8303,10 +8303,11 @@
          imgs[eID] = {name: sName, url: u, ranges: []};
         imgs[eID].ranges.push(eStart);
        }
+       const imgIDs = Object.keys(imgs);
        const ret = [];
-       for (let i = 0, n = imgs.length; i < n; i++)
+       for (let i = 0, n = imgIDs.length; i < n; i++)
        {
-        let l = imgs[i].ranges.length;
+        let l = imgs[imgIDs[i]].ranges.length;
         if (dup === false)
          l = 1;
         else if (dup !== true)
@@ -8315,8 +8316,8 @@
         const lcl = false;
         for (let c = 0; c < l; c++)
         {
-         const p = imgs[i].ranges[c];
-         ret.push({svc: cSources.service.twitch, url: u, str: sName, pos: p, scope: cSources.scope.global, local: false});
+         const p = imgs[imgIDs[i]].ranges[c];
+         ret.push({svc: cSources.service.twitch, url: imgs[imgIDs[i]].url, str: imgs[imgIDs[i]].name, pos: p, scope: cSources.scope.global, local: false});
         }
        }
        return ret;
@@ -8801,7 +8802,7 @@
         return false;
        if (!cmd.hasOwnProperty('tags'))
         return false;
-       if (!cmd.tags.hasOwnProperty('gif'))
+       if (!cmd.tags.hasOwnProperty('gifs'))
         return false;
        let p = _parse.content.gif(cmd);
        if (p.length === 0)
