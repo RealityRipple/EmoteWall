@@ -1331,7 +1331,7 @@
       irc: 'wss://irc-ws.chat.twitch.tv',
       eventSub: 'wss://eventsub.wss.twitch.tv/ws'
      }),
-     kick: 'wss://ws-us2.pusher.com/app/' + cVARs.url.chatID + '?protocol=7&client=js&version=7.6.0&flash=false',
+     kick: 'wss://ws-' + cVARs.url.origin + '.pusher.com/app/' + cVARs.url.chatID + '?protocol=7&client=js&version=7.6.0&flash=false',
      streamlabs: 'wss://sockets.streamlabs.com/socket.io/?transport=websocket&token=' + cVARs.url.token,
      streamelements: 'wss://realtime.streamelements.com/socket.io/?transport=websocket',
      bttv: 'wss://sockets.betterttv.net/ws',
@@ -12539,8 +12539,8 @@
         }
        }
        _tPing = 0;
-       const appID = await _getAppID();
-       _ws = new WebSocket(cURLs.ws.kick.replaceAll(cVARs.url.chatID, appID));
+       const {appID, cluster} = await _getAppID();
+       _ws = new WebSocket(cURLs.ws.kick.replaceAll(cVARs.url.origin, cluster).replaceAll(cVARs.url.chatID, appID));
        _ws.onopen = _wsOpen;
        _ws.onclose = _wsClose;
        _ws.onmessage = _wsMessage;
@@ -13157,23 +13157,40 @@
 
       const _getAppID = function()
       {
-       const _defAppID = '32cbd69e4b950bf97679';
+       const _defAppID = '34bf7a0ff419a2a775b9';
+       const _defCluster = 'us2';
        let _cachedAppID = false;
+       let _cachedCluster = false;
 
        async function $c_getAppID()
        {
+        let ret = {
+         appID: _defAppID,
+         cluster: _defCluster
+        };
         if (!!_cachedAppID)
-         return _cachedAppID;
+         ret.appID = _cachedAppID;
+        if (!!_cachedCluster)
+         ret.cluster = _cachedCluster;
+        if (!!_cachedAppID && !!_cachedCluster)
+         return ret;
         const r = await shared.httpRequest('GET', cURLs.cdn.kick.appid);
         if (!r.success)
-         return _defAppID;
+         return ret;
         const j = r.json;
         if (j === null)
-         return _defAppID;
-        if (!j.hasOwnProperty('PUSHER_APP_ID') || j.PUSHER_APP_ID === null)
-         return _defAppID;
-        _cachedAppID = j.PUSHER_APP_ID;
-        return j.PUSHER_APP_ID;
+         return ret;
+        if (j.hasOwnProperty('PUSHER_APP_ID') && j.PUSHER_APP_ID !== null)
+        {
+         _cachedAppID = j.PUSHER_APP_ID;
+         ret.appID = _cachedAppID;
+        }
+        if (j.hasOwnProperty('PUSHER_CLUSTER') && j.PUSHER_CLUSTER !== null)
+        {
+         _cachedCluster = j.PUSHER_CLUSTER;
+         ret.cluster = _cachedCluster;
+        }
+        return ret;
        }
 
        return $c_getAppID;
