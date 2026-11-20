@@ -112,7 +112,7 @@ Despite these numerous issues, the Emote Wall still functions on YouTube, and ne
 The Kick API is being actively developed and improved, but some issues haven't been addressed yet.
 
 > #### [WebSockets](https://github.com/KickEngineering/KickDevDocs/issues/20)
-> Events currently are sent only over WebHooks from server to server. A redirection system using a dummy Twitch account currently works around this lack of server-to-client WebSocket support.
+> Events currently are sent only over WebHooks from server to server. A redirection system using a dummy Kick account currently works around this lack of server-to-client WebSocket support.
 
 ### OBS
 This emote wall may do better if the browser source has a frame rate limit of 30 or 60. If you use your GPU while streaming, you may wish to disable Browser Source Hardware Acceleration. It may also work better using a smaller screen resolution (such as 720p on a 1080p screen) and then stretching the browser source to fit to the screen using the OBS Transform feature.
