@@ -12527,6 +12527,7 @@
        if (kick.net.channelID === 0 || kick.net.chatID === 0)
        {
         await _getChIDs();
+        await _loadChannelData();
         if (kick.net.channelID === 0 || kick.net.chatID === 0)
         {
          if (kick.net.oAuth.usesChannel)
@@ -13676,6 +13677,31 @@
       }
       service.syncList();
      }
+
+     const _loadChannelData = function()
+     {
+      const _lCache = 30000;
+      let _tCache = false;
+
+      async function $c_loadChannelData()
+      {
+       if (_tCache !== false)
+        return;
+       _tCache = window.setInterval(_tick, _lCache);
+       await _tick();
+      }
+
+      async function _tick()
+      {
+       if (_tCache === false)
+        return;
+       const oCh = [];
+       oCh.push(_loadEmote_channel(kick.net.oAuth.auth.slug));
+       await Promise.allSettled(oCh);
+      }
+
+      return $c_loadChannelData;
+     }();
 
      const $oAuth = function()
      {
